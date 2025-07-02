@@ -1,4 +1,4 @@
-class BranchPredictor2Bit:
+class PHT:
     def __init__(self, size=1024):
         # Khởi tạo bảng PHT gồm nhiều bộ đếm 2-bit (giá trị từ 0 đến 3)
         self.size = size

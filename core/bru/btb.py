@@ -9,17 +9,18 @@ class BTB:
         self.entries = [None] * size  # Khởi tạo rỗng
 
     def _get_index_tag(self, pc):
-        index = (pc >> 2) & (self.size - 1)  # 5 bit giữa dùng làm index
-        tag = pc >> (2 + 5)  # 25 bit cao làm tag
+        index = (pc >> 2) & (self.size - 1)  # lấy 5 bit giữa: PC[6:2]
+        tag = pc >> (2 + 5)     # lấy 25 bit cao: PC[31:7]
         return index, tag
 
     def lookup(self, pc):
         index, tag = self._get_index_tag(pc)
         entry = self.entries[index]
+
         if entry and entry.tag == tag:
-            return entry.target  # Hit → trả về địa chỉ đích
+            return True, entry.target     # hit
         else:
-            return None  # Miss
+            return False, None            # miss
 
     def update(self, pc, target):
         index, tag = self._get_index_tag(pc)
