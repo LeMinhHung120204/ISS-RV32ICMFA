@@ -82,3 +82,4 @@ class RegisterFile:
                   f"f{i+1:02}: {self.read_f(i+1):.8e}  "
                   f"f{i+2:02}: {self.read_f(i+2):.8e}  "
                   f"f{i+3:02}: {self.read_f(i+3):.8e}")
+            
