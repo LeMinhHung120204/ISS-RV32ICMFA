@@ -1,4 +1,4 @@
-from core.bru.bru import BRU
+from core.bru import BRU
 
 test_branches = [
     # CASE A: PHT Taken, BTB Hit → đúng
