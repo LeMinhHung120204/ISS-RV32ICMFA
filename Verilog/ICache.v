@@ -1,13 +1,23 @@
 module ICache(
-    input         clk,
-    input         reset,
-    input         req_valid,          // Có yêu cầu fetch
-    input  [31:0] req_addr,           // Địa chỉ PC
-    output        resp_valid,         // Có dữ liệu hợp lệ
-    output [31:0] resp_data,          // Dữ liệu lệnh
-    output        hit                 // Có cache hit không
-    output       req_ready,          // Sẵn sàng nhận yêu cầu mới
+    input clk, reset,
+    input req_valid,            // Có yêu cầu fetch
+    input [31:0] req_addr,      // Địa chỉ PC
+    output resp_valid,          // Có dữ liệu hợp lệ
+    output [31:0] resp_data,    // Dữ liệu lệnh
+    output hit,                 // Có cache hit không
+    output req_ready,           // Sẵn sàng nhận yêu cầu mới
 );
+    typedef enum logic [1:0] {
+        IDLE,
+        REQ,   // gửi request đến memory
+        WAIT,  // đợi memory trả lời
+        FILL   // ghi dữ liệu vào cache
+    } refill_state_t;
+
+    reg [1:0] refill_state;
+    reg [31:0] refill_addr;
+    reg [31:0] refill_data;
+
     reg [22:0] ram_tag1 [0:255];
     reg [22:0] ram_tag2 [0:255];
     reg [22:0] ram_tag3 [0:255];
@@ -18,86 +28,35 @@ module ICache(
     reg [31:0] data3 [0:255];
     reg [31:0] data4 [0:255];
 
-    // S0: Nhận yêu cầu
-    reg        s0_valid;
-    reg [31:0] s0_addr;
+    reg [5:0]  idx;  // 6 bit index
+    reg [21:0] tag;  // 22 bit tag
     
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            s0_valid <= 1'b0;
-            s0_addr  <= 32'b0;
-        end else if (req_valid && req_ready) begin
-            s0_valid <= req_valid;
-            s0_addr  <= req_addr;
-        end
-    end
-
-    // S1: Decode
-    reg        s1_valid;
-    reg [31:0] s1_paddr;
-    reg [19:0] s1_tag;
-    reg [5:0]  s1_idx;
-
-    always @(posedge clk) begin
-        s1_valid <= s0_valid;
-        s1_idx   <= s0_addr[9:2];  // 6 bit index
-        s1_tag   <= s0_addr[31:10]; // 22 bit tag
-    end
-
-    // S2: Compare
-    reg s2_valid;
-    reg s2_hit;
-    reg [31:0] s2_data;
     wire hit1, hit2, hit3, hit4;
 
-    assign hit1 = (ram_tag1[s1_idx][22:1] == req_addr[31:10]) && ram_tag1[s1_idx][0];
-    assign hit2 = (ram_tag2[s1_idx][22:1] == req_addr[31:10]) && ram_tag2[s1_idx][0];
-    assign hit3 = (ram_tag3[s1_idx][22:1] == req_addr[31:10]) && ram_tag3[s1_idx][0];
-    assign hit4 = (ram_tag4[s1_idx][22:1] == req_addr[31:10]) && ram_tag4[s1_idx][0];
-
-    wire [31:0] way_sel = hit1 ? data1[s1_idx] :
-                         hit2 ? data2[s1_idx] :
-                         hit3 ? data3[s1_idx]:
-                         hit4 ? data4[s1_idx] : 2'd0;
-
-    assign hit_comb = hit1 | hit2 | hit3 | hit4;
-
-    always @(posedge clk) begin
-        s2_valid <= s1_valid;
-        s2_hit   <= hit_comb;
-        s2_data   <= way_sel;
-    end
-
-    // S3: Read data
-    reg s3_valid;
-    reg s3_hit;
-    reg [31:0] s3_data;
-
-    always @(posedge clk) begin
-        s3_valid <= s2_valid;
-        s3_hit   <= s2_hit;
-        if (s2_hit) begin
-            s3_data <= s2_data; // Lấy dữ liệu từ cache hit
-        end else begin
-            s3_data <= 32'b0; // Không có dữ liệu hợp lệ
+    always @(posedge clk or negedge reset) begin
+        if (!reset) begin
+            idx <= 0;
+            tag <= 0;
+        end else if (req_valid && req_ready) begin
+            idx   <= req_addr[9:2];  // 6 bit index
+            tag   <= req_addr[31:10]; // 22 bit tag
         end
     end
 
-    // S4: Output
-    reg s4_valid;
-    reg [31:0] s4_data;
-    reg s4_hit;
+    assign hit1 = (ram_tag1[idx][22:1] == req_addr[31:10]) && ram_tag1[idx][0];
+    assign hit2 = (ram_tag2[idx][22:1] == req_addr[31:10]) && ram_tag2[idx][0];
+    assign hit3 = (ram_tag3[idx][22:1] == req_addr[31:10]) && ram_tag3[idx][0];
+    assign hit4 = (ram_tag4[idx][22:1] == req_addr[31:10]) && ram_tag4[idx][0];
 
-    always @(posedge clk) begin
-        s4_valid <= s3_valid;
-        s4_data  <= s3_data;
-        s4_hit   <= s3_hit;
-    end
+    wire [31:0] way_sel = hit1 ? data1[idx] :
+                         hit2 ? data2[idx] :
+                         hit3 ? data3[idx]:
+                         hit4 ? data4[idx] : 2'd0;
 
+    assign hit = hit1 | hit2 | hit3 | hit4;
     reg refill_valid;
     
-    assign resp_valid = s4_valid;
-    assign resp_data  = s4_data;
-    assign hit = s4_hit;
+    assign resp_valid = hit | refill_valid;
+    assign resp_data  = (hit) ? way_sel : 32'b0;
     assign req_ready = ~refill_valid;
 endmodule
