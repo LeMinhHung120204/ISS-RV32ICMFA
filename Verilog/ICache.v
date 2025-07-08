@@ -39,8 +39,14 @@ module ICache (
     reg                valid_array [0:NUM_WAYS-1][0:NUM_SETS-1]; // mảng 2 chiều chứa bit valid cho từng block.
     reg [31:0]         data_array  [0:NUM_WAYS-1][0:NUM_SETS-1]; // mảng 2 chiều chứa dữ liệu cho từng block.
 
+
+    // LRU: 2-bit priority value per way per set (0 = most recent, 3 = least)
+    reg [1:0] lru_priority [0:NUM_SETS-1][0:NUM_WAYS-1];
+    reg [1:0]          victim_way;
+
     reg [NUM_WAYS-1:0] way_hit;
     reg [31:0]         data_sel;
+    
 
     integer i;
     always @(*) begin
@@ -73,12 +79,39 @@ module ICache (
             state <= next_state;
     end
 
-    // Cache refill logic (chon tam way 0) chua co lru
+    // Victim way logic: find way with LRU priority == 2'b11 (least recently used)
+    always @(*) begin
+        victim_way = 0;
+        for (i = 0; i < NUM_WAYS; i = i + 1) begin
+            if (lru_priority[index][i] == 2'b11)
+                victim_way = i;
+        end
+    end
+
+    // Update LRU priorities
+    task update_lru;
+        input [1:0] used_way;
+        integer j;
+        begin
+            for (j = 0; j < NUM_WAYS; j = j + 1) begin
+                if (j != used_way && lru_priority[index][j] < lru_priority[index][used_way])
+                    lru_priority[index][j] = lru_priority[index][j] + 1;
+            end
+            lru_priority[index][used_way] = 2'b00; // most recently used
+        end
+    endtask
+
+    // Cache refill logic using victim way from LRU
     always @(posedge clk) begin
         if (state == FILL) begin
-            tag_array[0][index]   <= tag;
-            data_array[0][index]  <= data_in;
-            valid_array[0][index] <= 1'b1;
+            tag_array[victim_way][index]   <= tag;
+            data_array[victim_way][index]  <= data_in;
+            valid_array[victim_way][index] <= 1'b1;
+            update_lru(victim_way);
+        end else if (hit && req_valid) begin
+            for (i = 0; i < NUM_WAYS; i = i + 1)
+                if (way_hit[i])
+                    update_lru(i);
         end
     end
 
