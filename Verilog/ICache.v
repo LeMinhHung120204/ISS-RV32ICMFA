@@ -1,62 +1,93 @@
-module ICache(
-    input clk, reset,
-    input req_valid,            // Có yêu cầu fetch
-    input [31:0] req_addr,      // Địa chỉ PC
-    output resp_valid,          // Có dữ liệu hợp lệ
-    output [31:0] resp_data,    // Dữ liệu lệnh
-    output hit,                 // Có cache hit không
-    output req_ready,           // Sẵn sàng nhận yêu cầu mới
+module ICache (
+    input         clk, reset,
+    input         req_valid, // yêu cầu từ CPU
+    input  [31:0] req_addr,  // địa chỉ yêu cầu từ CPU
+    output        req_ready, // sẵn sàng nhận yêu cầu từ CPU
+
+    // interface to memory
+    output        mem_req_valid,    // yêu cầu từ cache đến memory
+    output [31:0] mem_req_addr,     // địa chỉ yêu cầu từ cache đến memory
+    input         mem_resp_valid,   // phản hồi từ memory
+    input  [31:0] data_in,          // dữ liệu trả về từ memory
+
+    output        resp_valid,       // phản hồi từ cache đến CPU
+    output [31:0] resp_data,        // dữ liệu trả về từ cache đến CPU
+    output        hit               // hit signal indicating cache hit
 );
+
+    localparam NUM_SETS = 64;
+    localparam NUM_WAYS = 4;
+    localparam OFFSET_BITS = 2;  // 4B block
+    localparam INDEX_BITS  = 6;  // 64 sets
+    localparam TAG_BITS    = 24; // 32 - 6 - 2
+
     typedef enum logic [1:0] {
         IDLE,
-        REQ,   // gửi request đến memory
-        WAIT,  // đợi memory trả lời
-        FILL   // ghi dữ liệu vào cache
-    } refill_state_t;
+        MISS,
+        WAIT,
+        FILL
+    } state_t;
 
-    reg [1:0] refill_state;
-    reg [31:0] refill_addr;
-    reg [31:0] refill_data;
+    state_t state, next_state;
 
-    reg [22:0] ram_tag1 [0:255];
-    reg [22:0] ram_tag2 [0:255];
-    reg [22:0] ram_tag3 [0:255];
-    reg [22:0] ram_tag4 [0:255];
+    wire [TAG_BITS-1:0]   tag     = addr[31:8];
+    wire [INDEX_BITS-1:0] index   = addr[7:2];
+    wire [OFFSET_BITS-1:0] offset = addr[1:0];
 
-    reg [31:0] data1 [0:255];
-    reg [31:0] data2 [0:255];
-    reg [31:0] data3 [0:255];
-    reg [31:0] data4 [0:255];
+    // Tag, Valid and Data arrays
+    reg [TAG_BITS-1:0] tag_array   [0:NUM_WAYS-1][0:NUM_SETS-1]; // mảng 2 chiều chứa TAG cho từng block.
+    reg                valid_array [0:NUM_WAYS-1][0:NUM_SETS-1]; // mảng 2 chiều chứa bit valid cho từng block.
+    reg [31:0]         data_array  [0:NUM_WAYS-1][0:NUM_SETS-1]; // mảng 2 chiều chứa dữ liệu cho từng block.
 
-    reg [5:0]  idx;  // 6 bit index
-    reg [21:0] tag;  // 22 bit tag
-    
-    wire hit1, hit2, hit3, hit4;
+    reg [NUM_WAYS-1:0] way_hit;
+    reg [31:0]         data_sel;
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            idx <= 0;
-            tag <= 0;
-        end else if (req_valid && req_ready) begin
-            idx   <= req_addr[9:2];  // 6 bit index
-            tag   <= req_addr[31:10]; // 22 bit tag
+    integer i;
+    always @(*) begin
+        way_hit = 0;
+        data_sel = 32'b0;
+        for (i = 0; i < NUM_WAYS; i = i + 1) begin
+            if (valid_array[i][index] && tag_array[i][index] == tag) begin
+                way_hit[i] = 1;
+                data_sel = data_array[i][index];
+            end
         end
     end
 
-    assign hit1 = (ram_tag1[idx][22:1] == req_addr[31:10]) && ram_tag1[idx][0];
-    assign hit2 = (ram_tag2[idx][22:1] == req_addr[31:10]) && ram_tag2[idx][0];
-    assign hit3 = (ram_tag3[idx][22:1] == req_addr[31:10]) && ram_tag3[idx][0];
-    assign hit4 = (ram_tag4[idx][22:1] == req_addr[31:10]) && ram_tag4[idx][0];
+    // FSM - state transitions
+    always @(*) begin
+        case (state)
+            IDLE:   next_state = (req_valid && !hit) ? MISS : IDLE;
+            MISS:   next_state = WAIT;
+            WAIT:   next_state = mem_resp_valid ? FILL : WAIT;
+            FILL:   next_state = IDLE;
+            default: next_state = IDLE;
+        endcase
+    end
 
-    wire [31:0] way_sel = hit1 ? data1[idx] :
-                         hit2 ? data2[idx] :
-                         hit3 ? data3[idx]:
-                         hit4 ? data4[idx] : 2'd0;
+    // FSM - state updates
+    always @(posedge clk or negedge reset) begin
+        if (!reset)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
 
-    assign hit = hit1 | hit2 | hit3 | hit4;
-    reg refill_valid;
-    
-    assign resp_valid = hit | refill_valid;
-    assign resp_data  = (hit) ? way_sel : 32'b0;
-    assign req_ready = ~refill_valid;
+    // Cache refill logic (chon tam way 0) chua co lru
+    always @(posedge clk) begin
+        if (state == FILL) begin
+            tag_array[0][index]   <= tag;
+            data_array[0][index]  <= data_in;
+            valid_array[0][index] <= 1'b1;
+        end
+    end
+
+    // Outputs
+    assign hit = |way_hit; // hit nếu có ít nhất một way hợp lệ và tag khớp
+    assign req_ready = (state == IDLE); // sẵn sàng nhận yêu cầu nếu không có yêu cầu hoặc đã hit
+    assign mem_req_valid = (state == MISS); // yêu cầu đến memory khi ở trạng thái MISS
+    assign mem_req_addr  = req_addr; // địa chỉ yêu cầu từ CPU
+    assign resp_valid = hit; // phản hồi hợp lệ nếu có hit
+    assign resp_data = data_sel; // dữ liệu trả về từ cache đến CPU
+
 endmodule
