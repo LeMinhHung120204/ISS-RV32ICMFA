@@ -21,18 +21,12 @@ module ICache (
     localparam INDEX_BITS  = 6;  // 64 sets
     localparam TAG_BITS    = 24; // 32 - 6 - 2
 
-    typedef enum logic [1:0] {
-        IDLE,
-        MISS,
-        WAIT,
-        FILL
-    } state_t;
+    parameter IDLE = 2'b00, MISS = 2'b01, WAIT = 2'b10, FILL = 2'b11;
+	reg [1:0] state, next_state;
 
-    state_t state, next_state;
-
-    wire [TAG_BITS-1:0]   tag     = addr[31:8];
-    wire [INDEX_BITS-1:0] index   = addr[7:2];
-    wire [OFFSET_BITS-1:0] offset = addr[1:0];
+    wire [TAG_BITS-1:0]   tag     = req_addr[31:8];
+    wire [INDEX_BITS-1:0] index   = req_addr[7:2];
+    wire [OFFSET_BITS-1:0] offset = req_addr[1:0];
 
     // Tag, Valid and Data arrays
     reg [TAG_BITS-1:0] tag_array   [0:NUM_WAYS-1][0:NUM_SETS-1]; // mảng 2 chiều chứa TAG cho từng block.
