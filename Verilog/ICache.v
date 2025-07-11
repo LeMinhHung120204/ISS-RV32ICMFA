@@ -33,7 +33,7 @@ module ICache (
     reg [1:0] lru [0:NUM_WAYS-1][0:NUM_SETS-1];
     reg [1:0] least_recent_used;
 
-    wire way_hit [0:NUM_WAYS-1];
+    wire [0:NUM_WAYS-1]     way_hit;
     wire [INDEX_BITS-1:0]   index;
     wire [TAG_BITS-1:0]     tag;
 
@@ -79,7 +79,7 @@ module ICache (
             lru[least_recent_used][index] <= 2'b00; // reset LRU for this way
 
             // update LRU for other ways
-            for (i = 0; i < NUM_WAYS; i++) begin
+            for (i = 0; i < NUM_WAYS; i = i + 1) begin
                 if (i != least_recent_used) begin
                     if (lru[i][index] < 3) begin
                         lru[i][index] <= lru[i][index] + 1; // increment LRU value
@@ -89,7 +89,7 @@ module ICache (
         end
         else if (hit && req_valid) begin
             // Update LRU on hit
-            for (i = 0; i < NUM_WAYS; i++) begin
+            for (i = 0; i < NUM_WAYS; i = i + 1) begin
                 if (way_hit[i]) begin
                     lru[i][index] <= 2'b00; // reset LRU for this way
                 end else if (lru[i][index] < 3) begin
