@@ -1,0 +1,19 @@
+# Verilog simulation outputs
+*.vcd
+*.vvp
+*.log
+*.out
+*.fst
+*.sav
+
+# GTKWave waveform save files
+*.gtkw
+
+# VS Code settings (optional)
+.vscode/
+
+# Temp / backup files
+*~
+*.bak
+*.swp
+.DS_Store

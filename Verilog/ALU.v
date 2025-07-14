@@ -7,5 +7,7 @@ module ALU(
     output        cmp_out       // Bit so sánh (dùng cho nhánh)
     output        zero          // Bit chỉ ra kết quả là 0
 );
-
+    always @(*) begin
+        
+    end
 endmodule
