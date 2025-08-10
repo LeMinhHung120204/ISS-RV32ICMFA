@@ -1,18 +1,17 @@
-module ICache (
-    input         clk, reset,
-    input         req_valid, // yêu cầu từ CPU
-    input  [31:0] req_addr,  // địa chỉ yêu cầu từ CPU
-    output        req_ready, // sẵn sàng nhận yêu cầu từ CPU
-
-    // interface to memory
-    output        mem_req_valid,    // yêu cầu từ cache đến memory
-    output [31:0] mem_req_addr,     // địa chỉ yêu cầu từ cache đến memory
-    input         mem_resp_valid,   // phản hồi từ memory
-    input  [31:0] data_in,          // dữ liệu trả về từ memory
-
-    output        resp_valid,       // phản hồi từ cache đến CPU
-    output [31:0] resp_data,        // dữ liệu trả về từ cache đến CPU
-    output        hit               // hit signal indicating cache hit
+module DCache (
+    input clk, reset,
+    input en_cache,
+    input [2:0] load_sel, // select for data alignment
+    input [2:0] store_sel, // select for data alignment
+    input [31:0] addr_d, // address for data cache
+    input [31:0] addr_copy, // address to copy from upper level
+    input [31:0] data_wr, // data to write
+    input [31:0] data_mem, // data from memory
+    input [31:0] data_copy, // data to copy from upper
+    input WB_TL, // write back to memory or transfer to load
+    input en_wr, // enable write operation
+    output [31:0] data_out, // output data after alignment
+    output [31:0] addr_mem  // address for memory operation
 );
 
     localparam NUM_SETS = 64;
@@ -28,6 +27,7 @@ module ICache (
     reg [TAG_BITS-1:0]  tag_array   [0:NUM_WAYS-1][0:NUM_SETS-1];
     reg                 valid_array [0:NUM_WAYS-1][0:NUM_SETS-1];
     reg [31:0]          data_array  [0:NUM_WAYS-1][0:NUM_SETS-1];
+    reg                 dirty       [0:NUM_WAYS-1][0:NUM_SETS-1];
 
     // LRU: 2-bit priority value per way per set (0 = most recent, 3 = least)
     reg [1:0] lru [0:NUM_WAYS-1][0:NUM_SETS-1];
@@ -36,86 +36,48 @@ module ICache (
     wire [0:NUM_WAYS-1]     way_hit;
     wire [INDEX_BITS-1:0]   index;
     wire [TAG_BITS-1:0]     tag;
+    wire [31:0]             read_data;
+    wire [31:0]             data_sel;
+    wire [31:0]             addr_sel;
+    wire                    write;
 
-    // FSM state update
+    assign tag = addr_d[31:8];
+    assign index = addr_d[7:2];
+
+    assign read_data = (en_wr) ? 32'b0 : 
+                    (valid1[index] && tag_array[0][index] == tag) ? data_array[0][index] : 
+                    (valid1[index] && tag_array[1][index] == tag) ? data_array[1][index] : 
+                    (valid1[index] && tag_array[2][index] == tag) ? data_array[2][index] : 
+                    (valid1[index] && tag_array[3][index] == tag) ? data_array[3][index] : data_mem;
+
+    assign data_sel = (WB_TL) ? data_copy : data_wr;
+    assign addr_sel = (WB_TL) ? addr_copy : addr_d;
+    assign write = (WB_TL | en_wr) && en_cache;
+
+    assign data_out = (load_sel == 3'b000) ?{{24{read_data[31]}}, read_data[7:0]} :
+                    (load_sel == 3'b001) ? {24'b0, read_data[7:0]} :
+                    (load_sel == 3'b010) ? {16'b0, read_data[15:0]} :
+                    (load_sel == 3'b011) ? {{16{read_data[31]}}, read_data[15:0]} : read_data;
+
+    integer i;
     always @(posedge clk or negedge reset) begin
         if (!reset) begin
-            state <= IDLE;
-        end else begin
-            state <= next_state;
-        end
-    end
+            for (i = 0; i < NUM_SETS; i = i + 1) begin
+                lru[0][i] <= 2'b00;
+                lru[1][i] <= 2'b00; 
+                lru[2][i] <= 2'b00; 
+                lru[3][i] <= 2'b00;
 
-    // FSM next state logic
-    always @(*) begin
-        next_state = state;
-        case (state)
-            IDLE: next_state = (req_valid && !hit) ? MISS : IDLE;
-            MISS: next_state = mem_req_valid ? FILL : MISS;
-            FILL: next_state = IDLE;
-        endcase
-    end
-
-    // chooose way to fill
-    always @(*) begin
-        least_recent_used = 2'b00;
-        if (lru[1][index] > least_recent_used) begin 
-            least_recent_used = lru[1][index];
+                dirty[0][i] <= 1'b0;
+                dirty[1][i] <= 1'b0;
+                dirty[2][i] <= 1'b0;
+                dirty[3][i] <= 1'b0; 
+            end
         end
-        else if (lru[2][index] > least_recent_used) begin 
-            least_recent_used = lru[2][index];
+        else if (!write) begin
+            
         end
-        else if (lru[3][index] > least_recent_used) begin 
-            least_recent_used = lru[3][index];
-        end
+        
     end 
     
-    integer i;
-    always @(posedge clk) begin
-        if (state == FILL) begin
-            tag_array[least_recent_used][index] <= tag;
-            data_array[least_recent_used][index] <= data_in;    
-            valid_array[least_recent_used][index] <= 1'b1;
-            lru[least_recent_used][index] <= 2'b00; // reset LRU for this way
-
-            // update LRU for other ways
-            for (i = 0; i < NUM_WAYS; i = i + 1) begin
-                if (i != least_recent_used) begin
-                    if (lru[i][index] < 3) begin
-                        lru[i][index] <= lru[i][index] + 1; // increment LRU value
-                    end
-                end
-            end
-        end
-        else if (hit && req_valid) begin
-            // Update LRU on hit
-            for (i = 0; i < NUM_WAYS; i = i + 1) begin
-                if (way_hit[i]) begin
-                    lru[i][index] <= 2'b00; // reset LRU for this way
-                end else if (lru[i][index] < 3) begin
-                    lru[i][index] <= lru[i][index] + 1; // increment LRU value
-                end
-            end
-        end
-    end 
-
-    assign tag = req_addr[31:8];
-    assign index = req_addr[7:2];
-
-    assign way_hit[0] = (tag_array[0][index] == tag) && valid_array[0][index];
-    assign way_hit[1] = (tag_array[1][index] == tag) && valid_array[1][index];
-    assign way_hit[2] = (tag_array[2][index] == tag) && valid_array[2][index];
-    assign way_hit[3] = (tag_array[3][index] == tag) && valid_array[3][index];
-
-    // output 
-    assign hit = | way_hit;
-    assign req_ready = (state == IDLE); // sẵn sàng nhận yêu cầu từ CPU
-    assign mem_req_valid = (state == MISS); // yêu cầu đến memory khi ở trạng thái MISS
-    assign mem_req_addr  = req_addr; // địa chỉ yêu cầu từ CPU
-    assign resp_valid = (state == IDLE && hit) || (state == FILL && mem_resp_valid); // phản hồi từ cache đến CPU
-    assign resp_data = way_hit[0] ? data_array[0][index] :
-                       way_hit[1] ? data_array[1][index] :
-                       way_hit[2] ? data_array[2][index] :
-                       way_hit[3] ? data_array[3][index] : 32'b0;
-
 endmodule
