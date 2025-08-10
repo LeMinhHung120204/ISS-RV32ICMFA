@@ -1,10 +1,10 @@
 module ControlUnit(
     input      [6:0] OP,
     input      [6:0] funct7,
-    input      [2:0] funct3 
-    output reg [3:0] ALUOp,     // Mã điều khiển ALU
+    input      [2:0] funct3, 
+    output reg [3:0] ALUOp,     // Mã đi�?u khiển ALU
     output reg       RegWrite,   // Tín hiệu ghi vào thanh ghi
-    output reg       MemRead,    // Tín hiệu đọc bộ nhớ
+    output reg       MemRead,    // Tín hiệu đ�?c bộ nhớ
     output reg       MemWrite,   // Tín hiệu ghi bộ nhớ
     output reg       Branch,     // Tín hiệu nhánh
     output reg       Jump        // Tín hiệu nhảy
@@ -16,7 +16,7 @@ module ControlUnit(
             7'b0110011: begin // R-type instructions
                 ALUOp = instruction[14:12]; // ALUOp từ funct3
                 RegWrite = 1'b1; // Ghi vào thanh ghi
-                MemRead = 1'b0;  // Không đọc bộ nhớ
+                MemRead = 1'b0;  // Không đ�?c bộ nhớ
                 MemWrite = 1'b0; // Không ghi bộ nhớ
                 Branch = 1'b0;   // Không phải nhánh
                 Jump = 1'b0;     // Không phải nhảy
