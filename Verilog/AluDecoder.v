@@ -1,0 +1,43 @@
+module AluDecoder(
+    input [1:0] ALUOp,
+    input [2:0] funct3,
+    input funct7_5, op_5,
+    output reg [2:0] ALUControl
+);
+    always @(*) begin
+        case(ALUOp)
+            2'b00: begin
+                ALUControl = 3'b000;    // (add) intruction lw, sw
+            end 
+            2'b01: begin
+                ALUControl = 3'b001;    // (sub) intruction beq 
+            end 
+            2'b10: begin
+                case(funct3)
+                    3'b00: begin
+                        case({op_5, funct7_5})
+                            2'b00, 2'b01, 2'b10:    ALUControl = 3'b000;    // (add) intruction add
+                            2'b11:                  ALUControl = 3'b001;    // (sub) intruction sub
+                            default:                ALUControl = 3'b000;
+                        endcase
+                    end 
+                    3'b010: begin
+                        ALUControl = 3'b101;    // (set less than) slt
+                    end 
+                    3'b110: begin
+                        ALUControl = 3'b011;    // or 
+                    end 
+                    3'b111: begin
+                        ALUControl = 3'b010;    // and 
+                    end 
+                    default: begin
+                        ALUControl = 3'b000;
+                    end 
+                endcase
+            end
+            default: begin
+                ALUControl = 3'b000;
+            end
+        endcase
+    end 
+endmodule
