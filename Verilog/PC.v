@@ -1,19 +1,16 @@
-module PC(
-    input clk,
-    input reset,
-    input pc_src,               // 0: tuần tự, 1: nhảy
-    input [31:0] pc_branch,     // địa chỉ nhảy nếu có
-    output reg [31:0] pc        // PC hiện tại
+module PC @(
+    parameter WIDTH = 32;
+)(
+    input clk, rst_n,
+    input [WIDTH - 1:0] PCNext,
+    output reg [WIDTH - 1:0] PC
 );
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            pc <= 32'h00000000; // Reset PC về 0
-        end else begin
-            if (pc_src) begin
-                pc <= pc_branch; // Nhảy đến địa chỉ mới
-            end else begin
-                pc <= pc + 4; // Tăng PC theo tuần tự
-            end
-        end
+    always @(posedge clk or negedge rst_n) begin
+        if(~rst_n) begin
+            PC <= 32'd0;
+        end 
+        else begin
+            PC <= PCnext;
+        end 
     end
 endmodule
