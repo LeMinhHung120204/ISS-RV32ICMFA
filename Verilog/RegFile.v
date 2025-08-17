@@ -1,6 +1,6 @@
 module RegFile(
     input clk,
-    input rst, 
+    input rst_n, 
     input we,
     input [4:0] rs1, rs2, // read address
     input [4:0] rd,       // write address
@@ -14,12 +14,12 @@ module RegFile(
     end
 
     integer i;
-    always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst) begin
             for (i = 0; i < 32; i = i + 1'b1)
                 register[i] <= 32'b0;
         end else if (we && rd != 5'b00000) begin
-             register[rd] <= wd; 
+            register[rd] <= wd; 
         end
     end 
 endmodule 
