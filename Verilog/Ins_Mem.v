@@ -15,7 +15,7 @@ module Ins_Mem #(
         $readmemh("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/assembly.s", rom);
     end
     always @(posedge clk) begin
-        out <= rom[addr];
+        out <= rom[(addr >> 2)];
     end
     
     assign instruction = out; 
