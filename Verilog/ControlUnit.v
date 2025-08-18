@@ -5,7 +5,7 @@ module ControlUnit(
     input [14:12] funct3,
     input funct7_5, Zero,
     output PCSrc, MemWrite, ALUSrc, RegWrite,
-    output [2:0] ALUControl,
+    output [3:0] ALUControl,
     output [1:0] ImmSrc, ResultSrc
 );
     wire [1:0] ALUOp;
