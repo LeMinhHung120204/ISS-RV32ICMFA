@@ -4,8 +4,7 @@ module datapath #(
     parameter WIDTH_DATA = 32,
     parameter WIDTH_ADDR = 32
 )(
-    input clk, rst_n,
-    output [WIDTH_DATA - 1:0] data
+    input clk, rst_n
 );
     wire [WIDTH_DATA - 1:0] SrcA, WriteData;
     wire [WIDTH_DATA - 1:0] SrcB, Instr, ImmExt, ALUResult, ReadData;
@@ -14,7 +13,7 @@ module datapath #(
     // ----------------------- Tin hieu dieu khien -----------------------
     wire RegWrite, ALUSrc, MemWrite, PCSrc, Zero;
     wire [1:0] ImmSrc, ResultSrc;
-    wire [2:0] ALUControl;
+    wire [3:0] ALUControl;
 
     reg [WIDTH_DATA - 1:0] Result;
 
@@ -53,11 +52,14 @@ module datapath #(
     );
 
     PC PC_inst(
+        .clk(clk),
+        .rst_n(rst_n),
         .PCNext(PCNext),
         .PC(PC)
     );
 
     Ins_Mem instruction_memory(
+        .clk(clk),
         .addr(PC),
         .instruction(Instr)
     );
@@ -66,8 +68,8 @@ module datapath #(
         .clk(clk),
         .rst_n(rst_n),
         .we(RegWrite),
-        .rst1(Instr[19:15]),
-        .rst2(Instr[24:20]),
+        .rs1(Instr[19:15]),
+        .rs2(Instr[24:20]),
         .rd(Instr[11:7]),
         .wd(Result),
         .rd1(SrcA),
