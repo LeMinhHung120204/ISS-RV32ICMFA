@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module RegFile(
     input clk,
     input rst_n, 
@@ -15,7 +17,7 @@ module RegFile(
 
     integer i;
     always @(posedge clk or negedge rst_n) begin
-        if (~rst) begin
+        if (~rst_n) begin
             for (i = 0; i < 32; i = i + 1'b1)
                 register[i] <= 32'b0;
         end else if (we && rd != 5'b00000) begin

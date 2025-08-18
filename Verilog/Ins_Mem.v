@@ -1,14 +1,22 @@
-module Ins_Mem #(
-    parameter WIDTH_ADDR = 32,
-    parameter WIDTH_DATA = 32
-)(
-    input clk, rst_n,
-    input [WIDTH_ADDR - 1:0] addr,
-    output [WIDTH_DATA -1:0] instruction
-);
-    reg [WIDTH_DATA - 1:0] mem [0:WIDTH_ADDR - 1];
+`timescale 1ns/1ps
 
-    always @(posedge clk or negedge rst_n) begin
-        instruction <= mem[addr];
-    end 
-endmodule 
+module Ins_Mem #(
+    parameter integer WIDTH_ADDR = 32,
+    parameter integer WIDTH_DATA = 32
+)(
+    input clk,
+    input  [WIDTH_ADDR - 1:0] addr,
+    output [WIDTH_DATA - 1:0] instruction
+);
+    reg [31:0] rom [0:4095];
+    reg [31:0] out;
+    
+    initial begin: init_and_load
+        $readmemh("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/assembly.s", rom);
+    end
+    always @(posedge clk) begin
+        out <= rom[addr];
+    end
+    
+    assign instruction = out; 
+endmodule
