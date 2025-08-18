@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module datapath #(
     parameter WIDTH_DATA = 32,
     parameter WIDTH_ADDR = 32
@@ -6,7 +8,7 @@ module datapath #(
     output [WIDTH_DATA - 1:0] data
 );
     wire [WIDTH_DATA - 1:0] SrcA, WriteData;
-    wire [WIDTH_DATA - 1:0] SrcB, Instr, ImmExt, ALUResult, Result, ReadData;
+    wire [WIDTH_DATA - 1:0] SrcB, Instr, ImmExt, ALUResult, ReadData;
     wire [WIDTH_ADDR - 1:0] PC, PCPlus4, PCTarget, PCNext;
 
     // ----------------------- Tin hieu dieu khien -----------------------
@@ -75,15 +77,15 @@ module datapath #(
     Extend extend_inst(
         .ImmSrc(ImmSrc),
         .Instr(Instr[31:0]),
-        .ImmExt(ImmExt),
+        .ImmExt(ImmExt)
     );
 
     ALU alu_inst(
-        .ALUOp(ALUControl),
+        .ALUControl(ALUControl),
         .in1(SrcA),
         .in2(SrcB),
         .result(ALUResult),
-        .zero(Zero),
+        .zero(Zero)
     );
 
     DataMem data_memory(
