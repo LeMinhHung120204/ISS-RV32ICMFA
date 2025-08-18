@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module Extend(
     input [1:0] ImmSrc,
     input [31:0] Instr,
