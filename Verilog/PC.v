@@ -1,5 +1,7 @@
-module PC @(
-    parameter WIDTH = 32;
+`timescale 1ns/1ps
+
+module PC #(
+    parameter WIDTH = 32
 )(
     input clk, rst_n,
     input [WIDTH - 1:0] PCNext,
@@ -10,7 +12,7 @@ module PC @(
             PC <= 32'd0;
         end 
         else begin
-            PC <= PCnext;
+            PC <= PCNext;
         end 
     end
 endmodule

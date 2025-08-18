@@ -1,8 +1,10 @@
+`timescale 1ns/1ps
+
 module ControlUnit(
     input [6:0] op,
     input [14:12] funct3,
     input funct7_5, Zero,
-    output PCSrc, MemWrite, ALUSrc, RegWrite
+    output PCSrc, MemWrite, ALUSrc, RegWrite,
     output [2:0] ALUControl,
     output [1:0] ImmSrc, ResultSrc
 );
