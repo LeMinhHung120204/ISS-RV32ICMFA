@@ -18,7 +18,16 @@ module RegFile(
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            for (i = 0; i < 32; i = i + 1'b1)
+            register[0] <= 32'd0;
+            register[1] <= 32'd12;
+            register[2] <= 32'd22;
+            register[3] <= 32'd32;
+            register[4] <= 32'd42;
+            register[5] <= 32'd52;
+            register[6] <= 32'd62;
+            register[7] <= 32'd72;
+            register[8] <= 32'd82;
+            for (i = 9; i < 32; i = i + 1'b1)
                 register[i] <= 32'b0;
         end else if (we && rd != 5'b00000) begin
             register[rd] <= wd; 
