@@ -4,15 +4,11 @@ module ControlUnit(
     input [6:0] op,
     input [14:12] funct3,
     input funct7_5, Zero,
-    output PCSrc, MemWrite, ALUSrc, RegWrite,
+    output PCSrc, MemWrite, ALUSrc, RegWrite, Jump, Branch,
     output [3:0] ALUControl,
     output [1:0] ImmSrc, ResultSrc
 );
     wire [1:0] ALUOp;
-    wire Branch, Jump;
-
-    assign PCSrc = (Branch & Zero) | Jump;
-
     MainDecoder maindecoder_inst(
         .op(op),
         .Branch(Branch),
