@@ -4,12 +4,12 @@ module IF_ID #(
     parameter ADDR_WIDTH = 32
 )(
     input clk, rst_n,
-    input  [DATA_WIDTH - 1:0] RDF, 
-    input  [ADDR_WIDTH - 1:0] PCF,
-    input  [ADDR_WIDTH - 1:0] PCPlus4F,
-    output [DATA_WIDTH - 1:0] InstrD,
-    output [DATA_WIDTH - 1:0] PCD,
-    output [ADDR_WIDTH - 1:0] PCPlus4D
+    input  [DATA_WIDTH - 1:0] F_RD, 
+    input  [ADDR_WIDTH - 1:0] F_PC,
+    input  [ADDR_WIDTH - 1:0] F_PCPlus4,
+    output [DATA_WIDTH - 1:0] D_Instr,
+    output [DATA_WIDTH - 1:0] D_PC,
+    output [ADDR_WIDTH - 1:0] D_PCPlus4
 );
     reg [ADDR_WIDTH - 1:0] reg_PCD;
     reg [ADDR_WIDTH - 1:0] reg_PCPlus4D;
@@ -22,13 +22,13 @@ module IF_ID #(
             reg_InstrD      <= 32'd0;
         end 
         else begin
-            reg_PCD         <= PCF;
-            reg_PCPlus4D    <= RDF;
-            reg_InstrD      <= PCPlus4F;
+            reg_PCD         <= F_PC;
+            reg_PCPlus4D    <= F_PCPlus4;
+            reg_InstrD      <= F_RD;
         end 
     end 
 
-    assign InstrD    = reg_InstrD;
-    assign PCD       = reg_PCD;
-    assign PCPlus4D  = reg_PCPlus4D;
+    assign D_Instr    = reg_InstrD;
+    assign D_PC       = reg_PCD;
+    assign D_PCPlus4  = reg_PCPlus4D;
 endmodule

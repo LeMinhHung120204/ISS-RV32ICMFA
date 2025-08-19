@@ -16,7 +16,7 @@ module RegFile(
     end
 
     integer i;
-    always @(posedge clk or negedge rst_n) begin
+    always @(negedge clk or negedge rst_n) begin
         if (~rst_n) begin
             register[0] <= 32'd0;
             register[1] <= 32'd12;
