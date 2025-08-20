@@ -17,8 +17,11 @@ module RV32I #(
     // ----------------------- Tin hieu dieu khien -----------------------
     wire D_RegWrite, E_RegWrite, M_RegWrite, W_RegWrite, D_MemWrite, E_MemWrite, M_MemWrite, D_Jump, E_Jump, D_Branch, E_Branch, D_ALUSrc, E_ALUSrc, E_Zero, E_PCSrc;
     wire [1:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc, D_ImmSrc, E_ImmSrc;
-    wire [1:0] ForwardAE, ForwardBE;
     wire [2:0] D_ALUControl, E_ALUControl;
+
+    // ----------------------- Tin hieu Hazard -----------------------
+    wire F_Stall, D_Stall, D_Flush, E_Flush;
+    wire [1:0] ForwardAE, ForwardBE;
 
     assign E_WriteData  = E_RD2;
     assign F_PCPlus4    = F_PC + 32'd4;
@@ -53,12 +56,20 @@ module RV32I #(
     HazardUnit HazardUnit_inst(
         .M_RegWrite(M_RegWrite),
         .W_RegWrite(W_RegWrite),
+        .D_Rs1(D_Instr[19:15]),
+        .D_Rs2(D_Instr[24:20]),
         .E_Rs1(E_Rs1),
         .E_Rs2(E_Rs2),
+        .E_Rd(E_Rd),
+        .E_PCSrc(E_PCSrc),
         .M_Rd(M_Rd),
         .W_Rd(W_Rd),
         .ForwardAE(ForwardAE),
-        .ForwardBE(ForwardBE)
+        .ForwardBE(ForwardBE),
+        .F_Stall(F_Stall),
+        .D_Stall(D_Stall),
+        .D_Flush(D_Flush),
+        .E_Flush(E_Flush)
     );
 
     ControlUnit ControlUnit_ins(
@@ -79,6 +90,7 @@ module RV32I #(
     PC PC_inst(
         .clk(clk),
         .rst_n(rst_n),
+        .EN(F_Stall),
         .PCNext(PCNext),
         .PC(F_PC)
     );
@@ -92,6 +104,8 @@ module RV32I #(
     IF_ID IF_ID_register(
         .clk(clk),
         .rst_n(rst_n),
+        .EN(D_Stall),
+        .D_Flush(D_Flush),
         .F_RD(F_RD),
         .F_PC(F_PC),
         .F_PCPlus4(F_PCPlus4),
@@ -121,6 +135,7 @@ module RV32I #(
     ID_EX ID_EX_register(
         .clk(clk),
         .rst_n(rst_n),
+        .E_Flush(E_Flush),
         .RD1(RD1),
         .RD2(RD2),
         .D_Rs1(D_Instr[19:15]),
