@@ -3,7 +3,7 @@
 module PC #(
     parameter WIDTH = 32
 )(
-    input clk, rst_n,
+    input clk, rst_n, EN,
     input [WIDTH - 1:0] PCNext,
     output reg [WIDTH - 1:0] PC
 );
@@ -12,7 +12,8 @@ module PC #(
             PC <= 32'd0;
         end 
         else begin
-            PC <= PCNext;
+            if (~EN)
+                PC <= PCNext;
         end 
     end
 endmodule
