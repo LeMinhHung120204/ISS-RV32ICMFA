@@ -42,10 +42,10 @@ module MEM_WB #(
         end 
     end 
 
-    assign ALUResultW   = reg_ALUResultW;
-    assign ReadDataW    = reg_ReadDataW;
-    assign PCPlus4W     = reg_PCPlus4W;
+    assign W_ALUResult  = reg_ALUResultW;
+    assign W_ReadData   = reg_ReadDataW;
+    assign W_PCPlus4    = reg_PCPlus4W;
     assign W_Rd         = reg_W_rd;
-    assign RegWriteW    = reg_RegWriteW;
-    assign ResultSrcW   = reg_ResultSrcW;
+    assign W_RegWrite   = reg_RegWriteW;
+    assign W_ResultSrc  = reg_ResultSrcW;
 endmodule

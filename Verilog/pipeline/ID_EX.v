@@ -9,14 +9,14 @@ module ID_EX #(
     input [4:0] D_Rs1, D_Rs2, D_Rd,
     input D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
     input [1:0] D_ResultSrc, D_ImmSrc,
-    input [2:0] D_ALUControl,
+    input [3:0] D_ALUControl,
 
     output [DATA_WIDTH - 1:0] E_RD1, E_RD2, E_ImmExt,
     output [ADDR_WIDTH - 1:0] E_PC, E_PCPlus4,
     output [4:0] E_Rs1, E_Rs2, E_Rd,
     output E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc,
     output [1:0] E_ResultSrc, E_ImmSrc,
-    output [2:0] E_ALUControl
+    output [3:0] E_ALUControl
 );
 
     reg [DATA_WIDTH - 1:0] reg_RD1, reg_RD2, reg_ImmExtE;
@@ -24,7 +24,7 @@ module ID_EX #(
     reg [ADDR_WIDTH - 1:0] reg_PCE, reg_PCPlus4E;
     reg reg_RegWriteE, reg_MemWriteE, reg_JumpE, reg_BranchE, reg_ALUSrcE;
     reg [1:0] reg_ResultSrcE, reg_ImmSrcE;
-    reg [2:0] reg_ALUControlE;
+    reg [3:0] reg_ALUControlE;
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -65,7 +65,7 @@ module ID_EX #(
                 reg_ALUSrcE     <= 1'b0;
                 reg_ResultSrcE  <= 2'b0;
                 reg_ImmSrcE     <= 2'b0;
-                reg_ALUControlE <= 3'b0;
+                reg_ALUControlE <= 4'b0;
             end 
             else begin
                 reg_RD1         <= RD1;
