@@ -4,7 +4,7 @@ module tb_RV32I;
     reg clk, rst_n;
     reg[31:0] r0, r1, r2, r3, r4, r5, r6, r7, r8;
 
-    datapath dut(
+    RV32I dut(
         .clk(clk),
         .rst_n(rst_n)  
     );

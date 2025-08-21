@@ -8,7 +8,7 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] RD1, RD2, F_RD, E_RD1, E_RD2;
     wire [WIDTH_DATA - 1:0] D_Instr, M_ReadData, W_ReadData;
     wire [WIDTH_DATA - 1:0] D_ImmExt, E_ImmExt, E_ALUResult, M_ALUResult, W_ALUResult, E_WriteData, M_WriteData;
-    wire [4:0] E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd;
+    wire [4:0] E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd, A1, A2, WD3;
 
     wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC ,PCNext, F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4, E_PCTarget;
     
@@ -17,7 +17,7 @@ module RV32I #(
     // ----------------------- Tin hieu dieu khien -----------------------
     wire D_RegWrite, E_RegWrite, M_RegWrite, W_RegWrite, D_MemWrite, E_MemWrite, M_MemWrite, D_Jump, E_Jump, D_Branch, E_Branch, D_ALUSrc, E_ALUSrc, E_Zero, E_PCSrc;
     wire [1:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc, D_ImmSrc, E_ImmSrc;
-    wire [2:0] D_ALUControl, E_ALUControl;
+    wire [3:0] D_ALUControl, E_ALUControl;
 
     // ----------------------- Tin hieu Hazard -----------------------
     wire F_Stall, D_Stall, D_Flush, E_Flush;
@@ -28,6 +28,10 @@ module RV32I #(
     assign E_PCTarget   = E_PC + E_ImmExt;
     assign E_PCSrc      = E_Jump | (E_Zero & E_Branch);
     assign PCNext       = (E_PCSrc == 1'b1) ? E_PCTarget : F_PCPlus4;
+
+    assign A1   = D_Instr[19:15];
+    assign A2   = D_Instr[24:20];
+    assign WD3  = D_Instr[11:7];
 
     always @(*) begin
         case(W_ResultSrc)
@@ -54,22 +58,24 @@ module RV32I #(
     end 
 
     HazardUnit HazardUnit_inst(
-        .M_RegWrite(M_RegWrite),
-        .W_RegWrite(W_RegWrite),
-        .D_Rs1(D_Instr[19:15]),
-        .D_Rs2(D_Instr[24:20]),
+        .F_Stall(F_Stall),
+        .D_Rs1(A1),
+        .D_Rs2(A2),
+        .D_Stall(D_Stall),
+        .D_Flush(D_Flush),
         .E_Rs1(E_Rs1),
         .E_Rs2(E_Rs2),
         .E_Rd(E_Rd),
         .E_PCSrc(E_PCSrc),
+        .E_ResultSrc_0(E_ResultSrc[0]),
+        .E_Flush(E_Flush),
+        .M_RegWrite(M_RegWrite),
         .M_Rd(M_Rd),
         .W_Rd(W_Rd),
+        .W_RegWrite(W_RegWrite),
         .ForwardAE(ForwardAE),
-        .ForwardBE(ForwardBE),
-        .F_Stall(F_Stall),
-        .D_Stall(D_Stall),
-        .D_Flush(D_Flush),
-        .E_Flush(E_Flush)
+        .ForwardBE(ForwardBE)
+        
     );
 
     ControlUnit ControlUnit_ins(
@@ -118,9 +124,9 @@ module RV32I #(
         .clk(clk),
         .rst_n(rst_n),
         .we(W_RegWrite),
-        .rs1(D_Instr[19:15]),
-        .rs2(D_Instr[24:20]),
-        .rd(D_Instr[11:7]),
+        .rs1(A1),
+        .rs2(A2),
+        .rd(W_Rd),
         .wd(W_Result),
         .rd1(RD1),
         .rd2(RD2)
@@ -138,9 +144,9 @@ module RV32I #(
         .E_Flush(E_Flush),
         .RD1(RD1),
         .RD2(RD2),
-        .D_Rs1(D_Instr[19:15]),
-        .D_Rs2(D_Instr[24:20]),
-        .D_Rd(D_Instr[11:7]),
+        .D_Rs1(A1),
+        .D_Rs2(A2),
+        .D_Rd(WD3),
         .D_ImmExt(D_ImmExt),
         .D_PC(D_PC),
         .D_PCPlus4(D_PCPlus4),
