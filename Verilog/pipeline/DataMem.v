@@ -12,7 +12,7 @@ module DataMem #(
     reg [Data_WIDTH - 1:0] mem [0:(1 << WIDTH_ADDR) - 1];
     
     integer i;
-    always @(negedge clk or negedge rst_n) begin
+    always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             for(i = 0 ; i < (1 << WIDTH_ADDR); i = i + 1'b1) begin
                 mem[i] <= 32'd0;
