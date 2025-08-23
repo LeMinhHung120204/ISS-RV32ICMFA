@@ -58,7 +58,7 @@ module MainDecoder(
                 ALUOp       = 2'b10;
                 Jump        = 1'b0;
             end 
-            7'b0010011: begin           // jal, ALUSrc = x, ALUOp = xx
+            7'b1101111: begin           // jal, ALUSrc = x, ALUOp = xx
                 RegWrite    = 1'b1;
                 ImmSrc      = 2'b11;
                 ALUSrc      = 1'b0;
