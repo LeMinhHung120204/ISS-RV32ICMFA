@@ -34,10 +34,10 @@ module HazardUnit #(
     // Stall when a load hazard
     wire lw_Stall;
     assign lw_Stall = E_ResultSrc_0 & ((D_Rs1 == E_Rd) | (D_Rs2 == E_Rd));
-    assign F_Stall  = lw_Stall | E_PCSrc;
+    assign F_Stall  = lw_Stall;
     assign D_Stall  = lw_Stall;
 
     // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
-    assign E_Flush  = lw_Stall;
+    assign E_Flush  = lw_Stall | E_PCSrc;
     assign D_Flush  = E_PCSrc;
 endmodule 
