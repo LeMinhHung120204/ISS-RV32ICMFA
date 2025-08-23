@@ -4,10 +4,10 @@ module DataMem #(
     parameter WIDTH_ADDR = 8,
     parameter Data_WIDTH = 32
 )(
-    input clk, rst_n, MemWrite,
-    input [WIDTH_ADDR - 1:0] addr,
-    input [Data_WIDTH - 1:0] data_in,
-    output [Data_WIDTH - 1:0] rd
+    input   clk, rst_n, MemWrite,
+    input   [WIDTH_ADDR - 1:0]  addr,
+    input   [Data_WIDTH - 1:0]  data_in,
+    output  [Data_WIDTH - 1:0]  rd
 );
     reg [Data_WIDTH - 1:0] mem [0:(1 << WIDTH_ADDR) - 1];
     

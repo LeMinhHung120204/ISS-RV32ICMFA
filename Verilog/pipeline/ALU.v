@@ -3,10 +3,10 @@
 module ALU #(
     parameter DATA_WIDTH = 32
 )(
-    input  [3:0]  ALUControl, 
-    input  [DATA_WIDTH - 1:0] in1, in2, 
-    output reg [DATA_WIDTH - 1:0] result,
-    output reg zero 
+    input       [3:0]               ALUControl, 
+    input       [DATA_WIDTH - 1:0]  in1, in2, 
+    output reg  [DATA_WIDTH - 1:0]  result,
+    output reg                      zero 
 );
     wire [31:0] in2_mod = (ALUControl[3]) ? ~in2 : in2; 
     wire [31:0] add_out = in1 + in2_mod + ALUControl[3];

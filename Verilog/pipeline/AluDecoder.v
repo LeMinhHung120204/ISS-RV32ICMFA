@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 
 module AluDecoder(
-    input [1:0] ALUOp,
-    input [2:0] funct3,
-    input funct7_5, op_5,
-    output reg [3:0] ALUControl
+    input       [1:0]   ALUOp,
+    input       [2:0]   funct3,
+    input               funct7_5, op_5,
+    output reg  [3:0]   ALUControl
 );
     always @(*) begin
         case(ALUOp)
