@@ -3,13 +3,13 @@ module IF_ID #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input clk, rst_n, EN, D_Flush,
-    input  [DATA_WIDTH - 1:0] F_RD, 
-    input  [ADDR_WIDTH - 1:0] F_PC,
-    input  [ADDR_WIDTH - 1:0] F_PCPlus4,
-    output [DATA_WIDTH - 1:0] D_Instr,
-    output [DATA_WIDTH - 1:0] D_PC,
-    output [ADDR_WIDTH - 1:0] D_PCPlus4
+    input   clk, rst_n, EN, D_Flush,
+    input   [DATA_WIDTH - 1:0] F_RD, 
+    input   [ADDR_WIDTH - 1:0] F_PC,
+    input   [ADDR_WIDTH - 1:0] F_PCPlus4,
+    output  [DATA_WIDTH - 1:0] D_Instr,
+    output  [DATA_WIDTH - 1:0] D_PC,
+    output  [ADDR_WIDTH - 1:0] D_PCPlus4
 );
     reg [ADDR_WIDTH - 1:0] reg_PCD;
     reg [ADDR_WIDTH - 1:0] reg_PCPlus4D;

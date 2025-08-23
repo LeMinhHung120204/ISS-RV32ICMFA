@@ -3,20 +3,19 @@ module ID_EX #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input clk, rst_n, E_Flush,
-    input [DATA_WIDTH - 1:0] RD1, RD2, D_ImmExt,
-    input [ADDR_WIDTH - 1:0] D_PC, D_PCPlus4,
-    input [4:0] D_Rs1, D_Rs2, D_Rd,
-    input D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
-    input [1:0] D_ResultSrc, D_ImmSrc,
-    input [3:0] D_ALUControl,
+    input clk, rst_n, E_Flush, D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
+    input [DATA_WIDTH - 1:0]    RD1, RD2, D_ImmExt,
+    input [ADDR_WIDTH - 1:0]    D_PC, D_PCPlus4,
+    input [4:0]                 D_Rs1, D_Rs2, D_Rd,
+    input [1:0]                 D_ResultSrc, D_ImmSrc,
+    input [3:0]                 D_ALUControl,
 
-    output [DATA_WIDTH - 1:0] E_RD1, E_RD2, E_ImmExt,
-    output [ADDR_WIDTH - 1:0] E_PC, E_PCPlus4,
-    output [4:0] E_Rs1, E_Rs2, E_Rd,
+    output [DATA_WIDTH - 1:0]   E_RD1, E_RD2, E_ImmExt,
+    output [ADDR_WIDTH - 1:0]   E_PC, E_PCPlus4,
+    output [4:0]                E_Rs1, E_Rs2, E_Rd,
     output E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc,
-    output [1:0] E_ResultSrc, E_ImmSrc,
-    output [3:0] E_ALUControl
+    output [1:0]                E_ResultSrc, E_ImmSrc,
+    output [3:0]                E_ALUControl
 );
 
     reg [DATA_WIDTH - 1:0] reg_RD1, reg_RD2, reg_ImmExtE;

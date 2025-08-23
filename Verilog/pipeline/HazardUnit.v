@@ -2,10 +2,10 @@
 module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
-    input M_RegWrite, W_RegWrite, E_ResultSrc_0, E_PCSrc, 
-    input [4:0] D_Rs1, D_Rs2, E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd,
-    output reg [1:0] ForwardAE, ForwardBE,       // forward cho SrcAE, SrcBE
-    output F_Stall, D_Stall, D_Flush, E_Flush
+    input               M_RegWrite, W_RegWrite, E_ResultSrc_0, E_PCSrc, 
+    input       [4:0]   D_Rs1, D_Rs2, E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd,
+    output reg  [1:0]   ForwardAE, ForwardBE,       // forward cho SrcAE, SrcBE
+    output              F_Stall, D_Stall, D_Flush, E_Flush
 
 );
     // Solve Data Hazard
