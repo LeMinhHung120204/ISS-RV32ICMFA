@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 
 module MainDecoder(
-    input [6:0] op,
-    output reg Branch, MemWrite, ALUSrc, RegWrite, Jump,
-    output reg [1:0] ImmSrc, ALUOp, ResultSrc
+    input       [6:0] op,
+    output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump,
+    output reg  [1:0] ImmSrc, ALUOp, ResultSrc
 );
 
     always @(*) begin

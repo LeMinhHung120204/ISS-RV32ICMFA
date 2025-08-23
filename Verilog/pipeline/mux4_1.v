@@ -1,9 +1,9 @@
 module mux4_1 #(
     parameter WIDTH = 32
 )(
-    input [WIDTH - 1:0] in0, in1, in2, in3,
-    input [1:0] sel,
-    output reg [WIDTH - 1:0] res
+    input       [WIDTH - 1:0] in0, in1, in2, in3,
+    input       [1:0] sel,
+    output reg  [WIDTH - 1:0] res
 );
     always @(*) begin
         case(sel)

@@ -3,9 +3,9 @@
 module PC #(
     parameter WIDTH = 32
 )(
-    input clk, rst_n, EN,
-    input [WIDTH - 1:0] PCNext,
-    output reg [WIDTH - 1:0] PC
+    input       clk, rst_n, EN,
+    input       [WIDTH - 1:0] PCNext,
+    output reg  [WIDTH - 1:0] PC
 );
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
