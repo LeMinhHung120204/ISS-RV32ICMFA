@@ -3,16 +3,15 @@ module EX_MEM #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input clk, rst_n,
-    input [DATA_WIDTH - 1:0] E_ALUResult, E_WriteData,
-    input [ADDR_WIDTH - 1:0] E_PCPlus4,
-    input [4:0] E_Rd,
-    input [1:0] E_ResultSrc,
-    input E_RegWrite, E_MemWrite,
-    output [DATA_WIDTH - 1:0] M_ALUResult, M_WriteData,
-    output [ADDR_WIDTH - 1:0] M_PCPlus4,
-    output [4:0] M_Rd,
-    output [1:0] M_ResultSrc,
+    input   clk, rst_n, E_RegWrite, E_MemWrite,
+    input   [DATA_WIDTH - 1:0]  E_ALUResult, E_WriteData,
+    input   [ADDR_WIDTH - 1:0]  E_PCPlus4,
+    input   [4:0]               E_Rd,
+    input   [1:0]               E_ResultSrc,
+    output  [DATA_WIDTH - 1:0]  M_ALUResult, M_WriteData,
+    output  [ADDR_WIDTH - 1:0]  M_PCPlus4,
+    output  [4:0]               M_Rd,
+    output  [1:0]               M_ResultSrc,
     output M_RegWrite, M_MemWrite
 );
     reg [DATA_WIDTH - 1:0] reg_ALUResultM, reg_WriteDataM;

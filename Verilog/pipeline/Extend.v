@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 
 module Extend(
-    input [1:0] ImmSrc,
-    input [31:0] Instr,
-    output reg [31:0] ImmExt
+    input       [1:0]   ImmSrc,
+    input       [31:0]  Instr,
+    output reg  [31:0]  ImmExt
 );
     always@(*) begin
         case(ImmSrc)

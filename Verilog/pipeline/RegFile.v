@@ -1,13 +1,13 @@
 `timescale 1ns/1ps
 
 module RegFile(
-    input clk,
-    input rst_n, 
-    input we,
-    input [4:0] rs1, rs2, // read address
-    input [4:0] rd,       // write address
-    input [31:0] wd,            // write data
-    output reg [31:0] rd1, rd2 // read data
+    input               clk,
+    input               rst_n, 
+    input               we,
+    input       [4:0]   rs1, rs2, // read address
+    input       [4:0]   rd,       // write address
+    input       [31:0]  wd,       // write data
+    output reg  [31:0]  rd1, rd2  // read data
 );
     reg [31:0] register [31:0];
     always @(*) begin
