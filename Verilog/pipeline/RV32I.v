@@ -7,12 +7,13 @@ module RV32I #(
 );
     wire [WIDTH_DATA - 1:0] RD1, RD2, F_RD, E_RD1, E_RD2;
     wire [WIDTH_DATA - 1:0] D_Instr, M_ReadData, W_ReadData;
-    wire [WIDTH_DATA - 1:0] D_ImmExt, E_ImmExt, E_ALUResult, M_ALUResult, W_ALUResult, E_WriteData, M_WriteData;
+    wire [WIDTH_DATA - 1:0] D_ImmExt, E_ImmExt, E_ALUResult, M_ALUResult, W_ALUResult, M_WriteData;
     wire [4:0] E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd, A1, A2, WD3;
 
     wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC ,PCNext, F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4, E_PCTarget;
     
-    reg  [WIDTH_DATA - 1:0] W_Result, E_SrcA, E_SrcB;
+    wire  [WIDTH_DATA - 1:0] W_Result, E_SrcA, E_SrcB;
+    wire  [WIDTH_DATA - 1:0] E_WriteData;
 
     // ----------------------- Tin hieu dieu khien -----------------------
     wire D_RegWrite, E_RegWrite, M_RegWrite, W_RegWrite, D_MemWrite, E_MemWrite, M_MemWrite, D_Jump, E_Jump, D_Branch, E_Branch, D_ALUSrc, E_ALUSrc, E_Zero, E_PCSrc;
@@ -23,7 +24,7 @@ module RV32I #(
     wire F_Stall, D_Stall, D_Flush, E_Flush;
     wire [1:0] ForwardAE, ForwardBE;
 
-    assign E_WriteData  = E_RD2;
+    // assign E_WriteData  = E_RD2;
     assign F_PCPlus4    = F_PC + 32'd4;
     assign E_PCTarget   = E_PC + E_ImmExt;
     assign E_PCSrc      = E_Jump | (E_Zero & E_Branch);
@@ -33,29 +34,67 @@ module RV32I #(
     assign A2   = D_Instr[24:20];
     assign WD3  = D_Instr[11:7];
 
-    always @(*) begin
-        case(W_ResultSrc)
-            2'b00: W_Result = W_ALUResult;
-            2'b01: W_Result = W_ReadData;
-            2'b10: W_Result = W_PCPlus4;
-            default: W_Result = 32'd0;
-        endcase
+    // always @(*) begin
+    //     case(W_ResultSrc)
+    //         2'b00: W_Result = W_ALUResult;
+    //         2'b01: W_Result = W_ReadData;
+    //         2'b10: W_Result = W_PCPlus4;
+    //         default: W_Result = 32'd0;
+    //     endcase
 
-        case(ForwardAE)
-            2'b00: E_SrcA = E_RD1;
-            2'b01: E_SrcA = W_Result;
-            2'b10: E_SrcA = M_ALUResult;
-            default: E_SrcA = 32'd0;
-        endcase
+    //     case(ForwardAE)
+    //         2'b00: E_SrcA = E_RD1;
+    //         2'b01: E_SrcA = W_Result;
+    //         2'b10: E_SrcA = M_ALUResult;
+    //         default: E_SrcA = 32'd0;
+    //     endcase
 
-        casez({ForwardBE, E_ALUSrc})
-            3'b000: E_SrcB = E_RD2;
-            3'b010: E_SrcB = W_Result;
-            3'b100: E_SrcB = M_ALUResult;
-            3'b??1: E_SrcB = E_ImmExt;
-            default: E_SrcB = 32'd0;
-        endcase
-    end 
+    //     case(ForwardBE)
+    //         2'b00: E_WriteData = E_RD2;
+    //         2'b01: E_WriteData = W_Result;
+    //         2'b10: E_WriteData = M_ALUResult;
+    //         default: E_WriteData = 32'd0;
+    //     endcase
+        
+    //     case(E_ALUSrc)
+    //         1'b0: E_SrcB = E_WriteData;
+    //         1'b1: E_SrcB = E_ImmExt;
+    //     endcase
+    // end 
+
+    mux4_1 mux_W_Result (
+        .in0(W_ALUResult),
+        .in1(W_ReadData),
+        .in2(W_PCPlus4),
+        .in3(32'd0),
+        .sel(W_ResultSrc),
+        .res(W_Result)
+    );
+
+    mux4_1 mux_ForwardAE (
+        .in0(E_RD1),
+        .in1(W_Result),
+        .in2(M_ALUResult),
+        .in3(32'd0),
+        .sel(ForwardAE),
+        .res(E_SrcA)
+    );
+
+    mux4_1 mux_ForwardBE (
+        .in0(E_RD2),
+        .in1(W_Result),
+        .in2(M_ALUResult),
+        .in3(32'd0),
+        .sel(ForwardBE),
+        .res(E_WriteData)
+    );
+
+    mux2_1 mux_E_ALUSrc (
+        .in0(E_WriteData),
+        .in1(E_ImmExt),
+        .sel(E_ALUSrc),
+        .res(E_SrcB)
+    );
 
     HazardUnit HazardUnit_inst(
         .F_Stall(F_Stall),
@@ -102,7 +141,6 @@ module RV32I #(
     );
 
     Ins_Mem instruction_memory(
-        .clk(clk),
         .addr(F_PC),
         .instruction(F_RD)
     );
@@ -209,7 +247,7 @@ module RV32I #(
         .clk(clk),
         .rst_n(rst_n),
         .MemWrite(M_MemWrite),
-        .addr(M_ALUResult),
+        .addr(M_ALUResult[7:0]),
         .data_in(M_WriteData),
         .rd(M_ReadData)
     );
