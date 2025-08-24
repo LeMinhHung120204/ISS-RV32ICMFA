@@ -7,20 +7,21 @@ module RV32I #(
 );
     wire [WIDTH_DATA - 1:0] RD1, RD2, F_RD, E_RD1, E_RD2;
     wire [WIDTH_DATA - 1:0] D_Instr, M_ReadData, W_ReadData;
-    wire [WIDTH_DATA - 1:0] D_ImmExt, E_ImmExt, E_ALUResult, M_ALUResult, W_ALUResult, M_WriteData;
+    wire [WIDTH_DATA - 1:0] D_ImmExt, E_ImmExt, M_ImmExt, W_ImmExt, E_ALUResult, M_ALUResult, W_ALUResult, M_WriteData;
     wire [4:0] E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd, A1, A2, WD3;
 
-    wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC ,PCNext, F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4, E_PCTarget;
+    wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC ,PCNext, F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4, E_PCTarget, M_PCTarget, W_PCTarget;
     
-    wire  [WIDTH_DATA - 1:0] W_Result, E_SrcA, E_SrcB;
-    wire  [WIDTH_DATA - 1:0] E_WriteData;
+    wire [WIDTH_DATA - 1:0] W_Result, E_SrcA, E_SrcB;
+    wire [WIDTH_DATA - 1:0] E_WriteData;
 
     // ----------------------- Tin hieu dieu khien -----------------------
     wire D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc;
     wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_funct3;
     wire M_RegWrite, M_MemWrite;
     wire W_RegWrite;
-    wire [1:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc, D_ImmSrc, E_ImmSrc;
+    wire [2:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc;
+    wire [2:0] D_ImmSrc;
     wire [3:0] D_ALUControl, E_ALUControl;
 
     // ----------------------- Tin hieu Hazard -----------------------
@@ -37,39 +38,23 @@ module RV32I #(
     assign A2   = D_Instr[24:20];
     assign WD3  = D_Instr[11:7];
 
-    // always @(*) begin
-    //     case(W_ResultSrc)
-    //         2'b00: W_Result = W_ALUResult;
-    //         2'b01: W_Result = W_ReadData;
-    //         2'b10: W_Result = W_PCPlus4;
-    //         default: W_Result = 32'd0;
-    //     endcase
-
-    //     case(ForwardAE)
-    //         2'b00: E_SrcA = E_RD1;
-    //         2'b01: E_SrcA = W_Result;
-    //         2'b10: E_SrcA = M_ALUResult;
-    //         default: E_SrcA = 32'd0;
-    //     endcase
-
-    //     case(ForwardBE)
-    //         2'b00: E_WriteData = E_RD2;
-    //         2'b01: E_WriteData = W_Result;
-    //         2'b10: E_WriteData = M_ALUResult;
-    //         default: E_WriteData = 32'd0;
-    //     endcase
-        
-    //     case(E_ALUSrc)
-    //         1'b0: E_SrcB = E_WriteData;
-    //         1'b1: E_SrcB = E_ImmExt;
-    //     endcase
-    // end 
-
-    mux4_1 mux_W_Result (
+    // mux4_1 mux_W_Result (
+    //     .in0(W_ALUResult),
+    //     .in1(W_ReadData),
+    //     .in2(W_PCPlus4),
+    //     .in3(32'd0),
+    //     .sel(W_ResultSrc),
+    //     .res(W_Result)
+    // );
+    mux8_1 mux_W_Result (
         .in0(W_ALUResult),
         .in1(W_ReadData),
         .in2(W_PCPlus4),
-        .in3(32'd0),
+        .in3(W_ImmExt),
+        .in4(W_PCTarget),
+        .in5(32'd0),
+        .in6(32'd0),
+        .in7(32'd0),
         .sel(W_ResultSrc),
         .res(W_Result)
     );
@@ -109,7 +94,7 @@ module RV32I #(
         .E_Rs2(E_Rs2),
         .E_Rd(E_Rd),
         .E_PCSrc(E_PCSrc),
-        .E_ResultSrc_0(E_ResultSrc[0]),
+        .E_ResultSrc(E_ResultSrc),
         .E_Flush(E_Flush),
         .M_RegWrite(M_RegWrite),
         .M_Rd(M_Rd),
@@ -205,7 +190,7 @@ module RV32I #(
         .D_Branch(D_Branch),
         .D_ALUSrc(D_ALUSrc),
         .D_ResultSrc(D_ResultSrc),
-        .D_ImmSrc(D_ImmSrc),
+        // .D_ImmSrc(D_ImmSrc),
         .D_funct3(D_Instr[14:12]),
         .D_ALUControl(D_ALUControl),
 
@@ -223,7 +208,7 @@ module RV32I #(
         .E_Branch(E_Branch),
         .E_ALUSrc(E_ALUSrc),
         .E_ResultSrc(E_ResultSrc),
-        .E_ImmSrc(E_ImmSrc),
+        // .E_ImmSrc(E_ImmSrc),
         .E_funct3(E_funct3),
         .E_ALUControl(E_ALUControl)
     );
@@ -242,7 +227,9 @@ module RV32I #(
         .rst_n(rst_n),
         .E_ALUResult(E_ALUResult),
         .E_WriteData(E_WriteData),
+        .E_ImmExt(E_ImmExt),
         .E_PCPlus4(E_PCPlus4),
+        .E_PCTarget(E_PCTarget),
         .E_Rd(E_Rd),
         .E_RegWrite(E_RegWrite),
         .E_MemWrite(E_MemWrite),
@@ -250,7 +237,9 @@ module RV32I #(
 
         .M_ALUResult(M_ALUResult),
         .M_WriteData(M_WriteData),
+        .M_ImmExt(M_ImmExt),
         .M_PCPlus4(M_PCPlus4),
+        .M_PCTarget(M_PCTarget),
         .M_Rd(M_Rd),
         .M_RegWrite(M_RegWrite),
         .M_MemWrite(M_MemWrite),
@@ -271,6 +260,8 @@ module RV32I #(
         .rst_n(rst_n),
         .M_ALUResult(M_ALUResult),
         .M_ReadData(M_ReadData),
+        .M_ImmExt(M_ImmExt),
+        .M_PCTarget(M_PCTarget),
         .M_PCPlus4(M_PCPlus4),
         .M_Rd(M_Rd),
         .M_RegWrite(M_RegWrite),
@@ -278,6 +269,8 @@ module RV32I #(
 
         .W_ALUResult(W_ALUResult),
         .W_ReadData(W_ReadData),
+        .W_ImmExt(W_ImmExt),
+        .W_PCTarget(W_PCTarget),
         .W_PCPlus4(W_PCPlus4),
         .W_Rd(W_Rd),
         .W_RegWrite(W_RegWrite),
