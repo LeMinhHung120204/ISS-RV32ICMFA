@@ -6,24 +6,27 @@ module ID_EX #(
     input clk, rst_n, E_Flush, D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
     input [DATA_WIDTH - 1:0]    RD1, RD2, D_ImmExt,
     input [ADDR_WIDTH - 1:0]    D_PC, D_PCPlus4,
-    input [4:0]                 D_Rs1, D_Rs2, D_Rd,
     input [1:0]                 D_ResultSrc, D_ImmSrc,
+    input [2:0]                 D_funct3,
     input [3:0]                 D_ALUControl,
+    input [4:0]                 D_Rs1, D_Rs2, D_Rd,
 
+    output E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc,
     output [DATA_WIDTH - 1:0]   E_RD1, E_RD2, E_ImmExt,
     output [ADDR_WIDTH - 1:0]   E_PC, E_PCPlus4,
-    output [4:0]                E_Rs1, E_Rs2, E_Rd,
-    output E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc,
     output [1:0]                E_ResultSrc, E_ImmSrc,
-    output [3:0]                E_ALUControl
+    output [2:0]                E_funct3,
+    output [3:0]                E_ALUControl,
+    output [4:0]                E_Rs1, E_Rs2, E_Rd
 );
 
-    reg [DATA_WIDTH - 1:0] reg_RD1, reg_RD2, reg_ImmExtE;
-    reg [4:0] reg_RS1, reg_RS2, reg_E_rd;
-    reg [ADDR_WIDTH - 1:0] reg_PCE, reg_PCPlus4E;
     reg reg_RegWriteE, reg_MemWriteE, reg_JumpE, reg_BranchE, reg_ALUSrcE;
+    reg [DATA_WIDTH - 1:0] reg_RD1, reg_RD2, reg_ImmExtE;
+    reg [ADDR_WIDTH - 1:0] reg_PCE, reg_PCPlus4E;
     reg [1:0] reg_ResultSrcE, reg_ImmSrcE;
     reg [3:0] reg_ALUControlE;
+    reg [2:0] reg_funct3E;
+    reg [4:0] reg_RS1, reg_RS2, reg_E_rd;
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -43,7 +46,8 @@ module ID_EX #(
             reg_ALUSrcE     <= 1'b0;
             reg_ResultSrcE  <= 2'b0;
             reg_ImmSrcE     <= 2'b0;
-            reg_ALUControlE <= 3'b0;
+            reg_funct3E     <= 3'b0;
+            reg_ALUControlE <= 4'b0;
 
         end 
         else begin
@@ -64,6 +68,7 @@ module ID_EX #(
                 reg_ALUSrcE     <= 1'b0;
                 reg_ResultSrcE  <= 2'b0;
                 reg_ImmSrcE     <= 2'b0;
+                reg_funct3E     <= 3'b0;
                 reg_ALUControlE <= 4'b0;
             end 
             else begin
@@ -83,6 +88,7 @@ module ID_EX #(
                 reg_ALUSrcE     <= D_ALUSrc;
                 reg_ResultSrcE  <= D_ResultSrc;
                 reg_ImmSrcE     <= D_ImmSrc;
+                reg_funct3E     <= D_funct3;
                 reg_ALUControlE <= D_ALUControl;
             end 
             
@@ -104,6 +110,7 @@ module ID_EX #(
     assign E_ALUSrc     = reg_ALUSrcE;
     assign E_ResultSrc  = reg_ResultSrcE;
     assign E_ImmSrc     = reg_ImmSrcE;
+    assign E_funct3     = reg_funct3E;
     assign E_ALUControl = reg_ALUControlE;
 
 endmodule   
