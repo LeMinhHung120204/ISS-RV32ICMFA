@@ -3,77 +3,98 @@
 module MainDecoder(
     input       [6:0] op,
     output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump,
-    output reg  [1:0] ImmSrc, ALUOp, ResultSrc
+    output reg  [1:0] ALUOp,
+    output reg  [2:0] ImmSrc, ResultSrc
 );
 
     always @(*) begin
         case(op)
             2'b0000011: begin           // lw
                 RegWrite    = 1'b1;
-                ImmSrc      = 2'b00;
+                ImmSrc      = 3'b000;
                 ALUSrc      = 1'b1;
                 MemWrite    = 1'b0;
-                ResultSrc   = 2'b01;
+                ResultSrc   = 3'b001;
                 Branch      = 1'b0;
                 ALUOp       = 2'b00;
                 Jump        = 1'b0;
             end 
             7'b0100011: begin           // sw, ResultSrc = xx
                 RegWrite    = 1'b0;
-                ImmSrc      = 2'b01;
+                ImmSrc      = 3'b001;
                 ALUSrc      = 1'b1;
                 MemWrite    = 1'b1;
-                ResultSrc   = 2'b00;
+                ResultSrc   = 3'b000;
                 Branch      = 1'b0;
                 ALUOp       = 2'b00;
                 Jump        = 1'b0;
             end 
             7'b0110011: begin           // R-type, ImmSrc = xx
                 RegWrite    = 1'b1;
-                ImmSrc      = 2'b00;
+                ImmSrc      = 3'b000;
                 ALUSrc      = 1'b0;
                 MemWrite    = 1'b0;
-                ResultSrc   = 2'b00;
+                ResultSrc   = 3'b000;
                 Branch      = 1'b0;
                 ALUOp       = 2'b10;
                 Jump        = 1'b0;
             end 
-            7'b1100011: begin           // beq, ResultSrc = xx
+            7'b1100011: begin           // branch, ResultSrc = xx
                 RegWrite    = 1'b0;
-                ImmSrc      = 2'b10;
+                ImmSrc      = 3'b010;
                 ALUSrc      = 1'b0;
                 MemWrite    = 1'b0;
-                ResultSrc   = 2'b00;
+                ResultSrc   = 3'b000;
                 Branch      = 1'b1;
                 ALUOp       = 2'b01;
                 Jump        = 1'b0;
             end 
             7'b0010011: begin           // I-type ALU, ALUSrc = x   
                 RegWrite    = 1'b1;
-                ImmSrc      = 2'b00;
+                ImmSrc      = 3'b000;
                 ALUSrc      = 1'b1;
                 MemWrite    = 1'b0;
-                ResultSrc   = 2'b00;
+                ResultSrc   = 3'b000;
                 Branch      = 1'b0;
                 ALUOp       = 2'b10;
                 Jump        = 1'b0;
             end 
             7'b1101111: begin           // jal, ALUSrc = x, ALUOp = xx
                 RegWrite    = 1'b1;
-                ImmSrc      = 2'b11;
+                ImmSrc      = 3'b011;
                 ALUSrc      = 1'b0;
                 MemWrite    = 1'b0;
-                ResultSrc   = 2'b10;
+                ResultSrc   = 3'b010;
                 Branch      = 1'b0;
                 ALUOp       = 2'b00;
                 Jump        = 1'b1;
             end 
-            default: begin
-                RegWrite    = 1'b0;
-                ImmSrc      = 2'b00;
+            7'b0110111: begin           // LoadUpperImm lui
+                RegWrite    = 1'b1;
+                ImmSrc      = 3'd4;
                 ALUSrc      = 1'b0;
                 MemWrite    = 1'b0;
-                ResultSrc   = 2'b00;
+                ResultSrc   = 3'b011;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+            end 
+            7'b0010111: begin           // AddUpperImmtoPC auipc
+                RegWrite    = 1'b1;
+                ImmSrc      = 3'd4;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b100;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+            end
+            default: begin
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'b000;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b000;
                 Branch      = 1'b0;
                 ALUOp       = 2'b00;
                 Jump        = 1'b0;

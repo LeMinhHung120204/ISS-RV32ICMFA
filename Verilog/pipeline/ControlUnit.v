@@ -6,7 +6,7 @@ module ControlUnit(
     input           funct7_5, Zero,
     output          MemWrite, ALUSrc, RegWrite, Jump, Branch,
     output  [3:0]   ALUControl,
-    output  [1:0]   ImmSrc, ResultSrc
+    output  [2:0]   ImmSrc, ResultSrc
 );
     wire [1:0] ALUOp;
     MainDecoder maindecoder_inst(
