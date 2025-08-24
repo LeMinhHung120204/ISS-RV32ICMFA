@@ -20,6 +20,7 @@ module RV32I #(
     wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_funct3;
     wire M_RegWrite, M_MemWrite;
     wire W_RegWrite;
+    wire PCTargetSrc;
     wire [2:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc;
     wire [2:0] D_ImmSrc;
     wire [3:0] D_ALUControl, E_ALUControl;
@@ -30,8 +31,8 @@ module RV32I #(
 
     // assign E_WriteData  = E_RD2;
     assign F_PCPlus4    = F_PC + 32'd4;
-    assign E_PCTarget   = E_PC + E_ImmExt;
-    assign PCNext       = (E_PCSrc == 1'b1) ? E_PCTarget : F_PCPlus4;
+    assign E_PCTarget   = (PCTargetSrc == 1'b1) ? E_ALUResult   : E_PC + E_ImmExt;
+    assign PCNext       = (E_PCSrc == 1'b1)     ? E_PCTarget    : F_PCPlus4;
     // assign E_PCSrc      = E_Jump | (E_Zero & E_Branch);
     
     assign A1   = D_Instr[19:15];
@@ -125,7 +126,8 @@ module RV32I #(
         .ImmSrc(D_ImmSrc),
         .RegWrite(D_RegWrite),
         .Branch(D_Branch),
-        .Jump(D_Jump)
+        .Jump(D_Jump),
+        .PCTargetSrc(PCTargetSrc)
     );
 
     PC PC_inst(
