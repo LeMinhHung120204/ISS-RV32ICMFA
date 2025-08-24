@@ -23,14 +23,30 @@ module AluDecoder(
                             default:                ALUControl = 4'b0000;
                         endcase
                     end 
+                    3'b001: begin
+                        ALUControl = 4'b0001;   // (ShiftLeftLogical) sll
+                    end 
                     3'b010: begin
-                        ALUControl = 4'b1001;    // (set less than) slt
+                        ALUControl = 4'b1001;   // (set less than) slt
+                    end 
+                    3'b011: begin
+                        ALUControl = 4'b1010;   // SetLessThan(U) sltu
+                    end 
+                    3'b100: begin
+                        ALUControl = 4'b0110;   // xor
+                    end 
+                    3'b101: begin
+                        case({op_5, funct7_5})
+                            2'b10, 2'b00:      ALUControl = 4'b0010;    // ShiftRightLogical srl/srli
+                            2'b11, 2'b01:      ALUControl = 4'b0011;    // ShiftRightArith sra/srai
+                            default:    ALUControl = 4'b0000;
+                        endcase
                     end 
                     3'b110: begin
-                        ALUControl = 4'b0101;    // or 
+                        ALUControl = 4'b0101;   // or 
                     end 
                     3'b111: begin
-                        ALUControl = 4'b0100;    // and 
+                        ALUControl = 4'b0100;   // and 
                     end 
                     default: begin
                         ALUControl = 4'b0000;
