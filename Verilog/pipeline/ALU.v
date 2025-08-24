@@ -6,12 +6,13 @@ module ALU #(
     input       [3:0]               ALUControl, 
     input       [DATA_WIDTH - 1:0]  in1, in2, 
     output reg  [DATA_WIDTH - 1:0]  result,
-    output reg                      zero 
+    output reg                      zero,
+    output                          signed_less
 );
     wire [31:0] in2_mod = (ALUControl[3]) ? ~in2 : in2; 
     wire [31:0] add_out = in1 + in2_mod + ALUControl[3];
 
-    wire signed_less = (in1[31] == in2[31]) ? add_out[31] : 
+    assign signed_less = (in1[31] == in2[31]) ? add_out[31] : 
                         (ALUControl[1] ? in2[31] : in1[31]);  // ALUOp[1] = 1-SLTU | 0-SLT
 
     wire [4:0] shamt = in2[4:0];
