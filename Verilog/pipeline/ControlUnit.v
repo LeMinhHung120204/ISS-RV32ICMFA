@@ -4,7 +4,7 @@ module ControlUnit(
     input   [6:0]   op,
     input   [14:12] funct3,
     input           funct7_5, Zero,
-    output          MemWrite, ALUSrc, RegWrite, Jump, Branch,
+    output          MemWrite, ALUSrc, RegWrite, Jump, Branch, PCTargetSrc,
     output  [3:0]   ALUControl,
     output  [2:0]   ImmSrc, ResultSrc
 );
@@ -18,7 +18,8 @@ module ControlUnit(
         .RegWrite(RegWrite),
         .ImmSrc(ImmSrc),
         .ALUOp(ALUOp),
-        .Jump(Jump)
+        .Jump(Jump),
+        .PCTargetSrc(PCTargetSrc)
     );
 
     AluDecoder aludecoder_inst(
