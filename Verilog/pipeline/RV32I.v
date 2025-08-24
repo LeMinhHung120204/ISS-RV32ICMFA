@@ -16,7 +16,10 @@ module RV32I #(
     wire  [WIDTH_DATA - 1:0] E_WriteData;
 
     // ----------------------- Tin hieu dieu khien -----------------------
-    wire D_RegWrite, E_RegWrite, M_RegWrite, W_RegWrite, D_MemWrite, E_MemWrite, M_MemWrite, D_Jump, E_Jump, D_Branch, E_Branch, D_ALUSrc, E_ALUSrc, E_Zero, E_PCSrc;
+    wire D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc;
+    wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_funct3;
+    wire M_RegWrite, M_MemWrite;
+    wire W_RegWrite;
     wire [1:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc, D_ImmSrc, E_ImmSrc;
     wire [3:0] D_ALUControl, E_ALUControl;
 
@@ -27,9 +30,9 @@ module RV32I #(
     // assign E_WriteData  = E_RD2;
     assign F_PCPlus4    = F_PC + 32'd4;
     assign E_PCTarget   = E_PC + E_ImmExt;
-    assign E_PCSrc      = E_Jump | (E_Zero & E_Branch);
     assign PCNext       = (E_PCSrc == 1'b1) ? E_PCTarget : F_PCPlus4;
-
+    // assign E_PCSrc      = E_Jump | (E_Zero & E_Branch);
+    
     assign A1   = D_Instr[19:15];
     assign A2   = D_Instr[24:20];
     assign WD3  = D_Instr[11:7];
@@ -116,6 +119,14 @@ module RV32I #(
         .ForwardBE(ForwardBE)
         
     );
+    BranchDecoder BranchDecoder_inst(
+        .E_Jump(E_Jump),
+        .E_Zero(E_Zero),
+        .E_Branch(E_Branch),
+        .E_signed_less(E_signed_less),
+        .funct3(E_funct3),
+        .E_PCSrc(E_PCSrc)
+    );
 
     ControlUnit ControlUnit_ins(
         .op(D_Instr[6:0]),
@@ -195,6 +206,7 @@ module RV32I #(
         .D_ALUSrc(D_ALUSrc),
         .D_ResultSrc(D_ResultSrc),
         .D_ImmSrc(D_ImmSrc),
+        .D_funct3(D_Instr[14:12]),
         .D_ALUControl(D_ALUControl),
 
         .E_RD1(E_RD1),
@@ -212,6 +224,7 @@ module RV32I #(
         .E_ALUSrc(E_ALUSrc),
         .E_ResultSrc(E_ResultSrc),
         .E_ImmSrc(E_ImmSrc),
+        .E_funct3(E_funct3),
         .E_ALUControl(E_ALUControl)
     );
 
@@ -220,7 +233,8 @@ module RV32I #(
         .in1(E_SrcA),
         .in2(E_SrcB),
         .result(E_ALUResult),
-        .zero(E_Zero)
+        .zero(E_Zero),
+        .signed_less(E_signed_less)
     );
 
     EX_MEM EX_MEM_register(
