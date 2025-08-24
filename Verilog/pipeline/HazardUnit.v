@@ -2,7 +2,8 @@
 module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
-    input               M_RegWrite, W_RegWrite, E_ResultSrc_0, E_PCSrc, 
+    input               M_RegWrite, W_RegWrite, E_PCSrc,
+    input       [2:0]   E_ResultSrc, 
     input       [4:0]   D_Rs1, D_Rs2, E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd,
     output reg  [1:0]   ForwardAE, ForwardBE,       // forward cho SrcAE, SrcBE
     output              F_Stall, D_Stall, D_Flush, E_Flush
@@ -33,7 +34,7 @@ module HazardUnit #(
 
     // Stall when a load hazard
     wire lw_Stall;
-    assign lw_Stall = E_ResultSrc_0 & ((D_Rs1 == E_Rd) | (D_Rs2 == E_Rd));
+    assign lw_Stall = (E_ResultSrc == 3'd1) & ((D_Rs1 == E_Rd) | (D_Rs2 == E_Rd));
     assign F_Stall  = lw_Stall;
     assign D_Stall  = lw_Stall;
 
