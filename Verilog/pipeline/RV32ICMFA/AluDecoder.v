@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module AluDecoder(
     input       [1:0]   ALUOp,
     input       [2:0]   funct3,

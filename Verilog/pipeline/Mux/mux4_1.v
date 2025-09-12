@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module mux4_1 #(
     parameter WIDTH = 32
 )(
