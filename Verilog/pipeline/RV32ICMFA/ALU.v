@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module ALU #(
     parameter DATA_WIDTH = 32
 )(

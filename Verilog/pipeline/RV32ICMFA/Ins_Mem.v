@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module Ins_Mem #(
     parameter integer WIDTH_ADDR = 32,
     parameter integer WIDTH_DATA = 32

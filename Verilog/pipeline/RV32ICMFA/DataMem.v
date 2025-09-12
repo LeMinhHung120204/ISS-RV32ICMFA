@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module DataMem #(
     parameter WIDTH_ADDR = 8,
     parameter Data_WIDTH = 32
