@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module MainDecoder(
     input       [6:0] op,
     output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump, PCTargetSrc,

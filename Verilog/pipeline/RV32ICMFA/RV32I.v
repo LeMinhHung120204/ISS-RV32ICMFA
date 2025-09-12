@@ -17,12 +17,12 @@ module RV32I #(
 
     // ----------------------- Tin hieu dieu khien -----------------------
     wire D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc;
-    wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_funct3;
+    wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc;
     wire M_RegWrite, M_MemWrite;
     wire W_RegWrite;
     wire PCTargetSrc;
     wire [2:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc;
-    wire [2:0] D_ImmSrc;
+    wire [2:0] D_ImmSrc, E_funct3;
     wire [3:0] D_ALUControl, E_ALUControl;
 
     // ----------------------- Tin hieu Hazard -----------------------
