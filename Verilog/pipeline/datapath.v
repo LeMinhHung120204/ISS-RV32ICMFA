@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module datapath #(
     parameter WIDTH_DATA = 32,
     parameter WIDTH_ADDR = 32
