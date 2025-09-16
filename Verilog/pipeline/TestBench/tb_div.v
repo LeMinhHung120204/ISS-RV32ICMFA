@@ -71,10 +71,10 @@ module tb_srt_4_div;
         dividend = 32'd11;
         divisor = 32'd3;
 
-        // #10;
-        // rst_n = 1'b1;
-        // dividend = 32'd10;
-        // divisor = 32'd5;
+         #10;
+         rst_n = 1'b1;
+         dividend = 32'd10;
+         divisor = 32'd5;
         
       
         #200;
