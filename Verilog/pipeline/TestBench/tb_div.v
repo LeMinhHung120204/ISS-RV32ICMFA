@@ -13,6 +13,7 @@ module tb_srt_4_div;
     reg  [DW-1:0]         dividend;
     reg  [DW-1:0]         divisor;
     reg  [9:0]            count_clock;
+    reg                     is_unsign;
     
     wire [DW-1:0]         quotient;
     wire [DW-1:0]         reminder;
@@ -51,9 +52,10 @@ module tb_srt_4_div;
 //    );
 
 
-    non_restore dut (
+    non_restore_v2 dut (
         .clk(clk),
         .rst_n(rst_n),
+        .is_unsign(is_unsign),
         .dividend(dividend),
         .divisor(divisor),
         .quotient(quotient),
@@ -64,19 +66,25 @@ module tb_srt_4_div;
         clk = 1'b0;
         rst_n = 1'b0;
         start = 1'b0;
+        is_unsign = 0;
         
         #10;
+        is_unsign = 0;
         rst_n = 1'b1;
         start = 1'b1;
-        dividend = 32'd11;
+        dividend = -32'd11;
         divisor = 32'd3;
 
          #10;
          rst_n = 1'b1;
          dividend = 32'd10;
          divisor = 32'd5;
+         
+         #10;
+         rst_n = 1'b1;
+         dividend = 32'd128;
+         divisor = 32'd13;
         
-      
         #200;
         $finish;
     end
