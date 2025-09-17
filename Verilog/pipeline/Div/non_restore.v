@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module non_restore #(
     parameter DATA_WIDTH = 32
 )(
