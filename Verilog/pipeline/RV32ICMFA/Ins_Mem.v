@@ -7,7 +7,7 @@ module Ins_Mem #(
     output [WIDTH_DATA - 1:0] instruction
 );
     reg [31:0] rom [0:4095];
-    reg [31:0] out;
+//    reg [31:0] out;
     
     initial begin: init_and_load
         $readmemh("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt", rom);

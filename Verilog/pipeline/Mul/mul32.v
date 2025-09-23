@@ -5,7 +5,7 @@ module mul32 #(
     input   clk, rst_n,
     input   is_unsigned,         
     input   [DATA_WIDH - 1:0] a, b,
-    output  [(DATA_WIDH * 2) - 1:0] R
+    output  [DATA_WIDH - 1:0] R_high, R_low
 );
     localparam num_reg = 12;
     localparam OUTW    = DATA_WIDH*2;
@@ -46,7 +46,8 @@ module mul32 #(
         end 
     end 
 
-    assign R = tmp[11];
+    assign R_high   = tmp[11][63:32];
+    assign R_low    = tmp[11][31:0]; 
 
     // 11 group 4-bit cho radix-8 Booth:
     wire [3:0] sel0  = {b[2:0],  1'b0};
