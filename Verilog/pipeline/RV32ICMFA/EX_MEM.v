@@ -7,18 +7,18 @@ module EX_MEM #(
     input   [DATA_WIDTH - 1:0]  E_ALUResult, E_WriteData, E_ImmExt,
     input   [ADDR_WIDTH - 1:0]  E_PCPlus4, E_PCTarget,
     input   [4:0]               E_Rd,
-    input   [2:0]               E_ResultSrc,
+    input   [2:0]               E_ResultSrc, E_StoreSrc,
 
     output  [DATA_WIDTH - 1:0]  M_ALUResult, M_WriteData, M_ImmExt,
     output  [ADDR_WIDTH - 1:0]  M_PCPlus4, M_PCTarget,
     output  [4:0]               M_Rd,
-    output  [2:0]               M_ResultSrc,
+    output  [2:0]               M_ResultSrc, M_StoreSrc,
     output M_RegWrite, M_MemWrite
 );
     reg [DATA_WIDTH - 1:0] reg_ALUResultM, reg_WriteDataM, reg_ImmExtM;
     reg [ADDR_WIDTH - 1:0] reg_PCPlus4M, reg_PCTargetM;
     reg [4:0] reg_M_rd;
-    reg [2:0] reg_ResultSrcM;
+    reg [2:0] reg_ResultSrcM, reg_StoreSrcM;
     reg reg_RegWriteM, reg_MemWriteM;
     
 
@@ -33,6 +33,7 @@ module EX_MEM #(
             reg_RegWriteM   <= 1'b0;
             reg_MemWriteM   <= 1'b0;
             reg_ResultSrcM  <= 3'b0;
+            reg_StoreSrcM   <= 3'b0;
         end 
         else begin
             reg_ALUResultM  <= E_ALUResult;
@@ -44,6 +45,7 @@ module EX_MEM #(
             reg_RegWriteM   <= E_RegWrite;
             reg_MemWriteM   <= E_MemWrite;
             reg_ResultSrcM  <= E_ResultSrc;
+            reg_StoreSrcM   <= E_StoreSrc;
         end 
     end 
 
@@ -56,4 +58,5 @@ module EX_MEM #(
     assign M_RegWrite   = reg_RegWriteM;
     assign M_MemWrite   = reg_MemWriteM;
     assign M_ResultSrc  = reg_ResultSrcM;
+    assign M_StoreSrc   = reg_StoreSrcM;
 endmodule
