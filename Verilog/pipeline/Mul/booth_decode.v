@@ -4,12 +4,13 @@ module booth_decode #(
 )(
     input   [DATA_WIDH - 1:0] A,
     input   [3:0]             sel,
+    input   is_signed,
     output  [DATA_WIDH + 1:0] res
 );
     wire [DATA_WIDH + 1:0] pp;
 
     wire [DATA_WIDH + 1:0] A_ex;
-    assign A_ex = {{2{A_ex[31]}}, A};
+    assign A_ex = (is_signed) ? {{2{A_ex[31]}}, A} : {2'b0, A};
 
     mux16_1 #(.DATA_WIDTH(34)) mux16_1_inst (
         .in0(34'd0),                    // 0X
