@@ -3,10 +3,16 @@ module mul32 #(
     parameter DATA_WIDH = 32
 )(
     input   clk, rst_n,
-    input   is_unsigned,         
+    input   [1:0] is_unsigned,         
     input   [DATA_WIDH - 1:0] a, b,
-    output  [(DATA_WIDH * 2) - 1:0] R
+    output  [DATA_WIDH - 1:0] R_high, R_low
 );
+    /*
+    00: unsigned x unsigned
+    01: signed x signed
+    11: signed x unsigned
+    */
+
     localparam num_reg = 12;
     localparam OUTW    = DATA_WIDH*2;
 
@@ -18,7 +24,7 @@ module mul32 #(
     wire sign_fill;
     reg  [OUTW-1:0] tmp [0:num_reg-1];
 
-    assign sign_fill = is_unsigned ? 1'b0 : b[DATA_WIDH-1];
+    assign sign_fill = (is_unsigned[0]) ? 1'b0 : b[DATA_WIDH-1];
 
     integer i;
     always @(posedge clk or negedge rst_n) begin
@@ -46,7 +52,8 @@ module mul32 #(
         end 
     end 
 
-    assign R = tmp[11];
+    assign R_high   = tmp[11][63:32];
+    assign R_low    = tmp[11][31:0]; 
 
     // 11 group 4-bit cho radix-8 Booth:
     wire [3:0] sel0  = {b[2:0],  1'b0};
@@ -69,17 +76,17 @@ module mul32 #(
     endgenerate
 
     // booth decode 
-    booth_decode u_bd0  (.A(a), .sel(sel0),  .res(pp[0]));
-    booth_decode u_bd1  (.A(a), .sel(sel1),  .res(pp[1]));
-    booth_decode u_bd2  (.A(a), .sel(sel2),  .res(pp[2]));
-    booth_decode u_bd3  (.A(a), .sel(sel3),  .res(pp[3]));
-    booth_decode u_bd4  (.A(a), .sel(sel4),  .res(pp[4]));
-    booth_decode u_bd5  (.A(a), .sel(sel5),  .res(pp[5]));
-    booth_decode u_bd6  (.A(a), .sel(sel6),  .res(pp[6]));
-    booth_decode u_bd7  (.A(a), .sel(sel7),  .res(pp[7]));
-    booth_decode u_bd8  (.A(a), .sel(sel8),  .res(pp[8]));
-    booth_decode u_bd9  (.A(a), .sel(sel9),  .res(pp[9]));
-    booth_decode u_bd10 (.A(a), .sel(sel10), .res(pp[10]));
+    booth_decode u_bd0  (.A(a), .is_signed(is_unsigned[1]), .sel(sel0),  .res(pp[0]));
+    booth_decode u_bd1  (.A(a), .is_signed(is_unsigned[1]), .sel(sel1),  .res(pp[1]));
+    booth_decode u_bd2  (.A(a), .is_signed(is_unsigned[1]), .sel(sel2),  .res(pp[2]));
+    booth_decode u_bd3  (.A(a), .is_signed(is_unsigned[1]), .sel(sel3),  .res(pp[3]));
+    booth_decode u_bd4  (.A(a), .is_signed(is_unsigned[1]), .sel(sel4),  .res(pp[4]));
+    booth_decode u_bd5  (.A(a), .is_signed(is_unsigned[1]), .sel(sel5),  .res(pp[5]));
+    booth_decode u_bd6  (.A(a), .is_signed(is_unsigned[1]), .sel(sel6),  .res(pp[6]));
+    booth_decode u_bd7  (.A(a), .is_signed(is_unsigned[1]), .sel(sel7),  .res(pp[7]));
+    booth_decode u_bd8  (.A(a), .is_signed(is_unsigned[1]), .sel(sel8),  .res(pp[8]));
+    booth_decode u_bd9  (.A(a), .is_signed(is_unsigned[1]), .sel(sel9),  .res(pp[9]));
+    booth_decode u_bd10 (.A(a), .is_signed(is_unsigned[1]), .sel(sel10), .res(pp[10]));
 
     csa #(.WIDTH(OUTW)) csa0(.x(tmp[6]),           .y(tmp[7]),        .z(tmp[8]),        .sum(sum[0]), .carry(carry[0]));
 

@@ -2,7 +2,7 @@
 module non_restore_v2 #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_unsign,
+    input   clk, rst_n, is_unsigned,
     input   [DATA_WIDTH - 1:0] dividend, divisor,
     output  [DATA_WIDTH - 1:0] quotient, remainder
 );
@@ -23,9 +23,9 @@ module non_restore_v2 #(
     wire [DATA_WIDTH-1:0] abs_a, abs_b;
     wire [DATA_WIDTH:0] M0;
 
-    assign divisor_ex   = (is_unsign) ? {1'b0, divisor} : {divisor[DATA_WIDTH-1], divisor};
-    assign sign_a       = ~is_unsign & dividend[DATA_WIDTH-1];
-    assign sign_b       = ~is_unsign & divisor [DATA_WIDTH-1];
+    assign divisor_ex   = (is_unsigned) ? {1'b0, divisor} : {divisor[DATA_WIDTH-1], divisor};
+    assign sign_a       = ~is_unsigned & dividend[DATA_WIDTH-1];
+    assign sign_b       = ~is_unsigned & divisor [DATA_WIDTH-1];
     assign abs_a        = sign_a ? (~dividend + 1'b1) : dividend;
     assign abs_b        = sign_b ? (~divisor  + 1'b1) : divisor;
     assign M0           = {1'b0, abs_b};
