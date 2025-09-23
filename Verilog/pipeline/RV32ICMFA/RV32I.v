@@ -14,11 +14,9 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] RD1, RD2, F_RD, E_RD1, E_RD2;
     wire [WIDTH_DATA - 1:0] D_Instr, M_ReadData, W_ReadData;
     wire [WIDTH_DATA - 1:0] D_ImmExt, E_ImmExt, M_ImmExt, W_ImmExt, E_ALUResult, M_ALUResult, W_ALUResult, M_WriteData;
-    wire [WIDTH_DATA - 1:0] E_MulHigh, E_MulLow, E_quotient, E_remainder;
     wire [4:0]              E_Rs1, E_Rs2, E_Rd, M_Rd, W_Rd, A1, A2, WD3;
 
     wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC ,PCNext, F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4, E_PCTarget, M_PCTarget, W_PCTarget;
-    
     wire [WIDTH_DATA - 1:0] W_Result, E_SrcA, E_SrcB;
     wire [WIDTH_DATA - 1:0] E_WriteData;
 
@@ -32,6 +30,13 @@ module RV32I #(
     wire [2:0] D_ImmSrc, E_funct3;
     wire [3:0] D_ALUControl, E_ALUControl;
     wire [2:0] D_StoreSrc, E_StoreSrc, M_StoreSrc;
+
+    // ----------------------- Tin hieu dieu khien MulDiv -----------------------
+    wire [WIDTH_DATA - 1:0] E_MulHigh, E_MulLow, E_MulOut, M_MulOut, W_MulOut;
+    wire [WIDTH_DATA - 1:0] E_quotient, M_quotient, W_quotient;
+    wire [WIDTH_DATA - 1:0] E_remainder, M_remainder, W_remainder;
+    wire [1:0] Mul_Div_unsigned;
+    wire is_high;
 
     // ----------------------- Tin hieu Hazard -----------------------
     wire F_Stall, D_Stall, D_Flush, E_Flush;
@@ -82,9 +87,9 @@ module RV32I #(
         .in2(W_PCPlus4),
         .in3(W_ImmExt),
         .in4(W_PCTarget),
-        .in5(32'd0),
-        .in6(32'd0),
-        .in7(32'd0),
+        .in5(W_MulOut),
+        .in6(W_quotient),
+        .in7(W_remainder),
         .sel(W_ResultSrc),
         .res(W_Result)
     );
@@ -112,6 +117,13 @@ module RV32I #(
         .in1(E_ImmExt),
         .sel(E_ALUSrc),
         .res(E_SrcB)
+    );
+
+    mux2_1 mux_E_MulOut (
+        .in0(E_MulLow),
+        .in1(E_MulHigh),
+        .sel(is_high),
+        .res(E_MulOut)
     );
 
     HazardUnit HazardUnit_inst(
@@ -147,8 +159,7 @@ module RV32I #(
     ControlUnit ControlUnit_ins(
         .op(D_Instr[6:0]),
         .funct3(D_Instr[14:12]),
-        .funct7_5(D_Instr[30]),
-        .Zero(E_Zero),
+        .funct7(D_Instr[31:25]),
         .ResultSrc(D_ResultSrc),
         .MemWrite(D_MemWrite),
         .ALUControl(D_ALUControl),
@@ -158,7 +169,9 @@ module RV32I #(
         .Branch(D_Branch),
         .Jump(D_Jump),
         .PCTargetSrc(PCTargetSrc),
-        .StoreSrc(D_StoreSrc)
+        .StoreSrc(D_StoreSrc),
+        .Mul_Div_unsigned(Mul_Div_unsigned),
+        .is_high(is_high)
     );
 
     PC PC_inst(
@@ -257,25 +270,25 @@ module RV32I #(
         .signed_less(E_signed_less)
     );
 
-//    mul32 mul_inst(
-//        .clk(clk),
-//        .rst_n(rst_n),
-//        .is_unsigned(),
-//        .a(E_SrcA),
-//        .b(E_SrcB),
-//        .R_high(E_MulHigh),
-//        .R_low(E_MulLow)
-//    );
+   mul32 mul_inst(
+       .clk(clk),
+       .rst_n(rst_n),
+       .is_unsigned(Mul_Div_unsigned),
+       .a(E_SrcA),
+       .b(E_WriteData),
+       .R_high(E_MulHigh),
+       .R_low(E_MulLow)
+   );
 
-//    non_restore_v2 div_inst(
-//        .clk(clk),
-//        .rst_n(rst_n),
-//        .is_unsigned(),
-//        .dividend(E_SrcA),
-//        .divisor(E_SrcB),
-//        .quotient(E_quotient),
-//        .remainder(E_remainder)
-//    );
+   non_restore_v2 div_inst(
+       .clk(clk),
+       .rst_n(rst_n),
+       .is_unsigned(Mul_Div_unsigned[0]),
+       .dividend(E_SrcA),
+       .divisor(E_WriteData),
+       .quotient(E_quotient),
+       .remainder(E_remainder)
+   );
 
     EX_MEM EX_MEM_register(
         .clk(clk),
@@ -290,6 +303,9 @@ module RV32I #(
         .E_MemWrite(E_MemWrite),
         .E_ResultSrc(E_ResultSrc),
         .E_StoreSrc(E_StoreSrc),
+        .E_MulOut(E_MulOut),
+        .E_quotient(E_quotient),
+        .E_remainder(E_remainder),
 
         .M_ALUResult(M_ALUResult),
         .M_WriteData(M_WriteData),
@@ -300,7 +316,10 @@ module RV32I #(
         .M_RegWrite(M_RegWrite),
         .M_MemWrite(M_MemWrite),
         .M_ResultSrc(M_ResultSrc),
-        .M_StoreSrc(M_StoreSrc)
+        .M_StoreSrc(M_StoreSrc),
+        .M_MulOut(M_MulOut),
+        .M_quotient(M_quotient),
+        .M_remainder(M_remainder)
     );
 
     DataMem data_memory(
@@ -324,6 +343,9 @@ module RV32I #(
         .M_Rd(M_Rd),
         .M_RegWrite(M_RegWrite),
         .M_ResultSrc(M_ResultSrc),
+        .M_MulOut(M_MulOut),
+        .M_quotient(M_quotient),
+        .M_remainder(M_remainder),
 
         .W_ALUResult(W_ALUResult),
         .W_ReadData(W_ReadData),
@@ -332,6 +354,9 @@ module RV32I #(
         .W_PCPlus4(W_PCPlus4),
         .W_Rd(W_Rd),
         .W_RegWrite(W_RegWrite),
-        .W_ResultSrc(W_ResultSrc)
+        .W_ResultSrc(W_ResultSrc),
+        .W_MulOut(W_MulOut),
+        .W_quotient(W_quotient),
+        .W_remainder(W_remainder)
     );
 endmodule

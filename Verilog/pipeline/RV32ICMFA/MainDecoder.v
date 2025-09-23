@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 module MainDecoder(
-    input       [6:0] op,
+    input       [6:0] op, funct7,
     input       [2:0] funct3,
     output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump, PCTargetSrc,
     output reg  [1:0] ALUOp,
@@ -66,11 +66,27 @@ module MainDecoder(
                 PCTargetSrc = 1'b0;
             end 
             7'b0110011: begin           // R-type, M-extension, ImmSrc = xx, PCTargetSrc = x
+                case(funct7[0])
+                    1'b0: begin                 // R-type
+                        ResultSrc   = 3'b000;
+                    end 
+                    1'b1: begin
+                        case(funct3)
+                            3'd0, 3'd1, 3'd2, 3'd3: ResultSrc   = 3'b101;   // Mul
+                            3'd4, 3'd5:             ResultSrc   = 3'b110;   // Div
+                            3'd6, 3'd7:             ResultSrc   = 3'b111;   // Remainder
+                            default: ResultSrc   = 3'b000;
+                        endcase
+                    end 
+                    default: begin
+                        ResultSrc   = 3'b000;
+                    end 
+                endcase
                 RegWrite    = 1'b1;
                 ImmSrc      = 3'b000;
                 ALUSrc      = 1'b0;
                 MemWrite    = 1'b0;
-                ResultSrc   = 3'b000;
+                
                 Branch      = 1'b0;
                 ALUOp       = 2'b10;
                 Jump        = 1'b0;

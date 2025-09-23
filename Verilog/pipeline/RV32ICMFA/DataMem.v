@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 module DataMem #(
-    parameter WIDTH_ADDR = 15,
+    parameter WIDTH_ADDR = 8,
     parameter Data_WIDTH = 32
 )(
     input   clk, rst_n, MemWrite,
@@ -37,7 +37,7 @@ module DataMem #(
                             2'b00: mem[word_addr][7:0]      <= data_in;
                             2'b01: mem[word_addr][15:8]     <= data_in;
                             2'b10: mem[word_addr][23:16]    <= data_in;
-                            2'b00: mem[word_addr][31:24]    <= data_in;
+                            2'b11: mem[word_addr][31:24]    <= data_in;
                         endcase
                     end 
                     2'b10: begin
