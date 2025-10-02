@@ -15,15 +15,36 @@ module Div_unit #(
     assign Q_new            = {Q_tmp[DATA_WIDTH-1:1], (~A_new[DATA_WIDTH])};
 endmodule
 
-module DivStage2 #(parameter W=32)(
-  input  [W:0]     A_in,
-  input  [W:0]     M_in,
-  input  [W-1:0]   Q_in,
-  output [W:0]     A_out,
-  output [W-1:0]   Q_out
+module DivStageK #(
+  parameter W = 32,
+  parameter K = 3
+)(
+  input  [W:0]    A_in,
+  input  [W:0]    M_in,
+  input  [W-1:0]  Q_in,
+  output [W:0]    A_out,
+  output [W-1:0]  Q_out
 );
-  wire [W:0]    A1;
-  wire [W-1:0]  Q1;
-  Div_unit s0(.A(A_in), .M(M_in), .Q(Q_in), .A_new(A1),     .Q_new(Q1));
-  Div_unit s1(.A(A1),   .M(M_in), .Q(Q1),   .A_new(A_out),  .Q_new(Q_out));
+  wire [W:0]    A_bus [0:K];
+  wire [W-1:0]  Q_bus [0:K];
+
+  assign A_bus[0] = A_in;
+  assign Q_bus[0] = Q_in;
+
+  genvar i;
+  generate
+    for (i = 0; i < K; i = i + 1) begin : G
+      Div_unit u_div_unit (
+        .A     (A_bus[i]),
+        .M     (M_in),
+        .Q     (Q_bus[i]),
+        .A_new (A_bus[i+1]),
+        .Q_new (Q_bus[i+1])
+      );
+    end
+  endgenerate
+
+  assign A_out = A_bus[K];
+  assign Q_out = Q_bus[K];
+
 endmodule
