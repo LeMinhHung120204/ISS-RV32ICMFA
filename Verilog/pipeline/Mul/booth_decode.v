@@ -10,10 +10,10 @@ module booth_decode #(
     wire [DATA_WIDH + 1:0] pp;
 
     wire [DATA_WIDH + 1:0] A_ex;
-    assign A_ex = (is_signed) ? {{2{A_ex[31]}}, A} : {2'b0, A};
+    assign A_ex = (is_signed) ? {{2{A_ex[DATA_WIDH-1]}}, A} : {2'b0, A};
 
-    mux16_1 #(.DATA_WIDTH(34)) mux16_1_inst (
-        .in0(34'd0),                    // 0X
+    mux16_1 #(.DATA_WIDTH(DATA_WIDH + 2)) mux16_1_inst (
+        .in0({(DATA_WIDH + 2){1'b0}}),                    // 0X
         .in1(A_ex),                        // +X
         .in2(A_ex),                        // +X
         .in3(A_ex << 1),                   // +2X
@@ -28,7 +28,7 @@ module booth_decode #(
         .in12(~(A_ex << 1) + 1'b1),        // -2X
         .in13(~(A_ex) + 1'b1),             // -X
         .in14(~(A_ex) + 1'b1),             // -X
-        .in15(34'd0),                   // 0X
+        .in15({(DATA_WIDH + 2){1'b0}}),                   // 0X
         .sel(sel),
         .res(pp)
     );

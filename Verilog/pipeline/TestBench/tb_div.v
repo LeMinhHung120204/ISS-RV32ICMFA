@@ -2,9 +2,6 @@
 
 module tb_srt_4_div;
 
-  //================================================================
-  // Tham số & tín hiệu
-  //================================================================
     localparam DW = 32;
 
     reg                   clk;
@@ -20,9 +17,6 @@ module tb_srt_4_div;
     wire                  mulfinish;
     wire                  diverror;
 
-  //================================================================
-  // Clock 5ns -> 200 MHz (đổi nếu bạn muốn)
-  //================================================================
     initial clk = 1'b0;
     always #2.5 clk = ~clk;
     
@@ -55,7 +49,7 @@ module tb_srt_4_div;
     non_restore_v2 dut (
         .clk(clk),
         .rst_n(rst_n),
-        .is_unsign(is_unsign),
+        .is_unsigned(is_unsign),
         .dividend(dividend),
         .divisor(divisor),
         .quotient(quotient),

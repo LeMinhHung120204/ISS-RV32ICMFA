@@ -35,6 +35,7 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] E_MulHigh, E_MulLow, E_MulOut, M_MulOut, W_MulOut;
     wire [WIDTH_DATA - 1:0] E_quotient, M_quotient, W_quotient;
     wire [WIDTH_DATA - 1:0] E_remainder, M_remainder, W_remainder;
+    wire [WIDTH_DATA - 1:0] OutData;
     wire [1:0] Mul_Div_unsigned;
     wire is_high;
 
@@ -270,25 +271,34 @@ module RV32I #(
         .signed_less(E_signed_less)
     );
 
-   mul32 mul_inst(
-       .clk(clk),
-       .rst_n(rst_n),
-       .is_unsigned(Mul_Div_unsigned),
-       .a(E_SrcA),
-       .b(E_WriteData),
-       .R_high(E_MulHigh),
-       .R_low(E_MulLow)
-   );
+//     mul32 mul_inst(
+//        .clk(clk),
+//        .rst_n(rst_n),
+//        .is_unsigned(Mul_Div_unsigned),
+//        .a(E_SrcA),
+//        .b(E_WriteData),
+//        .R_high(E_MulHigh),
+//        .R_low(E_MulLow)
+//    );
 
-   non_restore_v2 div_inst(
-       .clk(clk),
-       .rst_n(rst_n),
-       .is_unsigned(Mul_Div_unsigned[0]),
-       .dividend(E_SrcA),
-       .divisor(E_WriteData),
-       .quotient(E_quotient),
-       .remainder(E_remainder)
-   );
+//     non_restore div_inst(
+//        .clk(clk),
+//        .rst_n(rst_n),
+//        .is_unsigned(Mul_Div_unsigned[0]),
+//        .dividend(E_SrcA),
+//        .divisor(E_WriteData),
+//        .quotient(E_quotient),
+//        .remainder(E_remainder)
+//     );
+    MDU MDU_inst(
+        .clk(clk),
+        .rst_n(rst_n),
+        .Mul_Div_unsigned(Mul_Div_unsigned),
+        .funct3(E_funct3),
+        .rs1(E_SrcA),
+        .rs2(E_WriteData),
+        .OutData(OutData)
+    );
 
     EX_MEM EX_MEM_register(
         .clk(clk),

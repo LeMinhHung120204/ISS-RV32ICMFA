@@ -6,8 +6,8 @@ module non_restore_v2 #(
     input   [DATA_WIDTH - 1:0] dividend, divisor,
     output  [DATA_WIDTH - 1:0] quotient, remainder
 );
-    localparam num_reg = 16;
-    localparam num_tmp = 16;
+    localparam num_reg = 8;
+    localparam num_tmp = 8;
 
     reg [DATA_WIDTH:0]      M [0:num_reg - 1];
     reg [DATA_WIDTH:0]      A [0:num_reg - 1];
@@ -74,48 +74,16 @@ module non_restore_v2 #(
             Q[7]    <= Q_new[7];
             A[7]    <= A_new[7];
             M[7]    <= M[6];
-
-            Q[8]    <= Q_new[8];
-            A[8]    <= A_new[8];
-            M[8]    <= M[7];
-
-            Q[9]    <= Q_new[9];
-            A[9]    <= A_new[9];
-            M[9]    <= M[8];
-
-            Q[10]   <= Q_new[10];
-            A[10]   <= A_new[10];
-            M[10]   <= M[9];
-
-            Q[11]   <= Q_new[11];
-            A[11]   <= A_new[11];
-            M[11]   <= M[10];
-
-            Q[12]   <= Q_new[12];
-            A[12]   <= A_new[12];
-            M[12]   <= M[11];
-
-            Q[13]   <= Q_new[13];
-            A[13]   <= A_new[13];
-            M[13]   <= M[12];
-
-            Q[14]   <= Q_new[14];
-            A[14]   <= A_new[14];
-            M[14]   <= M[13];
-
-            Q[15]   <= Q_new[15];
-            A[15]   <= A_new[15];
-            M[15]   <= M[14];
         end 
     end 
 
     wire [DATA_WIDTH-1:0] rem_abs;
 
-    assign rem_abs      = (A[num_reg-1][DATA_WIDTH]) ? A[num_reg-1] + M[num_reg-1] : A[num_reg-1];
-    assign quotient     = (sign[num_reg - 1]) ? ~Q[num_reg - 1] + 1'b1  : Q[num_reg - 1];
-    assign remainder    = (sign[num_reg - 1]) ? ~rem_abs + 1'b1         : rem_abs;
+    assign rem_abs      = (A[num_reg-1][DATA_WIDTH])    ? A[num_reg-1] + M[num_reg-1]   : A[num_reg-1];
+    assign quotient     = (sign[num_reg - 1])           ? ~Q[num_reg - 1] + 1'b1        : Q[num_reg - 1];
+    assign remainder    = (sign[num_reg - 1])           ? ~rem_abs + 1'b1               : rem_abs;
 
-    DivStage2 DivStage2_inst0 (
+    DivStageK #(.W(DATA_WIDTH), .K(4)) u_stage_first (
         .A_in({(DATA_WIDTH + 1){1'b0}}),
         .M_in(M0),
         .Q_in(abs_a),
@@ -125,8 +93,8 @@ module non_restore_v2 #(
 
     genvar gi;
     generate
-        for (gi = 1 ; gi < num_reg; gi = gi + 1) begin : GEN_STAGES
-            DivStage2 stg(
+        for (gi = 1 ; gi < 8; gi = gi + 1) begin : GEN_STAGES
+            DivStageK #(.W(DATA_WIDTH), .K(4)) stg(
                 .A_in(A[gi - 1]),
                 .M_in(M[gi - 1]),
                 .Q_in(Q[gi - 1]),
