@@ -1,0 +1,12 @@
+
+{ 
+    crc :  10765165272668696798  , 
+    ccp_crc :  0  , 
+    cmdline : " --incr --debug typical --relax --mt 2 -L xil_defaultlib -L unisims_ver -L unimacro_ver -L secureip --snapshot fadd_behav xil_defaultlib.fadd xil_defaultlib.glbl" , 
+    buildDate : "May 22 2025" , 
+    buildTime : "00:13:55" , 
+    linkCmd : "D:\\Xilinx\\2025.1\\Vivado\\data\\..\\tps\\mingw\\6.2.0\\win64.o\\nt\\bin\\gcc.exe -Wa,-W  -O -Wl,--stack,104857600 -o \"xsim.dir/fadd_behav/xsimk.exe\"   \"xsim.dir/fadd_behav/obj/xsim_0.win64.obj\" \"xsim.dir/fadd_behav/obj/xsim_1.win64.obj\" -L\"D:\\Xilinx\\2025.1\\Vivado\\lib\\win64.o\" -lxv_simulator_kernel   -lxv_simbridge_kernel" , 
+    aggregate_nets : 
+    [ 
+    ] 
+} 
