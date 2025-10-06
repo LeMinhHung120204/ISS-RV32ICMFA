@@ -94,6 +94,6 @@ module mul32 #(
     booth_decode #(.DATA_WIDH(62)) u_bd9  (.A(a), .is_signed(is_unsigned[1]), .sel(sel9),  .res(pp[9]));
     booth_decode #(.DATA_WIDH(62)) u_bd10 (.A(a), .is_signed(is_unsigned[1]), .sel(sel10), .res(pp[10]));
 
-    csa #(.WIDTH(OUTW)) csa0(.x(tmp[6]),           .y(tmp[7]),        .z(tmp[8]),        .sum(sum[0]), .carry(carry[0]));
+    csa #(.WIDTH(OUTW)) csa0(.x(tmp[6]), .y(tmp[7]), .z(tmp[8]), .sum(sum[0]), .carry(carry[0]));
 
 endmodule
