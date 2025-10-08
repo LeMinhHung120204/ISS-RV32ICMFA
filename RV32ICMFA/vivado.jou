@@ -1,0 +1,36 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Thu May 22 00:12:29 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Wed Oct  8 15:32:32 2025
+# Process ID         : 10744
+# Current directory  : D:/KLTN/ISS-RV32ICMFA/RV32ICMFA
+# Command line       : vivado.exe -gui_launcher_event rodinguilauncherevent26096 D:\KLTN\ISS-RV32ICMFA\RV32ICMFA\RV32ICMFA.xpr
+# Log file           : D:/KLTN/ISS-RV32ICMFA/RV32ICMFA/vivado.log
+# Journal file       : D:/KLTN/ISS-RV32ICMFA/RV32ICMFA\vivado.jou
+# Running On         : ZaLaw
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26100
+# Processor Detail   : 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz
+# CPU Frequency      : 2688 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 16931 MB
+# Swap memory        : 6007 MB
+# Total Virtual      : 22939 MB
+# Available Virtual  : 4732 MB
+#-----------------------------------------------------------
+start_gui
+open_project D:/KLTN/ISS-RV32ICMFA/RV32ICMFA/RV32ICMFA.xpr
+update_compile_order -fileset sources_1
+import_files -norecurse {D:/KLTN/ISS-RV32ICMFA/Verilog/pipeline/Float/fle.v D:/KLTN/ISS-RV32ICMFA/Verilog/pipeline/Float/feq.v D:/KLTN/ISS-RV32ICMFA/Verilog/pipeline/Float/fsub.v}
+update_compile_order -fileset sources_1
+launch_simulation
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+set_property top feq [current_fileset]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode All [current_project]
+update_compile_order -fileset sources_1
+launch_simulation
