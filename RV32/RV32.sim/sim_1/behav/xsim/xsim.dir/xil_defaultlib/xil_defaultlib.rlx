@@ -1,0 +1,7 @@
+0.7
+2020.2
+May 22 2025
+00:13:55
+C:/Law/KLTN/ISS-RV32ICMFA/RV32/RV32.sim/sim_1/behav/xsim/glbl.v,1741209010,verilog,,,,glbl,,,,,,,,
+C:/Law/KLTN/ISS-RV32ICMFA/RV32/RV32.srcs/sources_1/imports/RV32ICMFA/RV32ICMFA.srcs/sources_1/imports/pipeline/Add/csa.v,1759422816,verilog,,,,csa;fulladder,,,D:/Xilinx/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Law/KLTN/ISS-RV32ICMFA/RV32/RV32.srcs/sources_1/imports/RV32ICMFA/RV32ICMFA.srcs/sources_1/imports/pipeline/Float/fsub.v,1760425034,verilog,,,,fsub,,,D:/Xilinx/2025.1/Vivado/data/rsb/busdef,,,,,
