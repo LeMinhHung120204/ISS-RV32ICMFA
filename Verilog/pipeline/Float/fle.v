@@ -1,79 +1,42 @@
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 module fle #(
     parameter WIDTH = 32
 )(
-    input                   clk,
-    input                   rst_n,
-    input                   valid_input,
-    input   [WIDTH-1:0]     a,
-    input   [WIDTH-1:0]     b,
-    output  reg             valid_output,
-    output  reg [WIDTH-1:0] y
+    input  [WIDTH-1:0]  a, b,
+    output [WIDTH-1:0]  out,
+    output              exception
 );
-    reg [2:0] state, next_state;
-    localparam GET_INPUT=3'd0, UNPACK=3'd1, COMPARE=3'd2, PACK=3'd3, DONE=3'd4;
+    // Unpack
+    wire sa = a[31];
+    wire sb = b[31];
+    wire [7:0]  ea = a[30:23];
+    wire [7:0]  eb = b[30:23];
+    wire [22:0] fa = a[22:0];
+    wire [22:0] fb = b[22:0];
 
-    reg [31:0] a_r, b_r;
-    reg sa,sb; reg [7:0] ea,eb; reg [22:0] fa,fb;
-    reg a_nan,b_nan,a_zero,b_zero;
-    reg result;
+    wire a_is_nan  = (ea == 8'hFF) && (fa != 23'd0);
+    wire b_is_nan  = (eb == 8'hFF) && (fb != 23'd0);
+    wire a_is_snan = a_is_nan && (fa[22] == 1'b0);
+    wire b_is_snan = b_is_nan && (fb[22] == 1'b0);
 
-    always @(posedge clk or negedge rst_n)
-        if(!rst_n) state<=GET_INPUT; else state<=next_state;
+    wire a_is_zero = (ea == 8'd0) && (fa == 23'd0);
+    wire b_is_zero = (eb == 8'd0) && (fb == 23'd0);
 
-    always @(*) begin
-        next_state=state;
-        case(state)
-            GET_INPUT: if(valid_input) next_state=UNPACK;
-            UNPACK   : next_state=COMPARE;
-            COMPARE  : next_state=PACK;
-            PACK     : next_state=DONE;
-            DONE     : next_state=GET_INPUT;
-        endcase
-    end
+    wire has_snan  = a_is_snan | b_is_snan;
+    wire unordered = a_is_nan  | b_is_nan; 
 
-    always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) begin a_r<=0; b_r<=0; end
-        else if(valid_input && state==GET_INPUT) begin a_r<=a; b_r<=b; end
-    end
+    wire [30:0] amag = a[30:0];
+    wire [30:0] bmag = b[30:0];
 
-    always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) begin sa<=0;sb<=0;ea<=0;eb<=0;fa<=0;fb<=0; end
-        else if(state==UNPACK) begin
-            sa<=a_r[31]; sb<=b_r[31];
-            ea<=a_r[30:23]; eb<=b_r[30:23];
-            fa<=a_r[22:0];  fb<=b_r[22:0];
-        end
-    end
-    always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) begin a_nan<=0;b_nan<=0;a_zero<=0;b_zero<=0; end
-        else if(state==UNPACK) begin
-            a_nan <= (ea==8'hFF && fa!=0);  b_nan <= (eb==8'hFF && fb!=0);
-            a_zero<= (ea==8'h00 && fa==0);  b_zero<= (eb==8'h00 && fb==0);
-        end
-    end
+    wire lt_ordered =   (a_is_zero && b_is_zero)    ? 1'b0 :
+                        (sa ^ sb)                   ? sa :
+                        (!sa)                       ? (amag < bmag) : (amag > bmag);
 
-    wire [31:0] a_abs = {1'b0, a_r[30:0]};
-    wire [31:0] b_abs = {1'b0, b_r[30:0]};
+    wire eq_ordered = (a_is_zero && b_is_zero) || (a[30:0] == b[30:0]);
 
-    always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) result<=0;
-        else if(state==COMPARE) begin
-            if(a_nan || b_nan) result <= 1'b0;
-            else if(a_zero && b_zero) result <= 1'b1;
-            else if(sa != sb) result <= sa;      // âm <= dương
-            else if(sa==1'b0) result <= (a_abs <= b_abs);
-            else               result <= (a_abs >= b_abs); // cùng âm: đảo quan hệ
-        end
-    end
+    // a <= b: nếu unordered (NaN) -> 0.
+    wire le = unordered ? 1'b0 : (lt_ordered | eq_ordered);
 
-    always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) y<=0;
-        else if(state==PACK) y <= {31'b0, result};
-    end
-
-    always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) valid_output<=0;
-        else       valid_output <= (state==DONE);
-    end
+    assign out       = {{WIDTH-1{1'b0}}, le};
+    assign exception = has_snan;
 endmodule

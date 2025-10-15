@@ -7,12 +7,9 @@ module fmin #(
     output reg  exception
 );
     localparam [31:0] QNAN = 32'h7FC00000; // quiet NaN
-    wire sa; 
-    wire sb; 
-    wire [7:0]  ea; 
-    wire [7:0]  eb; 
-    wire [22:0] fa;
-    wire [22:0] fb;
+    wire        sa, sb;
+    wire [7:0]  ea, eb;
+    wire [22:0] fa, fb;
 
     wire a_is_snan; 
     wire b_is_snan; 
