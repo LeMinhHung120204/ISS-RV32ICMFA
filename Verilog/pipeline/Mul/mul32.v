@@ -51,7 +51,7 @@ module mul32 #(
             tmp[8]      <= tmp[4] + tmp[5];
 
             tmp[9]      <= sum[0];
-            tmp[10]     <= carry[0];
+            tmp[10]     <= carry[0] << 1;
 
             tmp[11]     <= tmp[9] + tmp[10];
         end 
