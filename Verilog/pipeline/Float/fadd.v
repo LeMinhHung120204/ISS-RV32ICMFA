@@ -8,6 +8,8 @@ module fadd #(
     output  [WIDTH-1:0] y
 );
     reg [3:0]       state;
+    localparam [31:0] POS_INF = 32'h7F800000;
+    localparam [31:0] NEG_INF = 32'hFF800000;
     localparam  get_input       = 4'd0,
                 unpack          = 4'd1,
                 special_cases   = 4'd2,
@@ -18,7 +20,7 @@ module fadd #(
                 normalize_2     = 4'd7,
                 round           = 4'd8,
                 pack            = 4'd9,
-                put_z           = 4'd10;
+                put_res         = 4'd10;
     
     reg [WIDTH-1:0] a_reg, b_reg, res, reg_oY;
     reg [27:0]      sum;
@@ -98,14 +100,15 @@ module fadd #(
                         // res[22]     <= 1'b1;
                         // res[21:0]   <= 22'd0;
                         res     <= 32'h7FC00000;
-                        state   <= put_z;
+                        state   <= put_res;
                     end 
 
                     // if a is inf return inf
                     else if (a_e == 128) begin
-                        res[31]    <= a_s;
-                        res[30:23] <= 255;
-                        res[22:0]  <= 0;
+                        // res[31]    <= a_s;
+                        // res[30:23] <= 255;
+                        // res[22:0]  <= 0;
+                        res <= (a_s) ? NEG_INF : POS_INF;
 
                         //if a is inf and signs don't match return nan
                         if ((b_e == 128) && (a_s != b_s)) begin
@@ -115,15 +118,16 @@ module fadd #(
                             // res[21:0]   <= 22'd0;
                             res     <= 32'h7FC00000;
                         end
-                        state <= put_z;
+                        state <= put_res;
                     end 
 
                     //if b is inf return inf
                     else if(b_e == 128) begin
-                        res[31]     <= b_s;
-                        res[30:23]  <= 8'd255;
-                        res[22:0]   <= 23'd0;
-                        state       <= put_z;
+                        // res[31]     <= b_s;
+                        // res[30:23]  <= 8'd255;
+                        // res[22:0]   <= 23'd0;
+                        res     <= (b_s) ? NEG_INF : POS_INF;
+                        state   <= put_res;
                     end 
 
                     //if a, b is zero return b
@@ -131,7 +135,7 @@ module fadd #(
                         res[31]     <= a_s & b_s;
                         res[30:23]  <= b_e[7:0] + 8'd127;
                         res[22:0]   <= b_m[26:3];
-                        state       <= put_z;
+                        state       <= put_res;
                     end 
 
                     //if a is zero return b
@@ -139,7 +143,7 @@ module fadd #(
                         res[31]     <= b_s;
                         res[30:23]  <= b_e[7:0] + 8'd127;
                         res[22:0]   <= b_m[26:3];
-                        state       <= put_z;
+                        state       <= put_res;
                     end 
 
                     //if b is zero return a
@@ -147,7 +151,7 @@ module fadd #(
                         res[31]     <= a_s;
                         res[30:23]  <= a_e[7:0] + 8'd127;
                         res[22:0]   <= a_m[26:3];
-                        state       <= put_z;
+                        state       <= put_res;
                     end 
 
                     else begin
@@ -274,10 +278,10 @@ module fadd #(
                         res[30:23]  <= 8'd255;
                         res[31]     <= res_s;
                     end 
-                    state   <= put_z;
+                    state   <= put_res;
                 end 
 
-                put_z: begin
+                put_res: begin
                     reg_oY      <= res;
                     reg_oValid  <= 1'b1;
                     state       <= get_input;

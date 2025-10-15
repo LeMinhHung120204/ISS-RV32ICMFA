@@ -51,7 +51,7 @@ module mul32 #(
             tmp[8]      <= tmp[4] + tmp[5];
 
             tmp[9]      <= sum[0];
-            tmp[10]     <= carry[0];
+            tmp[10]     <= carry[0] << 1;
 
             tmp[11]     <= tmp[9] + tmp[10];
         end 
@@ -94,6 +94,6 @@ module mul32 #(
     booth_decode #(.DATA_WIDH(62)) u_bd9  (.A(a), .is_signed(is_unsigned[1]), .sel(sel9),  .res(pp[9]));
     booth_decode #(.DATA_WIDH(62)) u_bd10 (.A(a), .is_signed(is_unsigned[1]), .sel(sel10), .res(pp[10]));
 
-    csa #(.WIDTH(OUTW)) csa0(.x(tmp[6]),           .y(tmp[7]),        .z(tmp[8]),        .sum(sum[0]), .carry(carry[0]));
+    csa #(.WIDTH(OUTW)) csa0(.x(tmp[6]), .y(tmp[7]), .z(tmp[8]), .sum(sum[0]), .carry(carry[0]));
 
 endmodule
