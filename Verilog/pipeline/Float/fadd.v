@@ -213,6 +213,7 @@ module fadd #(
                         guard       <= sum[3];
                         round_bit   <= sum[2];
                         sticky      <= sum[1] | sum[0];
+                        res_e       <= res_e + 1'b1;
                     end 
                     else begin
                         res_m       <= sum[26:3];
