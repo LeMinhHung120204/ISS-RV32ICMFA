@@ -1,70 +1,68 @@
 `timescale 1ns/1ps
-module fcvt_w_s #(
-    parameter WIDTH = 32
-)(
-    input clk, rst_n, valid_input,
-    input [WIDTH-1:0] a,           // Số float IEEE-754 single
-    output valid_output,
-    output [WIDTH-1:0] y           // Kết quả nguyên có dấu
+module fcvt_w_s(
+    input  clk, rst_n, valid_input,
+    input  [31:0] a,
+    output reg valid_output,
+    output reg signed [31:0] y
 );
-    reg [3:0] state;
-    localparam GET_INPUT = 4'd0, CONVERT = 4'd1, PACK = 4'd2, DONE = 4'd3;
-    reg [WIDTH-1:0] a_reg;
-    reg [WIDTH-1:0] result;
-    reg [31:0] abs_int;
-    reg reg_oValid;
-    reg [WIDTH-1:0] reg_oY;
-    integer e;
-    assign valid_output = reg_oValid;
-    assign y = reg_oY;
+    reg v0; reg [31:0] a0;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            state <= GET_INPUT;
-            reg_oValid <= 1'b0;
-            reg_oY <= 0;
-            a_reg <= 0;
-            result <= 32'd0;
-            abs_int <= 32'd0;
+        if(!rst_n) begin v0<=0; a0<=0; end
+        else begin v0<=valid_input; a0<=a; end
+    end
+
+    wire s = a0[31];
+    wire [7:0] efield = a0[30:23];
+    wire [22:0] ffield = a0[22:0];
+    wire is_zero = (efield==8'd0) && (ffield==23'd0);
+    wire is_naninf = (efield==8'd255);
+    wire [23:0] mant = (efield==8'd0) ? {1'b0,ffield} : {1'b1,ffield};
+    wire signed_overflow_pos = (efield > (8'd127+8'd30));
+    wire signed_overflow_neg = (efield > (8'd127+8'd30));
+    reg v1; reg s1; reg [7:0] e1; reg [23:0] m1; reg is_zero1; reg is_naninf1;
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) begin v1<=0; s1<=0; e1<=0; m1<=0; is_zero1<=0; is_naninf1<=0; end
+        else begin
+            v1<=v0; s1<=s; e1<=efield; m1<=mant; is_zero1<=is_zero; is_naninf1<=is_naninf;
+        end
+    end
+
+    reg v2; reg signed [31:0] y2;
+    always @* begin
+        if (is_naninf1) begin
+            if (s1) y2 = -32'sd2147483648;
+            else    y2 = 32'sd2147483647;
+        end else if (is_zero1) begin
+            y2 = 32'sd0;
         end else begin
-            case(state)
-                GET_INPUT: begin
-                    reg_oValid <= 1'b0;
-                    if (valid_input) begin
-                        a_reg <= a;
-                        state <= CONVERT;
-                    end
+            integer shift;
+            reg [31:0] val_u;
+            if (e1 < 8'd127) begin
+                val_u = 32'd0;
+            end else begin
+                shift = e1 - 8'd127;
+                if (shift >= 23) val_u = {m1, (shift-23>=9)?{(shift-23-9){1'b0}}:9'd0} << (shift-23);
+                else val_u = m1 >> (23 - shift);
+            end
+            if (s1) begin
+                if (val_u[31]) y2 = -32'sd2147483648;
+                else begin
+                    reg signed [31:0] tmp;
+                    tmp = -$signed({1'b0,val_u[30:0]});
+                    y2 = tmp;
                 end
-                CONVERT: begin
-                    if (a_reg[30:23] < 8'd127) begin
-                        // |value| < 1.0 → kết quả = 0
-                        result <= 32'd0;
-                    end else begin
-                        e = a_reg[30:23] - 8'd127;
-                        if (e >= 31) begin
-                            // Quá lớn để biểu diễn
-                            if (a_reg[31]) result <= 32'h80000000;  // MIN_INT
-                            else result <= 32'h7FFFFFFF;           // MAX_INT
-                        end else begin
-                            // Tái tạo phần nguyên
-                            if (e > 23)
-                                abs_int = (32'd1 << e) | (a_reg[22:0] << (e - 23));
-                            else
-                                abs_int = (32'd1 << e) | (a_reg[22:0] >> (23 - e));
-                            if (a_reg[31]) result <= -abs_int;
-                            else result <= abs_int;
-                        end
-                    end
-                    state <= PACK;
-                end
-                PACK: begin
-                    reg_oY <= result;
-                    state <= DONE;
-                end
-                DONE: begin
-                    reg_oValid <= 1'b1;
-                    state <= GET_INPUT;
-                end
-            endcase
+            end else begin
+                if (val_u[31]) y2 = 32'sd2147483647;
+                else y2 = $signed(val_u);
+            end
+        end
+    end
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) begin v2<=0; y<=0; valid_output<=0; end
+        else begin
+            v2 <= v1;
+            y  <= y2;
+            valid_output <= v2;
         end
     end
 endmodule
