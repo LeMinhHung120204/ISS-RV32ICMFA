@@ -1,18 +1,19 @@
 `timescale 1ns / 1ps
 
-module FBU #(
+module FPU #(
     parameter WIDTH = 32
 )(
     input   clk, rst_n,
     input   [4:0] op, 
     input   [WIDTH-1:0] rs1, rs2, rs3,
     output  [WIDTH-1:0] rd,
-    output  done
+    output  done, stall
 );
-    wire    [WIDTH-1:0] res_fclass, res_fadd, res_fcvt_s_w, res_fcvt_s_wu, res_fcvt_w_s, res_fcvt_wu_s, 
-                        res_div, res_feq, res_fle, res_flt, res_fmadd, res_fmax, res_fmin, res_fmul, 
-                        res_fsgnj, res_fsgnjn, res_fsgnjx, res_fsqrt;
-    wire    done_add, done_fcvt_s_w, done_fcvt_s_wu, done_fcvt_w_s, done_fcvt_wu_s, done_fdiv, done_fmadd, done_fmul, done_fsqrt;
+    wire    [WIDTH-1:0] res_fclass, res_fadd,   res_fcvt_s_w,   res_fcvt_s_wu,  res_fcvt_w_s,   res_fcvt_wu_s, 
+                        res_div,    res_feq,    res_fle,        res_flt,        res_fmadd,      res_fmax,   res_fmin,   res_fmul, 
+                        res_fsgnj,  res_fsgnjn, res_fsgnjx,     res_fsqrt;
+    wire                done_add,   done_fcvt_s_w,              done_fcvt_s_wu, done_fcvt_w_s,  done_fcvt_wu_s,         done_fdiv, 
+                        done_fmadd, done_fmul,  done_fsqrt;
     
     reg [8:0]       valid_input;
     reg [WIDTH-1:0] in1, in2, in3, oRes;
@@ -59,7 +60,6 @@ module FBU #(
                 oRes            = res_fcvt_w_s;
                 valid_output    = done_fcvt_w_s;
             end 
-            
 
             5'd6: begin     // fcvt.wu.s
                 valid_input     = 9'b0_0001_0000;
@@ -176,12 +176,11 @@ module FBU #(
                 in3             = 32'd0;
                 valid_input     = 9'd0;
                 valid_output    = 1'b0;
-                
             end 
         endcase
-    end 
+    end
 
-    assign rd   = oRes;
+    assign rd   = (valid_output) ? oRes : 32'd0;
     assign done = valid_output;
 
     fadd fadd_inst(
