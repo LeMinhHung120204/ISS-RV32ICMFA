@@ -24,7 +24,11 @@ module flt #(
     wire a_is_zero  = (ea == 8'd0) && (fa == 23'd0);    //+0 và -0
     wire b_is_zero  = (eb == 8'd0) && (fb == 23'd0);
 
+<<<<<<< HEAD
     wire invalid    = a_is_san | b_is_san;
+=======
+    wire invalid    = a_is_snan | b_is_snan;
+>>>>>>> origin/main
 
     wire lt_ordered =
         // ±0 so với ±0 -> false

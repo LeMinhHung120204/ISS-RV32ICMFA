@@ -4,7 +4,11 @@ module MainDecoder(
     input       [2:0] funct3,
     output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump, PCTargetSrc,
     output reg  [1:0] ALUOp,
+<<<<<<< HEAD
     output reg  [2:0] ImmSrc, ResultSrc, StoreSrc
+=======
+    output reg  [2:0] ImmSrc, ResultSrc, StoreSrc, FRegWrite, RegSrc
+>>>>>>> origin/main
 );
 
     always @(*) begin
@@ -39,6 +43,11 @@ module MainDecoder(
                 ALUOp       = 2'b00;
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b0100011: begin          
                 case(funct3)
@@ -56,7 +65,11 @@ module MainDecoder(
                     end 
                 endcase 
                 RegWrite    = 1'b0;
+<<<<<<< HEAD
                 ImmSrc      = 3'b001;
+=======
+                ImmSrc      = 3'b000;
+>>>>>>> origin/main
                 ALUSrc      = 1'b1;
                 MemWrite    = 1'b1;
                 ResultSrc   = 3'b000;
@@ -64,6 +77,11 @@ module MainDecoder(
                 ALUOp       = 2'b00;
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b0110011: begin           // R-type, M-extension, ImmSrc = xx, PCTargetSrc = x
                 case(funct7[0])
@@ -92,6 +110,11 @@ module MainDecoder(
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b1100011: begin           // branch, ResultSrc = xxx
                 RegWrite    = 1'b0;
@@ -104,6 +127,11 @@ module MainDecoder(
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b0010011: begin           // I-type ALU, ALUSrc = x, PCTargetSrc = x  
                 RegWrite    = 1'b1;
@@ -116,6 +144,11 @@ module MainDecoder(
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b1101111: begin           // jal, ALUSrc = x, ALUOp = xx
                 RegWrite    = 1'b1;
@@ -128,6 +161,11 @@ module MainDecoder(
                 Jump        = 1'b1;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b1100111: begin           //  JumpAndLinkReg jalr
                 RegWrite    = 1'b1;
@@ -140,6 +178,11 @@ module MainDecoder(
                 Jump        = 1'b1;
                 PCTargetSrc = 1'b1;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b0110111: begin           // LoadUpperImm lui ALUOp = xx, ALUSrc = x, PCTargetSrc= x 
                 RegWrite    = 1'b1;
@@ -152,6 +195,11 @@ module MainDecoder(
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
             7'b0010111: begin           // AddUpperImmtoPC auipc ALUOp = xx, ALUSrc = xx, PCTargetSrc= x 
                 RegWrite    = 1'b1;
@@ -164,7 +212,111 @@ module MainDecoder(
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
             end
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+            end
+            7'b0000111: begin           // flw  
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd0;
+                ALUSrc      = 1'b1;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b001;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b1;
+                RegSrc      = 1'b1;
+            end 
+            7'b0100111: begin           // fsw
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd1;
+                ALUSrc      = 1'b1;
+                MemWrite    = 1'b1;
+                ResultSrc   = 3'b000;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b1;
+            end 
+            7'b1000011: begin           // fmadd
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd0;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b110;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b1;
+                RegSrc      = 1'b1;
+            end 
+            7'b1000111: begin           // fmsub
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd0;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b110;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b1;
+                RegSrc      = 1'b1;
+            end 
+            7'b1001111: begin           // fnmadd
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd0;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b110;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b1;
+                RegSrc      = 1'b1;
+            end 
+            7'b1001011: begin           // fnmsub
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd0;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b110;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b1;
+                RegSrc      = 1'b1;
+            end 
+            7'b1010011: begin           // another F instruction
+                RegWrite    = 1'b0;
+                ImmSrc      = 3'd0;
+                ALUSrc      = 1'b0;
+                MemWrite    = 1'b0;
+                ResultSrc   = 3'b110;
+                Branch      = 1'b0;
+                ALUOp       = 2'b00;
+                Jump        = 1'b0;
+                PCTargetSrc = 1'b0;
+                StoreSrc    = 3'b000;
+                FRegWrite   = 1'b1;
+                RegSrc      = 1'b1;
+            end 
+>>>>>>> origin/main
             default: begin
                 RegWrite    = 1'b0;
                 ImmSrc      = 3'b000;
@@ -176,6 +328,11 @@ module MainDecoder(
                 Jump        = 1'b0;
                 PCTargetSrc = 1'b0;
                 StoreSrc    = 3'b000;
+<<<<<<< HEAD
+=======
+                FRegWrite   = 1'b0;
+                RegSrc      = 1'b0;
+>>>>>>> origin/main
             end 
         endcase
     end

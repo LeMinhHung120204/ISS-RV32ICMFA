@@ -1,5 +1,9 @@
 `timescale 1ns/1ps
+<<<<<<< HEAD
 // optional: uncomment nếu bạn dùng Vivado nghiêm ngặt về nettype
+=======
+// optional: uncomment nếu bạn dùng Vivado nghiêm ngặt v�? nettype
+>>>>>>> origin/main
 // `default_nettype none
 
 module tb_fadd;
@@ -36,7 +40,11 @@ module tb_fadd;
     .valid_output (valid_output)
   );
 
+<<<<<<< HEAD
   // --- Task: phát 1 phép cộng và chờ done ---
+=======
+  // --- Task: phát 1 phép cộng và ch�? done ---
+>>>>>>> origin/main
   task do_add;
     input [DW-1:0] A;
     input [DW-1:0] B;
@@ -52,7 +60,11 @@ module tb_fadd;
       @(posedge clk);
       valid_input <= 1'b0;
 
+<<<<<<< HEAD
       // chờ valid_output lên 1, có timeout bảo vệ
+=======
+      // ch�? valid_output lên 1, có timeout bảo vệ
+>>>>>>> origin/main
       to_cnt = 0;
       while (valid_output !== 1'b1) begin
         @(posedge clk);
@@ -97,6 +109,11 @@ module tb_fadd;
     do_add(32'hC0700000, 32'h3FA00000);
     // 3) 0 + NaN
     do_add(32'h00000000, 32'h7FC00001);
+<<<<<<< HEAD
+=======
+    
+    do_add(32'h40400000, 32'h40400000); 
+>>>>>>> origin/main
     valid_input <= 1'b0;
 
     // doi them cho outputs cuoi cung
