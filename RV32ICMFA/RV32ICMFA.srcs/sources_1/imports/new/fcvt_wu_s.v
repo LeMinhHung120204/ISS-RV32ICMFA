@@ -46,11 +46,14 @@ module fcvt_wu_s(
         end
     end
     always @(posedge clk or negedge rst_n) begin
-        if(!rst_n) begin v2<=0; valid_output<=0; y<=0; end
-        else begin
+        if (!rst_n) begin
+            v2 <= 1'b0;
+            y  <= 32'd0;
+            valid_output <= 1'b0;
+        end else begin
             v2 <= v1;
             y  <= y2;
-            valid_output <= v2;
+            valid_output <= v1;
         end
     end
 endmodule

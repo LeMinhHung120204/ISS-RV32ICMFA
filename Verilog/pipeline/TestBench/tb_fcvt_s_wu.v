@@ -1,9 +1,16 @@
 `timescale 1ns/1ps
 module tb_fcvt_s_wu;
-    reg clk, rst_n, valid_input;
+    reg clk;
+    reg rst_n;
+    reg valid_input;
     reg [31:0] a;
     wire valid_output;
     wire [31:0] y;
+
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
 
     fcvt_s_wu uut (
         .clk(clk),
@@ -14,23 +21,16 @@ module tb_fcvt_s_wu;
         .y(y)
     );
 
-    always #5 clk = ~clk;
-
     initial begin
-        clk = 0;
         rst_n = 0;
         valid_input = 0;
         a = 0;
-        #30;
-        rst_n = 1;
-
-        valid_input = 1; a = 32'd0; #10;
-        valid_input = 1; a = 32'd1; #10;
-        valid_input = 1; a = 32'd99999; #10;
-        valid_input = 1; a = 32'hFFFFFFFF; #10;
-        valid_input = 0;
-
-        #100;
-        $finish;
+        #20 rst_n = 1;
+        #10 valid_input = 1; a = 32'd0;
+        #20 a = 32'd1;
+        #20 a = 32'd99999;
+        #20 a = 32'hFFFFFFFF;
+        #20 valid_input = 0;
+        #50 $finish;
     end
 endmodule
