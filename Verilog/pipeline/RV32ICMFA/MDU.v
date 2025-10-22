@@ -10,15 +10,11 @@ module MDU #(
     output  [DATA_WIDTH - 1:0]  oRD,
     output reg stall
 );
-    localparam num_reg = 8;
-
     wire [DATA_WIDTH - 1:0] E_MulHigh, E_MulLow;
     wire [DATA_WIDTH - 1:0] E_quotient, E_remainder;
 
-    reg         valid_inputMul, valid_inputDiv; 
-    reg [3:0]   oValid_mul;
-    reg [7:0]   oValid_div;
-    reg [DATA_WIDTH-1:0] hold_rd, tmp_out;
+    reg                     valid_inputMul, valid_inputDiv; 
+    reg [DATA_WIDTH-1:0]    hold_rd, tmp_out;
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -63,7 +59,6 @@ module MDU #(
 
     assign oRD      = hold_rd;
     assign OutData  = tmp_out;
-
 
     mul32 mul_inst(
        .clk(clk),
