@@ -3,7 +3,7 @@ module tb_fcvt_s_w;
     reg clk;
     reg rst_n;
     reg valid_input;
-    reg [31:0] a;
+    reg signed [31:0] a;
     wire valid_output;
     wire [31:0] y;
 
@@ -22,15 +22,24 @@ module tb_fcvt_s_w;
     );
 
     initial begin
+//        $dumpfile("tb_fcvt_s_w.vcd");
+//        $dumpvars(0, tb_fcvt_s_w);
+
         rst_n = 0;
         valid_input = 0;
         a = 0;
         #20 rst_n = 1;
-        #10 valid_input = 1; a = 32'd1;
+        #10 valid_input = 1;
+
+        a = 32'd0;
+        #20 a = 32'd1;
         #20 a = -32'd1;
         #20 a = 32'd123456;
         #20 a = -32'd999999;
+        #20 a = 32'd2147483647;  // Max
+        #20 a = -32'd2147483648; // Min
+
         #20 valid_input = 0;
-        #50 $finish;
+        #100 $finish;
     end
 endmodule

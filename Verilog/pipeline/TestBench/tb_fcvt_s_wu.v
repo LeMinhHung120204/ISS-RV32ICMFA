@@ -22,15 +22,22 @@ module tb_fcvt_s_wu;
     );
 
     initial begin
+        $dumpfile("tb_fcvt_s_wu.vcd");
+        $dumpvars(0, tb_fcvt_s_wu);
+
         rst_n = 0;
         valid_input = 0;
         a = 0;
         #20 rst_n = 1;
-        #10 valid_input = 1; a = 32'd0;
+        #10 valid_input = 1;
+
+        a = 32'd0;
         #20 a = 32'd1;
-        #20 a = 32'd99999;
-        #20 a = 32'hFFFFFFFF;
+        #20 a = -32'd100;
+        #20 a = 32'd9999;
+        #20 a = 32'd2147483647;
+
         #20 valid_input = 0;
-        #50 $finish;
+        #100 $finish;
     end
 endmodule

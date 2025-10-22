@@ -5,13 +5,15 @@ module tb_fcvt_w_s;
     reg valid_input;
     reg [31:0] a;
     wire valid_output;
-    wire [31:0] y;
+    wire signed [31:0] y;
 
+    // Clock 100MHz
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
     end
 
+    // Instantiate DUT
     fcvt_w_s uut (
         .clk(clk),
         .rst_n(rst_n),
@@ -22,17 +24,24 @@ module tb_fcvt_w_s;
     );
 
     initial begin
+        $dumpfile("tb_fcvt_w_s.vcd");
+        $dumpvars(0, tb_fcvt_w_s);
+
         rst_n = 0;
         valid_input = 0;
         a = 0;
         #20 rst_n = 1;
-        #10 valid_input = 1; a = 32'h3F800000;
-        #20 a = 32'hBF800000;
-        #20 a = 32'h41200000;
-        #20 a = 32'hC2480000;
-        #20 a = 32'h7F800000;
-        #20 a = 32'hFF800000;
+        #10 valid_input = 1;
+
+        // Single precision floats
+        a = 32'h3F800000; // +1.0
+        #20 a = 32'hBF800000; // -1.0
+        #20 a = 32'h41200000; // +10.0
+        #20 a = 32'hC2480000; // -50.0
+        #20 a = 32'h7F800000; // +Inf
+        #20 a = 32'hFF800000; // -Inf
+
         #20 valid_input = 0;
-        #50 $finish;
+        #100 $finish;
     end
 endmodule
