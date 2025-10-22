@@ -2,7 +2,7 @@
 module MDU #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_high,
+    input   clk, rst_n, is_high, valid_input,
     input   [1:0]               Mul_Div_unsigned, 
     input   [1:0]               MulDivOp,
     input   [DATA_WIDTH - 1:0]  rs1, rs2, rd,
@@ -11,10 +11,6 @@ module MDU #(
     output reg stall
 );
     localparam num_reg = 8;
-    reg [DATA_WIDTH - 1:0] tmp_out;
-    reg [DATA_WIDTH - 1:0] hold_rd      [num_reg - 1:0];
-    reg [2:0]              hold_funct3  [num_reg - 1:0];
-    reg [31:0]             reg_busy;
 
     wire [DATA_WIDTH - 1:0] E_MulHigh, E_MulLow;
     wire [DATA_WIDTH - 1:0] E_quotient, E_remainder;
