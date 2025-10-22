@@ -19,8 +19,55 @@ module MDU #(
     wire [DATA_WIDTH - 1:0] E_MulHigh, E_MulLow;
     wire [DATA_WIDTH - 1:0] E_quotient, E_remainder;
 
+    reg         valid_inputMul, valid_inputDiv; 
+    reg [3:0]   oValid_mul;
+    reg [7:0]   oValid_div;
+    reg [DATA_WIDTH-1:0] hold_rd, tmp_out;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            stall   <= 1'b0;
+            hold_rd <= 32'd0;
+        end 
+        else begin
+            if (valid_input) begin
+                stall   <= 1'b1;
+                hold_rd <= rd;
+            end 
+            if (stall & (valid_outputMul | valid_outputDiv)) begin
+                stall   <= 1'b0;
+            end 
+        end 
+    end 
+
+    always @(*) begin
+        case(MulDivOp)
+            2'b00: begin
+                tmp_out         = (is_high) ? E_MulHigh : E_MulLow;
+                valid_inputMul  = valid_input;
+                valid_inputDiv  = 1'b0;
+            end 
+            2'b01: begin
+                tmp_out         = E_quotient;
+                valid_inputMul  = 1'b0;
+                valid_inputDiv  = valid_input;
+            end 
+            2'b10: begin
+                tmp_out         = E_remainder;
+                valid_inputMul  = 1'b0;
+                valid_inputDiv  = valid_input;
+            end
+            default: begin 
+                tmp_out = 32'd0;
+                valid_inputMul  = 1'b0;
+                valid_inputDiv  = 1'b0;
+            end 
+        endcase
+    end
+
     assign oRD      = hold_rd;
     assign OutData  = tmp_out;
+
 
     mul32 mul_inst(
        .clk(clk),
@@ -45,18 +92,4 @@ module MDU #(
        .quotient(E_quotient),
        .remainder(E_remainder)
     );
-    always @(*) begin
-        case(funct3)
-            3'd0, 3'd1, 3'd2, 3'd3: begin
-                tmp_out = (is_high) ? E_MulHigh : E_MulLow;
-            end 
-            3'd4, 3'd5: begin
-                tmp_out = E_quotient;
-            end 
-            3'd6, 3'd7: begin
-                tmp_out = E_remainder;
-            end
-            default: tmp_out = 32'd0;
-        endcase
-    end
 endmodule
