@@ -16,7 +16,7 @@ module fcvt_w_s(
             v0 <= 0; 
             a0 <= 0; 
         end
-        else (valid_input) begin 
+        else if (valid_input) begin 
             v0 <= valid_input; 
             a0 <= a; 
         end
