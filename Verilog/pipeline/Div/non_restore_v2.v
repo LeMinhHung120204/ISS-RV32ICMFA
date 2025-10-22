@@ -2,9 +2,10 @@
 module non_restore_v2 #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_unsigned,
+    input   clk, rst_n, is_unsigned, valid_input,
     input   [DATA_WIDTH - 1:0] dividend, divisor,
-    output  [DATA_WIDTH - 1:0] quotient, remainder
+    output  [DATA_WIDTH - 1:0] quotient, remainder,
+    output  valid_output
 );
     localparam num_reg = 8;
     localparam num_tmp = 8;
@@ -13,6 +14,7 @@ module non_restore_v2 #(
     reg [DATA_WIDTH:0]      A [0:num_reg - 1];
     reg [DATA_WIDTH-1:0]    Q [0:num_reg - 1];
     reg [num_reg-1:0]       sign;
+    reg [7:0]               hold_valid;
 
     wire [DATA_WIDTH:0]     A_new[0:num_tmp-1];
     wire [DATA_WIDTH-1:0]   Q_new[0:num_tmp-1];
@@ -38,10 +40,12 @@ module non_restore_v2 #(
                 M[i] <= {(DATA_WIDTH + 1){1'b0}};
                 A[i] <= {(DATA_WIDTH + 1){1'b0}};
             end 
-            sign    <= {(num_reg){1'b0}};
+            hold_valid  <= 8'd0;
+            sign        <= {(num_reg){1'b0}};
         end 
         else begin
-            sign    <= {sign[num_reg-2:0], sign_a ^ sign_b};
+            sign        <= {sign[num_reg-2:0], sign_a ^ sign_b};
+            hold_valid  <= {hold_valid[6:0], valid_input};
 
             Q[0]    <= Q_new[0];
             A[0]    <= A_new[0];
@@ -82,6 +86,7 @@ module non_restore_v2 #(
     assign rem_abs      = (A[num_reg-1][DATA_WIDTH])    ? A[num_reg-1] + M[num_reg-1]   : A[num_reg-1];
     assign quotient     = (sign[num_reg - 1])           ? ~Q[num_reg - 1] + 1'b1        : Q[num_reg - 1];
     assign remainder    = (sign[num_reg - 1])           ? ~rem_abs + 1'b1               : rem_abs;
+    assign valid_output = hold_valid[7];
 
     DivStageK #(.W(DATA_WIDTH), .K(4)) u_stage_first (
         .A_in({(DATA_WIDTH + 1){1'b0}}),
