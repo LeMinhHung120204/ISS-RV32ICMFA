@@ -168,6 +168,11 @@ module FPU #(
                 oRes            = res_fsqrt;
                 valid_output    = done_fsqrt;
             end
+            
+            5'd22: begin    // fmv.x.w / fmv.w.x
+                oRes            = rs1;
+                valid_output    = 1'b1;
+            end 
 
             default: begin
                 oRes            = 32'd0;

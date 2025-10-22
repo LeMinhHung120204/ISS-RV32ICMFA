@@ -1,24 +1,29 @@
 `timescale 1ns/1ps
 module tb_MDU;
     parameter WIDTH = 32;
-    reg clk, rst_n, is_high;
+    reg clk, rst_n, is_high, valid_input;
     reg [1:0]   Mul_Div_unsigned;
-    reg [2:0]   funct3;
+    reg [1:0]   MulDivOp;
     reg [10:0]  count_clock;
     reg [WIDTH - 1:0] rs1, rs2, rd;
     
     wire [WIDTH - 1:0] OutData;
+    wire [WIDTH-1:0] oRD;
+    wire stall;
 
     MDU mul_inst(
         .clk(clk),
         .rst_n(rst_n),
         .is_high(is_high),
         .Mul_Div_unsigned(Mul_Div_unsigned),
-        .funct3(funct3),
+        .valid_input(valid_input),
+        .MulDivOp(MulDivOp),
         .rs1(rs1),
         .rs2(rs2),
         .rd(rd),
-        .OutData(OutData)
+        .OutData(OutData),
+        .oRD(oRD),
+        .stall(stall)
     );
 
     always #5 clk = ~clk;
@@ -35,18 +40,23 @@ module tb_MDU;
         clk = 0;
         rst_n = 0;
         is_high = 0;
+        valid_input = 0;
         Mul_Div_unsigned = 2'b00;
-        funct3 = 3'b000;
+//        funct3 = 3'b000;
         rs1 = 32'd0;
         rs2 = 32'd0;
         rd = 32'd0;
 
         #30;
         rst_n = 1;
-        funct3 = 3'd6;
+        valid_input = 1;
+        MulDivOp = 2'b00;
         rs1 = 32'd3;
         rs2 = 32'd5;
         rd = 32'd10;
+
+        #10;
+        valid_input = 0;
         #100;
     end
 endmodule

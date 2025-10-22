@@ -11,11 +11,13 @@ module tb_srt_4_div;
     reg  [DW-1:0]         divisor;
     reg  [9:0]            count_clock;
     reg                     is_unsign;
+    reg                     valid_input;
     
     wire [DW-1:0]         quotient;
     wire [DW-1:0]         reminder;
     wire                  mulfinish;
     wire                  diverror;
+    wire                    valid_output;
 
     initial clk = 1'b0;
     always #2.5 clk = ~clk;
@@ -50,10 +52,12 @@ module tb_srt_4_div;
         .clk(clk),
         .rst_n(rst_n),
         .is_unsigned(is_unsign),
+        .valid_input(valid_input),
         .dividend(dividend),
         .divisor(divisor),
         .quotient(quotient),
-        .remainder(reminder)
+        .remainder(reminder),
+        .valid_output(valid_output)
     );
     
     initial begin  
@@ -63,6 +67,7 @@ module tb_srt_4_div;
         is_unsign = 0;
         
         #10;
+        valid_input = 1;
         is_unsign = 0;
         rst_n = 1'b1;
         start = 1'b1;
@@ -78,6 +83,8 @@ module tb_srt_4_div;
          rst_n = 1'b1;
          dividend = 32'd128;
          divisor = 32'd13;
+         #10;
+         valid_input = 0;
         
         #200;
         $finish;
