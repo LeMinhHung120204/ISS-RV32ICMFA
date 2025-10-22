@@ -12,7 +12,7 @@ module fcvt_s_w(
     reg [7:0]   exp2; 
     reg [7:0]   exp1; 
     reg [4:0]   lz0;
-    reg v       2, s2, v0, v1, s1, is_zero1; 
+    reg v2, s2, v0, v1, s1, is_zero1; 
     
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin 
