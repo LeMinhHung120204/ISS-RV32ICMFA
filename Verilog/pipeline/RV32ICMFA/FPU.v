@@ -3,7 +3,7 @@
 module FPU #(
     parameter WIDTH = 32
 )(
-    input   clk, rst_n,
+    input   clk, rst_n, en,
     input   [4:0] op, 
     input   [WIDTH-1:0] rs1, rs2, rs3,
     output  [WIDTH-1:0] rd,
@@ -20,8 +20,8 @@ module FPU #(
     reg valid_output;
 
     always @(*) begin
-        case(op)
-            5'd0: begin     // add
+        case({op, en})
+            6'b0_0000_1: begin     // add
                 valid_input     = 9'b0_0000_0001;
                 in1             = rs1;
                 in2             = rs2;
@@ -29,7 +29,7 @@ module FPU #(
                 valid_output    = done_add;
             end 
 
-            5'd1: begin     // sub
+            6'b0_0001_1: begin     // sub
                 valid_input     = 9'b0_0000_0001;
                 in1             = rs1;
                 in2             = {~rs2[31], rs2[30:0]};
@@ -37,61 +37,61 @@ module FPU #(
                 valid_output    = done_add;
             end 
 
-            5'd2: begin     // fclass
+            6'b0_0010_1: begin     // fclass
                 valid_input     = 9'd0;
                 oRes            = res_fclass;
                 valid_output    = 1'b1;
             end 
 
-            5'd3: begin     // fcvt.s.w
+            6'b0_0011_1: begin     // fcvt.s.w
                 valid_input     = 9'b0_0000_0010;
                 oRes            = res_fcvt_s_w;
                 valid_output    = done_fcvt_s_w;
             end 
 
-            5'd4: begin     // fcvt.s.wu
+            6'b0_0100_1: begin     // fcvt.s.wu
                 valid_input     = 9'b0_0000_0100;
                 oRes            = res_fcvt_s_wu;
                 valid_output    = done_fcvt_s_wu;
             end 
 
-            5'd5: begin     // fcvt.w.s
+            6'b0_0101_1: begin     // fcvt.w.s
                 valid_input     = 9'b0_0000_1000;
                 oRes            = res_fcvt_w_s;
                 valid_output    = done_fcvt_w_s;
             end 
 
-            5'd6: begin     // fcvt.wu.s
+            6'b0_0110_1: begin     // fcvt.wu.s
                 valid_input     = 9'b0_0001_0000;
                 oRes            = res_fcvt_wu_s;
                 valid_output    = done_fcvt_wu_s;
             end 
 
-            5'd7: begin     // fdiv
+            6'b0_0111_1: begin     // fdiv
                 valid_input     = 9'b0_0010_0000;
                 oRes            = res_div;
                 valid_output    = done_fdiv;
             end
 
-            5'd8: begin     // feq
+            6'b0_1000_1: begin     // feq
                 valid_input     = 9'd0;
                 oRes            = res_feq;
                 valid_output    = 1'b1;
             end 
 
-            5'd9: begin     // fle
+            6'b0_1001_1: begin     // fle
                 valid_input     = 9'd0;
                 oRes            = res_fle;
                 valid_output    = 1'b1;
             end 
 
-            5'd10: begin    // flt
+            6'b0_1010_1: begin    // flt
                 valid_input     = 9'd0;
                 oRes            = res_flt;
                 valid_output    = 1'b1;
             end 
 
-            5'd11: begin    // fmadd
+            6'b0_1011_1: begin    // fmadd
                 valid_input     = 9'b0_0100_0000;
                 in1             =rs1;
                 in2             =rs2;
@@ -100,7 +100,7 @@ module FPU #(
                 valid_output    = done_fmadd;
             end 
 
-            5'd12: begin    // fmsub
+            6'b0_1100_1: begin    // fmsub
                 valid_input     = 9'b0_0100_0000;
                 in1             = rs1;
                 in2             = rs2;
@@ -109,7 +109,7 @@ module FPU #(
                 valid_output    = done_fmadd;
             end 
 
-            5'd13: begin    // fnmadd
+            6'b0_1101_1: begin    // fnmadd
                 valid_input     = 9'b0_0100_0000;
                 in1             = {~rs1[31], rs1[30:0]};
                 in2             = rs2;
@@ -118,7 +118,7 @@ module FPU #(
                 valid_output    = done_fmadd;
             end 
 
-            5'd14: begin    // fnmsub
+            6'b0_1110_1: begin    // fnmsub
                 valid_input     = 9'b0_0100_0000;
                 in1             = {~rs1[31], rs1[30:0]};
                 in2             = rs2;
@@ -127,49 +127,49 @@ module FPU #(
                 valid_output    = done_fmadd;
             end 
 
-            5'd15: begin    // fmax
+            6'b0_1111_1: begin    // fmax
                 valid_input     = 9'd0;
                 oRes            = res_fmax;
                 valid_output    = 1'b1;
             end 
 
-            5'd16: begin    // fmin
+            6'b1_0000_1: begin    // fmin
                 valid_input     = 9'd0;
                 oRes            = res_fmin;
                 valid_output    = 1'b1;
             end 
 
-            5'd17: begin    // fmul
+            6'b1_0001_1: begin    // fmul
                 valid_input     = 9'b0_1000_0000;
                 oRes            = res_fmul;
                 valid_output    = done_fmul;
             end 
 
-            5'd18: begin    // fsgnj
+            6'b1_0010_1: begin    // fsgnj
                 valid_input     = 9'd0;
                 oRes            = res_fsgnj;
                 valid_output    = 1'b1;
             end 
 
-            5'd19: begin    // fsgnjn
+            6'b1_0011_1: begin    // fsgnjn
                 valid_input     = 9'd0;
                 oRes            = res_fsgnjn;
                 valid_output    = 1'b1;
             end 
 
-            5'd20: begin    // fsgnjx
+            6'b1_0100_1: begin    // fsgnjx
                 valid_input     = 9'd0;
                 oRes            = res_fsgnjx;
                 valid_output    = 1'b1;
             end
 
-            5'd21: begin    // fsqrt
+            6'b1_0101_1: begin    // fsqrt
                 valid_input     = 9'b1_0000_0000;
                 oRes            = res_fsqrt;
                 valid_output    = done_fsqrt;
             end
             
-            5'd22: begin    // fmv.x.w / fmv.w.x
+            6'b1_0110_1: begin    // fmv.x.w / fmv.w.x
                 oRes            = rs1;
                 valid_output    = 1'b1;
             end 
