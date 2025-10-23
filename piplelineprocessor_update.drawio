@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0" version="28.2.7">
   <diagram name="Trang-1" id="gDVLnxsJr594n2i2ea_J">
-    <mxGraphModel dx="5750" dy="3824" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#FFFFFF" math="0" shadow="0">
+    <mxGraphModel dx="1974" dy="2797" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#FFFFFF" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -191,7 +191,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="vXOkVwNJW7AqoFIaPv7w-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;elbow=vertical;strokeWidth=3;endArrow=none;endFill=0;" parent="1" source="SivpRfSGO81f8dvX5T_r-93" edge="1">
+        <mxCell id="vXOkVwNJW7AqoFIaPv7w-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;elbow=vertical;strokeWidth=3;endArrow=none;endFill=0;fillColor=#e3c800;strokeColor=#B09500;" parent="1" source="SivpRfSGO81f8dvX5T_r-93" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="3702.000097632408" y="1196.2000732421875" as="targetPoint" />
           </mxGeometry>
@@ -275,12 +275,6 @@
         </mxCell>
         <mxCell id="SivpRfSGO81f8dvX5T_r-169" value="&lt;font style=&quot;font-size: 32px;&quot;&gt;InstrD&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=0;fontFamily=Times New Roman;" parent="1" vertex="1">
           <mxGeometry x="1116" y="164" width="100" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="vXOkVwNJW7AqoFIaPv7w-59" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.591;exitY=0.033;exitDx=0;exitDy=0;elbow=vertical;exitPerimeter=0;strokeWidth=2;endArrow=none;endFill=0;" parent="1" source="SivpRfSGO81f8dvX5T_r-189" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="3507" y="-404" as="targetPoint" />
-            <mxPoint x="3507.032" y="2008.96" as="sourcePoint" />
-          </mxGeometry>
         </mxCell>
         <mxCell id="SivpRfSGO81f8dvX5T_r-189" value="&lt;font&gt;&lt;b&gt;Hazard Unit&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontColor=#000000;strokeColor=#000000;fontSize=32;strokeWidth=3;fontFamily=Times New Roman;" parent="1" vertex="1">
           <mxGeometry x="288.8" y="2224" width="5446" height="120" as="geometry" />
@@ -571,9 +565,6 @@
         </mxCell>
         <mxCell id="SivpRfSGO81f8dvX5T_r-372" value="SrcBE" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=32;fontFamily=Times New Roman;" parent="1" vertex="1">
           <mxGeometry x="3858" y="379" width="102" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="SivpRfSGO81f8dvX5T_r-387" value="0" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=32;fontFamily=Times New Roman;" parent="1" vertex="1">
-          <mxGeometry x="3504" y="-413" width="34" height="50" as="geometry" />
         </mxCell>
         <mxCell id="SivpRfSGO81f8dvX5T_r-388" value="RegWriteM" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=32;fontFamily=Times New Roman;" parent="1" vertex="1">
           <mxGeometry x="4318.5" y="-485" width="170" height="50" as="geometry" />

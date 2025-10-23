@@ -4,7 +4,7 @@ module FPU #(
     parameter WIDTH = 32
 )(
     input   clk, rst_n, en,
-    input   [4:0] op, 
+    input   [4:0] FPUControl, 
     input   [WIDTH-1:0] rs1, rs2, rs3,
     output  [WIDTH-1:0] rd,
     output  done, stall
@@ -20,7 +20,7 @@ module FPU #(
     reg valid_output;
 
     always @(*) begin
-        case({op, en})
+        case({FPUControl, en})
             6'b0_0000_1: begin     // add
                 valid_input     = 9'b0_0000_0001;
                 in1             = rs1;

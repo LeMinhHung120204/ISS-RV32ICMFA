@@ -4,7 +4,7 @@ module MDU #(
 )(
     input   clk, rst_n, is_high, valid_input,
     input   [1:0]               Mul_Div_unsigned, 
-    input   [1:0]               MulDivOp,
+    input   [1:0]               MulDivControl,
     input   [DATA_WIDTH - 1:0]  rs1, rs2, rd,
     output  [DATA_WIDTH - 1:0]  OutData,
     output  [DATA_WIDTH - 1:0]  oRD,
@@ -33,7 +33,7 @@ module MDU #(
     end 
 
     always @(*) begin
-        case(MulDivOp)
+        case(MulDivControl)
             2'b00: begin
                 tmp_out         = (is_high) ? E_MulHigh : E_MulLow;
                 valid_inputMul  = valid_input;
