@@ -8,6 +8,7 @@ module MDU #(
     input   [DATA_WIDTH - 1:0]  rs1, rs2, rd,
     output  [DATA_WIDTH - 1:0]  OutData,
     output  [DATA_WIDTH - 1:0]  oRD,
+    output done,
     output reg stall
 );
     wire [DATA_WIDTH - 1:0] E_MulHigh, E_MulLow;
@@ -59,6 +60,7 @@ module MDU #(
 
     assign oRD      = hold_rd;
     assign OutData  = tmp_out;
+    assign done     = valid_outputMul | valid_outputDiv;
 
     mul32 mul_inst(
        .clk(clk),

@@ -26,7 +26,7 @@ module mux16_1 #(
             4'd13:      res = in13;
             4'd14:      res = in14;
             4'd15:      res = in15;
-            default:    res = 32'd0;
+            default:    res = {32{1'b0}};
         endcase
     end 
 endmodule

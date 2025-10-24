@@ -12,7 +12,7 @@ module tb_RV32I;
     wire [31:0] dmem_wdata;
     wire [31:0] dmem_rdata;
     wire        dmem_we;
-    wire        W_Result_output;
+    wire [31:0] W_Result_output;
 
     // DUT
     RV32I dut (
@@ -66,6 +66,6 @@ module tb_RV32I;
         // $dumpvars(0, tb_RV32I);
 
         #50  rst_n = 1'b1;
-        #500 $finish;
+        #400 $finish;
     end
 endmodule

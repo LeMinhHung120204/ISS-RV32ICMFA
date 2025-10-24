@@ -12,7 +12,7 @@ module mux4_1 #(
             2'b01: res = in1;
             2'b10: res = in2;
             2'b11: res = in3;
-            default: res = 32'd0;
+            default: res = {32{1'b0}};
         endcase
     end 
 endmodule

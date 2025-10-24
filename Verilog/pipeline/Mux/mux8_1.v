@@ -16,7 +16,7 @@ module mux8_1 #(
             3'b101: res = in5;
             3'b110: res = in6;
             3'b111: res = in7;
-            default: res = 32'd0;
+            default: res = {32{1'b0}};
         endcase
     end 
 endmodule
