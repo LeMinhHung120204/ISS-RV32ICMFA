@@ -9,7 +9,7 @@ module ID_EX #(
     input   [DATA_WIDTH - 1:0]  D_RD1, D_RD2, D_ImmExt, D_RD3,
     input   [ADDR_WIDTH - 1:0]  D_PC, D_PCPlus4,
     input   [1:0]               D_Mul_Div_unsigned, D_MulDivControl, D_ResExSel,
-    input   [2:0]               D_ResultSrc, D_StoreSrc,
+    input   [2:0]               D_ResultSrc, D_StoreSrc, D_funct3,
     input   [3:0]               D_ALUControl,
     input   [4:0]               D_Rs1, D_Rs2, D_rd, D_RsF3, D_FPUControl,
 
@@ -19,7 +19,7 @@ module ID_EX #(
     output reg  [DATA_WIDTH - 1:0]  E_RD1, E_RD2, E_ImmExt, E_RD3,
     output reg  [ADDR_WIDTH - 1:0]  E_PC, E_PCPlus4,
     output reg  [1:0]               E_Mul_Div_unsigned, E_MulDivControl, E_ResExSel,
-    output reg  [2:0]               E_ResultSrc, E_StoreSrc,
+    output reg  [2:0]               E_ResultSrc, E_StoreSrc, E_funct3,
     output reg  [3:0]               E_ALUControl,
     output reg  [4:0]               E_Rs1, E_Rs2, E_rd, E_RsF3, E_FPUControl
 );
@@ -39,6 +39,7 @@ module ID_EX #(
             E_ALUControl        <= 4'd0;
             E_StoreSrc          <= 3'd0;
             E_ResultSrc         <= 3'd0;
+            E_funct3            <= 3'd0;
             E_Mul_Div_unsigned  <= 2'd0;
             E_MulDivControl     <= 2'd0;
             E_ResExSel          <= 2'd0;
@@ -72,6 +73,7 @@ module ID_EX #(
                 E_ALUControl        <= 4'd0;
                 E_StoreSrc          <= 3'd0;
                 E_ResultSrc         <= 3'd0;
+                E_funct3            <= 3'd0;
                 E_Mul_Div_unsigned  <= 2'd0;
                 E_MulDivControl     <= 2'd0;
                 E_ResExSel          <= 2'd0;
@@ -104,6 +106,7 @@ module ID_EX #(
                 E_ALUControl        <= D_ALUControl      ;
                 E_StoreSrc          <= D_StoreSrc        ;
                 E_ResultSrc         <= D_ResultSrc       ;
+                E_funct3            <= D_funct3;
                 E_Mul_Div_unsigned  <= D_Mul_Div_unsigned;
                 E_MulDivControl     <= D_MulDivControl   ;
                 E_ResExSel          <= D_ResExSel        ;

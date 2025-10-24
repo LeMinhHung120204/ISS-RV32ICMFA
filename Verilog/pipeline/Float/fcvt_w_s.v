@@ -9,7 +9,7 @@ module fcvt_w_s(
     reg signed [31:0] y2;
     reg [23:0] m1; 
     reg [7:0] e1; 
-    reg v2, v1, s1, is_zero1, is_naninf1, v0; 
+    reg v1, s1, is_zero1, is_naninf1, v0; 
 
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin 
@@ -73,11 +73,9 @@ module fcvt_w_s(
     end
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            v2              <= 1'b0;
             y               <= 32'd0;
             valid_output    <= 1'b0;
         end else begin
-            v2              <= v1;
             y               <= y2;
             valid_output    <= v1;
         end

@@ -62,7 +62,6 @@ module fsqrt2 #(
         end 
     end 
 
-    reg         reg_s [0:13];
     reg [7:0]   reg_e [0:13];
     reg [12:0]  reg_f0;
     reg [6:0]   reg_f1;
@@ -104,7 +103,6 @@ module fsqrt2 #(
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             for (i = 0; i < 14; i = i + 1'b1) begin
-                reg_s[i] <= 1'b0;
                 reg_e[i] <= 8'b0;
             end  
             reg_oValid  <= 15'd0;

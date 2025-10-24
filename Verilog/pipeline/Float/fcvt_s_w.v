@@ -12,7 +12,7 @@ module fcvt_s_w(
     reg [7:0]   exp2; 
     reg [7:0]   exp1; 
     reg [4:0]   lz0;
-    reg v2, s2, v0, v1, s1, is_zero1; 
+    reg s2, v0, v1, s1, is_zero1; 
     
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin 
@@ -84,11 +84,9 @@ module fcvt_s_w(
     end
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            v2              <= 1'b0;
             y               <= 32'd0;
             valid_output    <= 1'b0;
         end else begin
-            v2              <= v1;
             y               <= (is_zero1) ? 32'd0 : {s2, exp2, frac2};
             valid_output    <= v1;
         end

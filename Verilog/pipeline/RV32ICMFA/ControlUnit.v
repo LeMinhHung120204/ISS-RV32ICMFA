@@ -31,7 +31,8 @@ module ControlUnit(
         .StoreSrc(StoreSrc),
         .addr_addend_sel(addr_addend_sel),
         .ResPCSel(ResPCSel),
-        .ResExSel(ResExSel)
+        .ResExSel(ResExSel),
+        .FPUOp(FPUOp)
     );
 
     AluDecoder aludecoder_inst(

@@ -16,7 +16,7 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] E_ImmExt, E_ALUResult;
     wire [WIDTH_DATA - 1:0] M_Result, M_ReadData, M_ALUResult, M_WriteData, M_ImmExt;
     wire [WIDTH_DATA - 1:0] W_ImmExt, W_ReadData, W_Result, WB_Result;
-    wire [4:0]              E_rs1, E_rs2, E_rd, E_RsF3, M_rd, W_rd, A1, A2, WD3;
+    wire [4:0]              E_rs1, E_rs2, E_rd, E_RsF3, M_rd, W_rd, A1, A2, A3, WD3;
 
     wire [WIDTH_DATA - 1:0] E_SrcA, E_SrcB;
     wire [WIDTH_DATA - 1:0] E_WriteData;
@@ -229,6 +229,7 @@ module RV32I #(
         .D_Branch(D_Branch),
         .D_ALUSrc(D_ALUSrc),
         .D_ResultSrc(D_ResultSrc),
+        .D_funct3(D_Instr[14:12]),
         .D_StoreSrc(D_StoreSrc),
         .D_ALUControl(D_ALUControl),
         .D_is_high(D_is_high),
@@ -260,6 +261,7 @@ module RV32I #(
         .E_Branch(E_Branch),
         .E_ALUSrc(E_ALUSrc),
         .E_ResultSrc(E_ResultSrc),
+        .E_funct3(E_funct3),
         .E_StoreSrc(E_StoreSrc),
         .E_ALUControl(E_ALUControl),
         .E_is_high(E_is_high),

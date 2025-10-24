@@ -25,6 +25,6 @@ module feq #(
 
     wire eq_res         = (a_is_nan || b_is_nan) ? 1'b0 : eq_ordered;
 
-    assign y            = {31'd0, eq_res};
+    assign out          = {31'd0, eq_res};
     assign exception    = a_is_snan | b_is_snan;
 endmodule

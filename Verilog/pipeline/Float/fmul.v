@@ -282,7 +282,7 @@ module fmul #(
         .clk(clk),
         .rst_n(rst_n),
         .valid_input(state == multiply_0),
-        .is_unsigned(2'b0),
+        // .is_unsigned(2'b0),
         .a(a_m),
         .b(b_m),
         .valid_output(mul_done),
