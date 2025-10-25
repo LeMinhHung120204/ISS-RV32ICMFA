@@ -59,7 +59,7 @@
     <Option Name="IPStaticSourceDir" Val="$PIPUSERFILESDIR/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSABoardId" Val="vc707"/>
-    <Option Name="WTXSimLaunchSim" Val="0"/>
+    <Option Name="WTXSimLaunchSim" Val="2"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -90,19 +90,16 @@
   <FileSets Version="1" Minor="32">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/csa.v">
+      <File Path="$PSRCDIR/sources_1/new/lr_w.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/csa.v"/>
-          <Attr Name="ImportTime" Val="1761221878"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt.v">
+      <File Path="$PSRCDIR/sources_1/new/sc_w.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt.v"/>
-          <Attr Name="ImportTime" Val="1761221878"/>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -378,6 +375,16 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/csa.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/csa.v"/>
+          <Attr Name="ImportTime" Val="1761221878"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/pipeline/datapath.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
@@ -538,6 +545,16 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt.v"/>
+          <Attr Name="ImportTime" Val="1761221878"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt2.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
@@ -680,8 +697,7 @@
       </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="fsqrt"/>
-        <Option Name="TopAutoSet" Val="TRUE"/>
+        <Option Name="TopModule" Val="lr_w"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1" RelGenDir="$PGENDIR/constrs_1">
@@ -691,8 +707,17 @@
       </Config>
     </FileSet>
     <FileSet Name="sim_1" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/sim_1" RelGenDir="$PGENDIR/sim_1">
+      <Filter Type="Srcs"/>
+      <File Path="$PSRCDIR/sim_1/new/tb_lr_w.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sim_1/imports/TestBench/tb_fcvt_s_w.v">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/TestBench/tb_fcvt_s_w.v"/>
           <Attr Name="ImportTime" Val="1761221878"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -840,9 +865,17 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sim_1/new/tb_sc_w.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="tb_fcvt_s_w"/>
+        <Option Name="TopModule" Val="tb_lr_w"/>
         <Option Name="TopLib" Val="xil_defaultlib"/>
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>
@@ -860,6 +893,14 @@
     </FileSet>
     <FileSet Name="utils_1" Type="Utils" RelSrcDir="$PSRCDIR/utils_1" RelGenDir="$PGENDIR/utils_1">
       <Filter Type="Utils"/>
+      <File Path="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedInSteps" Val="synth_1"/>
+          <Attr Name="AutoDcp" Val="1"/>
+        </FileInfo>
+      </File>
       <Config>
         <Option Name="TopAutoSet" Val="TRUE"/>
       </Config>
@@ -884,22 +925,19 @@
     </Simulator>
   </Simulators>
   <Runs Version="1" Minor="22">
-    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7vx485tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="true" WriteIncrSynthDcp="false" State="current" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/synth_1" ParallelReportGen="true">
+    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7vx485tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="true" IncrementalCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/synth_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2025">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2025"/>
         <Step Id="synth_design"/>
       </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
       <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2025"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
     <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7vx485tffg1761-2" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/impl_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2025">
-          <Desc>Default settings for Implementation.</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2025"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
