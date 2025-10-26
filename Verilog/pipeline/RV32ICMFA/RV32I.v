@@ -302,10 +302,8 @@ module RV32I #(
         .MulDivControl(E_MulDivControl),
         .rs1(E_SrcA),
         .rs2(E_SrcB),
-        .rd(E_rd),
 
         .OutData(E_MDUResult),
-        .oRD(),
         .done(E_MDU_done),
         .stall(E_MulDivStall)
     );

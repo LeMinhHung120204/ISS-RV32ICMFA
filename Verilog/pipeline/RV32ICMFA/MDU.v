@@ -5,30 +5,27 @@ module MDU #(
     input   clk, rst_n, is_high, valid_input,
     input   [1:0]               Mul_Div_unsigned, 
     input   [1:0]               MulDivControl,
-    input   [DATA_WIDTH - 1:0]  rs1, rs2, rd,
+    input   [DATA_WIDTH - 1:0]  rs1, rs2,
     output  [DATA_WIDTH - 1:0]  OutData,
-    output  [DATA_WIDTH - 1:0]  oRD,
     output done, stall
 );
     wire [DATA_WIDTH - 1:0] E_MulHigh, E_MulLow;
     wire [DATA_WIDTH - 1:0] E_quotient, E_remainder;
 
     reg                     valid_inputMul, valid_inputDiv, reg_stall;
-    reg [DATA_WIDTH-1:0]    hold_rd, tmp_out, reg_rs1, reg_rs2;
+    reg [DATA_WIDTH-1:0]    tmp_out, reg_rs1, reg_rs2;
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             reg_stall       <= 1'b0;
             valid_inputMul  <= 1'b0;
             valid_inputDiv  <= 1'b0;
-            hold_rd         <= 32'd0;
             reg_rs1         <= 32'd0;
             reg_rs2         <= 32'd0;
         end 
         else begin
             if (valid_input) begin
                 reg_stall   <= 1'b1;
-                hold_rd     <= rd;
                 reg_rs1     <= rs1;
                 reg_rs2     <= rs2;
             end 
@@ -75,7 +72,6 @@ module MDU #(
         endcase
     end
 
-    assign oRD      = hold_rd;
     assign OutData  = tmp_out;
     assign done     = valid_outputMul | valid_outputDiv;
 
