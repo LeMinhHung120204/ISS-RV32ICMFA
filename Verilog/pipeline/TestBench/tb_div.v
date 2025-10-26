@@ -48,7 +48,7 @@ module tb_srt_4_div;
 //    );
 
 
-    non_restore_v2 dut (
+    non_restore dut (
         .clk(clk),
         .rst_n(rst_n),
         .is_unsigned(is_unsign),

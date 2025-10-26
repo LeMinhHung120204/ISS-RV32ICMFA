@@ -2,16 +2,18 @@
 module non_restore #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_unsigned,
+    input   clk, rst_n, is_unsigned, valid_input,
     input   [DATA_WIDTH - 1:0] dividend, divisor,
-    output  [DATA_WIDTH - 1:0] quotient, remainder
+    output  [DATA_WIDTH - 1:0] quotient, remainder,
+    output  valid_output
 );
-    localparam num_reg = 11;
-    localparam num_tmp = 11;
+    localparam num_reg = 17;
+    localparam num_tmp = 17;
 
     reg [DATA_WIDTH:0]      M [0:num_reg - 1];
     reg [DATA_WIDTH:0]      A [0:num_reg - 1];
     reg [DATA_WIDTH-1:0]    Q [0:num_reg - 1];
+    reg [16:0]              hold_valid;
     reg [num_reg-1:0]       sign;
 
     wire [DATA_WIDTH:0]     A_new[0:num_tmp-1];
@@ -38,10 +40,12 @@ module non_restore #(
                 M[i] <= {(DATA_WIDTH + 1){1'b0}};
                 A[i] <= {(DATA_WIDTH + 1){1'b0}};
             end 
-            sign    <= {(num_reg){1'b0}};
+            sign        <= {(num_reg){1'b0}};
+            hold_valid  <= 17'd0;
         end 
         else begin
             sign    <= {sign[num_reg-2:0], sign_a ^ sign_b};
+            hold_valid  <= {hold_valid[15:0], valid_input};
 
             Q[0]    <= Q_new[0];
             A[0]    <= A_new[0];
@@ -87,25 +91,29 @@ module non_restore #(
             A[10]   <= A_new[10];
             M[10]   <= M[9];
 
-            // Q[11]   <= Q_new[11];
-            // A[11]   <= A_new[11];
-            // M[11]   <= M[10];
+            Q[11]   <= Q_new[11];
+            A[11]   <= A_new[11];
+            M[11]   <= M[10];
 
-            // Q[12]   <= Q_new[12];
-            // A[12]   <= A_new[12];
-            // M[12]   <= M[11];
+            Q[12]   <= Q_new[12];
+            A[12]   <= A_new[12];
+            M[12]   <= M[11];
 
-            // Q[13]   <= Q_new[13];
-            // A[13]   <= A_new[13];
-            // M[13]   <= M[12];
+            Q[13]   <= Q_new[13];
+            A[13]   <= A_new[13];
+            M[13]   <= M[12];
 
-            // Q[14]   <= Q_new[14];
-            // A[14]   <= A_new[14];
-            // M[14]   <= M[13];
+            Q[14]   <= Q_new[14];
+            A[14]   <= A_new[14];
+            M[14]   <= M[13];
 
-            // Q[15]   <= Q_new[15];
-            // A[15]   <= A_new[15];
-            // M[15]   <= M[14];
+            Q[15]   <= Q_new[15];
+            A[15]   <= A_new[15];
+            M[15]   <= M[14];
+
+            Q[16]   <= Q_new[16];
+            A[16]   <= A_new[16];
+            M[16]   <= M[15];
         end 
     end 
 
@@ -114,19 +122,20 @@ module non_restore #(
     assign rem_abs      = (A[num_reg-1][DATA_WIDTH])    ? A[num_reg-1] + M[num_reg-1]   : A[num_reg-1];
     assign quotient     = (sign[num_reg - 1])           ? ~Q[num_reg - 1] + 1'b1        : Q[num_reg - 1];
     assign remainder    = (sign[num_reg - 1])           ? ~rem_abs + 1'b1               : rem_abs;
+    assign valid_output = hold_valid[16];
 
-    DivStageK u_stage_first (
-        .A_in({(DATA_WIDTH + 1){1'b0}}),
-        .M_in(M0),
-        .Q_in(abs_a),
-        .A_out(A_new[0]),
-        .Q_out(Q_new[0])
+    Div_unit u_stage_first (
+        .A({(DATA_WIDTH + 1){1'b0}}),
+        .M(M0),
+        .Q(abs_a),
+        .A_new(A_new[0]),
+        .Q_new(Q_new[0])
     );
 
     genvar gi;
     generate
-        for (gi = 1 ; gi < 10; gi = gi + 1) begin : GEN_STAGES
-            DivStageK stg(
+        for (gi = 1 ; gi < 16; gi = gi + 1) begin : GEN_STAGES
+            DivStageK #(.W(DATA_WIDTH), .K(2)) stg(
                 .A_in(A[gi - 1]),
                 .M_in(M[gi - 1]),
                 .Q_in(Q[gi - 1]),
@@ -136,18 +145,11 @@ module non_restore #(
         end
     endgenerate
 
-    DivStageK #(.W(DATA_WIDTH), .K(2)) u_stage_last (
-          .A_in  (A[9]),
-          .M_in  (M[9]),
-          .Q_in  (Q[9]),
-          .A_out (A_new[10]),
-          .Q_out (Q_new[10])
-        );
-    // DivStage2 DivStage2_inst0(
-    //     .A_in(A[9]),
-    //     .M_in(M[9]),
-    //     .Q_in(Q[9]),
-    //     .A_out(A_new[10]),
-    //     .Q_out(Q_new[10]) 
-    // );
+    Div_unit u_stage_last (
+        .A(A[15]),
+        .M(M[15]),
+        .Q(Q[15]),
+        .A_new(A_new[16]),
+        .Q_new(Q_new[16])
+    );
 endmodule

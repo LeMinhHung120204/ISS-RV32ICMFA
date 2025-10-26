@@ -34,14 +34,10 @@ module MDU #(
                 valid_inputMul  <= valid_input;
                 valid_inputDiv  <= 1'b0;
                 end 
-                2'b01: begin
+                2'b01, 2'b10: begin
                     valid_inputMul  <= 1'b0;
                     valid_inputDiv  <= valid_input;
                 end 
-                2'b10: begin
-                    valid_inputMul  <= 1'b0;
-                    valid_inputDiv  <= valid_input;
-                end
                 default: begin
                     valid_inputMul  <= 1'b0;
                     valid_inputDiv  <= 1'b0;
@@ -87,7 +83,7 @@ module MDU #(
        .R_low(E_MulLow)
     );
 
-    non_restore_v2 div_inst(
+    non_restore div_inst(
        .clk(clk),
        .rst_n(rst_n),
        .valid_input(valid_inputDiv),
