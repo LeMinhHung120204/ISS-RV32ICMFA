@@ -47,7 +47,7 @@ module RV32I #(
     wire E_FPU_done, E_FPUStall;
 
     // ----------------------- Tin hieu Hazard -----------------------
-    wire F_Stall, D_Stall, D_Flush, E_Flush;
+    wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;
     wire [1:0] ForwardAE, ForwardBE;
 
     // ----------------------- Tin hieu PC -----------------------
@@ -83,6 +83,8 @@ module RV32I #(
         .E_Rs2(E_rs2),
         .E_rd(E_rd),
         .E_PCSrc(E_PCSrc),
+        .E_MulDivStall(E_MulDivStall),
+        .E_FPUStall(E_FPUStall),
         .E_ResultSrc(E_ResultSrc),
         .M_RegWrite(M_RegWrite),
         .M_Rd(M_rd),
@@ -91,6 +93,7 @@ module RV32I #(
         
         .F_Stall(F_Stall),
         .D_Stall(D_Stall),
+        .E_Stall(E_Stall),
         .D_Flush(D_Flush),
         .E_Flush(E_Flush),
         .ForwardAE(ForwardAE),
@@ -212,6 +215,7 @@ module RV32I #(
         .clk(clk),
         .rst_n(rst_n),
         .E_Flush(E_Flush),
+        .EN(E_Stall),
 
         .D_RD1(D_RD1),
         .D_RD2(D_RD2),

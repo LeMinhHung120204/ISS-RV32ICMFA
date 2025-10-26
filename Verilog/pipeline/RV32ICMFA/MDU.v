@@ -8,18 +8,17 @@ module MDU #(
     input   [DATA_WIDTH - 1:0]  rs1, rs2, rd,
     output  [DATA_WIDTH - 1:0]  OutData,
     output  [DATA_WIDTH - 1:0]  oRD,
-    output done,
-    output reg stall
+    output done, stall
 );
     wire [DATA_WIDTH - 1:0] E_MulHigh, E_MulLow;
     wire [DATA_WIDTH - 1:0] E_quotient, E_remainder;
 
-    reg                     valid_inputMul, valid_inputDiv, reg_rs1, reg_rs2; 
-    reg [DATA_WIDTH-1:0]    hold_rd, tmp_out;
+    reg                     valid_inputMul, valid_inputDiv, reg_stall;
+    reg [DATA_WIDTH-1:0]    hold_rd, tmp_out, reg_rs1, reg_rs2;
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            stall           <= 1'b0;
+            reg_stall       <= 1'b0;
             valid_inputMul  <= 1'b0;
             valid_inputDiv  <= 1'b0;
             hold_rd         <= 32'd0;
@@ -28,10 +27,10 @@ module MDU #(
         end 
         else begin
             if (valid_input) begin
-                stall   <= 1'b1;
-                hold_rd <= rd;
-                reg_rs1 <= rs1;
-                reg_rs2 <= rs2;
+                reg_stall   <= 1'b1;
+                hold_rd     <= rd;
+                reg_rs1     <= rs1;
+                reg_rs2     <= rs2;
             end 
             case(MulDivControl)
                 2'b00: begin
@@ -51,11 +50,13 @@ module MDU #(
                     valid_inputDiv  <= 1'b0;
                 end 
             endcase
-            if (stall & (valid_outputMul | valid_outputDiv)) begin
-                stall   <= 1'b0;
-            end 
+            if (reg_stall & (valid_outputMul | valid_outputDiv)) begin
+                reg_stall <= 1'b0;
+            end
         end 
     end 
+
+    assign stall = reg_stall | (valid_input);
 
     always @(*) begin
         case(MulDivControl)

@@ -3,7 +3,8 @@ module ID_EX #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input   clk, rst_n, E_Flush, D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
+    input   clk, rst_n, E_Flush, EN,
+    input   D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
             D_is_high, D_addr_addend_sel, D_ResPCSel, D_valid_MDU, D_FRegWrite, D_Valid_FPU,
             D_RegSrc1, D_RegSrc2,
     input   [DATA_WIDTH - 1:0]  D_RD1, D_RD2, D_ImmExt, D_RD3,
@@ -91,39 +92,43 @@ module ID_EX #(
                 E_RegSrc1           <= 1'd0;
                 E_RegSrc2           <= 1'd0;
             end 
-            else begin
-                E_RD1               <= D_RD1             ;
-                E_RD2               <= D_RD2             ;
-                E_RD3               <= D_RD3;
-                E_ImmExt            <= D_ImmExt          ;
-                E_PC                <= D_PC              ;
-                E_PCPlus4           <= D_PCPlus4         ;
-                E_Rs1               <= D_Rs1             ;
-                E_Rs2               <= D_Rs2             ;
-                E_rd                <= D_rd              ;
-                E_RsF3              <= D_RsF3            ;
-                E_FPUControl        <= D_FPUControl      ;
-                E_ALUControl        <= D_ALUControl      ;
-                E_StoreSrc          <= D_StoreSrc        ;
-                E_ResultSrc         <= D_ResultSrc       ;
-                E_funct3            <= D_funct3;
-                E_Mul_Div_unsigned  <= D_Mul_Div_unsigned;
-                E_MulDivControl     <= D_MulDivControl   ;
-                E_ResExSel          <= D_ResExSel        ;
-                E_RegWrite          <= D_RegWrite        ;
-                E_MemWrite          <= D_MemWrite        ;
-                E_Jump              <= D_Jump            ;
-                E_Branch            <= D_Branch          ;
-                E_ALUSrc            <= D_ALUSrc          ;
-                E_is_high           <= D_is_high         ;
-                E_addr_addend_sel   <= D_addr_addend_sel ;
-                E_ResPCSel          <= D_ResPCSel        ;
-                E_valid_MDU         <= D_valid_MDU       ;
-                E_FRegWrite         <= D_FRegWrite       ;
-                E_Valid_FPU         <= D_Valid_FPU       ;
-                E_RegSrc1           <= D_RegSrc1         ;
-                E_RegSrc2           <= D_RegSrc2         ;
-            end 
+            else begin 
+                E_valid_MDU         <= D_valid_MDU;
+                E_Valid_FPU         <= D_Valid_FPU;
+                if (~EN) begin
+                    E_RD1               <= D_RD1             ;
+                    E_RD2               <= D_RD2             ;
+                    E_RD3               <= D_RD3;
+                    E_ImmExt            <= D_ImmExt          ;
+                    E_PC                <= D_PC              ;
+                    E_PCPlus4           <= D_PCPlus4         ;
+                    E_Rs1               <= D_Rs1             ;
+                    E_Rs2               <= D_Rs2             ;
+                    E_rd                <= D_rd              ;
+                    E_RsF3              <= D_RsF3            ;
+                    E_FPUControl        <= D_FPUControl      ;
+                    E_ALUControl        <= D_ALUControl      ;
+                    E_StoreSrc          <= D_StoreSrc        ;
+                    E_ResultSrc         <= D_ResultSrc       ;
+                    E_funct3            <= D_funct3;
+                    E_Mul_Div_unsigned  <= D_Mul_Div_unsigned;
+                    E_MulDivControl     <= D_MulDivControl   ;
+                    E_ResExSel          <= D_ResExSel        ;
+                    E_RegWrite          <= D_RegWrite        ;
+                    E_MemWrite          <= D_MemWrite        ;
+                    E_Jump              <= D_Jump            ;
+                    E_Branch            <= D_Branch          ;
+                    E_ALUSrc            <= D_ALUSrc          ;
+                    E_is_high           <= D_is_high         ;
+                    E_addr_addend_sel   <= D_addr_addend_sel ;
+                    E_ResPCSel          <= D_ResPCSel        ;
+                    
+                    E_FRegWrite         <= D_FRegWrite       ;
+                    
+                    E_RegSrc1           <= D_RegSrc1         ;
+                    E_RegSrc2           <= D_RegSrc2         ;
+                end 
+            end
         end
     end 
 

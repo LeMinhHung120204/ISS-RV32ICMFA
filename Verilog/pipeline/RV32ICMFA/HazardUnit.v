@@ -2,11 +2,11 @@
 module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
-    input               M_RegWrite, W_RegWrite, E_PCSrc,
+    input               M_RegWrite, W_RegWrite, E_PCSrc, E_MulDivStall, E_FPUStall,
     input       [2:0]   E_ResultSrc, 
     input       [4:0]   D_Rs1, D_Rs2, E_Rs1, E_Rs2, E_rd, M_Rd, W_Rd,
     output reg  [1:0]   ForwardAE, ForwardBE,       // forward cho SrcAE, SrcBE
-    output              F_Stall, D_Stall, D_Flush, E_Flush
+    output              F_Stall, D_Stall, E_Stall, D_Flush, E_Flush
 
 );
     // Solve Data Hazard
@@ -34,9 +34,10 @@ module HazardUnit #(
 
     // Stall when a load hazard
     wire lw_Stall;
-    assign lw_Stall = (E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd));
-    assign F_Stall  = lw_Stall;
-    assign D_Stall  = lw_Stall;
+    assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
+    assign E_Stall  = E_MulDivStall | E_FPUStall;
+    assign F_Stall  = lw_Stall | E_Stall;
+    assign D_Stall  = lw_Stall | E_Stall;
 
     // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
     assign E_Flush  = lw_Stall | E_PCSrc;
