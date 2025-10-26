@@ -1,26 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1761396873" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
-  <File Type="PA-TCL" Name="lr_w.tcl"/>
-  <File Type="REPORTS-TCL" Name="lr_w_reports.tcl"/>
-  <File Type="RDS-RDS" Name="lr_w.vds"/>
-  <File Type="RDS-PROPCONSTRS" Name="lr_w_drc_synth.rpt"/>
-  <File Type="RDS-UTIL" Name="lr_w_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="lr_w_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="lr_w.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="lr_w_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="lr_w_timing_summary_synth.pb"/>
+<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1761500050" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
+  <File Type="PA-TCL" Name="amoswap_w.tcl"/>
+  <File Type="REPORTS-TCL" Name="amoswap_w_reports.tcl"/>
+  <File Type="RDS-RDS" Name="amoswap_w.vds"/>
+  <File Type="RDS-PROPCONSTRS" Name="amoswap_w_drc_synth.rpt"/>
+  <File Type="RDS-UTIL" Name="amoswap_w_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="amoswap_w_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="amoswap_w.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="amoswap_w_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="amoswap_w_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
-    <File Path="$PSRCDIR/sources_1/new/lr_w.v">
+    <File Path="$PSRCDIR/sources_1/new/amoswap_w.v">
       <FileInfo>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/new/sc_w.v">
+    <File Path="$PSRCDIR/sources_1/new/amoadd_w.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/csa.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/csa.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -296,16 +316,6 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/csa.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/csa.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <File Path="$PSRCDIR/sources_1/imports/pipeline/datapath.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -466,21 +476,19 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt.v">
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt2.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt2.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt2.v">
+    <File Path="$PSRCDIR/sources_1/new/lr_w.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt2.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -606,6 +614,14 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PSRCDIR/sources_1/new/sc_w.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PSRCDIR/sources_1/imports/pipeline/Div/srt_4_div.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -618,7 +634,7 @@
     </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="lr_w"/>
+      <Option Name="TopModule" Val="amoswap_w"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1" RelGenDir="$PGENDIR/constrs_1">
