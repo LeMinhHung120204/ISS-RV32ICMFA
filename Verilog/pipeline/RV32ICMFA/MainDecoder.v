@@ -3,7 +3,7 @@ module MainDecoder(
     input       [6:0] op, funct7,
     input       [2:0] funct3,
     output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump, addr_addend_sel,
-                RegSrc1, RegSrc2, FRegWrite, ResPCSel,
+                RegSrc1, RegSrc2, FRegWrite, ResPCSel, MDUOp,
     output reg  [1:0] ALUOp, ResExSel,
     output reg  [2:0] ImmSrc, ResultSrc, StoreSrc, FPUOp
 );
@@ -47,6 +47,7 @@ module MainDecoder(
                 Branch          = 1'b0;
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
+                MDUOp           = 1'b0;
             end 
             7'b0100011: begin          
                 case(funct3)
@@ -79,16 +80,20 @@ module MainDecoder(
                 Branch          = 1'b0;
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
+                MDUOp           = 1'b0;
             end 
             7'b0110011: begin           // R-type, M-extension, ImmSrc = xx,
                 case(funct7[0])
                     1'b0: begin                 // R-type
                         ResExSel    = 2'b00;
+                        MDUOp       = 1'b0;
                     end 
                     1'b1: begin
                         ResExSel    = 2'b01;
+                        MDUOp       = 1'b1;
                     end 
                     default: begin
+                        MDUOp       = 1'b0;
                         ResExSel    = 2'b00;
                     end 
                 endcase
@@ -128,6 +133,7 @@ module MainDecoder(
                 ALUOp           = 2'b01;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b0010011: begin           // I-type ALU, ALUSrc = x
                 addr_addend_sel = 1'b0;
@@ -147,6 +153,7 @@ module MainDecoder(
                 ALUOp           = 2'b10;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1101111: begin           // jal, ALUSrc = x, ALUOp = xx
                 addr_addend_sel = 1'b0;
@@ -166,6 +173,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b1;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1100111: begin           //  JumpAndLinkReg jalr
                 addr_addend_sel = 1'b1;
@@ -185,6 +193,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b1;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b0110111: begin           // LoadUpperImm lui ALUOp = xx, ALUSrc = x
                 addr_addend_sel = 1'b0;
@@ -204,6 +213,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b0010111: begin           // AddUpperImmtoPC auipc ALUOp = xx, ALUSrc = xx
                 addr_addend_sel = 1'b0;
@@ -223,6 +233,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end
             7'b0000111: begin           // flw  I-type
                 addr_addend_sel = 1'b0;
@@ -242,6 +253,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b0100111: begin           // fsw  S-type
                 addr_addend_sel = 1'b0;
@@ -261,6 +273,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1000011: begin           // fmadd    R4-type
                 addr_addend_sel = 1'b0;
@@ -280,6 +293,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1000111: begin           // fmsub    R4-type
                 addr_addend_sel = 1'b0;
@@ -299,6 +313,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1001111: begin           // fnmadd   R4-type
                 addr_addend_sel = 1'b0;
@@ -318,6 +333,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1001011: begin           // fnmsub   R4-type
                 addr_addend_sel = 1'b0;
@@ -337,6 +353,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             7'b1010011: begin           // another F instruction    R-type
                 addr_addend_sel = 1'b0;
@@ -356,6 +373,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
             default: begin
                 addr_addend_sel = 1'b0;
@@ -375,6 +393,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
             end 
         endcase
     end

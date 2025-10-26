@@ -11,6 +11,7 @@ module ControlUnit(
     output  [2:0]   ImmSrc, ResultSrc, StoreSrc,
     output  [1:0]   Mul_Div_unsigned, MulDivControl, ResExSel
 );
+    wire MDUOp;
     wire [1:0] ALUOp;
     wire [2:0] FPUOp;
     MainDecoder maindecoder_inst(
@@ -32,6 +33,7 @@ module ControlUnit(
         .addr_addend_sel(addr_addend_sel),
         .ResPCSel(ResPCSel),
         .ResExSel(ResExSel),
+        .MDUOp(MDUOp),
         .FPUOp(FPUOp)
     );
 
@@ -44,7 +46,7 @@ module ControlUnit(
     );
 
     MulDivDecode MulDivDecode_inst(
-        .MulDivOp(funct7[0]),
+        .MulDivOp(MDUOp),
         .funct3(funct3),
         .Mul_Div_unsigned(Mul_Div_unsigned),
         .is_high(is_high),

@@ -66,6 +66,6 @@ module tb_RV32I;
         // $dumpvars(0, tb_RV32I);
 
         #50  rst_n = 1'b1;
-        #400 $finish;
+        #600 $finish;
     end
 endmodule
