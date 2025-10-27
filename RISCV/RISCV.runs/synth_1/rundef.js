@@ -24,7 +24,7 @@ eval( EAInclude(ISEJScriptLib) );
 
 
 ISEStep( "vivado",
-         "-log amoswap_w.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source amoswap_w.tcl" );
+         "-log amomin_w.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source amomin_w.tcl" );
 
 
 

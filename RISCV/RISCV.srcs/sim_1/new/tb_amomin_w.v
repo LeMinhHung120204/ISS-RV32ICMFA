@@ -1,12 +1,12 @@
 `timescale 1ns/1ps
 
-module tb_amoswap_w;
+module tb_amomin_w;
     reg clk, rst_n, valid_input;
     reg [31:0] rs1, rs2, mem_rdata;
     wire valid_output;
     wire [31:0] rd, mem_addr, mem_wdata;
 
-    amoswap_w dut (
+    amomin_w dut (
         .clk(clk), .rst_n(rst_n), .valid_input(valid_input),
         .rs1(rs1), .rs2(rs2), .mem_rdata(mem_rdata),
         .valid_output(valid_output), .rd(rd),
@@ -21,14 +21,14 @@ module tb_amoswap_w;
         #10 rst_n = 1;
 
         #10;
-        // Test 1: swap 2 and 5
-        valid_input = 1; rs1 = 32'h1000; rs2 = 32'd2; mem_rdata = 32'd5;
+        // Test 1: min(20, 10) = 10
+        valid_input = 1; rs1 = 32'h1000; rs2 = 32'd20; mem_rdata = 32'd10;
         #10;
-        // Test 2: swap 10 and 15
-        valid_input = 1; rs1 = 32'h2000; rs2 = 32'd10; mem_rdata = 32'd15;
+        // Test 2: min(5, 15) = 5
+        valid_input = 1; rs1 = 32'h2000; rs2 = 32'd5; mem_rdata = 32'd15;
         #10;
-        // Test 3: swap 15 and 20
-        valid_input = 1; rs1 = 32'h3000; rs2 = 32'd15; mem_rdata = 32'd20;
+        // Test 3: min(10, 2) = 2
+        valid_input = 1; rs1 = 32'h3000; rs2 = 32'd10; mem_rdata = 32'd2;
         #10;
         valid_input = 0;
 
