@@ -20,8 +20,8 @@ module non_restore #(
     reg                     sign;
     reg [4:0]               count_calc;
 
-    wire [DATA_WIDTH:0]     A_new [0:2];
-    wire [DATA_WIDTH-1:0]   Q_new [0:2];
+    wire [DATA_WIDTH:0]     A_new [0:1];
+    wire [DATA_WIDTH-1:0]   Q_new [0:1];
     wire [DATA_WIDTH:0]     divisor_ex;
 
     wire sign_a;

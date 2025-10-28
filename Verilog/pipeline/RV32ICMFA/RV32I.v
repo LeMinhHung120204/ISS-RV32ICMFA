@@ -306,7 +306,7 @@ module RV32I #(
         // .rs2(E_RD2),
 
         .OutData(E_MDUResult),
-        .done(E_MDU_done),
+        // .done(E_MDU_done),
         .stall(E_MulDivStall)
     );
 
@@ -319,7 +319,7 @@ module RV32I #(
         .rs2(E_WriteData),
         .rs3(E_RD3),
         .rd(E_FPUResult),
-        .done(E_FPU_done),
+        // .done(E_FPU_done),
         .stall(E_FPUStall)
     );
 

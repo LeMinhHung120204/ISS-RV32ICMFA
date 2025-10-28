@@ -7,8 +7,8 @@ module FPU #(
     input   [4:0] FPUControl, 
     input   [WIDTH-1:0] rs1, rs2, rs3,
     output  [WIDTH-1:0] rd,
-    output  done,
-    output reg stall
+    // output  done,
+    output stall
 );
     wire    [WIDTH-1:0] res_fclass, res_fadd,   res_fcvt_s_w,   res_fcvt_s_wu,  res_fcvt_w_s,   res_fcvt_wu_s, 
                         res_div,    res_feq,    res_fle,        res_flt,        res_fmadd,      res_fmax,   res_fmin,   res_fmul, 
@@ -18,21 +18,23 @@ module FPU #(
     
     reg [8:0]       valid_input;
     reg [WIDTH-1:0] in1, in2, in3, oRes;
-    reg valid_output;
+    reg valid_output, reg_stall;
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            stall <= 1'b0;
+            reg_stall <= 1'b0;
         end 
         else begin
-            if (en & ~done) begin
-                stall <= 1'b1;
-            end 
-            else begin
-                stall <= 1'b0;
+            if (en) begin
+                reg_stall <= 1'b1;
+                if (valid_output) begin
+                    reg_stall <= 1'b0;
+                end
             end 
         end
     end 
+
+    assign stall = (reg_stall | en) & (~valid_output);
 
     always @(*) begin
         case({FPUControl, en})
@@ -255,7 +257,7 @@ module FPU #(
     end
 
     assign rd   = (valid_output) ? oRes : 32'd0;
-    assign done = valid_output;
+    // assign done = valid_output;
 
     fadd fadd_inst(
         .clk(clk),

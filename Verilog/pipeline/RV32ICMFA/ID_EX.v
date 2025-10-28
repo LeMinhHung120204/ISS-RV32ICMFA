@@ -93,9 +93,9 @@ module ID_EX #(
                 E_RegSrc2           <= 1'd0;
             end 
             else begin 
-                E_valid_MDU         <= D_valid_MDU;
-                E_Valid_FPU         <= D_Valid_FPU;
                 if (~EN) begin
+                    E_valid_MDU         <= D_valid_MDU;
+                    E_Valid_FPU         <= D_Valid_FPU;
                     E_RD1               <= D_RD1             ;
                     E_RD2               <= D_RD2             ;
                     E_RD3               <= D_RD3;

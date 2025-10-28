@@ -7,51 +7,16 @@ module MDU #(
     input   [1:0]                   MulDivControl,
     input   [DATA_WIDTH - 1:0]      rs1, rs2,
     output reg [DATA_WIDTH - 1:0]   OutData,
-    output done,
+    // output done,
     output stall
 );
-    localparam IDLE = 0, START = 1, DONE = 2;
-    reg     [1:0]               state, next_state;
     wire    [DATA_WIDTH - 1:0]  E_MulHigh, E_MulLow;
     wire    [DATA_WIDTH - 1:0]  E_quotient, E_remainder;
-    wire    mul_busy, div_busy;
+    wire    mul_busy, div_busy, done;
 
     reg                         valid_inputMul, valid_inputDiv, reg_stall;
     reg     [1:0]               reg_control;
     reg     [DATA_WIDTH-1:0]    reg_rs1, reg_rs2, A, B;
-
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            state <= IDLE;
-        end 
-        else begin
-            state <= next_state;
-        end
-    end
-
-    always @(*) begin
-        case(state)
-            IDLE: begin
-                if (valid_input) begin
-                    next_state = START;
-                end 
-                else begin
-                    next_state = IDLE;
-                end 
-            end 
-            START: begin
-                if (done) begin
-                    next_state = IDLE;
-                end 
-                else begin
-                    next_state = START;
-                end 
-            end 
-            default: begin
-                next_state = IDLE;
-            end 
-        endcase
-    end
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
