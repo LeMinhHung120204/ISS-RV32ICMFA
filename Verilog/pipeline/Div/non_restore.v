@@ -15,8 +15,8 @@ module non_restore #(
     reg [1:0]               state;
     reg [DATA_WIDTH-1:0]    reg_a, reg_b;
     reg [DATA_WIDTH:0]      M;
-    reg [DATA_WIDTH:0]      A;
-    reg [DATA_WIDTH-1:0]    Q;
+    reg [DATA_WIDTH:0]      A, A_res;
+    reg [DATA_WIDTH-1:0]    Q, Q_res;
     reg                     sign;
     reg [4:0]               count_calc;
 
@@ -45,10 +45,12 @@ module non_restore #(
                 A[i] <= {(DATA_WIDTH + 1){1'b0}};
             end 
             A           <= {(DATA_WIDTH + 1){1'b0}};
+            A_res       <= {(DATA_WIDTH + 1){1'b0}};
             M           <= {(DATA_WIDTH + 1){1'b0}};
             reg_a       <= {(DATA_WIDTH){1'b0}};
             reg_b       <= {(DATA_WIDTH){1'b0}};
             Q           <= {DATA_WIDTH{1'b0}};
+            Q_res       <= {DATA_WIDTH{1'b0}};
             state       <= IDLE;
             count_calc  <= 5'd0;
             is_busy     <= 1'b0;
@@ -87,8 +89,8 @@ module non_restore #(
                         Q   <= Q_new[1];
                     end
                     else begin
-                        A       <= A_new[0];
-                        Q       <= Q_new[0];
+                        A_res   <= A_new[0];
+                        Q_res   <= Q_new[0];
                         state   <= DONE;
                     end
                 end
@@ -182,9 +184,9 @@ module non_restore #(
     
     wire [DATA_WIDTH-1:0] rem_abs;
 
-    assign rem_abs      = (A[DATA_WIDTH]) ? A + M           : A;
-    assign quotient     = (sign)          ? ~Q + 1'b1       : Q;
-    assign remainder    = (sign)          ? ~rem_abs + 1'b1 : rem_abs;
+    assign rem_abs      = (A_res[DATA_WIDTH])   ? A_res + M         : A_res;
+    assign quotient     = (sign)                ? ~Q_res + 1'b1     : Q_res;
+    assign remainder    = (sign)                ? ~rem_abs + 1'b1   : rem_abs;
     assign valid_output = (state == DONE);
 
     Div_unit u_stage_first (

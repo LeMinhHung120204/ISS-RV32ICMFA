@@ -42,15 +42,20 @@ module MDU #(
     always @(*) begin
         case(MulDivControl)
             2'b00: begin
-                valid_inputMul = valid_input;
-                valid_inputDiv = 1'b0;
+                valid_inputMul  = valid_input;
+                valid_inputDiv  = 1'b0;
                 OutData         = (is_high) ? E_MulHigh : E_MulLow;
             end 
-            2'b01, 2'b10: begin
-                valid_inputMul = 1'b0;
-                valid_inputDiv = valid_input;
-                OutData         = (MulDivControl == 2'b01) ? E_quotient : E_remainder;
+            2'b01: begin
+                valid_inputMul  = 1'b0;
+                valid_inputDiv  = valid_input;
+                OutData         = E_quotient;
             end 
+            2'b10: begin
+                valid_inputMul  = 1'b0;
+                valid_inputDiv  = valid_input;
+                OutData         = E_remainder;
+            end
             default: begin
                 valid_inputMul = 1'b0;
                 valid_inputDiv = 1'b0;

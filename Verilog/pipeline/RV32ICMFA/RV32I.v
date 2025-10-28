@@ -44,7 +44,7 @@ module RV32I #(
 
     // ----------------------- Tin hieu dieu khien FPU -----------------------
     wire [WIDTH_DATA-1:0] E_FPUResult, M_FPUResult;
-    wire E_FPU_done, E_FPUStall;
+    // wire E_FPU_done, E_FPUStall;
 
     // ----------------------- Tin hieu Hazard -----------------------
     wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;

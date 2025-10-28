@@ -29,6 +29,7 @@ module mul32 #(
 
     reg [1:0]           state;
     reg [OUTW-1:0]      tmp         [0:num_reg-1];
+    reg [OUTW-1:0]      result;
     reg [DATA_WIDH-1:0] reg_rs1, reg_rs2;
     reg [2:0]           compute_count;
 
@@ -41,6 +42,7 @@ module mul32 #(
                 tmp[i] <= 64'd0;
             end
             state           <= IDLE;
+            result          <= 64'd0;
             reg_rs1         <= 32'd0;
             reg_rs2         <= 32'd0;
             compute_count   <= 3'd0;
@@ -93,7 +95,7 @@ module mul32 #(
                             tmp[1]  <= carry[0] << 1;
                         end
                         3'd3: begin
-                            tmp[0]  <= tmp[0] + tmp[1];
+                            result  <= tmp[0] + tmp[1];
                             state   <= DONE;
                         end  
                     endcase
@@ -123,8 +125,8 @@ module mul32 #(
         end 
     end 
 
-    assign R_high       = tmp[0][63:32];
-    assign R_low        = tmp[0][31:0];
+    assign R_high       = result[63:32];
+    assign R_low        = result[31:0];
     assign valid_output = (state == DONE) ? 1'b1 : 1'b0;
 
     // 11 group 4-bit cho radix-8 Booth:
