@@ -14,20 +14,20 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] RDX1, RDX2, RDF1, RDF2, RDF3, F_RD, D_RD1, D_RD2, E_RD1, E_RD2, E_RD3;
     wire [WIDTH_DATA - 1:0] D_Instr, D_ImmExt;
     wire [WIDTH_DATA - 1:0] E_ImmExt, E_ALUResult;
-    wire [WIDTH_DATA - 1:0] M_Result, M_ReadData, M_ALUResult, M_WriteData, M_ImmExt;
+    wire [WIDTH_DATA - 1:0] M_Result, M_XResult, M_ReadData, M_ALUResult, M_WriteData, M_ImmExt;
     wire [WIDTH_DATA - 1:0] W_ImmExt, W_ReadData, W_Result, WB_Result;
     wire [4:0]              E_rs1, E_rs2, E_rd, E_RsF3, M_rd, W_rd, A1, A2, A3, WD3;
 
-    wire [WIDTH_DATA - 1:0] E_SrcA, E_SrcB;
+    wire [WIDTH_DATA - 1:0] E_SrcA, E_SrcB, E_SrcFA, E_SrcFB, E_SrcFC;
     wire [WIDTH_DATA - 1:0] E_WriteData;
 
     // ----------------------- Tin hieu dieu khien -----------------------
     wire    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_FRegWrite, D_addr_addend_sel, D_ResPCSel, 
             D_valid_MDU, D_Valid_FPU, D_RegSrc1, D_RegSrc2;
     wire    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel,
-            E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_RegSrc1, E_RegSrc2;
-    wire    M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel;
-    wire    W_RegWrite, W_FRegWrite;
+            E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_RegSrc1, E_RegSrc2, E_MDU_FPUEn;
+    wire    M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel, M_MDU_FPUEn;
+    wire    W_RegWrite, W_FRegWrite, W_MDU_FPUEn;
     wire    D_is_high, E_is_high;
     
     wire [4:0] D_FPUControl, E_FPUControl;
@@ -48,7 +48,7 @@ module RV32I #(
 
     // ----------------------- Tin hieu Hazard -----------------------
     wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;
-    wire [1:0] ForwardAE, ForwardBE;
+    wire [1:0] ForwardAE, ForwardBE, ForwardFAE, ForwardFBE, ForwardFCE;
 
     // ----------------------- Tin hieu PC -----------------------
     wire [WIDTH_ADDR - 1:0] F_PC, PCNext, F_PCPlus4;
@@ -81,15 +81,19 @@ module RV32I #(
         .D_Rs2(A2),
         .E_Rs1(E_rs1),
         .E_Rs2(E_rs2),
+        .E_RsF3(E_RsF3),
         .E_rd(E_rd),
         .E_PCSrc(E_PCSrc),
         .E_MulDivStall(E_MulDivStall),
         .E_FPUStall(E_FPUStall),
         .E_ResultSrc(E_ResultSrc),
         .M_RegWrite(M_RegWrite),
+        .M_FRegWrite(M_FRegWrite),
         .M_Rd(M_rd),
         .W_Rd(W_rd),
         .W_RegWrite(W_RegWrite),
+        .W_FRegWrite(W_FRegWrite),
+        .W_MDU_FPUEn(W_MDU_FPUEn),
         
         .F_Stall(F_Stall),
         .D_Stall(D_Stall),
@@ -97,7 +101,10 @@ module RV32I #(
         .D_Flush(D_Flush),
         .E_Flush(E_Flush),
         .ForwardAE(ForwardAE),
-        .ForwardBE(ForwardBE)
+        .ForwardBE(ForwardBE),
+        .ForwardFAE(ForwardFAE),
+        .ForwardFBE(ForwardFBE),
+        .ForwardFCE(ForwardFCE)
     );
     
     BranchDecoder BranchDecoder_inst(
@@ -316,8 +323,8 @@ module RV32I #(
         .en(E_Valid_FPU),
         .FPUControl(E_FPUControl),
         .rs1(E_SrcA),
-        .rs2(E_WriteData),
-        .rs3(E_RD3),
+        .rs2(E_SrcFB),
+        .rs3(E_SrcFC),
         .rd(E_FPUResult),
         // .done(E_FPU_done),
         .stall(E_FPUStall)
@@ -333,7 +340,7 @@ module RV32I #(
     mux4_1 mux_ForwardAE (
         .in0(E_RD1),
         .in1(WB_Result),
-        .in2(M_Result),
+        .in2(M_XResult),
         .in3(32'd0),
         .sel(ForwardAE),
         .res(E_SrcA)
@@ -342,10 +349,37 @@ module RV32I #(
     mux4_1 mux_ForwardBE (
         .in0(E_RD2),
         .in1(WB_Result),
-        .in2(M_Result),
+        .in2(M_XResult),
         .in3(32'd0),
         .sel(ForwardBE),
         .res(E_WriteData)
+    );
+
+    mux4_1 mux_ForwardFAE (
+        .in0(E_RD1),
+        .in1(WB_Result),
+        .in2(M_FPUResult),
+        .in3(M_XResult),
+        .sel(ForwardFAE),
+        .res(E_SrcFA)
+    );
+
+    mux4_1 mux_ForwardFBE (
+        .in0(E_RD2),
+        .in1(WB_Result),
+        .in2(M_FPUResult),
+        .in3(32'd0),
+        .sel(ForwardFBE),
+        .res(E_SrcFB)
+    );
+
+    mux4_1 mux_ForwardFCE (
+        .in0(E_RD3),
+        .in1(WB_Result),
+        .in2(M_FPUResult),
+        .in3(32'd0),
+        .sel(ForwardFCE),
+        .res(E_SrcFC)
     );
 
     mux2_1 mux_E_ALUSrc (
@@ -355,7 +389,8 @@ module RV32I #(
         .res(E_SrcB)
     );
 
-    assign E_PCTarget = E_ImmExt + E_PCtmp;
+    assign E_PCTarget   = E_ImmExt + E_PCtmp;
+    assign E_MDU_FPUEn  = E_valid_MDU | E_Valid_FPU;
 
     EX_MEM EX_MEM_register(
         .clk(clk),
@@ -376,6 +411,7 @@ module RV32I #(
         .E_StoreSrc(E_StoreSrc),
         .E_ResExSel(E_ResExSel),
         .E_ResPCSel(E_ResPCSel),
+        .E_MDU_FPUEn(E_MDU_FPUEn),
 
         .M_ALUResult(M_ALUResult),
         .M_MDUResult(M_MDUResult),
@@ -391,7 +427,8 @@ module RV32I #(
         .M_ResultSrc(M_ResultSrc),
         .M_StoreSrc(M_StoreSrc),
         .M_ResExSel(M_ResExSel),
-        .M_ResPCSel(M_ResPCSel)
+        .M_ResPCSel(M_ResPCSel),
+        .M_MDU_FPUEn(M_MDU_FPUEn)
     );
 
     // ---------------------------------------- MEM state ----------------------------------------
@@ -405,14 +442,28 @@ module RV32I #(
         .rd(M_ReadData)
     );
 
-    mux4_1 mux_Result (
+    mux2_1 mux_XResult (
         .in0(M_ALUResult),
         .in1(M_MDUResult),
-        .in2(M_FPUResult),
-        .in3(32'd0),
-        .sel(M_ResExSel),
+        .sel(M_ResExSel[0]),
+        .res(M_XResult)
+    );
+
+    mux2_1 mux_Result (
+        .in0(M_XResult),
+        .in1(M_FPUResult),
+        .sel(M_ResExSel[1]),
         .res(M_Result)
     );
+
+    // mux4_1 mux_Result (
+    //     .in0(M_ALUResult),
+    //     .in1(M_MDUResult),
+    //     .in2(M_FPUResult),
+    //     .in3(32'd0),
+    //     .sel(M_ResExSel),
+    //     .res(M_Result)
+    // );
 
     mux2_1 mux_ResPC(
         .in0(M_PCTarget),
@@ -432,6 +483,7 @@ module RV32I #(
         .M_RegWrite(M_RegWrite),
         .M_FRegWrite(M_FRegWrite),
         .M_ResultSrc(M_ResultSrc),
+        .M_MDU_FPUEn(M_MDU_FPUEn),
 
         .W_Result(W_Result),
         .W_ReadData(W_ReadData),
@@ -440,6 +492,7 @@ module RV32I #(
         .W_rd(W_rd),
         .W_RegWrite(W_RegWrite),
         .W_FRegWrite(W_FRegWrite),
-        .W_ResultSrc(W_ResultSrc)
+        .W_ResultSrc(W_ResultSrc),
+        .W_MDU_FPUEn(W_MDU_FPUEn)
     );
 endmodule

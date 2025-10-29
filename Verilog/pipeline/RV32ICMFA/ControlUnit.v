@@ -21,8 +21,6 @@ module ControlUnit(
         .Branch(Branch),
         .ResultSrc(ResultSrc),
         .MemWrite(MemWrite),
-        .RegSrc1(RegSrc1),
-        .RegSrc2(RegSrc2),
         .ALUSrc(ALUSrc),
         .RegWrite(RegWrite),
         .FRegWrite(FRegWrite),
@@ -59,6 +57,8 @@ module ControlUnit(
         .funct7(funct7),
         .funct5(funct5),
         .funct3(funct3),
+        .RegSrc1(RegSrc1),
+        .RegSrc2(RegSrc2),
         .Valid_FPU(Valid_FPU),
         .FPUControl(FPUControl)
     );

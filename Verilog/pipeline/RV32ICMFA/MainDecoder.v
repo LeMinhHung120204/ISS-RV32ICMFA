@@ -3,7 +3,7 @@ module MainDecoder(
     input       [6:0] op, funct7,
     input       [2:0] funct3,
     output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump, addr_addend_sel,
-                RegSrc1, RegSrc2, FRegWrite, ResPCSel, MDUOp,
+                FRegWrite, ResPCSel, MDUOp,
     output reg  [1:0] ALUOp, ResExSel,
     output reg  [2:0] ImmSrc, ResultSrc, StoreSrc, FPUOp
 );
@@ -34,8 +34,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -67,8 +65,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -84,11 +80,11 @@ module MainDecoder(
             end 
             7'b0110011: begin           // R-type, M-extension, ImmSrc = xx,
                 case(funct7[0])
-                    1'b0: begin                 // R-type
+                    1'b0: begin            // R-type
                         ResExSel    = 2'b00;
                         MDUOp       = 1'b0;
                     end 
-                    1'b1: begin
+                    1'b1: begin            // M-extension       
                         ResExSel    = 2'b01;
                         MDUOp       = 1'b1;
                     end 
@@ -99,8 +95,6 @@ module MainDecoder(
                 endcase
                 addr_addend_sel = 1'b0;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -119,8 +113,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -139,8 +131,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -159,8 +149,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b1;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -179,8 +167,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b1;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b1;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
                 
@@ -199,8 +185,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
                 
@@ -219,8 +203,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
                 
@@ -239,8 +221,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b1;
                 FPUOp           = 3'd0;
 
@@ -259,8 +239,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b1;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 
@@ -279,8 +257,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b1;
-                RegSrc2         = 1'b1;
                 FRegWrite       = 1'b1;
                 FPUOp           = 3'd1;
 
@@ -299,8 +275,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b1;
-                RegSrc2         = 1'b1;
                 FRegWrite       = 1'b1;
                 FPUOp           = 3'd2;
 
@@ -319,8 +293,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b1;
-                RegSrc2         = 1'b1;
                 FRegWrite       = 1'b1;
                 FPUOp           = 3'd3;
 
@@ -339,8 +311,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b1;
-                RegSrc2         = 1'b1;
                 FRegWrite       = 1'b1;
                 FPUOp           = 3'd4;
 
@@ -356,15 +326,24 @@ module MainDecoder(
                 MDUOp           = 1'b0;
             end 
             7'b1010011: begin           // another F instruction    R-type
+                case(funct7)
+                    7'b110_0000: begin      // fcvt.w.s / fcvt.wu.s
+                        RegWrite = 1'b1;
+                    end 
+                    7'b111_0000: begin      // fmv.x.w / fclass
+                        RegWrite = 1'b1;
+                    end 
+                    default: begin
+                        RegWrite = 1'b0;
+                    end
+                endcase
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b1;
-                RegSrc2         = 1'b1;
                 FRegWrite       = 1'b1;
                 FPUOp           = 3'd5;
 
-                RegWrite        = 1'b0;
+                // RegWrite        = 1'b0;
                 ImmSrc          = 3'd0;
                 ALUSrc          = 1'b0;
                 MemWrite        = 1'b0;
@@ -379,8 +358,6 @@ module MainDecoder(
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
-                RegSrc1         = 1'b0;
-                RegSrc2         = 1'b0;
                 FRegWrite       = 1'b0;
                 FPUOp           = 3'd0;
 

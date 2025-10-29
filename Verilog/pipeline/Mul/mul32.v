@@ -16,11 +16,10 @@ module mul32 #(
     */
 
     localparam IDLE = 0, COMPUTE = 1, DONE = 2;
-    localparam num_reg = 12;
+    localparam num_reg = 6;
     localparam OUTW    = DATA_WIDH*2;
 
     wire [OUTW-1:0] pp      [0:10];
-    // wire [OUTW-1:0] pp_sx   [0:10];
     wire [OUTW-1:0] sum     [0:0];
     wire [OUTW-1:0] carry   [0:0];
     wire [61:0]     A_ex;
@@ -57,12 +56,12 @@ module mul32 #(
                     tmp[3]          <= 64'd0;
                     tmp[4]          <= 64'd0;
                     tmp[5]          <= 64'd0;
-                    tmp[6]          <= 64'd0;
-                    tmp[7]          <= 64'd0;
-                    tmp[8]          <= 64'd0;
-                    tmp[9]          <= 64'd0;
-                    tmp[10]         <= 64'd0;
-                    tmp[11]         <= 64'd0;
+                    // tmp[6]          <= 64'd0;
+                    // tmp[7]          <= 64'd0;
+                    // tmp[8]          <= 64'd0;
+                    // tmp[9]          <= 64'd0;
+                    // tmp[10]         <= 64'd0;
+                    // tmp[11]         <= 64'd0;
                     reg_rs1         <= 32'd0;
                     reg_rs2         <= 32'd0;
                     compute_count   <= 3'd0;

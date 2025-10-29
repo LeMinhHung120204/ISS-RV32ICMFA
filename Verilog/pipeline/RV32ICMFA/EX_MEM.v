@@ -3,14 +3,14 @@ module EX_MEM #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input   clk, rst_n, E_RegWrite, E_MemWrite, E_FRegWrite, E_ResPCSel,
+    input   clk, rst_n, E_RegWrite, E_MemWrite, E_FRegWrite, E_ResPCSel, E_MDU_FPUEn,
     input   [DATA_WIDTH - 1:0]  E_ALUResult, E_WriteData, E_ImmExt, E_MDUResult, E_FPUResult,
     input   [ADDR_WIDTH - 1:0]  E_PCPlus4, E_PCTarget,
     input   [4:0]               E_rd,
     input   [2:0]               E_ResultSrc, E_StoreSrc,
     input   [1:0]               E_ResExSel,
 
-    output reg M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel,
+    output reg M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel, M_MDU_FPUEn,
     output reg [DATA_WIDTH - 1:0]    M_ALUResult, M_WriteData, M_ImmExt, M_MDUResult, M_FPUResult,
     output reg [ADDR_WIDTH - 1:0]    M_PCPlus4, M_PCTarget,
     output reg [4:0]                 M_rd,
@@ -34,6 +34,7 @@ module EX_MEM #(
             M_MemWrite  <= 1'd0;
             M_FRegWrite <= 1'd0;
             M_ResPCSel  <= 1'd0;
+            M_MDU_FPUEn <= 1'd0;
         end 
         else begin
             M_ALUResult <= E_ALUResult;
@@ -51,6 +52,7 @@ module EX_MEM #(
             M_MemWrite  <= E_MemWrite ;
             M_FRegWrite <= E_FRegWrite;
             M_ResPCSel  <= E_ResPCSel ;
+            M_MDU_FPUEn <= E_MDU_FPUEn;
         end 
     end 
 endmodule
