@@ -3,7 +3,7 @@ module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
     input               M_RegWrite, W_RegWrite, E_PCSrc, E_MulDivStall, E_FPUStall, W_MDU_FPUEn,
-                        M_FRegWrite, W_FRegWrite,
+                        M_FRegWrite, W_FRegWrite, E_RegSrc1,
     input       [2:0]   E_ResultSrc, 
     input       [4:0]   D_Rs1, D_Rs2, E_Rs1, E_Rs2, E_RsF3, E_rd, M_Rd, W_Rd,
     output reg  [1:0]   ForwardAE, ForwardBE, ForwardFAE, ForwardFBE, ForwardFCE, 
@@ -34,11 +34,22 @@ module HazardUnit #(
     end 
     
     always @(*) begin
-        if ((E_Rs1 == M_Rd) & M_FRegWrite & (E_Rs1 != 5'd0)) begin
-            ForwardFAE = 2'b10;
+        if ((E_Rs1 == M_Rd) & (E_Rs1 != 5'd0)) begin
+            if (M_RegWrite & (~E_RegSrc1)) begin
+                ForwardFAE = 2'b11;
+            end 
+            else if (M_FRegWrite & E_RegSrc1) begin
+                ForwardFAE = 2'b10;
+            end 
+            else begin
+                ForwardFAE = 2'b00;
+            end
         end 
-        else if ((E_Rs1 == W_Rd) & W_FRegWrite & (E_Rs1 != 5'd0)) begin
-            ForwardFAE = 2'b01;
+        else if ((E_Rs1 == W_Rd) & (E_Rs1 != 5'd0)) begin
+            if ((W_RegWrite & (~E_RegSrc1)) | (W_FRegWrite & E_RegSrc1))
+                ForwardFAE = 2'b01;
+            else 
+                ForwardFAE = 2'b00;
         end 
         else begin
             ForwardFAE = 2'b00;
