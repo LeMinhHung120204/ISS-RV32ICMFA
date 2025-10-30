@@ -17,7 +17,6 @@
 *.bak
 *.swp
 .DS_Store
-<<<<<<< HEAD
 *.wdb
 *.wcfg
 *.jou
@@ -35,5 +34,3 @@
 xsim.dir/
 **/sim_1/behav/xsim/
 RV32/RV32.sim/
-=======
->>>>>>> origin/main
