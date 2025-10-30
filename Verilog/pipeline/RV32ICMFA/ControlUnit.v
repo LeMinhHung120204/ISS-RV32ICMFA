@@ -5,7 +5,7 @@ module ControlUnit(
     input   [4:0]   funct5,
     input   [2:0]   funct3,
     output          MemWrite, ALUSrc, RegWrite, Jump, Branch, is_high, addr_addend_sel, 
-                    ResPCSel, valid_MDU, FRegWrite, Valid_FPU, RegSrc1,
+                    ResPCSel, valid_MDU, FRegWrite, Valid_FPU, RegSrc1, RegSrc2,
     output  [4:0]   FPUControl,
     output  [3:0]   ALUControl,
     output  [2:0]   ImmSrc, ResultSrc, StoreSrc,
@@ -58,6 +58,7 @@ module ControlUnit(
         .funct5(funct5),
         .funct3(funct3),
         .RegSrc1(RegSrc1),
+        .RegSrc2(RegSrc2),
         .Valid_FPU(Valid_FPU),
         .FPUControl(FPUControl)
     );

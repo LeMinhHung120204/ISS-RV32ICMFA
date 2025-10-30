@@ -15,7 +15,7 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] E_RD1, E_RD2, E_RDF2, E_RD3;
     wire [WIDTH_DATA - 1:0] D_Instr, D_ImmExt;
     wire [WIDTH_DATA - 1:0] E_ImmExt, E_ALUResult;
-    wire [WIDTH_DATA - 1:0] M_Result, M_XResult, M_ReadData, M_ALUResult, M_WriteData, M_ImmExt;
+    wire [WIDTH_DATA - 1:0] M_Result, M_ReadData, M_ALUResult, M_WriteData, M_ImmExt;
     wire [WIDTH_DATA - 1:0] W_ImmExt, W_ReadData, W_Result, WB_Result;
     wire [4:0]              E_rs1, E_rs2, E_rd, E_RsF3, M_rd, W_rd, A1, A2, A3, WD3;
 
@@ -24,7 +24,7 @@ module RV32I #(
 
     // ----------------------- Tin hieu dieu khien -----------------------
     wire    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_FRegWrite, D_addr_addend_sel, D_ResPCSel, 
-            D_valid_MDU, D_Valid_FPU, D_RegSrc1;
+            D_valid_MDU, D_Valid_FPU, D_RegSrc1, D_RegSrc2;
     wire    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel,
             E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_MDU_FPUEn, E_RegSrc1;
     wire    M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel, M_MDU_FPUEn;
@@ -49,7 +49,7 @@ module RV32I #(
 
     // ----------------------- Tin hieu Hazard -----------------------
     wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;
-    wire [1:0] ForwardAE, ForwardBE, ForwardFAE, ForwardFBE, ForwardFCE;
+    wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
 
     // ----------------------- Tin hieu PC -----------------------
     wire [WIDTH_ADDR - 1:0] F_PC, PCNext, F_PCPlus4;
@@ -89,6 +89,7 @@ module RV32I #(
         .E_FPUStall(E_FPUStall),
         .E_ResultSrc(E_ResultSrc),
         .E_RegSrc1(E_RegSrc1),
+        .E_RegSrc2(E_RegSrc2),
         .M_RegWrite(M_RegWrite),
         .M_FRegWrite(M_FRegWrite),
         .M_Rd(M_rd),
@@ -104,8 +105,8 @@ module RV32I #(
         .E_Flush(E_Flush),
         .ForwardAE(ForwardAE),
         .ForwardBE(ForwardBE),
-        .ForwardFAE(ForwardFAE),
-        .ForwardFBE(ForwardFBE),
+        // .ForwardFAE(ForwardFAE),
+        // .ForwardFBE(ForwardFBE),
         .ForwardFCE(ForwardFCE)
     );
     
@@ -141,7 +142,7 @@ module RV32I #(
         .is_high(D_is_high),
         .Valid_FPU(D_Valid_FPU),
         .RegSrc1(D_RegSrc1),
-        // .RegSrc2(D_RegSrc2),
+        .RegSrc2(D_RegSrc2),
         .FPUControl(D_FPUControl),
         .FRegWrite(D_FRegWrite)
     );
@@ -213,12 +214,12 @@ module RV32I #(
         .res(D_RD1)
     );
 
-    // mux2_1 mux_D_RD2 (
-    //     .in0(RDX2),
-    //     .in1(RDF2),
-    //     .sel(D_RegSrc2),
-    //     .res(D_RD2)
-    // );
+    mux2_1 mux_D_RD2 (
+        .in0(RDX2),
+        .in1(RDF2),
+        .sel(D_RegSrc2),
+        .res(D_RD2)
+    );
 
     ID_EX ID_EX_register(
         .clk(clk),
@@ -227,7 +228,7 @@ module RV32I #(
         .EN(E_Stall),
 
         .D_RD1(D_RD1),
-        .D_RD2(RDX2),
+        .D_RD2(D_RD2),
         .D_RDF2(RDF2),
         .D_RD3(RDF3),
         .D_Rs1(A1),
@@ -253,7 +254,7 @@ module RV32I #(
         .D_FRegWrite(D_FRegWrite),
         .D_Valid_FPU(D_Valid_FPU),
         .D_RegSrc1(D_RegSrc1),
-        // .D_RegSrc2(D_RegSrc2),
+        .D_RegSrc2(D_RegSrc2),
         .D_FPUControl(D_FPUControl),
         .D_Mul_Div_unsigned(D_Mul_Div_unsigned),
         .D_MulDivControl(D_MulDivControl),
@@ -286,7 +287,7 @@ module RV32I #(
         .E_FRegWrite(E_FRegWrite),
         .E_Valid_FPU(E_Valid_FPU),
         .E_RegSrc1(E_RegSrc1),
-        // .E_RegSrc2(E_RegSrc2),
+        .E_RegSrc2(E_RegSrc2),
         .E_FPUControl(E_FPUControl),
         .E_Mul_Div_unsigned(E_Mul_Div_unsigned),
         .E_MulDivControl(E_MulDivControl),
@@ -313,11 +314,8 @@ module RV32I #(
         .MulDivControl(E_MulDivControl),
         .rs1(E_SrcA),
         .rs2(E_WriteData),
-        // .rs1(E_RD1),
-        // .rs2(E_RD2),
 
         .OutData(E_MDUResult),
-        // .done(E_MDU_done),
         .stall(E_MulDivStall)
     );
 
@@ -326,11 +324,12 @@ module RV32I #(
         .rst_n(rst_n),
         .en(E_Valid_FPU),
         .FPUControl(E_FPUControl),
-        .rs1(E_SrcFA),
-        .rs2(E_SrcFB),
+        .rs1(E_SrcA),
+        // .rs2(E_SrcFB),
+        .rs2(E_WriteData),
         .rs3(E_SrcFC),
+
         .rd(E_FPUResult),
-        // .done(E_FPU_done),
         .stall(E_FPUStall)
     );
 
@@ -344,7 +343,7 @@ module RV32I #(
     mux4_1 mux_ForwardAE (
         .in0(E_RD1),
         .in1(WB_Result),
-        .in2(M_XResult),
+        .in2(M_Result),
         .in3(32'd0),
         .sel(ForwardAE),
         .res(E_SrcA)
@@ -353,29 +352,29 @@ module RV32I #(
     mux4_1 mux_ForwardBE (
         .in0(E_RD2),
         .in1(WB_Result),
-        .in2(M_XResult),
+        .in2(M_Result),
         .in3(32'd0),
         .sel(ForwardBE),
         .res(E_WriteData)
     );
 
-    mux4_1 mux_ForwardFAE (
-        .in0(E_RD1),
-        .in1(WB_Result),
-        .in2(M_FPUResult),
-        .in3(M_XResult),
-        .sel(ForwardFAE),
-        .res(E_SrcFA)
-    );
+    // mux4_1 mux_ForwardFAE (
+    //     .in0(E_RD1),
+    //     .in1(WB_Result),
+    //     .in2(M_FPUResult),
+    //     .in3(M_XResult),
+    //     .sel(ForwardFAE),
+    //     .res(E_SrcFA)
+    // );
 
-    mux4_1 mux_ForwardFBE (
-        .in0(E_RDF2),
-        .in1(WB_Result),
-        .in2(M_FPUResult),
-        .in3(32'd0),
-        .sel(ForwardFBE),
-        .res(E_SrcFB)
-    );
+    // mux4_1 mux_ForwardFBE (
+    //     .in0(E_RDF2),
+    //     .in1(WB_Result),
+    //     .in2(M_FPUResult),
+    //     .in3(32'd0),
+    //     .sel(ForwardFBE),
+    //     .res(E_SrcFB)
+    // );
 
     mux4_1 mux_ForwardFCE (
         .in0(E_RD3),
@@ -446,28 +445,28 @@ module RV32I #(
         .rd(M_ReadData)
     );
 
-    mux2_1 mux_XResult (
-        .in0(M_ALUResult),
-        .in1(M_MDUResult),
-        .sel(M_ResExSel[0]),
-        .res(M_XResult)
-    );
-
-    mux2_1 mux_Result (
-        .in0(M_XResult),
-        .in1(M_FPUResult),
-        .sel(M_ResExSel[1]),
-        .res(M_Result)
-    );
-
-    // mux4_1 mux_Result (
+    // mux2_1 mux_XResult (
     //     .in0(M_ALUResult),
     //     .in1(M_MDUResult),
-    //     .in2(M_FPUResult),
-    //     .in3(32'd0),
-    //     .sel(M_ResExSel),
+    //     .sel(M_ResExSel[0]),
+    //     .res(M_XResult)
+    // );
+
+    // mux2_1 mux_Result (
+    //     .in0(M_XResult),
+    //     .in1(M_FPUResult),
+    //     .sel(M_ResExSel[1]),
     //     .res(M_Result)
     // );
+
+    mux4_1 mux_Result (
+        .in0(M_ALUResult),
+        .in1(M_MDUResult),
+        .in2(M_FPUResult),
+        .in3(32'd0),
+        .sel(M_ResExSel),
+        .res(M_Result)
+    );
 
     mux2_1 mux_ResPC(
         .in0(M_PCTarget),

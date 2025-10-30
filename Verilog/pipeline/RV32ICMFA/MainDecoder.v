@@ -240,7 +240,7 @@ module MainDecoder(
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
                 FRegWrite       = 1'b0;
-                FPUOp           = 3'd0;
+                FPUOp           = 3'd6;
 
                 RegWrite        = 1'b0;
                 ImmSrc          = 3'd1;

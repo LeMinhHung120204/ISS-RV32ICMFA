@@ -5,7 +5,7 @@ module ID_EX #(
 )(
     input   clk, rst_n, E_Flush, EN,
     input   D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc,
-            D_is_high, D_addr_addend_sel, D_ResPCSel, D_valid_MDU, D_FRegWrite, D_Valid_FPU, D_RegSrc1,
+            D_is_high, D_addr_addend_sel, D_ResPCSel, D_valid_MDU, D_FRegWrite, D_Valid_FPU, D_RegSrc1, D_RegSrc2,
     input   [DATA_WIDTH - 1:0]  D_RD1, D_RD2, D_RDF2, D_ImmExt, D_RD3,
     input   [ADDR_WIDTH - 1:0]  D_PC, D_PCPlus4,
     input   [1:0]               D_Mul_Div_unsigned, D_MulDivControl, D_ResExSel,
@@ -14,7 +14,7 @@ module ID_EX #(
     input   [4:0]               D_Rs1, D_Rs2, D_rd, D_RsF3, D_FPUControl,
 
     output reg  E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc,
-                E_is_high, E_addr_addend_sel, E_ResPCSel, E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_RegSrc1,
+                E_is_high, E_addr_addend_sel, E_ResPCSel, E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_RegSrc1, E_RegSrc2,
     output reg  [DATA_WIDTH - 1:0]  E_RD1, E_RD2, E_RDF2, E_ImmExt, E_RD3,
     output reg  [ADDR_WIDTH - 1:0]  E_PC, E_PCPlus4,
     output reg  [1:0]               E_Mul_Div_unsigned, E_MulDivControl, E_ResExSel,
@@ -55,6 +55,7 @@ module ID_EX #(
             E_FRegWrite         <= 1'd0;
             E_Valid_FPU         <= 1'd0;
             E_RegSrc1           <= 1'd0;
+            E_RegSrc2           <= 1'd0;
         end 
         else begin
             if (E_Flush) begin
@@ -89,6 +90,7 @@ module ID_EX #(
                 E_FRegWrite         <= 1'd0;
                 E_Valid_FPU         <= 1'd0;
                 E_RegSrc1           <= 1'd0;
+                E_RegSrc2           <= 1'd0;
             end 
             else begin 
                 if (~EN) begin
@@ -123,6 +125,7 @@ module ID_EX #(
                     E_ResPCSel          <= D_ResPCSel        ;
                     E_FRegWrite         <= D_FRegWrite       ;
                     E_RegSrc1           <= D_RegSrc1         ;
+                    E_RegSrc2           <= D_RegSrc2         ;
                 end 
             end
         end
