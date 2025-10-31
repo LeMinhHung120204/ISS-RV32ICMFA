@@ -3,8 +3,8 @@
 # SW Build 6140274 on Thu May 22 00:12:29 MDT 2025
 # IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
 # SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
-# Start of session at: Mon Oct 27 09:42:39 2025
-# Process ID         : 22988
+# Start of session at: Fri Oct 31 02:17:51 2025
+# Process ID         : 5180
 # Current directory  : C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1
 # Command line       : vivado.exe -log amomin_w.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source amomin_w.tcl
 # Log file           : C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1/amomin_w.vds
@@ -17,9 +17,9 @@
 # CPU Physical cores : 6
 # CPU Logical cores  : 12
 # Host memory        : 16931 MB
-# Swap memory        : 6710 MB
-# Total Virtual      : 23642 MB
-# Available Virtual  : 7657 MB
+# Swap memory        : 9944 MB
+# Total Virtual      : 26876 MB
+# Available Virtual  : 3021 MB
 #-----------------------------------------------------------
 source amomin_w.tcl -notrace
 Command: read_checkpoint -auto_incremental -incremental C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/utils_1/imports/synth_1/lr_w.dcp
@@ -31,38 +31,101 @@ Attempting to get a license for feature 'Synthesis' and/or device 'xc7vx485t'
 INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7vx485t'
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 22756
+INFO: [Synth 8-7075] Helper process launched with PID 11216
 ---------------------------------------------------------------------------------
-Starting Synthesize : Time (s): cpu = 00:00:05 ; elapsed = 00:00:05 . Memory (MB): peak = 1020.621 ; gain = 496.633
+Starting Synthesize : Time (s): cpu = 00:00:05 ; elapsed = 00:00:05 . Memory (MB): peak = 1022.074 ; gain = 496.910
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-6157] synthesizing module 'amomin_w' [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/amomin_w.v:1]
 INFO: [Synth 8-6155] done synthesizing module 'amomin_w' (0#1) [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/amomin_w.v:1]
+WARNING: [Synth 8-3917] design amomin_w has port axi_arsize[2] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_arsize[1] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_arsize[0] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_arlock[1] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_arlock[0] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_awsize[2] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_awsize[1] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_awsize[0] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_awlock[1] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_awlock[0] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[3] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[2] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[1] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[0] driven by constant 1
+WARNING: [Synth 8-7129] Port mem_rdata[31] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[30] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[29] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[28] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[27] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[26] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[25] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[24] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[23] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[22] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[21] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[20] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[19] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[18] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[17] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[16] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[15] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[14] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[13] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[12] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[11] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[10] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[9] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[8] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[7] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[6] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[5] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[4] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[3] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[2] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[1] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[0] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_arready in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_rresp[1] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_rresp[0] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_awready in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_wready in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_bresp[1] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_bresp[0] in module amomin_w is either unconnected or has no load
 ---------------------------------------------------------------------------------
-Finished Synthesize : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1126.379 ; gain = 602.391
+Finished Synthesize : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.719 ; gain = 602.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1126.379 ; gain = 602.391
+Finished Constraint Validation : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.719 ; gain = 602.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7vx485tffg1761-2
----------------------------------------------------------------------------------
 INFO: [Device 21-403] Loading part xc7vx485tffg1761-2
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1126.379 ; gain = 602.391
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.719 ; gain = 602.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Preparing Guide Design
 ---------------------------------------------------------------------------------
 CRITICAL WARNING: [Synth 8-6895] The reference checkpoint C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/utils_1/imports/synth_1/lr_w.dcp is not suitable for use with incremental synthesis for this design. Please regenerate the checkpoint for this design with -incremental_synth switch in the same Vivado session that synth_design has been run. Synthesis will continue with the default flow
 ---------------------------------------------------------------------------------
-Finished Doing Graph Differ : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1126.379 ; gain = 602.391
+Finished Doing Graph Differ : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.719 ; gain = 602.555
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Preparing Guide Design : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1126.379 ; gain = 602.391
+Finished Preparing Guide Design : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.719 ; gain = 602.555
 ---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'amomin_w'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    IDLE |                               01 |                               00
+                    READ |                               11 |                               01
+                     ALU |                               10 |                               10
+                   WRITE |                               00 |                               11
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'amomin_w'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1126.379 ; gain = 602.391
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.719 ; gain = 602.555
 ---------------------------------------------------------------------------------
 
 
@@ -80,10 +143,13 @@ Start RTL Component Statistics
 ---------------------------------------------------------------------------------
 Detailed RTL Component Info : 
 +---Registers : 
-	               32 Bit    Registers := 9     
-	                1 Bit    Registers := 3     
+	               32 Bit    Registers := 7     
+	                1 Bit    Registers := 1     
 +---Muxes : 
 	   2 Input   32 Bit        Muxes := 1     
+	   4 Input    2 Bit        Muxes := 1     
+	   4 Input    1 Bit        Muxes := 1     
+	   2 Input    1 Bit        Muxes := 1     
 ---------------------------------------------------------------------------------
 Finished RTL Component Statistics 
 ---------------------------------------------------------------------------------
@@ -101,21 +167,74 @@ No constraint files found.
 Start Cross Boundary and Area Optimization
 ---------------------------------------------------------------------------------
 WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
+WARNING: [Synth 8-3917] design amomin_w has port axi_arsize[2] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_arsize[1] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_arsize[0] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_arlock[1] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_arlock[0] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_awsize[2] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_awsize[1] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_awsize[0] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_awlock[1] driven by constant 0
+WARNING: [Synth 8-3917] design amomin_w has port axi_awlock[0] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[3] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[2] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[1] driven by constant 1
+WARNING: [Synth 8-3917] design amomin_w has port axi_wstrb[0] driven by constant 1
+WARNING: [Synth 8-7129] Port mem_rdata[31] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[30] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[29] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[28] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[27] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[26] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[25] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[24] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[23] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[22] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[21] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[20] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[19] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[18] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[17] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[16] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[15] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[14] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[13] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[12] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[11] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[10] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[9] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[8] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[7] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[6] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[5] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[4] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[3] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[2] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[1] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port mem_rdata[0] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_arready in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_rresp[1] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_rresp[0] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_awready in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_wready in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_bresp[1] in module amomin_w is either unconnected or has no load
+WARNING: [Synth 8-7129] Port axi_bresp[0] in module amomin_w is either unconnected or has no load
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 1593.969 ; gain = 1069.980
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 1595.879 ; gain = 1070.715
 ---------------------------------------------------------------------------------
 No constraint files found.
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:14 ; elapsed = 00:00:15 . Memory (MB): peak = 1609.762 ; gain = 1085.773
+Finished Timing Optimization : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 1611.656 ; gain = 1086.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Technology Mapping
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:14 ; elapsed = 00:00:15 . Memory (MB): peak = 1609.762 ; gain = 1085.773
+Finished Technology Mapping : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 1611.656 ; gain = 1086.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -133,37 +252,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished IO Insertion : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -181,43 +300,46 @@ Report Cell Usage:
 +------+-------+------+
 |1     |BUFG   |     1|
 |2     |CARRY4 |     4|
-|3     |LUT1   |     1|
-|4     |LUT3   |    32|
-|5     |LUT4   |    32|
-|6     |FDCE   |   291|
-|7     |IBUF   |    99|
-|8     |OBUF   |    97|
+|3     |LUT1   |     2|
+|4     |LUT2   |     3|
+|5     |LUT3   |    35|
+|6     |LUT4   |    32|
+|7     |LUT5   |     1|
+|8     |FDCE   |   226|
+|9     |FDPE   |     1|
+|10    |IBUF   |   101|
+|11    |OBUF   |   212|
 +------+-------+------+
 
 Report Instance Areas: 
 +------+---------+-------+------+
 |      |Instance |Module |Cells |
 +------+---------+-------+------+
-|1     |top      |       |   557|
+|1     |top      |       |   618|
 +------+---------+-------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 ---------------------------------------------------------------------------------
-Synthesis finished with 0 errors, 1 critical warnings and 1 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
-Synthesis Optimization Complete : Time (s): cpu = 00:00:17 ; elapsed = 00:00:19 . Memory (MB): peak = 1833.734 ; gain = 1309.746
+Synthesis finished with 0 errors, 1 critical warnings and 107 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
+Synthesis Optimization Complete : Time (s): cpu = 00:00:16 ; elapsed = 00:00:18 . Memory (MB): peak = 1835.656 ; gain = 1310.492
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1847.758 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1849.738 ; gain = 0.000
 INFO: [Netlist 29-17] Analyzing 4 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1981.559 ; gain = 0.000
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1984.484 ; gain = 0.000
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
-Synth Design complete | Checksum: 528e259d
+Synth Design complete | Checksum: feb4f225
 INFO: [Common 17-83] Releasing license: Synthesis
-17 Infos, 1 Warnings, 1 Critical Warnings and 0 Errors encountered.
+19 Infos, 107 Warnings, 1 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:00:20 ; elapsed = 00:00:23 . Memory (MB): peak = 1981.559 ; gain = 1463.582
+synth_design: Time (s): cpu = 00:00:20 ; elapsed = 00:00:23 . Memory (MB): peak = 1984.484 ; gain = 1465.320
 INFO: [runtcl-6] Synthesis results are not added to the cache due to CRITICAL_WARNING
-Write ShapeDB Complete: Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.002 . Memory (MB): peak = 1981.559 ; gain = 0.000
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1984.484 ; gain = 0.000
 INFO: [Common 17-1381] The checkpoint 'C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1/amomin_w.dcp' has been generated.
 INFO: [Vivado 12-24828] Executing command : report_utilization -file amomin_w_utilization_synth.rpt -pb amomin_w_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Mon Oct 27 09:43:09 2025...
+INFO: [Common 17-206] Exiting Vivado at Fri Oct 31 02:18:21 2025...
