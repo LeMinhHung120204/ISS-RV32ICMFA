@@ -333,6 +333,23 @@ module MainDecoder(
                     7'b111_0000: begin      // fmv.x.w / fclass
                         RegWrite = 1'b1;
                     end 
+            7'b0101111: begin // add atomic
+                addr_addend_sel = 1'b0;
+                ResExSel        = 2'b00;
+                ResPCSel        = 1'b0;
+                FRegWrite       = 1'b0;
+                FPUOp           = 3'd0;
+                RegWrite        = 1'b1;
+                ImmSrc          = 3'b000;
+                ALUSrc          = 1'b0;
+                MemWrite        = 1'b0;
+                ResultSrc       = 3'b000;
+                Branch          = 1'b0;
+                ALUOp           = 2'b00;
+                Jump            = 1'b0;
+                StoreSrc        = 3'b000;
+                MDUOp           = 1'b0;
+           end
                     default: begin
                         RegWrite = 1'b0;
                     end

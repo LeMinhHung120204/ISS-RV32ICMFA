@@ -9,13 +9,18 @@ module EX_MEM #(
     input   [4:0]               E_rd,
     input   [2:0]               E_ResultSrc, E_StoreSrc,
     input   [1:0]               E_ResExSel,
-
+    input   E_is_atomic, // atomic
+    input   [DATA_WIDTH-1:0] E_atomic_rdata,
+    input   E_atomic_done,
     output reg M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel, M_MDU_FPUEn,
     output reg [DATA_WIDTH - 1:0]    M_ALUResult, M_WriteData, M_ImmExt, M_MDUResult, M_FPUResult,
     output reg [ADDR_WIDTH - 1:0]    M_PCPlus4, M_PCTarget,
     output reg [4:0]                 M_rd,
     output reg [2:0]                 M_ResultSrc, M_StoreSrc,
-    output reg [1:0]                 M_ResExSel
+    output reg [1:0]                 M_ResExSel,
+    output reg M_is_atomic, //atomic
+    output reg [DATA_WIDTH-1:0] M_atomic_rdata,
+    output reg M_atomic_done
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -35,6 +40,9 @@ module EX_MEM #(
             M_FRegWrite <= 1'd0;
             M_ResPCSel  <= 1'd0;
             M_MDU_FPUEn <= 1'd0;
+            M_is_atomic     <= 1'b0;            // atomic
+            M_atomic_rdata  <= 32'd0;
+            M_atomic_done   <= 1'b0;
         end 
         else begin
             M_ALUResult <= E_ALUResult;
@@ -53,6 +61,9 @@ module EX_MEM #(
             M_FRegWrite <= E_FRegWrite;
             M_ResPCSel  <= E_ResPCSel ;
             M_MDU_FPUEn <= E_MDU_FPUEn;
+            M_is_atomic     <= E_is_atomic;     // atomic
+            M_atomic_rdata  <= E_atomic_rdata;
+            M_atomic_done   <= E_atomic_done;
         end 
     end 
 endmodule
