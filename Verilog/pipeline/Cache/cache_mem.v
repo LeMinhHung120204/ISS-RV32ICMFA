@@ -9,11 +9,10 @@ module cache_mem #(
     parameter INDEX_W       = $clog2(N_SETS),
     parameter CACHE_DATA_W  = (1 << OFFSET_W) * 32
 )(
-    input clk, rst_n, 
-    input write_ack,
+    input clk, rst_n,
 
     // cpu <-> cache
-    input                   data_req, req_reg,
+    input                   data_valid, data_valid_reg,
     input   [ADDR_W-1:0]    data_addr, data_addr_reg,
     input   [DATA_W-1:0]    data_wdata_reg,
     output  [DATA_W-1:0]    data_rdata,     // chua co assign
@@ -21,14 +20,14 @@ module cache_mem #(
     output                  data_ready,
 
     // cache <-> mem (write channel)
-    input                           write_valid,
+    input                           write_ready,
     output  [ADDR_W-1:0]            write_addr,
     output reg [CACHE_DATA_W-1:0]   write_wdata,  // chua co
     // output  [3:0]           write_wstrb, // write back khong dung vi write ca line
-    output                          write_req,
+    output                          write_valid,
 
     // cache <-> mem (read channel)
-    output                  replace_req,
+    output                  replace_valid,
     output  [ADDR_W-1:0]    replace_addr,
     input                   replace,
     input   [ADDR_W-1:0]    read_addr,
@@ -70,13 +69,12 @@ module cache_mem #(
     assign index_reg    = data_addr_reg[IDX_MSB:IDX_LSB];
     assign offset       = data_addr_reg[WO-1:0];
 
-    assign write_access = ( |data_wstrb_reg) & req_reg;
-    assign read_access  = (~|data_wstrb_reg) & req_reg;
-    assign replace_req  = (~|way_hit) & (write_ack) & (req_reg) & (~replace);
-    assign replace_addr = data_addr;
+    assign write_access     = ( |data_wstrb_reg) & data_valid_reg;
+    assign read_access      = (~|data_wstrb_reg) & data_valid_reg;
+    assign replace_valid    = (~|way_hit) & (write_ready) & (data_valid_reg) & (~replace);
+    assign replace_addr     = data_addr;
 
-    // CPU ACK signal
-    assign ack_o = hit & req_reg;
+    assign data_ready       = hit & data_valid_reg;
 
     // Read-After-Write (RAW) Hazard (pipeline) control
     wire                raw;
@@ -116,7 +114,7 @@ module cache_mem #(
                 valid_reg2  <= {(N_SETS){1'b0}};
                 valid_reg3  <= {(N_SETS){1'b0}};
             end 
-            else if (replace_req) begin
+            else if (replace_valid) begin
                 case(way_select)
                     4'b0001: valid_reg0[index_reg] <= 1'b1;
                     4'b0010: valid_reg1[index_reg] <= 1'b1;
@@ -126,7 +124,7 @@ module cache_mem #(
             end 
 
             // dirty
-            if (write_req) begin
+            if (write_valid) begin
                 case(way_select)
                     4'b0001: dirty_reg0[index_reg] <= 1'b0;
                     4'd0010: dirty_reg1[index_reg] <= 1'b0;
@@ -181,7 +179,7 @@ module cache_mem #(
             end 
         endcase
     end 
-    assign write_req    = req_reg & ~(|way_hit) & dirty[way_select_bin];
+    assign write_valid  = data_valid_reg & ~(|way_hit) & dirty[way_select_bin];
     assign write_addr   = {tag_flush, index_reg, 6'd0};
 
     // RAW
@@ -192,10 +190,10 @@ module cache_mem #(
 
 
     // output for cache control
-    assign write_hit    = ack_o & write_access;
-    assign write_miss   = ack_o & (~hit & write_access);    // write_miss luon = 0
-    assign read_hit     = ack_o & read_access;
-    assign read_miss_o  = replace_req;
+    assign write_hit    = data_ready & write_access;
+    assign write_miss   = data_ready & (~hit & write_access);    // write_miss luon = 0
+    assign read_hit     = data_ready & read_access;
+    assign read_miss    = replace_valid;
 
     assign way_hit[0]   = (tag == tag_read0) & valid[0];
     assign way_hit[1]   = (tag == tag_read1) & valid[1];
@@ -223,7 +221,7 @@ module cache_mem #(
     ) tag_mem0 (
         .clk    (clk),
         .rst_n  (rst_n),
-        .we     (way_select[0] & replace_req),
+        .we     (way_select[0] & replace_valid),
         .index  (index),
         .din    (tag),
         .dout   (tag_read0)
@@ -250,7 +248,7 @@ module cache_mem #(
     ) tag_mem1 (
         .clk    (clk),
         .rst_n  (rst_n),
-        .we     (way_select[1] & replace_req),
+        .we     (way_select[1] & replace_valid),
         .index  (index),
         .din    (tag),
         .dout   (tag_read1)
@@ -277,7 +275,7 @@ module cache_mem #(
     ) tag_mem2 (
         .clk    (clk),
         .rst_n  (rst_n),
-        .we     (way_select[2] & replace_req),
+        .we     (way_select[2] & replace_valid),
         .index  (index),
         .din    (tag),
         .dout   (tag_read2)
@@ -304,7 +302,7 @@ module cache_mem #(
     ) tag_mem3 (
         .clk    (clk),
         .rst_n  (rst_n),
-        .we     (way_select[3] & replace_req),
+        .we     (way_select[3] & replace_valid),
         .index  (index),
         .din    (tag),
         .dout   (tag_read3)
