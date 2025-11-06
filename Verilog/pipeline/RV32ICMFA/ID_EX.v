@@ -12,6 +12,13 @@ module ID_EX #(
     input   [2:0]               D_ResultSrc, D_StoreSrc, D_funct3,
     input   [3:0]               D_ALUControl,
     input   [4:0]               D_Rs1, D_Rs2, D_rd, D_RsF3, D_FPUControl,
+    
+    // atomic inputs
+    input   D_is_atomic,
+    input   [4:0]  D_atomic_funct5,
+    input   D_atomic_aq,
+    input   D_atomic_rl,
+    input   [2:0]  D_atomic_funct3,
 
     output reg  E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc,
                 E_is_high, E_addr_addend_sel, E_ResPCSel, E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_RegSrc1, E_RegSrc2,
@@ -20,7 +27,14 @@ module ID_EX #(
     output reg  [1:0]               E_Mul_Div_unsigned, E_MulDivControl, E_ResExSel,
     output reg  [2:0]               E_ResultSrc, E_StoreSrc, E_funct3,
     output reg  [3:0]               E_ALUControl,
-    output reg  [4:0]               E_Rs1, E_Rs2, E_rd, E_RsF3, E_FPUControl
+    output reg  [4:0]               E_Rs1, E_Rs2, E_rd, E_RsF3, E_FPUControl,
+    
+    // atomic outputs
+    output reg E_is_atomic,
+    output reg [4:0]  E_atomic_funct5,
+    output reg E_atomic_aq,
+    output reg E_atomic_rl,
+    output reg [2:0]  E_atomic_funct3
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -56,6 +70,13 @@ module ID_EX #(
             E_Valid_FPU         <= 1'd0;
             E_RegSrc1           <= 1'd0;
             E_RegSrc2           <= 1'd0;
+            
+            // reset atomic
+            E_is_atomic         <= 1'b0;
+            E_atomic_funct5     <= 5'd0;
+            E_atomic_aq         <= 1'b0;
+            E_atomic_rl         <= 1'b0;
+            E_atomic_funct3     <= 3'd0;
         end 
         else begin
             if (E_Flush) begin
@@ -91,6 +112,13 @@ module ID_EX #(
                 E_Valid_FPU         <= 1'd0;
                 E_RegSrc1           <= 1'd0;
                 E_RegSrc2           <= 1'd0;
+                
+                // flush atomic
+                E_is_atomic         <= 1'b0;
+                E_atomic_funct5     <= 5'd0;
+                E_atomic_aq         <= 1'b0;
+                E_atomic_rl         <= 1'b0;
+                E_atomic_funct3     <= 3'd0;
             end 
             else begin 
                 if (~EN) begin
@@ -126,9 +154,16 @@ module ID_EX #(
                     E_FRegWrite         <= D_FRegWrite       ;
                     E_RegSrc1           <= D_RegSrc1         ;
                     E_RegSrc2           <= D_RegSrc2         ;
+                    
+                    // forward atomic
+                    E_is_atomic         <= D_is_atomic;
+                    E_atomic_funct5     <= D_atomic_funct5;
+                    E_atomic_aq         <= D_atomic_aq;
+                    E_atomic_rl         <= D_atomic_rl;
+                    E_atomic_funct3     <= D_atomic_funct3;
                 end 
             end
         end
     end 
 
-endmodule   
+endmodule
