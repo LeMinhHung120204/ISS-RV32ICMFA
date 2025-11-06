@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module cache_data_mem #(
     parameter DATA_WITDH        = 32,
     parameter INDEX_WIDTH       = 10,

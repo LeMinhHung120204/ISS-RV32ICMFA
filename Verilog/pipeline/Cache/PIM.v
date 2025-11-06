@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module PIM #(   // Policy info Memory
     parameter ADDR_WIDTH = 10,
     parameter DATA_WIDTH = 3

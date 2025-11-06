@@ -1,12 +1,13 @@
+`timescale 1ns/1ps
 module cache_replacement #(
     parameter N_WAYS    = 4,
     parameter N_LINES   = 1024,
     parameter N_WAYS_W  = $clog2(N_WAYS),
     parameter N_LINEs_W = $clog2(N_LINES)
 )(
-    input                   clk, rst_n, write_en,
+    input                   clk, rst_n, we,
     input   [N_WAYS-1:0]    way_hit,
-    input   [N_LINEs_W-1:0] line_addr,
+    input   [N_LINEs_W-1:0] addr,
     output  [N_WAYS-1:0]    way_select,
     output  [N_WAYS_W-1:0]  way_select_bin
 );
@@ -62,10 +63,12 @@ module cache_replacement #(
     ) Policy_info_Memory (
         .clk        (clk),
         .rst_n      (rst_n),
+        .we         (we),
+        .addr       (addr),
         .plru_in    (tree_in),
         .plru_out   (tree_out)
     );
 
-    assign way_select_bin   = node_id[NWAYS_W] - N_WAYS;
+    assign way_select_bin   = node_id[N_WAYS_W] - N_WAYS;
     assign way_select       = (1 << way_select_bin);
 endmodule
