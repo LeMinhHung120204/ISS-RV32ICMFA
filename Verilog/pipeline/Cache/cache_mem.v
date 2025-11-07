@@ -314,7 +314,7 @@ module cache_mem #(
     ) cache_replacement (
         .clk        (clk),
         .rst_n      (rst_n | invalidate),
-        .we         (ack_o),
+        .we         (data_ready),
         .way_hit    (way_hit),
         .addr       (index_reg),
         .way_select (way_select),
