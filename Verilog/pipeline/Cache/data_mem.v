@@ -5,12 +5,13 @@ module data_mem #(
     parameter CACHE_DATA_WIDTH  = 512,
     parameter NUM_CACHE_LINES   = 16
 )(
-    input                               clk, rst_n, we,
-    input   [INDEX_WIDTH-1:0]           index,
-    input   [DATA_W-1:0]                din,
-    input   [1:0]                       word_off,
+    input                           clk, rst_n, we,
+    input   [INDEX_WIDTH-1:0]       index,
+    input   [DATA_W-1:0]            din,
+    input   [1:0]                   word_off,
     // input   [3:0]                       write_wstrb,
-    output reg [CACHE_DATA_WIDTH-1:0]   dout
+    // output reg [CACHE_DATA_WIDTH-1:0]   dout
+    output  [CACHE_DATA_WIDTH-1:0]  dout
 );
 
     reg [CACHE_DATA_WIDTH-1:0] data_mem [0:NUM_CACHE_LINES-1];
@@ -39,9 +40,9 @@ module data_mem #(
                     end  
                 endcase
             end 
-            dout <= data_mem[index];
+            // dout <= data_mem[index];
         end
     end
 
-    // assign dout = cache_data_mem[index];
+    assign dout = cache_data_mem[index];
 endmodule

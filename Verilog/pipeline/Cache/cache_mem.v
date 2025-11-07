@@ -16,7 +16,7 @@ module cache_mem #(
     input   [ADDR_W-1:0]    data_addr, data_addr_reg,
     input   [DATA_W-1:0]    data_wdata_reg,
     input   [3:0]           data_wstrb_reg,
-    output  [DATA_W-1:0]    data_rdata,     // chua co assign
+    output reg [DATA_W-1:0] data_rdata,
     output                  data_ready,
 
     // cache <-> mem (write channel)
@@ -57,6 +57,7 @@ module cache_mem #(
 
     wire write_access, read_access;
     wire buffer_empty, buffer_full;
+    wire hit;
 //    wire [] buffer_dout;
 
     reg [N_WAYS-1:0]    dirty, valid;
@@ -71,6 +72,8 @@ module cache_mem #(
 
     assign write_access     = ( |data_wstrb_reg) & data_valid_reg;
     assign read_access      = (~|data_wstrb_reg) & data_valid_reg;
+
+    // kich hoat refill khi miss
     assign replace_valid    = (~|way_hit) & (write_ready) & (data_valid_reg) & (~replace);
     assign replace_addr     = data_addr;
 
@@ -86,10 +89,12 @@ module cache_mem #(
         if (~rst_n) begin
             offset_prev     <= {(OFFSET_W){1'b0}};
             way_hit_prev    <= {(N_WAYS){1'b0}};
+            write_hit_prev  <= 1'b0;
         end
         else begin
             offset_prev     <= offset;
             way_hit_prev    <= way_hit;
+            write_hit_prev  <= write_access;
         end 
     end
 
@@ -124,6 +129,7 @@ module cache_mem #(
             end 
 
             // dirty
+            // Clear dirty khi đang write-back xong một line:
             if (write_valid) begin
                 case(way_select)
                     4'b0001: dirty_reg0[index_reg] <= 1'b0;
@@ -132,6 +138,8 @@ module cache_mem #(
                     4'b1000: dirty_reg3[index_reg] <= 1'b0;
                 endcase
             end 
+
+            // Set dirty khi write hit:
             else if (write_access & hit) begin
                 case(way_select)
                     4'b0001: dirty_reg0[index_reg] <= 1'b1;
@@ -158,8 +166,10 @@ module cache_mem #(
             valid[3] <= valid_reg3[index];
         end 
     end 
-    // flush
+
     always @(*) begin
+        // flush
+        // Ghi ca cache line ra bo nho
         case(way_select_bin)
             2'd0: begin
                 tag_flush   = tag_read0;
@@ -178,16 +188,103 @@ module cache_mem #(
                 write_wdata = line_way3;
             end 
         endcase
+
+        // read data mux
+        case(way_hit)
+            4'b0001: begin
+                case(offset)
+                    4'd0 : data_rdata = line_way0[ 31:  0];
+                    4'd1 : data_rdata = line_way0[ 63: 32];
+                    4'd2 : data_rdata = line_way0[ 95: 64];
+                    4'd3 : data_rdata = line_way0[127: 96];
+                    4'd4 : data_rdata = line_way0[159:128];
+                    4'd5 : data_rdata = line_way0[191:160];
+                    4'd6 : data_rdata = line_way0[223:192];
+                    4'd7 : data_rdata = line_way0[255:224];
+                    4'd8 : data_rdata = line_way0[287:256];
+                    4'd9 : data_rdata = line_way0[319:288];
+                    4'd10: data_rdata = line_way0[351:320];
+                    4'd11: data_rdata = line_way0[383:352];
+                    4'd12: data_rdata = line_way0[415:384];
+                    4'd13: data_rdata = line_way0[447:416];
+                    4'd14: data_rdata = line_way0[479:448];
+                    4'd15: data_rdata = line_way0[511:480];
+                    default: data_rdata = 32'd0;
+                endcase
+            end
+            4'b0010: begin
+                case(offset)
+                    4'd0 : data_rdata = line_way1[ 31:  0];
+                    4'd1 : data_rdata = line_way1[ 63: 32];
+                    4'd2 : data_rdata = line_way1[ 95: 64];
+                    4'd3 : data_rdata = line_way1[127: 96];
+                    4'd4 : data_rdata = line_way1[159:128];
+                    4'd5 : data_rdata = line_way1[191:160];
+                    4'd6 : data_rdata = line_way1[223:192];
+                    4'd7 : data_rdata = line_way1[255:224];
+                    4'd8 : data_rdata = line_way1[287:256];
+                    4'd9 : data_rdata = line_way1[319:288];
+                    4'd10: data_rdata = line_way1[351:320];
+                    4'd11: data_rdata = line_way1[383:352];
+                    4'd12: data_rdata = line_way1[415:384];
+                    4'd13: data_rdata = line_way1[447:416];
+                    4'd14: data_rdata = line_way1[479:448];
+                    4'd15: data_rdata = line_way1[511:480];
+                    default: data_rdata = 32'd0;
+                endcase
+            end 
+            4'b0100: begin
+                case(offset)
+                    4'd0 : data_rdata = line_way2[ 31:  0];
+                    4'd1 : data_rdata = line_way2[ 63: 32];
+                    4'd2 : data_rdata = line_way2[ 95: 64];
+                    4'd3 : data_rdata = line_way2[127: 96];
+                    4'd4 : data_rdata = line_way2[159:128];
+                    4'd5 : data_rdata = line_way2[191:160];
+                    4'd6 : data_rdata = line_way2[223:192];
+                    4'd7 : data_rdata = line_way2[255:224];
+                    4'd8 : data_rdata = line_way2[287:256];
+                    4'd9 : data_rdata = line_way2[319:288];
+                    4'd10: data_rdata = line_way2[351:320];
+                    4'd11: data_rdata = line_way2[383:352];
+                    4'd12: data_rdata = line_way2[415:384];
+                    4'd13: data_rdata = line_way2[447:416];
+                    4'd14: data_rdata = line_way2[479:448];
+                    4'd15: data_rdata = line_way2[511:480];
+                    default: data_rdata = 32'd0;
+                endcase
+            end 
+            4'b1000: begin
+                case(offset)
+                    4'd0 : data_rdata = line_way3[ 31:  0];
+                    4'd1 : data_rdata = line_way3[ 63: 32];
+                    4'd2 : data_rdata = line_way3[ 95: 64];
+                    4'd3 : data_rdata = line_way3[127: 96];
+                    4'd4 : data_rdata = line_way3[159:128];
+                    4'd5 : data_rdata = line_way3[191:160];
+                    4'd6 : data_rdata = line_way3[223:192];
+                    4'd7 : data_rdata = line_way3[255:224];
+                    4'd8 : data_rdata = line_way3[287:256];
+                    4'd9 : data_rdata = line_way3[319:288];
+                    4'd10: data_rdata = line_way3[351:320];
+                    4'd11: data_rdata = line_way3[383:352];
+                    4'd12: data_rdata = line_way3[415:384];
+                    4'd13: data_rdata = line_way3[447:416];
+                    4'd14: data_rdata = line_way3[479:448];
+                    4'd15: data_rdata = line_way3[511:480];
+                    default: data_rdata = 32'd0;
+                endcase
+            end 
+            default: data_rdata = 32'd0;
+        endcase
     end 
-    assign write_valid  = data_valid_reg & ~(|way_hit) & dirty[way_select_bin];
     assign write_addr   = {tag_flush, index_reg, 6'd0};
+
+    // if miss & line duoc chon thay the dang ban, thi bat kenh ghi BE de write-back.
+    assign write_valid  = data_valid_reg & ~(|way_hit) & dirty[way_select_bin];
 
     // RAW
     assign raw          = write_hit_prev & (way_hit_prev == way_hit) & (offset_prev == offset) & read_access;
-
-    // Check hit
-    assign hit          = |way_hit & (~replace) & (~raw);
-
 
     // output for cache control
     assign write_hit    = data_ready & write_access;
@@ -195,6 +292,8 @@ module cache_mem #(
     assign read_hit     = data_ready & read_access;
     assign read_miss    = replace_valid;
 
+    // Check hit
+    assign hit          = |way_hit & (~replace) & (~raw);
     assign way_hit[0]   = (tag == tag_read0) & valid[0];
     assign way_hit[1]   = (tag == tag_read1) & valid[1];
     assign way_hit[2]   = (tag == tag_read2) & valid[2];
