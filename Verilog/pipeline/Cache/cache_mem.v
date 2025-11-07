@@ -15,14 +15,14 @@ module cache_mem #(
     input                   data_valid, data_valid_reg,
     input   [ADDR_W-1:0]    data_addr, data_addr_reg,
     input   [DATA_W-1:0]    data_wdata_reg,
+    input   [3:0]           data_wstrb_reg,
     output  [DATA_W-1:0]    data_rdata,     // chua co assign
-    output  [3:0]           data_wstrb_reg, // chua co assign 
     output                  data_ready,
 
     // cache <-> mem (write channel)
     input                           write_ready,
     output  [ADDR_W-1:0]            write_addr,
-    output reg [CACHE_DATA_W-1:0]   write_wdata,  // chua co
+    output reg [CACHE_DATA_W-1:0]   write_wdata,
     // output  [3:0]           write_wstrb, // write back khong dung vi write ca line
     output                          write_valid,
 
