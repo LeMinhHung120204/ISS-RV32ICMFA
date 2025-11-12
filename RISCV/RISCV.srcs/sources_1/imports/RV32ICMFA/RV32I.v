@@ -47,25 +47,6 @@ module RV32I #(
     wire [WIDTH_DATA-1:0] E_FPUResult, M_FPUResult;
     // wire E_FPU_done, E_FPUStall;
 
-    // ----------------------- ATOMIC: Tin hieu dieu khien Atomic -----------------------
-    wire D_AtomicOp;
-    wire [4:0] D_atomic_funct5;
-    wire D_atomic_aq, D_atomic_rl;
-    wire [2:0] D_atomic_funct3;
-    
-    wire E_AtomicOp;
-    wire [4:0] E_atomic_funct5;
-    wire E_atomic_aq, E_atomic_rl;
-    wire [2:0] E_atomic_funct3;
-    
-    wire E_atomic_done;
-    wire [WIDTH_DATA-1:0] E_atomic_rd;
-    wire atomic_stall;
-    
-    wire M_AtomicOp;
-    wire [WIDTH_DATA-1:0] M_atomic_rdata;
-    wire M_atomic_done;
-
     // ----------------------- Tin hieu Hazard -----------------------
     wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;
     wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
@@ -80,12 +61,6 @@ module RV32I #(
     assign F_PCPlus4        = F_PC + 32'd4;
     assign W_Result_output  = WB_Result;
     assign PCNext           = (E_PCSrc == 1'b1) ? E_PCTarget : F_PCPlus4;
-
-    // ATOMIC: Extract atomic fields from instruction
-    assign D_atomic_funct5 = (D_AtomicOp) ? D_Instr[31:27] : 5'b0;
-    assign D_atomic_aq     = (D_AtomicOp) ? D_Instr[26]    : 1'b0;
-    assign D_atomic_rl     = (D_AtomicOp) ? D_Instr[25]    : 1'b0;
-    assign D_atomic_funct3 = (D_AtomicOp) ? D_Instr[14:12] : 3'b0;
 
     // ---------------------------------------- WB state ----------------------------------------
 
@@ -112,10 +87,6 @@ module RV32I #(
         .E_PCSrc(E_PCSrc),
         .E_MulDivStall(E_MulDivStall),
         .E_FPUStall(E_FPUStall),
-        // ATOMIC: Add atomic stall inputs
-        .E_AtomicOp(E_AtomicOp),
-        .E_atomic_done(E_atomic_done),
-        
         .E_ResultSrc(E_ResultSrc),
         .E_RegSrc1(E_RegSrc1),
         .E_RegSrc2(E_RegSrc2),
@@ -173,9 +144,7 @@ module RV32I #(
         .RegSrc1(D_RegSrc1),
         .RegSrc2(D_RegSrc2),
         .FPUControl(D_FPUControl),
-        .FRegWrite(D_FRegWrite),
-        // ATOMIC: Add AtomicOp output
-        .AtomicOp(D_AtomicOp)
+        .FRegWrite(D_FRegWrite)
     );
     // ---------------------------------------- IF state ----------------------------------------
     PC PC_inst(
@@ -199,6 +168,7 @@ module RV32I #(
         .F_RD(F_RD),
         .F_PC(F_PC),
         .F_PCPlus4(F_PCPlus4),
+
         .D_Instr(D_Instr),
         .D_PC(D_PC),
         .D_PCPlus4(D_PCPlus4)
@@ -288,13 +258,7 @@ module RV32I #(
         .D_FPUControl(D_FPUControl),
         .D_Mul_Div_unsigned(D_Mul_Div_unsigned),
         .D_MulDivControl(D_MulDivControl),
-        .D_ResExSel(D_ResExSel),
-        // ATOMIC: Add atomic inputs to ID_EX
-        .D_AtomicOp(D_AtomicOp),
-        .D_atomic_funct5(D_atomic_funct5),
-        .D_atomic_aq(D_atomic_aq),
-        .D_atomic_rl(D_atomic_rl),
-        .D_atomic_funct3(D_atomic_funct3),        
+        .D_ResExSel(D_ResExSel),        
 
         .E_RD1(E_RD1),
         .E_RD2(E_RD2),
@@ -327,13 +291,7 @@ module RV32I #(
         .E_FPUControl(E_FPUControl),
         .E_Mul_Div_unsigned(E_Mul_Div_unsigned),
         .E_MulDivControl(E_MulDivControl),
-        .E_ResExSel(E_ResExSel),
-        // ATOMIC: Add atomic outputs from ID_EX
-        .E_AtomicOp(E_AtomicOp),
-        .E_atomic_funct5(E_atomic_funct5),
-        .E_atomic_aq(E_atomic_aq),
-        .E_atomic_rl(E_atomic_rl),
-        .E_atomic_funct3(E_atomic_funct3)
+        .E_ResExSel(E_ResExSel) 
     );
 
     // ---------------------------------------- Ex state ----------------------------------------
@@ -373,74 +331,6 @@ module RV32I #(
 
         .rd(E_FPUResult),
         .stall(E_FPUStall)
-    );
-
-    // ATOMIC: Instantiate atomic_wrapper in EX stage
-    atomic_wrapper atomic_wrapper_inst(
-        .clk(clk),
-        .rst_n(rst_n),
-        
-        .E_AtomicOp(E_AtomicOp),
-        .E_atomic_funct5(E_atomic_funct5),
-        .E_atomic_aq(E_atomic_aq),
-        .E_atomic_rl(E_atomic_rl),
-        .E_RD1(E_SrcA),
-        .E_RD2(E_WriteData),
-        
-        .E_atomic_done(E_atomic_done),
-        .E_atomic_rd(E_atomic_rd),
-        .atomic_stall(atomic_stall),
-        
-        // ACE interface - Tie off for now
-        .m_ARID(),
-        .m_ARADDR(),
-        .m_ARLEN(),
-        .m_ARSIZE(),
-        .m_ARBURST(),
-        .m_ARLOCK(),
-        .m_ARCACHE(),
-        .m_ARPROT(),
-        .m_ARQOS(),
-        .m_ARREGION(),
-        .m_ARDOMAIN(),
-        .m_ARSNOOP(),
-        .m_ARBAR(),
-        .m_ARVALID(),
-        .m_ARREADY(1'b1),
-        
-        .m_RID(2'b0),
-        .m_RDATA(32'h0),
-        .m_RRESP(2'b00),
-        .m_RLAST(1'b1),
-        .m_RVALID(1'b0),
-        .m_RREADY(),
-        
-        .m_AWID(),
-        .m_AWADDR(),
-        .m_AWLEN(),
-        .m_AWSIZE(),
-        .m_AWBURST(),
-        .m_AWLOCK(),
-        .m_AWCACHE(),
-        .m_AWPROT(),
-        .m_AWQOS(),
-        .m_AWREGION(),
-        .m_AWDOMAIN(),
-        .m_AWSNOOP(),
-        .m_AWBAR(),
-        .m_AWVALID(),
-        .m_AWREADY(1'b1),
-        
-        .m_WDATA(),
-        .m_WSTRB(),
-        .m_WLAST(),
-        .m_WVALID(),
-        .m_WREADY(1'b1),
-        
-        .m_BID(2'b0),
-        .m_BRESP(2'b00),
-        .m_BVALID(1'b0),
-        .m_BREADY()
     );
 
     mux2_1 Mux_PCadd(
@@ -525,10 +415,6 @@ module RV32I #(
         .E_ResExSel(E_ResExSel),
         .E_ResPCSel(E_ResPCSel),
         .E_MDU_FPUEn(E_MDU_FPUEn),
-        // ATOMIC: Add atomic inputs to EX_MEM
-        .E_AtomicOp(E_AtomicOp),
-        .E_atomic_rdata(E_atomic_rd),
-        .E_atomic_done(E_atomic_done),
 
         .M_ALUResult(M_ALUResult),
         .M_MDUResult(M_MDUResult),
@@ -545,11 +431,7 @@ module RV32I #(
         .M_StoreSrc(M_StoreSrc),
         .M_ResExSel(M_ResExSel),
         .M_ResPCSel(M_ResPCSel),
-        .M_MDU_FPUEn(M_MDU_FPUEn),
-        // ATOMIC: Add atomic outputs from EX_MEM
-        .M_AtomicOp(M_AtomicOp),
-        .M_atomic_rdata(M_atomic_rdata),
-        .M_atomic_done(M_atomic_done)
+        .M_MDU_FPUEn(M_MDU_FPUEn)
     );
 
     // ---------------------------------------- MEM state ----------------------------------------
@@ -605,9 +487,6 @@ module RV32I #(
         .M_FRegWrite(M_FRegWrite),
         .M_ResultSrc(M_ResultSrc),
         .M_MDU_FPUEn(M_MDU_FPUEn),
-        // ATOMIC: Add atomic inputs to MEM_WB
-        .M_AtomicOp(M_AtomicOp),
-        .M_atomic_rdata(M_atomic_rdata),
 
         .W_Result(W_Result),
         .W_ReadData(W_ReadData),
