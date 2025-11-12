@@ -1,101 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1761851869" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
-  <File Type="PA-TCL" Name="amomin_w.tcl"/>
-  <File Type="REPORTS-TCL" Name="amomin_w_reports.tcl"/>
-  <File Type="RDS-RDS" Name="amomin_w.vds"/>
-  <File Type="RDS-PROPCONSTRS" Name="amomin_w_drc_synth.rpt"/>
-  <File Type="RDS-UTIL" Name="amomin_w_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="amomin_w_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="amomin_w.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="amomin_w_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="amomin_w_timing_summary_synth.pb"/>
+<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1762944888" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
+  <File Type="PA-TCL" Name="MEM_WB.tcl"/>
+  <File Type="REPORTS-TCL" Name="MEM_WB_reports.tcl"/>
+  <File Type="RDS-RDS" Name="MEM_WB.vds"/>
+  <File Type="RDS-PROPCONSTRS" Name="MEM_WB_drc_synth.rpt"/>
+  <File Type="RDS-UTIL" Name="MEM_WB_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="MEM_WB_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="MEM_WB.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="MEM_WB_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="MEM_WB_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
-    <File Path="$PSRCDIR/sources_1/new/amomin_w.v">
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MEM_WB.v">
       <FileInfo>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/amoand_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/amoor_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/amoxor_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/amoswap_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/amoadd_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/sc_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/lr_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/amomax_w.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/csa.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/csa.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MEM_WB.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt.v">
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/HazardUnit.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/HazardUnit.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -192,20 +120,20 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/FRegFile.v">
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/FPUDecoder.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/FRegFile.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/FPUDecoder.v"/>
+        <Attr Name="ImportTime" Val="1761848937"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/HazardUnit.v">
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/FRegFile.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/HazardUnit.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/FRegFile.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -252,16 +180,6 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MEM_WB.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MEM_WB.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MainDecoder.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -292,21 +210,35 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/RV32I.v">
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/RegFile.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RV32I.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RegFile.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/RegFile.v">
+    <File Path="$PSRCDIR/sources_1/new/atomic_decoder.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RegFile.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/new/atomic_wrapper.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -322,60 +254,10 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_16b.v">
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/csa.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_16b.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_4b.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_4b.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_64b.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_64b.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_8b.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_8b.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/controlMDU.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/controlMDU.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/datapath.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/datapath.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/csa.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -562,16 +444,6 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Mul/mul32_v2.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Mul/mul32_v2.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <File Path="$PSRCDIR/sources_1/imports/pipeline/Mux/mux16_1.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -602,16 +474,6 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/Mux/mux8_1.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Mux/mux8_1.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <File Path="$PSRCDIR/sources_1/imports/pipeline/Div/non_restore.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -626,6 +488,106 @@
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Div/non_restore_v2.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/RV32I.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RV32I.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Float/fsqrt.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Float/fsqrt.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_16b.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_16b.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_4b.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_4b.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_64b.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_64b.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Add/cla_8b.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Add/cla_8b.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/controlMDU.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/controlMDU.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/datapath.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/datapath.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Mul/mul32_v2.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Mul/mul32_v2.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/Mux/mux8_1.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Mux/mux8_1.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -672,9 +634,219 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/MulDivDecode.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MulDivDecode.v"/>
+        <Attr Name="ImportTime" Val="1761398609"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/controlMDU.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/controlMDU.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/MEM_WB.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MEM_WB.v"/>
+        <Attr Name="ImportTime" Val="1762461377"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/PC.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/PC.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/RV32I.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RV32I.v"/>
+        <Attr Name="ImportTime" Val="1761848937"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/MainDecoder.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MainDecoder.v"/>
+        <Attr Name="ImportTime" Val="1762461377"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/DataMem.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/DataMem.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/FRegFile.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/FRegFile.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/ID_EX.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/ID_EX.v"/>
+        <Attr Name="ImportTime" Val="1762461377"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/HazardUnit.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/HazardUnit.v"/>
+        <Attr Name="ImportTime" Val="1761848937"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/Ins_Mem.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/Ins_Mem.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/MDU.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MDU.v"/>
+        <Attr Name="ImportTime" Val="1761848937"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/AluDecoder.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/AluDecoder.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/FPU.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/FPU.v"/>
+        <Attr Name="ImportTime" Val="1761848937"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/RegFile.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RegFile.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/BranchDecoder.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/BranchDecoder.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/EX_MEM.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/EX_MEM.v"/>
+        <Attr Name="ImportTime" Val="1762461377"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/ControlUnit.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/ControlUnit.v"/>
+        <Attr Name="ImportTime" Val="1761848937"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/Extend.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/Extend.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/IF_ID.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/IF_ID.v"/>
+        <Attr Name="ImportTime" Val="1762712489"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/RV32ICMFA/ALU.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/ALU.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="amomin_w"/>
+      <Option Name="TopModule" Val="MEM_WB"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1" RelGenDir="$PGENDIR/constrs_1">
