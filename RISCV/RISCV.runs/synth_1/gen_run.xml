@@ -1,30 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1762944888" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
-  <File Type="PA-TCL" Name="MEM_WB.tcl"/>
-  <File Type="REPORTS-TCL" Name="MEM_WB_reports.tcl"/>
-  <File Type="RDS-RDS" Name="MEM_WB.vds"/>
-  <File Type="RDS-PROPCONSTRS" Name="MEM_WB_drc_synth.rpt"/>
-  <File Type="RDS-UTIL" Name="MEM_WB_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="MEM_WB_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="MEM_WB.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="MEM_WB_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="MEM_WB_timing_summary_synth.pb"/>
+<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1763583491" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
+  <File Type="PA-TCL" Name="atomic_unit_ace.tcl"/>
+  <File Type="REPORTS-TCL" Name="atomic_unit_ace_reports.tcl"/>
+  <File Type="RDS-RDS" Name="atomic_unit_ace.vds"/>
+  <File Type="RDS-PROPCONSTRS" Name="atomic_unit_ace_drc_synth.rpt"/>
+  <File Type="RDS-UTIL" Name="atomic_unit_ace_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="atomic_unit_ace_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="atomic_unit_ace.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="atomic_unit_ace_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="atomic_unit_ace_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MEM_WB.v">
+    <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MEM_WB.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/HazardUnit.v">
+    <File Path="$PSRCDIR/sources_1/new/atomic_decoder.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/HazardUnit.v"/>
-        <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -140,6 +136,16 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/HazardUnit.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/HazardUnit.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/ID_EX.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -174,6 +180,16 @@
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MDU.v"/>
+        <Attr Name="ImportTime" Val="1761221878"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MEM_WB.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MEM_WB.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -220,25 +236,11 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/new/atomic_decoder.v">
+    <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_wrapper.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/new/atomic_wrapper.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_wrapper.v"/>
+        <Attr Name="ImportTime" Val="1763583341"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -844,9 +846,29 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_decoder.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_decoder.v"/>
+        <Attr Name="ImportTime" Val="1763583308"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_unit_ace.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_unit_ace.v"/>
+        <Attr Name="ImportTime" Val="1763583327"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="MEM_WB"/>
+      <Option Name="TopModule" Val="atomic_unit_ace"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1" RelGenDir="$PGENDIR/constrs_1">

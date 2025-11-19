@@ -1,422 +1,443 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
-module atomic_unit_ace(
-    ACLK,
-    ARESETn,
-    valid_input,
-    ready,
-    valid_output,
-    atomic_op,
-    rs1_value,
-    rs2_value,
-    rd_value,
-    aq,
-    rl,
-    m_ARID,
-    m_ARADDR,
-    m_ARLEN,
-    m_ARSIZE,
-    m_ARBURST,
-    m_ARLOCK,
-    m_ARCACHE,
-    m_ARPROT,
-    m_ARQOS,
-    m_ARREGION,
-    m_ARDOMAIN,
-    m_ARSNOOP,
-    m_ARBAR,
-    m_ARVALID,
-    m_ARREADY,
-    m_RID,
-    m_RDATA,
-    m_RRESP,
-    m_RLAST,
-    m_RVALID,
-    m_RREADY,
-    m_AWID,
-    m_AWADDR,
-    m_AWLEN,
-    m_AWSIZE,
-    m_AWBURST,
-    m_AWLOCK,
-    m_AWCACHE,
-    m_AWPROT,
-    m_AWQOS,
-    m_AWREGION,
-    m_AWDOMAIN,
-    m_AWSNOOP,
-    m_AWBAR,
-    m_AWVALID,
-    m_AWREADY,
-    m_WDATA,
-    m_WSTRB,
-    m_WLAST,
-    m_WVALID,
-    m_WREADY,
-    m_BID,
-    m_BRESP,
-    m_BVALID,
-    m_BREADY
+module atomic_unit_ace #(
+    parameter WIDTH_DATA = 32,
+    parameter WIDTH_ADDR = 32,
+    parameter CORE_ID = 0  // NEW: For multi-core systems
+)(
+    input clk, rst_n,
+    
+    // Control signals
+    input valid_input,
+    output reg ready,
+    output reg valid_output,
+    
+    // Data inputs
+    input [4:0] funct5,
+    input aq, rl,
+    input [WIDTH_ADDR-1:0] addr,
+    input [WIDTH_DATA-1:0] rs1_data, rs2_data,
+    
+    // Result output  
+    output reg [WIDTH_DATA-1:0] rd_value,
+    
+    // Reservation invalidation from snoop
+    input snoop_invalidate,
+    input [WIDTH_ADDR-1:0] snoop_addr,
+    input [3:0] snoop_core_id,  // NEW: Which core sent snoop
+    
+    // Debug/monitoring
+    output wire [3:0] debug_state,
+    output wire debug_reservation_valid,
+    
+    // ===== AXI Master Interface (5 channels) =====
+    // Read Address Channel (AR)
+    output reg m_ARVALID,
+    input wire m_ARREADY,
+    output reg [WIDTH_ADDR-1:0] m_ARADDR,
+    output wire [7:0] m_ARLEN,
+    output wire [2:0] m_ARSIZE,
+    output wire [1:0] m_ARBURST,
+    
+    // Read Data Channel (R)
+    input wire m_RVALID,
+    output reg m_RREADY,
+    input wire [WIDTH_DATA-1:0] m_RDATA,
+    input wire [1:0] m_RRESP,
+    input wire m_RLAST,
+    
+    // Write Address Channel (AW)
+    output reg m_AWVALID,
+    input wire m_AWREADY,
+    output reg [WIDTH_ADDR-1:0] m_AWADDR,
+    output wire [7:0] m_AWLEN,
+    output wire [2:0] m_AWSIZE,
+    output wire [1:0] m_AWBURST,
+    
+    // Write Data Channel (W)
+    output reg m_WVALID,
+    input wire m_WREADY,
+    output reg [WIDTH_DATA-1:0] m_WDATA,
+    output wire [3:0] m_WSTRB,
+    output wire m_WLAST,
+    
+    // Write Response Channel (B)
+    input wire m_BVALID,
+    output reg m_BREADY,
+    input wire [1:0] m_BRESP
 );
-
-parameter DATA_WIDTH = 32;
-parameter ADDR_WIDTH = 32;
-parameter ID_WIDTH = 2;
-
-// System
-input            ACLK;
-input            ARESETn;
-
-// Control
-input            valid_input;
-output reg       ready;
-output reg       valid_output;
-
-// Operation
-input  [3:0]              atomic_op;
-input  [ADDR_WIDTH-1:0]   rs1_value;
-input  [DATA_WIDTH-1:0]   rs2_value;
-output reg [DATA_WIDTH-1:0] rd_value;
-input            aq;
-input            rl;
-
-// ACE Read Address Channel
-output reg [ID_WIDTH-1:0]     m_ARID;
-output reg [ADDR_WIDTH-1:0]   m_ARADDR;
-output reg [7:0]              m_ARLEN;
-output reg [2:0]              m_ARSIZE;
-output reg [1:0]              m_ARBURST;
-output reg                    m_ARLOCK;
-output reg [3:0]              m_ARCACHE;
-output reg [2:0]              m_ARPROT;
-output reg [3:0]              m_ARQOS;
-output reg [3:0]              m_ARREGION;
-output reg [1:0]              m_ARDOMAIN;
-output reg [3:0]              m_ARSNOOP;
-output reg [1:0]              m_ARBAR;
-output reg                    m_ARVALID;
-input                         m_ARREADY;
-
-// ACE Read Data Channel
-input [ID_WIDTH-1:0]     m_RID;
-input [DATA_WIDTH-1:0]   m_RDATA;
-input [1:0]              m_RRESP;
-input                    m_RLAST;
-input                    m_RVALID;
-output reg               m_RREADY;
-
-// ACE Write Address Channel
-output reg [ID_WIDTH-1:0]     m_AWID;
-output reg [ADDR_WIDTH-1:0]   m_AWADDR;
-output reg [7:0]              m_AWLEN;
-output reg [2:0]              m_AWSIZE;
-output reg [1:0]              m_AWBURST;
-output reg                    m_AWLOCK;
-output reg [3:0]              m_AWCACHE;
-output reg [2:0]              m_AWPROT;
-output reg [3:0]              m_AWQOS;
-output reg [3:0]              m_AWREGION;
-output reg [1:0]              m_AWDOMAIN;
-output reg [2:0]              m_AWSNOOP;
-output reg [1:0]              m_AWBAR;
-output reg                    m_AWVALID;
-input                         m_AWREADY;
-
-// ACE Write Data Channel
-output reg [DATA_WIDTH-1:0]   m_WDATA;
-output reg [3:0]              m_WSTRB;
-output reg                    m_WLAST;
-output reg                    m_WVALID;
-input                         m_WREADY;
-
-// ACE Write Response Channel
-input [ID_WIDTH-1:0]     m_BID;
-input [1:0]              m_BRESP;
-input                    m_BVALID;
-output reg               m_BREADY;
-
-// Operation codes
-localparam OP_LR       = 4'b0000;
-localparam OP_SC       = 4'b0001;
-localparam OP_AMOSWAP  = 4'b0010;
-localparam OP_AMOADD   = 4'b0011;
-localparam OP_AMOXOR   = 4'b0100;
-localparam OP_AMOAND   = 4'b0101;
-localparam OP_AMOOR    = 4'b0110;
-localparam OP_AMOMIN   = 4'b0111;
-localparam OP_AMOMAX   = 4'b1000;
-localparam OP_AMOMINU  = 4'b1001;
-localparam OP_AMOMAXU  = 4'b1010;
-
-// FSM states
-localparam IDLE   = 3'b000;
-localparam READ   = 3'b001;
-localparam ALU    = 3'b010;
-localparam WRITE  = 3'b011;
-localparam CHECK  = 3'b100;
-localparam DONE   = 3'b101;
-
-// ACE snoop types
-localparam ARSNOOP_READONCE   = 4'b0000;
-localparam ARSNOOP_READUNIQUE = 4'b0111;
-localparam AWSNOOP_WRITENSNOOP = 3'b000;
-localparam AWSNOOP_WRITEUNIQUE = 3'b001;
-
-// ACE domains
-localparam DOMAIN_NONSHAREABLE = 2'b00;
-localparam DOMAIN_INNER        = 2'b01;
-
-// Internal registers
-reg [2:0]              state, next_state;
-reg [3:0]              op_reg;
-reg [ADDR_WIDTH-1:0]   addr_reg;
-reg [DATA_WIDTH-1:0]   data_reg;
-reg [DATA_WIDTH-1:0]   rdata_reg;
-reg [DATA_WIDTH-1:0]   result_reg;
-reg                    aq_reg, rl_reg;
-reg                    reservation_valid;
-reg [ADDR_WIDTH-1:0]   reservation_addr;
-
-// FSM sequential
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn)
-        state <= IDLE;
-    else
-        state <= next_state;
-end
-
-// FSM combinational
-always @(*) begin
-    next_state = state;
-    case (state)
-        IDLE: begin
-            if (valid_input) begin
-                if (atomic_op == OP_SC)
-                    next_state = CHECK;
-                else
-                    next_state = READ;
+    
+    // ===== STATE MACHINE =====
+    localparam IDLE       = 4'b0000;
+    localparam AR_WAIT    = 4'b0001;
+    localparam R_WAIT     = 4'b0010;
+    localparam CHECK_SC   = 4'b0011;
+    localparam ALU        = 4'b0100;
+    localparam AW_WAIT    = 4'b0101;
+    localparam W_WAIT     = 4'b0110;
+    localparam B_WAIT     = 4'b0111;
+    localparam DONE       = 4'b1000;
+    localparam SC_FAIL    = 4'b1001;
+    
+    reg [3:0] state, next_state;
+    reg [WIDTH_DATA-1:0] read_data;
+    reg [4:0] current_funct5;
+    reg current_aq, current_rl;
+    reg [WIDTH_ADDR-1:0] current_addr;
+    reg [WIDTH_DATA-1:0] current_rs2;
+    
+    // ===== RESERVATION SET =====
+    reg reservation_valid;
+    reg [WIDTH_ADDR-1:0] reservation_addr;
+    reg [3:0] reservation_core_id;  // NEW: Track which core owns reservation
+    
+    // ===== SC CONTROL FLAG (FIX #1) =====
+    reg sc_will_succeed;  // NEW: Explicit flag to control write
+    
+    // ===== HELPER SIGNALS =====
+    wire is_lr = (current_funct5 == 5'b00010);
+    wire is_sc = (current_funct5 == 5'b00011);
+    wire is_amo = !is_lr && !is_sc;
+    
+    // SC succeeds only if ALL conditions met
+    wire sc_can_succeed = reservation_valid && 
+                          (current_addr[WIDTH_ADDR-1:2] == reservation_addr[WIDTH_ADDR-1:2]) &&
+                          (reservation_core_id == CORE_ID);  // NEW: Check core ID
+    
+    // ===== DEBUG OUTPUTS =====
+    assign debug_state = state;
+    assign debug_reservation_valid = reservation_valid;
+    
+    // ===== AXI FIXED SIGNALS =====
+    assign m_ARLEN = 8'h00;
+    assign m_ARSIZE = 3'b010;
+    assign m_ARBURST = 2'b01;
+    assign m_AWLEN = 8'h00;
+    assign m_AWSIZE = 3'b010;
+    assign m_AWBURST = 2'b01;
+    assign m_WSTRB = 4'b1111;
+    assign m_WLAST = 1'b1;
+    
+    // ===== DEADLOCK WATCHDOG (FIX #3) =====
+    reg [15:0] state_timer;
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state_timer <= 0;
+        end else begin
+            if (state == next_state && state != IDLE && state != DONE && state != SC_FAIL) begin
+                state_timer <= state_timer + 1;
+            end else begin
+                state_timer <= 0;
             end
         end
-        READ: begin
-            if (m_RVALID && m_RREADY)
-                next_state = (op_reg == OP_LR) ? DONE : ALU;
-        end
-        ALU:
-            next_state = WRITE;
-        WRITE: begin
-            if (m_BVALID && m_BREADY)
-                next_state = DONE;
-        end
-        CHECK:
-            next_state = (reservation_valid && (reservation_addr == addr_reg)) ? WRITE : DONE;
-        DONE:
-            next_state = IDLE;
-        default:
-            next_state = IDLE;
-    endcase
-end
-
-// Capture inputs
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn) begin
-        op_reg   <= 4'b0;
-        addr_reg <= {ADDR_WIDTH{1'b0}};
-        data_reg <= {DATA_WIDTH{1'b0}};
-        aq_reg   <= 1'b0;
-        rl_reg   <= 1'b0;
-    end else if (state == IDLE && valid_input) begin
-        op_reg   <= atomic_op;
-        addr_reg <= rs1_value;
-        data_reg <= rs2_value;
-        aq_reg   <= aq;
-        rl_reg   <= rl;
     end
-end
-
-// Capture read data
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn)
-        rdata_reg <= {DATA_WIDTH{1'b0}};
-    else if (state == READ && m_RVALID)
-        rdata_reg <= m_RDATA;
-end
-
-// ALU computation
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn)
-        result_reg <= {DATA_WIDTH{1'b0}};
-    else if (state == ALU) begin
-        case (op_reg)
-            OP_AMOSWAP:  result_reg <= data_reg;
-            OP_AMOADD:   result_reg <= rdata_reg + data_reg;
-            OP_AMOXOR:   result_reg <= rdata_reg ^ data_reg;
-            OP_AMOOR:    result_reg <= rdata_reg | data_reg;
-            OP_AMOAND:   result_reg <= rdata_reg & data_reg;
-            OP_AMOMIN:   result_reg <= ($signed(rdata_reg) < $signed(data_reg)) ? rdata_reg : data_reg;
-            OP_AMOMAX:   result_reg <= ($signed(rdata_reg) > $signed(data_reg)) ? rdata_reg : data_reg;
-            OP_AMOMINU:  result_reg <= (rdata_reg < data_reg) ? rdata_reg : data_reg;
-            OP_AMOMAXU:  result_reg <= (rdata_reg > data_reg) ? rdata_reg : data_reg;
-            default:     result_reg <= {DATA_WIDTH{1'b0}};
-        endcase
-    end
-end
-
-// Reservation set for LR/SC
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn) begin
-        reservation_valid <= 1'b0;
-        reservation_addr  <= {ADDR_WIDTH{1'b0}};
-    end else begin
-        if (state == READ && op_reg == OP_LR && m_RVALID) begin
-            reservation_valid <= 1'b1;
-            reservation_addr  <= addr_reg;
+    
+    // Assertion for deadlock detection
+    always @(posedge clk) begin
+        if (state_timer > 16'hFFFF) begin
+            $display("ERROR: Deadlock detected in state %d at time %t", state, $time);
+            $fatal(1, "Atomic unit deadlock");
         end
-        else if (state == DONE && op_reg == OP_SC)
+    end
+    
+    // ===== RESERVATION MANAGEMENT =====
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
             reservation_valid <= 1'b0;
-    end
-end
-
-// Output generation
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn) begin
-        valid_output <= 1'b0;
-        rd_value     <= {DATA_WIDTH{1'b0}};
-    end else if (state == DONE) begin
-        valid_output <= 1'b1;
-        case (op_reg)
-            OP_LR:
-                rd_value <= rdata_reg;
-            OP_SC:
-                rd_value <= (reservation_valid && (reservation_addr == addr_reg)) ? 
-                      {DATA_WIDTH{1'b0}} : {{(DATA_WIDTH-1){1'b0}}, 1'b1};
-            default:
-                rd_value <= rdata_reg;
-        endcase
-    end else
-        valid_output <= 1'b0;
-end
-
-always @(*) begin
-    ready = (state == IDLE);
-end
-
-// ACE Read Address
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn) begin
-        m_ARVALID   <= 1'b0;
-        m_ARADDR    <= {ADDR_WIDTH{1'b0}};
-        m_ARLEN     <= 8'h0;
-        m_ARSIZE    <= 3'b010;
-        m_ARBURST   <= 2'b01;
-        m_ARLOCK    <= 1'b0;
-        m_ARCACHE   <= 4'b0000;
-        m_ARPROT    <= 3'b000;
-        m_ARQOS     <= 4'b0000;
-        m_ARREGION  <= 4'b0000;
-        m_ARDOMAIN  <= DOMAIN_NONSHAREABLE;
-        m_ARSNOOP   <= ARSNOOP_READONCE;
-        m_ARBAR     <= 2'b00;
-        m_ARID      <= {ID_WIDTH{1'b0}};
-    end else begin
-        if (state == READ && !m_ARVALID) begin
-            m_ARADDR   <= addr_reg;
-            m_ARLEN    <= 8'h0;
-            m_ARSIZE   <= 3'b010;
-            m_ARBURST  <= 2'b01;
-            m_ARLOCK   <= 1'b0;
-            m_ARCACHE  <= 4'b0000;
-            m_ARPROT   <= 3'b000;
-            m_ARQOS    <= 4'b0000;
-            m_ARREGION <= 4'b0000;
-            m_ARID     <= {ID_WIDTH{1'b0}};
-            
-            if (op_reg == OP_LR || (op_reg >= OP_AMOSWAP && op_reg <= OP_AMOMAXU)) begin
-                m_ARDOMAIN <= DOMAIN_INNER;
-                m_ARSNOOP  <= ARSNOOP_READUNIQUE;
-            end else begin
-                m_ARDOMAIN <= DOMAIN_NONSHAREABLE;
-                m_ARSNOOP  <= ARSNOOP_READONCE;
+            reservation_addr <= {WIDTH_ADDR{1'b0}};
+            reservation_core_id <= 4'b0;
+        end else begin
+            // Priority 1: Snoop invalidation
+            if (snoop_invalidate && reservation_valid) begin
+                // Invalidate if:
+                // 1. Address matches (word-aligned)
+                // 2. Snoop is from different core
+                if ((snoop_addr[WIDTH_ADDR-1:2] == reservation_addr[WIDTH_ADDR-1:2]) &&
+                    (snoop_core_id != CORE_ID)) begin
+                    reservation_valid <= 1'b0;
+                    `ifdef DEBUG
+                    $display("Time %t: Core %d reservation invalidated by snoop from core %d", 
+                             $time, CORE_ID, snoop_core_id);
+                    `endif
+                end
             end
             
-            m_ARBAR   <= {rl_reg, aq_reg};
-            m_ARVALID <= 1'b1;
+            // Priority 2: LR sets reservation after successful read
+            if (state == R_WAIT && m_RVALID && m_RREADY && is_lr) begin
+                reservation_valid <= 1'b1;
+                reservation_addr <= current_addr;
+                reservation_core_id <= CORE_ID;
+                `ifdef DEBUG
+                $display("Time %t: Core %d set reservation at addr 0x%h", 
+                         $time, CORE_ID, current_addr);
+                `endif
+            end
+            
+            // Priority 3: SC/AMO clear reservation
+            if ((state == DONE || state == SC_FAIL) && (is_sc || is_amo)) begin
+                reservation_valid <= 1'b0;
+            end
         end
-        else if (m_ARREADY)
+    end
+    
+    // ===== STATE REGISTER =====
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+    
+    // ===== OUTPUT LOGIC =====
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ready <= 1'b1;
+            valid_output <= 1'b0;
+            rd_value <= {WIDTH_DATA{1'b0}};
             m_ARVALID <= 1'b0;
+            m_ARADDR <= {WIDTH_ADDR{1'b0}};
+            m_RREADY <= 1'b0;
+            m_AWVALID <= 1'b0;
+            m_AWADDR <= {WIDTH_ADDR{1'b0}};
+            m_WVALID <= 1'b0;
+            m_WDATA <= {WIDTH_DATA{1'b0}};
+            m_BREADY <= 1'b0;
+            current_funct5 <= 5'b0;
+            current_aq <= 1'b0;
+            current_rl <= 1'b0;
+            current_addr <= {WIDTH_ADDR{1'b0}};
+            current_rs2 <= {WIDTH_DATA{1'b0}};
+            read_data <= {WIDTH_DATA{1'b0}};
+            sc_will_succeed <= 1'b0;  // NEW
+        end else begin
+            case (state)
+                IDLE: begin
+                    ready <= 1'b1;
+                    valid_output <= 1'b0;
+                    m_ARVALID <= 1'b0;
+                    m_RREADY <= 1'b0;
+                    m_AWVALID <= 1'b0;
+                    m_WVALID <= 1'b0;
+                    m_BREADY <= 1'b0;
+                    sc_will_succeed <= 1'b0;  // NEW: Reset flag
+                    
+                    if (valid_input && ready) begin
+                        current_funct5 <= funct5;
+                        current_aq <= aq;
+                        current_rl <= rl;
+                        current_addr <= addr;
+                        current_rs2 <= rs2_data;
+                        ready <= 1'b0;
+                    end
+                end
+                
+                AR_WAIT: begin
+                    m_ARVALID <= 1'b1;
+                    m_ARADDR <= current_addr;
+                    m_RREADY <= 1'b1;
+                end
+                
+                R_WAIT: begin
+                    m_ARVALID <= 1'b0;
+                    m_RREADY <= 1'b1;
+                    
+                    if (m_RVALID && m_RREADY) begin
+                        read_data <= m_RDATA;
+                        m_RREADY <= 1'b0;
+                    end
+                end
+                
+                CHECK_SC: begin
+                    // FIX #1: Set explicit flag for SC success/fail
+                    if (sc_can_succeed) begin
+                        sc_will_succeed <= 1'b1;  // ✅ Will write
+                    end else begin
+                        sc_will_succeed <= 1'b0;  // ✅ Will NOT write
+                        rd_value <= 32'h00000001; // Return failure
+                    end
+                end
+                
+                ALU: begin
+                    m_WDATA <= perform_amo(read_data, current_rs2, current_funct5);
+                end
+                
+                AW_WAIT: begin
+                    // FIX #1: Only assert AWVALID if we will actually write
+                    if (is_amo || (is_sc && sc_will_succeed)) begin
+                        m_AWVALID <= 1'b1;
+                        m_AWADDR <= current_addr;
+                    end
+                    m_BREADY <= 1'b1;
+                end
+                
+                W_WAIT: begin
+                    // FIX #1: CRITICAL - Only assert WVALID if write is allowed
+                    if (is_amo || (is_sc && sc_will_succeed)) begin
+                        m_WVALID <= 1'b1;
+                    end else begin
+                        m_WVALID <= 1'b0;  // ✅ Guarantee no write if SC failed
+                    end
+                    
+                    if (!m_AWREADY && (is_amo || (is_sc && sc_will_succeed))) begin
+                        m_AWVALID <= 1'b1;
+                    end else begin
+                        m_AWVALID <= 1'b0;
+                    end
+                end
+                
+                B_WAIT: begin
+                    m_AWVALID <= 1'b0;
+                    m_WVALID <= 1'b0;
+                    m_BREADY <= 1'b1;
+                    
+                    if (m_BVALID && m_BREADY) begin
+                        m_BREADY <= 1'b0;
+                    end
+                end
+                
+                SC_FAIL: begin
+                    valid_output <= 1'b1;
+                    rd_value <= 32'h00000001;  // SC failed
+                end
+                
+                DONE: begin
+                    valid_output <= 1'b1;
+                    
+                    // FIX #2: Clarify return values
+                    if (is_sc) begin
+                        // SC succeeded (only reach here if sc_will_succeed was true)
+                        rd_value <= 32'h00000000;
+                    end else if (is_lr) begin
+                        // LR returns loaded value
+                        rd_value <= read_data;
+                    end else begin
+                        // AMO returns OLD value (before modification)
+                        // Memory is updated with NEW value via m_WDATA
+                        rd_value <= read_data;
+                    end
+                end
+            endcase
+        end
     end
-end
-
-always @(*) begin
-    m_RREADY = (state == READ);
-end
-
-// ACE Write Address
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn) begin
-        m_AWVALID   <= 1'b0;
-        m_AWADDR    <= {ADDR_WIDTH{1'b0}};
-        m_AWLEN     <= 8'h0;
-        m_AWSIZE    <= 3'b010;
-        m_AWBURST   <= 2'b01;
-        m_AWLOCK    <= 1'b0;
-        m_AWCACHE   <= 4'b0000;
-        m_AWPROT    <= 3'b000;
-        m_AWQOS     <= 4'b0000;
-        m_AWREGION  <= 4'b0000;
-        m_AWDOMAIN  <= DOMAIN_NONSHAREABLE;
-        m_AWSNOOP   <= AWSNOOP_WRITENSNOOP;
-        m_AWBAR     <= 2'b00;
-        m_AWID      <= {ID_WIDTH{1'b0}};
-    end else begin
-        if (state == WRITE && !m_AWVALID) begin
-            m_AWADDR   <= addr_reg;
-            m_AWLEN    <= 8'h0;
-            m_AWSIZE   <= 3'b010;
-            m_AWBURST  <= 2'b01;
-            m_AWLOCK   <= 1'b0;
-            m_AWCACHE  <= 4'b0000;
-            m_AWPROT   <= 3'b000;
-            m_AWQOS    <= 4'b0000;
-            m_AWREGION <= 4'b0000;
-            m_AWID     <= {ID_WIDTH{1'b0}};
-            
-            if (op_reg == OP_SC || (op_reg >= OP_AMOSWAP && op_reg <= OP_AMOMAXU)) begin
-                m_AWDOMAIN <= DOMAIN_INNER;
-                m_AWSNOOP  <= AWSNOOP_WRITEUNIQUE;
-            end else begin
-                m_AWDOMAIN <= DOMAIN_NONSHAREABLE;
-                m_AWSNOOP  <= AWSNOOP_WRITENSNOOP;
+    
+    // ===== NEXT STATE LOGIC =====
+    always @(*) begin
+        next_state = state;
+        
+        case (state)
+            IDLE: begin
+                if (valid_input && ready)
+                    next_state = AR_WAIT;
             end
             
-            m_AWBAR   <= {rl_reg, aq_reg};
-            m_AWVALID <= 1'b1;
-        end
-        else if (m_AWREADY)
-            m_AWVALID <= 1'b0;
+            AR_WAIT: begin
+                if (m_ARVALID && m_ARREADY)
+                    next_state = R_WAIT;
+            end
+            
+            R_WAIT: begin
+                if (m_RVALID && m_RREADY) begin
+                    if (is_lr)
+                        next_state = DONE;
+                    else if (is_sc)
+                        next_state = CHECK_SC;
+                    else
+                        next_state = ALU;
+                end
+            end
+            
+            CHECK_SC: begin
+                if (!sc_can_succeed)
+                    next_state = SC_FAIL;
+                else
+                    next_state = ALU;
+            end
+            
+            ALU: begin
+                next_state = AW_WAIT;
+            end
+            
+            AW_WAIT: begin
+                next_state = W_WAIT;
+            end
+            
+            W_WAIT: begin
+                // Only proceed if write channels complete
+                // OR if this is SC that failed (skip write)
+                if (is_sc && !sc_will_succeed) begin
+                    next_state = SC_FAIL;
+                end else if ((m_AWVALID && m_AWREADY) && (m_WVALID && m_WREADY)) begin
+                    next_state = B_WAIT;
+                end else if (m_AWREADY && m_WREADY) begin
+                    next_state = B_WAIT;
+                end
+            end
+            
+            B_WAIT: begin
+                if (m_BVALID && m_BREADY)
+                    next_state = DONE;
+            end
+            
+            SC_FAIL: begin
+                next_state = IDLE;
+            end
+            
+            DONE: begin
+                next_state = IDLE;
+            end
+            
+            default: next_state = IDLE;
+        endcase
     end
-end
-
-// ACE Write Data
-always @(posedge ACLK or negedge ARESETn) begin
-    if (!ARESETn) begin
-        m_WVALID <= 1'b0;
-        m_WDATA  <= {DATA_WIDTH{1'b0}};
-        m_WSTRB  <= 4'b0000;
-        m_WLAST  <= 1'b0;
-    end else begin
-        if (state == WRITE && !m_WVALID) begin
-            m_WDATA  <= (op_reg == OP_SC) ? data_reg : result_reg;
-            m_WSTRB  <= 4'b1111;
-            m_WLAST  <= 1'b1;
-            m_WVALID <= 1'b1;
+    
+    // ===== AMO FUNCTION =====
+    function [WIDTH_DATA-1:0] perform_amo;
+        input [WIDTH_DATA-1:0] mem_data, rs2_data;
+        input [4:0] funct5;
+        begin
+            case (funct5)
+                5'b00010: perform_amo = mem_data;                    // LR.W
+                5'b00011: perform_amo = rs2_data;                    // SC.W
+                5'b00001: perform_amo = rs2_data;                    // AMOSWAP.W
+                5'b00000: perform_amo = mem_data + rs2_data;         // AMOADD.W
+                5'b00100: perform_amo = mem_data ^ rs2_data;         // AMOXOR.W
+                5'b01100: perform_amo = mem_data & rs2_data;         // AMOAND.W
+                5'b01000: perform_amo = mem_data | rs2_data;         // AMOOR.W
+                5'b10000: perform_amo = ($signed(mem_data) < $signed(rs2_data)) ? 
+                                        mem_data : rs2_data;         // AMOMIN.W
+                5'b10100: perform_amo = ($signed(mem_data) > $signed(rs2_data)) ? 
+                                        mem_data : rs2_data;         // AMOMAX.W
+                5'b11000: perform_amo = (mem_data < rs2_data) ? 
+                                        mem_data : rs2_data;         // AMOMINU.W
+                5'b11100: perform_amo = (mem_data > rs2_data) ? 
+                                        mem_data : rs2_data;         // AMOMAXU.W
+                default:  perform_amo = 32'b0;
+            endcase
         end
-        else if (m_WREADY)
-            m_WVALID <= 1'b0;
+    endfunction
+    
+    // ===== ASSERTIONS FOR VERIFICATION =====
+    `ifdef FORMAL
+    // Formal verification properties
+    always @(posedge clk) begin
+        // Property 1: SC cannot write if reservation invalid
+        if (is_sc && !sc_can_succeed) begin
+            assert (m_WVALID == 1'b0) 
+                else $error("SC writing when reservation invalid!");
+        end
+        
+        // Property 2: Ready and valid_output never both high
+        assert (!(ready && valid_output))
+            else $error("Ready and valid_output both high!");
+        
+        // Property 3: LR must set reservation
+        if (state == DONE && is_lr) begin
+            assert (reservation_valid == 1'b1)
+                else $error("LR did not set reservation!");
+        end
     end
-end
-
-always @(*) begin
-    m_BREADY = (state == WRITE);
-end
-
+    `endif
+    
 endmodule

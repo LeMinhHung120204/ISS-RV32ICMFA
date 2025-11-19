@@ -1,0 +1,404 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Thu May 22 00:12:29 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Thu Nov 20 03:18:13 2025
+# Process ID         : 13756
+# Current directory  : C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1
+# Command line       : vivado.exe -log atomic_unit_ace.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source atomic_unit_ace.tcl
+# Log file           : C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1/atomic_unit_ace.vds
+# Journal file       : C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1\vivado.jou
+# Running On         : ZaLaw
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26200
+# Processor Detail   : 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz
+# CPU Frequency      : 2688 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 16931 MB
+# Swap memory        : 6442 MB
+# Total Virtual      : 23374 MB
+# Available Virtual  : 3683 MB
+#-----------------------------------------------------------
+source atomic_unit_ace.tcl -notrace
+create_project: Time (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 511.105 ; gain = 210.977
+Command: read_checkpoint -auto_incremental -incremental C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/utils_1/imports/synth_1/lr_w.dcp
+INFO: [Vivado 12-5825] Read reference checkpoint from C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/utils_1/imports/synth_1/lr_w.dcp for incremental synthesis
+INFO: [Vivado 12-7989] Please ensure there are no constraint changes
+Command: synth_design -top atomic_unit_ace -part xc7vx485tffg1761-2
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7vx485t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7vx485t'
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 12536
+---------------------------------------------------------------------------------
+Starting Synthesize : Time (s): cpu = 00:00:05 ; elapsed = 00:00:05 . Memory (MB): peak = 1019.383 ; gain = 495.707
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'atomic_unit_ace' [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/atomic_unit_ace.v:3]
+INFO: [Synth 8-155] case statement is not full and has no default [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/atomic_unit_ace.v:215]
+INFO: [Synth 8-6155] done synthesizing module 'atomic_unit_ace' (0#1) [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/atomic_unit_ace.v:3]
+WARNING: [Synth 8-6014] Unused sequential element state_timer_reg was removed.  [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/atomic_unit_ace.v:126]
+WARNING: [Synth 8-6014] Unused sequential element current_aq_reg was removed.  [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/atomic_unit_ace.v:208]
+WARNING: [Synth 8-6014] Unused sequential element current_rl_reg was removed.  [C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/sources_1/new/atomic_unit_ace.v:209]
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[7] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[6] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[5] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[4] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[3] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARSIZE[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARSIZE[1] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARSIZE[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARBURST[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARBURST[0] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[7] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[6] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[5] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[4] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[3] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWSIZE[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWSIZE[1] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWSIZE[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWBURST[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWBURST[0] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[3] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[2] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[1] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[0] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WLAST driven by constant 1
+WARNING: [Synth 8-7129] Port aq in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rl in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[31] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[30] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[29] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[28] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[27] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[26] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[25] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[24] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[23] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[22] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[21] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[20] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[19] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[18] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[17] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[16] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[15] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[14] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[13] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[12] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[11] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[10] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[9] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[8] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[7] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[6] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[5] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[4] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[3] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[2] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[0] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port snoop_addr[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port snoop_addr[0] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_RRESP[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_RRESP[0] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_RLAST in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_BRESP[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_BRESP[0] in module atomic_unit_ace is either unconnected or has no load
+---------------------------------------------------------------------------------
+Finished Synthesize : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 1127.914 ; gain = 604.238
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 1127.914 ; gain = 604.238
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7vx485tffg1761-2
+INFO: [Device 21-403] Loading part xc7vx485tffg1761-2
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 1127.914 ; gain = 604.238
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Preparing Guide Design
+---------------------------------------------------------------------------------
+CRITICAL WARNING: [Synth 8-6895] The reference checkpoint C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.srcs/utils_1/imports/synth_1/lr_w.dcp is not suitable for use with incremental synthesis for this design. Please regenerate the checkpoint for this design with -incremental_synth switch in the same Vivado session that synth_design has been run. Synthesis will continue with the default flow
+---------------------------------------------------------------------------------
+Finished Doing Graph Differ : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 1127.914 ; gain = 604.238
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Preparing Guide Design : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 1127.914 ; gain = 604.238
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'atomic_unit_ace'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    IDLE |                       0000000001 |                             0000
+                 AR_WAIT |                       0000000010 |                             0001
+                  R_WAIT |                       0000000100 |                             0010
+                CHECK_SC |                       0000001000 |                             0011
+                     ALU |                       0000010000 |                             0100
+                 AW_WAIT |                       0000100000 |                             0101
+                  W_WAIT |                       0001000000 |                             0110
+                 SC_FAIL |                       0010000000 |                             1001
+                  B_WAIT |                       0100000000 |                             0111
+                    DONE |                       1000000000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'atomic_unit_ace'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 1127.914 ; gain = 604.238
+---------------------------------------------------------------------------------
+
+
+Incremental Synthesis Report Summary:
+
+1. Incremental synthesis run: no
+
+   Reason for not running incremental synthesis : 
+
+
+INFO: [Synth 8-7130] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
+No constraint files found.
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   32 Bit       Adders := 1     
++---XORs : 
+	   2 Input     32 Bit         XORs := 1     
++---Registers : 
+	               32 Bit    Registers := 8     
+	                5 Bit    Registers := 1     
+	                4 Bit    Registers := 1     
+	                1 Bit    Registers := 9     
++---Muxes : 
+	   2 Input   32 Bit        Muxes := 5     
+	  10 Input   32 Bit        Muxes := 1     
+	  10 Input   10 Bit        Muxes := 1     
+	   2 Input   10 Bit        Muxes := 4     
+	  10 Input    4 Bit        Muxes := 1     
+	   2 Input    1 Bit        Muxes := 4     
+	  10 Input    1 Bit        Muxes := 17    
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 2800 (col length:140)
+BRAMs: 2060 (col length: RAMB18 140 RAMB36 70)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[7] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[6] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[5] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[4] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[3] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARLEN[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARSIZE[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARSIZE[1] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARSIZE[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARBURST[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_ARBURST[0] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[7] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[6] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[5] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[4] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[3] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWLEN[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWSIZE[2] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWSIZE[1] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWSIZE[0] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWBURST[1] driven by constant 0
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_AWBURST[0] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[3] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[2] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[1] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WSTRB[0] driven by constant 1
+WARNING: [Synth 8-3917] design atomic_unit_ace has port m_WLAST driven by constant 1
+WARNING: [Synth 8-7129] Port aq in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rl in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[31] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[30] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[29] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[28] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[27] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[26] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[25] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[24] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[23] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[22] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[21] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[20] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[19] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[18] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[17] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[16] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[15] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[14] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[13] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[12] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[11] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[10] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[9] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[8] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[7] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[6] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[5] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[4] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[3] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[2] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rs1_data[0] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port snoop_addr[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port snoop_addr[0] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_RRESP[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_RRESP[0] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_RLAST in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_BRESP[1] in module atomic_unit_ace is either unconnected or has no load
+WARNING: [Synth 8-7129] Port m_BRESP[0] in module atomic_unit_ace is either unconnected or has no load
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:17 ; elapsed = 00:00:17 . Memory (MB): peak = 1638.434 ; gain = 1114.758
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:17 ; elapsed = 00:00:18 . Memory (MB): peak = 1647.305 ; gain = 1123.629
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:17 ; elapsed = 00:00:18 . Memory (MB): peak = 1647.305 ; gain = 1123.629
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+-------+------+
+|      |Cell   |Count |
++------+-------+------+
+|1     |BUFG   |     1|
+|2     |CARRY4 |    32|
+|3     |LUT1   |     1|
+|4     |LUT2   |    65|
+|5     |LUT3   |     5|
+|6     |LUT4   |   139|
+|7     |LUT5   |     9|
+|8     |LUT6   |   132|
+|9     |FDCE   |   276|
+|10    |FDPE   |     2|
+|11    |IBUF   |   144|
+|12    |OBUF   |   171|
++------+-------+------+
+
+Report Instance Areas: 
++------+---------+-------+------+
+|      |Instance |Module |Cells |
++------+---------+-------+------+
+|1     |top      |       |   977|
++------+---------+-------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 1 critical warnings and 148 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+Synthesis Optimization Complete : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 1838.316 ; gain = 1314.641
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.005 . Memory (MB): peak = 1850.402 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 32 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1985.484 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Synth Design complete | Checksum: 83fab097
+INFO: [Common 17-83] Releasing license: Synthesis
+20 Infos, 148 Warnings, 1 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:25 ; elapsed = 00:00:26 . Memory (MB): peak = 1985.484 ; gain = 1469.062
+INFO: [runtcl-6] Synthesis results are not added to the cache due to CRITICAL_WARNING
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.011 . Memory (MB): peak = 1985.484 ; gain = 0.000
+INFO: [Common 17-1381] The checkpoint 'C:/Law/KLTN/ISS-RV32ICMFA/RISCV/RISCV.runs/synth_1/atomic_unit_ace.dcp' has been generated.
+INFO: [Vivado 12-24828] Executing command : report_utilization -file atomic_unit_ace_utilization_synth.rpt -pb atomic_unit_ace_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Thu Nov 20 03:18:48 2025...
