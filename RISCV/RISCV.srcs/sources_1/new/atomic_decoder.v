@@ -1,26 +1,33 @@
 `timescale 1ns/1ps
 
-module atomic_decoder (
-    input [4:0] atomic_funct5,
-    output reg [3:0] atomic_op
+module atomic_decoder(
+    input [31:0] instr,
+    output reg is_atomic,
+    output reg [4:0] funct5,
+    output reg aq,
+    output reg rl,
+    output reg [2:0] funct3
 );
 
-    // ATOMIC: Decode atomic instruction type from funct5
+    wire [6:0] opcode = instr[6:0];
+    wire [6:0] funct7 = instr[31:25];
+    
     always @(*) begin
-        case(atomic_funct5)
-            5'b00010: atomic_op = 4'b0000;  // LR (Load-Reserved)
-            5'b00011: atomic_op = 4'b0001;  // SC (Store-Conditional)
-            5'b00001: atomic_op = 4'b0010;  // AMOSWAP
-            5'b00000: atomic_op = 4'b0011;  // AMOADD
-            5'b00100: atomic_op = 4'b0100;  // AMOXOR
-            5'b01100: atomic_op = 4'b0101;  // AMOAND
-            5'b01000: atomic_op = 4'b0110;  // AMOOR
-            5'b10000: atomic_op = 4'b0111;  // AMOMIN (signed)
-            5'b10100: atomic_op = 4'b1000;  // AMOMAX (signed)
-            5'b11000: atomic_op = 4'b1001;  // AMOMINU (unsigned)
-            5'b11100: atomic_op = 4'b1010;  // AMOMAXU (unsigned)
-            default:  atomic_op = 4'b1111;  // Invalid
-        endcase
+        // Default values
+        is_atomic = 1'b0;
+        funct5 = 5'b0;
+        aq = 1'b0;
+        rl = 1'b0;
+        funct3 = 3'b0;
+        
+        // Check if opcode is AMO (0101111)
+        if (opcode == 7'b0101111) begin
+            is_atomic = 1'b1;
+            funct5 = funct7[6:2];  // Extract funct5 from funct7[6:2]
+            aq = funct7[1];        // Acquire bit
+            rl = funct7[0];        // Release bit
+            funct3 = instr[14:12]; // Width (010 for .W)
+        end
     end
 
 endmodule

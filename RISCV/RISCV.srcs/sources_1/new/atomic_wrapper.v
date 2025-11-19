@@ -1,150 +1,162 @@
 `timescale 1ns/1ps
 
-module atomic_wrapper (
-    input clk,
+module atomic_wrapper #(
+    parameter WIDTH_DATA = 32,
+    parameter WIDTH_ADDR = 32,
+    parameter CORE_ID = 0
+)(
+    input clk, 
     input rst_n,
     
-    // Pipeline interface
-    input E_AtomicOp,  // ATOMIC: Atomic operation flag
+    // From pipeline (E stage)
+    input E_AtomicOp,
     input [4:0] E_atomic_funct5,
-    input E_atomic_aq,
+    input E_atomic_aq, 
     input E_atomic_rl,
-    input [31:0] E_RD1,
-    input [31:0] E_RD2,
+    input [WIDTH_ADDR-1:0] E_addr,
+    input [WIDTH_DATA-1:0] E_RD1,
+    input [WIDTH_DATA-1:0] E_RD2,
     
-    output E_atomic_done,
-    output [31:0] E_atomic_rd,
-    output atomic_stall,
+    // To pipeline
+    output wire E_atomic_done,
+    output wire [WIDTH_DATA-1:0] E_atomic_rd,
+    output wire atomic_stall,
     
-    // ACE Master Interface - Read Address Channel
-    output [1:0] m_ARID,
-    output [31:0] m_ARADDR,
-    output [7:0] m_ARLEN,
-    output [2:0] m_ARSIZE,
-    output [1:0] m_ARBURST,
-    output m_ARLOCK,
-    output [3:0] m_ARCACHE,
-    output [2:0] m_ARPROT,
-    output [3:0] m_ARQOS,
-    output [3:0] m_ARREGION,
-    output [1:0] m_ARDOMAIN,
-    output [3:0] m_ARSNOOP,
-    output [1:0] m_ARBAR,
-    output m_ARVALID,
-    input m_ARREADY,
+    // Snoop interface (can be tied off if not used)
+    input snoop_valid,
+    input [WIDTH_ADDR-1:0] snoop_addr,
+    input [3:0] snoop_type,
+    input [3:0] snoop_core_id,
     
-    // Read Data Channel
-    input [1:0] m_RID,
-    input [31:0] m_RDATA,
-    input [1:0] m_RRESP,
-    input m_RLAST,
-    input m_RVALID,
-    output m_RREADY,
+    // Debug outputs
+    output wire [3:0] debug_state,
+    output wire debug_reservation_valid,
     
-    // Write Address Channel
-    output [1:0] m_AWID,
-    output [31:0] m_AWADDR,
-    output [7:0] m_AWLEN,
-    output [2:0] m_AWSIZE,
-    output [1:0] m_AWBURST,
-    output m_AWLOCK,
-    output [3:0] m_AWCACHE,
-    output [2:0] m_AWPROT,
-    output [3:0] m_AWQOS,
-    output [3:0] m_AWREGION,
-    output [1:0] m_AWDOMAIN,
-    output [2:0] m_AWSNOOP,
-    output [1:0] m_AWBAR,
-    output m_AWVALID,
-    input m_AWREADY,
+    // AXI Master - Read Address Channel
+    output wire m_ARVALID,
+    input wire m_ARREADY,
+    output wire [WIDTH_ADDR-1:0] m_ARADDR,
+    output wire [7:0] m_ARLEN,
+    output wire [2:0] m_ARSIZE,
+    output wire [1:0] m_ARBURST,
     
-    // Write Data Channel
-    output [31:0] m_WDATA,
-    output [3:0] m_WSTRB,
-    output m_WLAST,
-    output m_WVALID,
-    input m_WREADY,
+    // AXI Master - Read Data Channel
+    input wire m_RVALID,
+    output wire m_RREADY,
+    input wire [WIDTH_DATA-1:0] m_RDATA,
+    input wire [1:0] m_RRESP,
+    input wire m_RLAST,
     
-    // Write Response Channel
-    input [1:0] m_BID,
-    input [1:0] m_BRESP,
-    input m_BVALID,
-    output m_BREADY
+    // AXI Master - Write Address Channel
+    output wire m_AWVALID,
+    input wire m_AWREADY,
+    output wire [WIDTH_ADDR-1:0] m_AWADDR,
+    output wire [7:0] m_AWLEN,
+    output wire [2:0] m_AWSIZE,
+    output wire [1:0] m_AWBURST,
+    
+    // AXI Master - Write Data Channel
+    output wire m_WVALID,
+    input wire m_WREADY,
+    output wire [WIDTH_DATA-1:0] m_WDATA,
+    output wire [3:0] m_WSTRB,
+    output wire m_WLAST,
+    
+    // AXI Master - Write Response Channel
+    input wire m_BVALID,
+    output wire m_BREADY,
+    input wire [1:0] m_BRESP
 );
 
-    wire [3:0] atomic_op;
-
-    // ATOMIC: Instantiate decoder
-    atomic_decoder decoder_inst (
-        .atomic_funct5(E_atomic_funct5),
-        .atomic_op(atomic_op)
-    );
-
-    // ATOMIC: Instantiate execution unit
-    atomic_unit_ace unit_inst (
+    // Internal signals
+    wire ready;
+    wire valid_output;
+    
+    assign E_atomic_done = valid_output;
+    assign atomic_stall = ~ready;
+    
+    // Snoop processing
+    wire snoop_invalidate;
+    reg [WIDTH_ADDR-1:0] snoop_addr_reg;
+    reg [3:0] snoop_core_id_reg;
+    
+    assign snoop_invalidate = snoop_valid && 
+                              (snoop_type == 4'h0 || snoop_type == 4'h1);
+    
+    always @(posedge clk) begin
+        if (snoop_valid) begin
+            snoop_addr_reg <= snoop_addr;
+            snoop_core_id_reg <= snoop_core_id;
+        end
+    end
+    
+    // Instantiate atomic unit, KHÔNG truyền port thừa/missing!
+    atomic_unit_ace #(
+        .WIDTH_DATA(WIDTH_DATA),
+        .WIDTH_ADDR(WIDTH_ADDR),
+        .CORE_ID(CORE_ID)
+    ) atomic_core (
+        // Clock and reset
         .clk(clk),
         .rst_n(rst_n),
-        .atomic_op(atomic_op),
-        .rs1_value(E_RD1),
-        .rs2_value(E_RD2),
+
+        // Control
+        .valid_input(E_AtomicOp),
+        .ready(ready),
+        .valid_output(valid_output),
+
+        // Data
+        .funct5(E_atomic_funct5),
         .aq(E_atomic_aq),
         .rl(E_atomic_rl),
+        .addr(E_addr),
+        .rs1_data(E_RD1),
+        .rs2_data(E_RD2),
         .rd_value(E_atomic_rd),
-        .done(E_atomic_done),
+
+        // Snoop
+        .snoop_invalidate(snoop_invalidate),
+        .snoop_addr(snoop_addr_reg),
+        .snoop_core_id(snoop_core_id_reg),
+
+        // Debug
+        .debug_state(debug_state),
+        .debug_reservation_valid(debug_reservation_valid),
         
-        // ACE interface
-        .m_ARID(m_ARID),
+        // AXI Read Address
+        .m_ARVALID(m_ARVALID),
+        .m_ARREADY(m_ARREADY),
         .m_ARADDR(m_ARADDR),
         .m_ARLEN(m_ARLEN),
         .m_ARSIZE(m_ARSIZE),
         .m_ARBURST(m_ARBURST),
-        .m_ARLOCK(m_ARLOCK),
-        .m_ARCACHE(m_ARCACHE),
-        .m_ARPROT(m_ARPROT),
-        .m_ARQOS(m_ARQOS),
-        .m_ARREGION(m_ARREGION),
-        .m_ARDOMAIN(m_ARDOMAIN),
-        .m_ARSNOOP(m_ARSNOOP),
-        .m_ARBAR(m_ARBAR),
-        .m_ARVALID(m_ARVALID),
-        .m_ARREADY(m_ARREADY),
         
-        .m_RID(m_RID),
+        // AXI Read Data
+        .m_RVALID(m_RVALID),
+        .m_RREADY(m_RREADY),
         .m_RDATA(m_RDATA),
         .m_RRESP(m_RRESP),
         .m_RLAST(m_RLAST),
-        .m_RVALID(m_RVALID),
-        .m_RREADY(m_RREADY),
         
-        .m_AWID(m_AWID),
+        // AXI Write Address
+        .m_AWVALID(m_AWVALID),
+        .m_AWREADY(m_AWREADY),
         .m_AWADDR(m_AWADDR),
         .m_AWLEN(m_AWLEN),
         .m_AWSIZE(m_AWSIZE),
         .m_AWBURST(m_AWBURST),
-        .m_AWLOCK(m_AWLOCK),
-        .m_AWCACHE(m_AWCACHE),
-        .m_AWPROT(m_AWPROT),
-        .m_AWQOS(m_AWQOS),
-        .m_AWREGION(m_AWREGION),
-        .m_AWDOMAIN(m_AWDOMAIN),
-        .m_AWSNOOP(m_AWSNOOP),
-        .m_AWBAR(m_AWBAR),
-        .m_AWVALID(m_AWVALID),
-        .m_AWREADY(m_AWREADY),
         
+        // AXI Write Data
+        .m_WVALID(m_WVALID),
+        .m_WREADY(m_WREADY),
         .m_WDATA(m_WDATA),
         .m_WSTRB(m_WSTRB),
         .m_WLAST(m_WLAST),
-        .m_WVALID(m_WVALID),
-        .m_WREADY(m_WREADY),
         
-        .m_BID(m_BID),
-        .m_BRESP(m_BRESP),
+        // AXI Write Response
         .m_BVALID(m_BVALID),
-        .m_BREADY(m_BREADY)
+        .m_BREADY(m_BREADY),
+        .m_BRESP(m_BRESP)
     );
-
-    // ATOMIC: Signal stall to pipeline
-    assign atomic_stall = E_AtomicOp & (~E_atomic_done);
 
 endmodule
