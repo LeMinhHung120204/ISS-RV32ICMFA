@@ -64,7 +64,18 @@ module atomic_unit_ace #(
     // Write Response Channel (B)
     input wire m_BVALID,
     output reg m_BREADY,
-    input wire [1:0] m_BRESP
+    input wire [1:0] m_BRESP,
+
+    // ===== AXI ACE Extensions =====
+    // Read Address Channel
+    output wire [3:0] m_ARSNOOP,
+    output wire [1:0] m_ARDOMAIN,
+    output wire [1:0] m_ARBAR,
+    
+    // Write Address Channel
+    output wire [2:0] m_AWSNOOP,
+    output wire [1:0] m_AWDOMAIN,
+    output wire [1:0] m_AWBAR
 );
     
     // ===== STATE MACHINE =====
@@ -117,6 +128,29 @@ module atomic_unit_ace #(
     assign m_AWBURST = 2'b01;
     assign m_WSTRB = 4'b1111;
     assign m_WLAST = 1'b1;
+
+    // ===== AXI ACE LOGIC =====
+    // Domain: 2'b01 = Inner Shareable (typical for multi-core within a cluster)
+    assign m_ARDOMAIN = 2'b01; 
+    assign m_AWDOMAIN = 2'b01;
+    
+    // Barriers: Normal memory access, respecting barriers
+    assign m_ARBAR = 2'b00;
+    assign m_AWBAR = 2'b00;
+
+    // ARSNOOP Encoding:
+    // LR -> ReadShared (0001): Read data, cacheable, other caches can keep copy
+    // AMO (Read phase) -> ReadUnique (0111): Read data, invalidate other copies (we will write)
+    assign m_ARSNOOP = is_lr ? 4'b0001 :          // ReadShared
+                       is_amo ? 4'b0111 :         // ReadUnique
+                       4'b0000;                   // Default/None
+
+    // AWSNOOP Encoding:
+    // SC -> WriteUnique (000): Write data, ensure no other copies exist
+    // AMO (Write phase) -> WriteUnique (000)
+    // Note: WriteUnique is typically 000 in ACE for full cache line or partial? 
+    // Actually for partial writes or standard writes in ACE, WriteUnique (000) is common for coherent write.
+    assign m_AWSNOOP = 3'b000; // WriteUnique
     
     // ===== DEADLOCK WATCHDOG (FIX #3) =====
     reg [15:0] state_timer;
