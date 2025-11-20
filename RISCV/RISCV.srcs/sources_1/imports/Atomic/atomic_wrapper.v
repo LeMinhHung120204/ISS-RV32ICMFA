@@ -65,7 +65,15 @@ module atomic_wrapper #(
     // AXI Master - Write Response Channel
     input wire m_BVALID,
     output wire m_BREADY,
-    input wire [1:0] m_BRESP
+    input wire [1:0] m_BRESP,
+
+    // ===== AXI ACE Extensions =====
+    output wire [3:0] m_ARSNOOP,
+    output wire [1:0] m_ARDOMAIN,
+    output wire [1:0] m_ARBAR,
+    output wire [2:0] m_AWSNOOP,
+    output wire [1:0] m_AWDOMAIN,
+    output wire [1:0] m_AWBAR
 );
 
     // Internal signals
@@ -77,20 +85,30 @@ module atomic_wrapper #(
     
     // Snoop processing
     wire snoop_invalidate;
+    reg snoop_invalidate_reg;
     reg [WIDTH_ADDR-1:0] snoop_addr_reg;
     reg [3:0] snoop_core_id_reg;
     
-    assign snoop_invalidate = snoop_valid && 
-                              (snoop_type == 4'h0 || snoop_type == 4'h1);
-    
-    always @(posedge clk) begin
-        if (snoop_valid) begin
-            snoop_addr_reg <= snoop_addr;
-            snoop_core_id_reg <= snoop_core_id;
+    // Fix: Register the invalidate signal to align with the address register
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            snoop_invalidate_reg <= 1'b0;
+            snoop_addr_reg <= {WIDTH_ADDR{1'b0}};
+            snoop_core_id_reg <= 4'b0;
+        end else begin
+            // Capture inputs
+            snoop_invalidate_reg <= snoop_valid && (snoop_type == 4'h0 || snoop_type == 4'h1);
+            
+            if (snoop_valid) begin
+                snoop_addr_reg <= snoop_addr;
+                snoop_core_id_reg <= snoop_core_id;
+            end
         end
     end
     
-    // Instantiate atomic unit, KHÔNG truyền port thừa/missing!
+    assign snoop_invalidate = snoop_invalidate_reg;
+    
+    // Instantiate atomic unit
     atomic_unit_ace #(
         .WIDTH_DATA(WIDTH_DATA),
         .WIDTH_ADDR(WIDTH_ADDR),
@@ -156,7 +174,15 @@ module atomic_wrapper #(
         // AXI Write Response
         .m_BVALID(m_BVALID),
         .m_BREADY(m_BREADY),
-        .m_BRESP(m_BRESP)
+        .m_BRESP(m_BRESP),
+
+        // AXI ACE Extensions
+        .m_ARSNOOP(m_ARSNOOP),
+        .m_ARDOMAIN(m_ARDOMAIN),
+        .m_ARBAR(m_ARBAR),
+        .m_AWSNOOP(m_AWSNOOP),
+        .m_AWDOMAIN(m_AWDOMAIN),
+        .m_AWBAR(m_AWBAR)
     );
 
 endmodule

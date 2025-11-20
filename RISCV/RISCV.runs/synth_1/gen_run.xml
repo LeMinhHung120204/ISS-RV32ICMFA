@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1763583491" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
-  <File Type="PA-TCL" Name="atomic_unit_ace.tcl"/>
-  <File Type="REPORTS-TCL" Name="atomic_unit_ace_reports.tcl"/>
-  <File Type="RDS-RDS" Name="atomic_unit_ace.vds"/>
-  <File Type="RDS-PROPCONSTRS" Name="atomic_unit_ace_drc_synth.rpt"/>
-  <File Type="RDS-UTIL" Name="atomic_unit_ace_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="atomic_unit_ace_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="atomic_unit_ace.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="atomic_unit_ace_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="atomic_unit_ace_timing_summary_synth.pb"/>
+<GenRun Id="synth_1" LaunchPart="xc7vx485tffg1761-2" LaunchTime="1763647002" LaunchIncrCheckpoint="$PSRCDIR/utils_1/imports/synth_1/lr_w.dcp">
+  <File Type="PA-TCL" Name="atomic_decoder.tcl"/>
+  <File Type="REPORTS-TCL" Name="atomic_decoder_reports.tcl"/>
+  <File Type="RDS-RDS" Name="atomic_decoder.vds"/>
+  <File Type="RDS-PROPCONSTRS" Name="atomic_decoder_drc_synth.rpt"/>
+  <File Type="RDS-UTIL" Name="atomic_decoder_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="atomic_decoder_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="atomic_decoder.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="atomic_decoder_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="atomic_decoder_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
-    <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
+    <File Path="$PSRCDIR/sources_1/new/atomic_decoder.v">
       <FileInfo>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/new/atomic_decoder.v">
+    <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
@@ -231,16 +231,6 @@
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/RegFile.v"/>
         <Attr Name="ImportTime" Val="1761221878"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_wrapper.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_wrapper.v"/>
-        <Attr Name="ImportTime" Val="1763583341"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -860,7 +850,17 @@
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_unit_ace.v"/>
-        <Attr Name="ImportTime" Val="1763583327"/>
+        <Attr Name="ImportTime" Val="1763639678"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_wrapper.v">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_wrapper.v"/>
+        <Attr Name="ImportTime" Val="1763645517"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -868,7 +868,7 @@
     </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="atomic_unit_ace"/>
+      <Option Name="TopModule" Val="atomic_decoder"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1" RelGenDir="$PGENDIR/constrs_1">
