@@ -90,10 +90,18 @@
   <FileSets Version="1" Minor="32">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_unit_ace.v">
+      <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_unit_ace.v"/>
-          <Attr Name="ImportTime" Val="1763639678"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MainDecoder.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MainDecoder.v"/>
+          <Attr Name="ImportTime" Val="1761221878"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -101,16 +109,19 @@
       </File>
       <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_wrapper.v">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_wrapper.v"/>
-          <Attr Name="ImportTime" Val="1763645517"/>
+          <Attr Name="ImportTime" Val="1763649223"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/new/atomic_unit_ace.v">
+      <File Path="$PSRCDIR/sources_1/imports/Atomic/atomic_unit_ace.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_unit_ace.v"/>
+          <Attr Name="ImportTime" Val="1763663928"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -288,16 +299,6 @@
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MEM_WB.v"/>
-          <Attr Name="ImportTime" Val="1761221878"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/pipeline/RV32ICMFA/MainDecoder.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/RV32ICMFA/MainDecoder.v"/>
           <Attr Name="ImportTime" Val="1761221878"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -938,7 +939,7 @@
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/Atomic/atomic_decoder.v"/>
-          <Attr Name="ImportTime" Val="1763583308"/>
+          <Attr Name="ImportTime" Val="1763791064"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -946,7 +947,7 @@
       </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="atomic_wrapper"/>
+        <Option Name="TopModule" Val="atomic_unit_ace"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1" RelGenDir="$PGENDIR/constrs_1">
@@ -1102,14 +1103,6 @@
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../Verilog/pipeline/TestBench/tb_mul4x4.v"/>
           <Attr Name="ImportTime" Val="1761221878"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sim_1/new/tb_atomic_unit.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
