@@ -137,59 +137,93 @@ module atomic_unit_tb;
         forever #5 clk = ~clk;
     end
 
-    // AXI Slave Simulation Task
-    task axi_slave_response;
-        input [31:0] read_data;
-        begin
-            // Handle Read
-            fork
-                begin
-                    wait(m_ARVALID);
-                    @(posedge clk);
-                    m_ARREADY <= 1;
-                    @(posedge clk);
-                    m_ARREADY <= 0;
-                    repeat(2) @(posedge clk); // Latency
-                    m_RVALID <= 1;
-                    m_RDATA <= read_data;
-                    m_RLAST <= 1;
-                    wait(m_RREADY);
-                    @(posedge clk);
-                    m_RVALID <= 0;
-                    m_RDATA <= 0;
-                    m_RLAST <= 0;
-                end
-            join_none
-        end
-    endtask
+    // AXI Slave Logic (Verilog-2001 compatible)
+    reg [31:0] next_read_data;
+    reg aw_handshake_done;
+    reg w_handshake_done;
 
-    task axi_write_response;
-        begin
-            // Handle Write
-            fork
-                begin
-                    wait(m_AWVALID);
-                    @(posedge clk);
-                    m_AWREADY <= 1;
-                    @(posedge clk);
-                    m_AWREADY <= 0;
-                end
-                begin
-                    wait(m_WVALID);
-                    @(posedge clk);
-                    m_WREADY <= 1;
-                    @(posedge clk);
-                    m_WREADY <= 0;
-                end
-            join
-            
-            repeat(2) @(posedge clk);
-            m_BVALID <= 1;
-            wait(m_BREADY);
+    // Read Channel Handler
+    initial begin
+        m_ARREADY = 0;
+        m_RVALID = 0;
+        m_RDATA = 0;
+        m_RLAST = 0;
+        m_RRESP = 0;
+        forever begin
             @(posedge clk);
-            m_BVALID <= 0;
+            if (m_ARVALID && !m_ARREADY) begin
+                m_ARREADY <= 1;
+                @(posedge clk);
+                m_ARREADY <= 0;
+                
+                // Latency simulation
+                repeat(2) @(posedge clk);
+                
+                m_RVALID <= 1;
+                m_RDATA <= next_read_data;
+                m_RLAST <= 1;
+                
+                wait(m_RREADY);
+                @(posedge clk);
+                m_RVALID <= 0;
+                m_RLAST <= 0;
+            end
         end
-    endtask
+    end
+
+    // Write Address Handler
+    initial begin
+        m_AWREADY = 0;
+        aw_handshake_done = 0;
+        forever begin
+            @(posedge clk);
+            if (m_AWVALID && !m_AWREADY) begin
+                m_AWREADY <= 1;
+                @(posedge clk);
+                m_AWREADY <= 0;
+                aw_handshake_done = 1;
+            end
+            
+            if (m_BVALID && m_BREADY) begin
+                aw_handshake_done = 0;
+            end
+        end
+    end
+
+    // Write Data Handler
+    initial begin
+        m_WREADY = 0;
+        w_handshake_done = 0;
+        forever begin
+            @(posedge clk);
+            if (m_WVALID && !m_WREADY) begin
+                m_WREADY <= 1;
+                @(posedge clk);
+                m_WREADY <= 0;
+                w_handshake_done = 1;
+            end
+            
+            if (m_BVALID && m_BREADY) begin
+                w_handshake_done = 0;
+            end
+        end
+    end
+
+    // Write Response Handler
+    initial begin
+        m_BVALID = 0;
+        m_BRESP = 0;
+        forever begin
+            @(posedge clk);
+            if (aw_handshake_done && w_handshake_done && !m_BVALID) begin
+                repeat(2) @(posedge clk); // Latency
+                m_BVALID <= 1;
+                wait(m_BREADY);
+                @(posedge clk);
+                m_BVALID <= 0;
+            end
+        end
+    end
 
     // Test Sequence
     initial begin
@@ -234,7 +268,7 @@ module atomic_unit_tb;
         E_addr = 32'h1000;
         
         // Start AXI Read Handler
-        axi_slave_response(32'hDEADBEEF);
+        next_read_data = 32'hDEADBEEF;
         
         @(posedge clk);
         while (!E_atomic_done) @(posedge clk);
@@ -277,12 +311,7 @@ module atomic_unit_tb;
         // But the current implementation DOES read.
         // So we need to handle the read first.
         
-        axi_slave_response(32'hDEADBEEF); // Read phase of SC
-        
-        // Then it will try to write
-        fork
-            axi_write_response();
-        join_none
+        next_read_data = 32'hDEADBEEF; // Read phase of SC
         
         @(posedge clk);
         while (!E_atomic_done) @(posedge clk);
@@ -311,7 +340,7 @@ module atomic_unit_tb;
         E_atomic_funct5 = 5'b00010; // LR.W
         E_addr = 32'h2000;
         
-        axi_slave_response(32'h12345678);
+        next_read_data = 32'h12345678;
         
         @(posedge clk);
         while (!E_atomic_done) @(posedge clk);
@@ -343,7 +372,7 @@ module atomic_unit_tb;
         E_RD2 = 32'hBADF00D;
         
         // SC still reads first in this implementation
-        axi_slave_response(32'h12345678);
+        next_read_data = 32'h12345678;
         
         // But it should NOT write
         // We can check if AWVALID goes high. 
@@ -382,12 +411,10 @@ module atomic_unit_tb;
         E_RD2 = 32'h10; // Add 0x10
         
         // Read phase
-        axi_slave_response(32'h20); // Memory has 0x20
+        next_read_data = 32'h20; // Memory has 0x20
         
         // Write phase
-        fork
-            axi_write_response();
-        join_none
+
         
         @(posedge clk);
         while (!E_atomic_done) @(posedge clk);
@@ -396,14 +423,181 @@ module atomic_unit_tb;
         if (E_atomic_rd === 32'h20) 
             $display("PASS: AMOADD returned old value 0x20");
         else 
-            $display("FAIL: AMOADD returned %h", E_atomic_rd);
+            $display("FAIL: AMOADD returned %h, expected 0x20", E_atomic_rd);
             
-        // We can't easily check the written value in this simple TB unless we spy on m_WDATA during the write task
-        // But we can check m_ARSNOOP
         if (m_ARSNOOP === 4'b0111)
             $display("PASS: AMO ARSNOOP is ReadUnique (0111)");
         else
             $display("FAIL: AMO ARSNOOP is %b", m_ARSNOOP);
+
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 5: AMOSWAP
+        // ---------------------------------------------------------
+        $display("\n[TEST 5] AMOSWAP at 0x3004");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b00001; // AMOSWAP
+        E_addr = 32'h3004;
+        E_RD2 = 32'hAABBCCDD; // New value
+        
+        next_read_data = 32'h11223344; // Old value
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'h11223344) $display("PASS: AMOSWAP returned old value");
+        else $display("FAIL: AMOSWAP returned %h", E_atomic_rd);
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 6: AMOXOR
+        // ---------------------------------------------------------
+        $display("\n[TEST 6] AMOXOR at 0x3008");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b00100; // AMOXOR
+        E_addr = 32'h3008;
+        E_RD2 = 32'h0000FFFF; 
+        
+        next_read_data = 32'hFFFF0000; // Old value
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'hFFFF0000) $display("PASS: AMOXOR returned old value");
+        else $display("FAIL: AMOXOR returned %h", E_atomic_rd);
+        // Expected write: FFFF0000 ^ 0000FFFF = FFFFFFFF
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 7: AMOAND
+        // ---------------------------------------------------------
+        $display("\n[TEST 7] AMOAND at 0x300C");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b01100; // AMOAND
+        E_addr = 32'h300C;
+        E_RD2 = 32'h0000FFFF; 
+        
+        next_read_data = 32'hFFFF0000; // Old value
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'hFFFF0000) $display("PASS: AMOAND returned old value");
+        else $display("FAIL: AMOAND returned %h", E_atomic_rd);
+        // Expected write: FFFF0000 & 0000FFFF = 00000000
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 8: AMOOR
+        // ---------------------------------------------------------
+        $display("\n[TEST 8] AMOOR at 0x3010");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b01000; // AMOOR
+        E_addr = 32'h3010;
+        E_RD2 = 32'h0000FFFF; 
+        
+        next_read_data = 32'hFFFF0000; // Old value
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'hFFFF0000) $display("PASS: AMOOR returned old value");
+        else $display("FAIL: AMOOR returned %h", E_atomic_rd);
+        // Expected write: FFFF0000 | 0000FFFF = FFFFFFFF
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 9: AMOMIN (Signed)
+        // ---------------------------------------------------------
+        $display("\n[TEST 9] AMOMIN (Signed) at 0x3014");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b10000; // AMOMIN
+        E_addr = 32'h3014;
+        E_RD2 = 32'hFFFFFFFE; // -2
+        
+        next_read_data = 32'h00000001; // 1 (Old value)
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'h00000001) $display("PASS: AMOMIN returned old value");
+        else $display("FAIL: AMOMIN returned %h", E_atomic_rd);
+        // Expected write: min(1, -2) = -2 (FFFFFFFE)
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 10: AMOMAX (Signed)
+        // ---------------------------------------------------------
+        $display("\n[TEST 10] AMOMAX (Signed) at 0x3018");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b10100; // AMOMAX
+        E_addr = 32'h3018;
+        E_RD2 = 32'hFFFFFFFE; // -2
+        
+        next_read_data = 32'h00000001; // 1 (Old value)
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'h00000001) $display("PASS: AMOMAX returned old value");
+        else $display("FAIL: AMOMAX returned %h", E_atomic_rd);
+        // Expected write: max(1, -2) = 1 (00000001)
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 11: AMOMINU (Unsigned)
+        // ---------------------------------------------------------
+        $display("\n[TEST 11] AMOMINU (Unsigned) at 0x301C");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b11000; // AMOMINU
+        E_addr = 32'h301C;
+        E_RD2 = 32'hFFFFFFFE; // Large unsigned number
+        
+        next_read_data = 32'h00000001; // 1 (Old value)
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'h00000001) $display("PASS: AMOMINU returned old value");
+        else $display("FAIL: AMOMINU returned %h", E_atomic_rd);
+        // Expected write: minu(1, FFFFFFFE) = 1 (00000001)
+        repeat(5) @(posedge clk);
+
+        // ---------------------------------------------------------
+        // TEST CASE 12: AMOMAXU (Unsigned)
+        // ---------------------------------------------------------
+        $display("\n[TEST 12] AMOMAXU (Unsigned) at 0x3020");
+        E_AtomicOp = 1;
+        E_atomic_funct5 = 5'b11100; // AMOMAXU
+        E_addr = 32'h3020;
+        E_RD2 = 32'hFFFFFFFE; // Large unsigned number
+        
+        next_read_data = 32'h00000001; // 1 (Old value)
+
+        
+        @(posedge clk);
+        while (!E_atomic_done) @(posedge clk);
+        E_AtomicOp = 0;
+        
+        if (E_atomic_rd === 32'h00000001) $display("PASS: AMOMAXU returned old value");
+        else $display("FAIL: AMOMAXU returned %h", E_atomic_rd);
+        // Expected write: maxu(1, FFFFFFFE) = FFFFFFFE
+        repeat(5) @(posedge clk);
 
         $display("\n=== TEST COMPLETE ===");
         $finish;

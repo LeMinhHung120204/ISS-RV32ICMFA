@@ -20,8 +20,8 @@ module atomic_decoder(
         rl = 1'b0;
         funct3 = 3'b0;
         
-        // Check if opcode is AMO (0101111)
-        if (opcode == 7'b0101111) begin
+        // Check if opcode is AMO (0101111) AND funct3 is 010 (Word)
+        if (opcode == 7'b0101111 && instr[14:12] == 3'b010) begin
             is_atomic = 1'b1;
             funct5 = funct7[6:2];  // Extract funct5 from funct7[6:2]
             aq = funct7[1];        // Acquire bit
