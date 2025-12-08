@@ -175,20 +175,9 @@ module unit_atomic #(
         end
     endfunction
 
-    // Initialize per-core reservation arrays
-    integer i;
-    always @(posedge clk or negedge rstn) begin
-        if (!rstn) begin
-            for (i = 0; i < NUM_CORES; i = i + 1) begin
-                lr_valid[i] <= 1'b0;
-                reserved_addr[i] <= {ADDR_WIDTH{1'b0}};
-                aq_pending[i] <= 1'b0;
-                rl_pending[i] <= 1'b0;
-            end
-        end
-    end
-
     // Main state machine and transaction capture
+    // All reservation array updates are in this single always block to avoid multiple drivers
+    integer i;
     always @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= IDLE;
@@ -205,6 +194,13 @@ module unit_atomic #(
             mem_read_data <= {DATA_WIDTH{1'b0}};
             amo_result <= {DATA_WIDTH{1'b0}};
             sc_success <= 1'b0;
+            // Initialize per-core reservation arrays
+            for (i = 0; i < NUM_CORES; i = i + 1) begin
+                lr_valid[i] <= 1'b0;
+                reserved_addr[i] <= {ADDR_WIDTH{1'b0}};
+                aq_pending[i] <= 1'b0;
+                rl_pending[i] <= 1'b0;
+            end
         end else begin
             state <= next_state;
 
@@ -219,6 +215,14 @@ module unit_atomic #(
                 is_lr_op <= 1'b1;
                 is_sc_op <= 1'b0;
                 is_amo_op <= 1'b0;
+                // Set aq_pending if acquire bit is set
+                if (cpu_ar_user[3]) begin
+                    aq_pending[cpu_ar_id] <= 1'b1;
+                end
+                // Set rl_pending if release bit is set
+                if (cpu_ar_user[2]) begin
+                    rl_pending[cpu_ar_id] <= 1'b1;
+                end
             end
 
             // Capture SC transaction: Store-Conditional
@@ -233,6 +237,14 @@ module unit_atomic #(
                 is_sc_op <= 1'b1;
                 is_lr_op <= 1'b0;
                 is_amo_op <= 1'b0;
+                // Set aq_pending if acquire bit is set
+                if (cpu_aw_user[3]) begin
+                    aq_pending[cpu_aw_id] <= 1'b1;
+                end
+                // Set rl_pending if release bit is set
+                if (cpu_aw_user[2]) begin
+                    rl_pending[cpu_aw_id] <= 1'b1;
+                end
             end
 
             // Capture AMO transaction: Atomic Memory Operation
@@ -248,6 +260,14 @@ module unit_atomic #(
                 is_amo_op <= 1'b1;
                 is_lr_op <= 1'b0;
                 is_sc_op <= 1'b0;
+                // Set aq_pending if acquire bit is set
+                if (cpu_aw_user[3]) begin
+                    aq_pending[cpu_aw_id] <= 1'b1;
+                end
+                // Set rl_pending if release bit is set
+                if (cpu_aw_user[2]) begin
+                    rl_pending[cpu_aw_id] <= 1'b1;
+                end
             end
 
             // Capture read response: Store old value for AMO ALU computation or return to CPU
@@ -273,9 +293,12 @@ module unit_atomic #(
                     end
                 end
                 
-                // Clear aq_pending after operation completes (allows next op with aq to start)
+                // Clear aq_pending and rl_pending after operation completes
                 if (aq_pending[core_idx]) begin
                     aq_pending[core_idx] <= 1'b0;
+                end
+                if (rl_pending[core_idx]) begin
+                    rl_pending[core_idx] <= 1'b0;
                 end
             end
 
@@ -283,7 +306,7 @@ module unit_atomic #(
             // Prevents SC from succeeding after another master wrote to reserved address
             if (snoop_ac_valid && snoop_ac_ready) begin
                 for (i = 0; i < NUM_CORES; i = i + 1) begin
-                    if (reserved_addr[i][ADDR_WIDTH-1:3] == snoop_ac_addr[ADDR_WIDTH-1:3]) begin
+                    if (reserved_addr[i][ADDR_WIDTH-1:2] == snoop_ac_addr[ADDR_WIDTH-1:2]) begin
                         lr_valid[i] <= 1'b0;  // Invalidate reservation
                     end
                 end
