@@ -164,7 +164,7 @@ module cache_fsm #(
     end
 
     // -------- memories (single-port, direct-mapped) --------
-    cache_data_mem u_data (
+    data_mem u_data (
         .clk(clk),
         .rst_n(rst_n),
         .we(data_we),

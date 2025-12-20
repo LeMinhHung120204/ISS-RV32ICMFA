@@ -10,10 +10,11 @@ module PIM #(   // Policy info Memory
 );
     localparam DEPTH = 1 << ADDR_WIDTH;
     reg [DATA_WIDTH-1:0] pim [0:DEPTH-1];
-
+    
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
+        
             for(i = 0 ; i < DEPTH; i = i + 1) begin
                 pim[i]  <= 3'd0;
             end 

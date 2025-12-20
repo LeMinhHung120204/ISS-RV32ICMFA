@@ -8,22 +8,70 @@ module ICache #(
     parameter WORD_OFF_W    = 4,  // 16 words/line
     parameter BYTE_OFF_W    = 2,  // 4B/word
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
-    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
-)(
-    input clk, rst_n,
-    // CPU -> Cache
-    input [ADDR_W-1:0]          CPU_Addr,
-    input                       CPU_Valid,
-    // Mem -> Cache
-    input [CACHE_DATA_W-1:0]    Mem_BlockData,
-    input                       Mem_Ready,
+    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
 
-    // Cache -> Mem
-    output                      Mem_Valid,
-    
-    // Cache -> CPU
-    output reg [DATA_W-1:0]    data_rdata,
-    output                     hit
+    parameter ID_W          = 2,    // ICACHE1: 2'b10, ICACHE2: 2'b11;
+    parameter USER_W        = 4,
+    parameter STRB_W        = (DATA_W/8)
+
+)(
+    input ACLK, ARESETn,
+    input      [ADDR_W-1:0] CPU_Addr,
+    output reg [DATA_W-1:0] data_rdata,
+
+    // (cache <-> cache L2)
+    // AW channel 
+    output  [ID_W-1:0]      oAWID,
+    output  [ADDR_W-1:0]    oAWADDR,
+    output  [7:0]           oAWLEN,
+    output  [2:0]           oAWSIZE,
+    output  [1:0]           oAWBURST,
+    output                  oAWLOCK,
+    output  [3:0]           oAWCACHE,
+    output  [2:0]           oAWPROT,
+    output  [3:0]           oAWQOS,
+    output  [3:0]           oAWREGION,
+    output  [USER_W-1:0]    oAWUSER,
+    output                  oAWVALID,
+    input                   iAWREADY,
+
+    // W channel
+    output  [DATA_W-1:0]    oWDATA,
+    output  [STRB_W-1:0]    oWSTRB,
+    output                  oWLAST,
+    output  [USER_W-1:0]    oWUSER,
+    output                  oWVALID,
+    input                   iWREADY,
+
+    // B channel
+    input   [ID_W-1:0]      iBID,
+    input   [1:0]           iBRESP,
+    input   [USER_W-1:0]    iBUSER,
+    input                   iBVALID,
+    output                  oBREADY,
+
+    // AR channel
+    output  [ID_W-1:0]      oARID,
+    output  [ADDR_W-1:0]    oARADDR,
+    output  [7:0]           oARLEN,
+    output  [2:0]           oARSIZE,
+    output  [1:0]           oARBURST,
+    output                  oARLOCK,
+    output  [3:0]           oARCACHE,
+    output  [2:0]           oARPROT,
+    output  [3:0]           oARQUOS,
+    output  [USER_W-1:0]    oARUSER,
+    output                  oARVALID,
+    input                   iARREADY,
+
+    // R channel
+    input   [ID_W-1:0]      iRID,
+    input   [DATA_W-1:0]    iRDATA,
+    input   [1:0]           iRRESP,
+    input                   iRLAST,
+    input   [USER_W-1:0]    iRUSER,
+    input                   iRVALID,
+    output                  oRREADY
 );
     localparam BO       = BYTE_OFF_W;
     localparam WO       = WORD_OFF_W;
@@ -43,14 +91,14 @@ module ICache #(
     wire [CACHE_DATA_W-1:0] data_write;
     wire [CACHE_DATA_W-1:0] line_way0, line_way1, line_way2, line_way3;
     wire [NUM_WAYS-1:0]     way_hit, way_select;
-    wire tag_we, data_we;
+    wire tag_we, data_we, hit;
 
-    reg [NUM_SETS-1:0] valid;
+    reg [NUM_SETS-1:0] valid0, valid1, valid2, valid3;
     //--------------------------------------- check hit ---------------------------------------
-    assign way_hit[0]   = (tag == tag_read0) & valid[0];
-    assign way_hit[1]   = (tag == tag_read1) & valid[1];
-    assign way_hit[2]   = (tag == tag_read2) & valid[2];
-    assign way_hit[3]   = (tag == tag_read3) & valid[3];
+    assign way_hit[0]   = (tag == tag_read0) & valid0[index];
+    assign way_hit[1]   = (tag == tag_read1) & valid1[index];
+    assign way_hit[2]   = (tag == tag_read2) & valid2[index];
+    assign way_hit[3]   = (tag == tag_read3) & valid3[index];
     assign hit          = | way_hit;
 
     //--------------------------------------- write data when miss ---------------------------------------
@@ -80,8 +128,8 @@ module ICache #(
         .NUM_SETS   (NUM_SETS),
         .TAG_W      (TAG_W)
     ) tag_way0(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (tag_we & way_select[0]),
         .index      (index),
         .din        (tag_write),
@@ -94,8 +142,8 @@ module ICache #(
         .INDEX_W    (INDEX_W),
         .WORD_OFF_W (WORD_OFF_W)
     ) data_mem0(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (data_we & way_select[0]),
         .index      (index),
         .din        (data_write),
@@ -108,8 +156,8 @@ module ICache #(
         .NUM_SETS   (NUM_SETS),
         .TAG_W      (TAG_W)
     ) tag_way1(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (tag_we & way_select[1]),
         .index      (index),
         .din        (tag_write),
@@ -122,8 +170,8 @@ module ICache #(
         .INDEX_W    (INDEX_W),
         .WORD_OFF_W (WORD_OFF_W)
     ) data_mem1(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (data_we & way_select[1]),
         .index      (index),
         .din        (data_write),
@@ -136,8 +184,8 @@ module ICache #(
         .NUM_SETS   (NUM_SETS),
         .TAG_W      (TAG_W)
     ) tag_way2(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (tag_we & way_select[2]),
         .index      (index),
         .din        (tag_write),
@@ -150,8 +198,8 @@ module ICache #(
         .INDEX_W    (INDEX_W),
         .WORD_OFF_W (WORD_OFF_W)
     ) data_mem2(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (data_we & way_select[2]),
         .index      (index),
         .din        (data_write),
@@ -164,8 +212,8 @@ module ICache #(
         .NUM_SETS   (NUM_SETS),
         .TAG_W      (TAG_W)
     ) tag_way3(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (tag_we & way_select[3]),
         .index      (index),
         .din        (tag_write),
@@ -178,8 +226,8 @@ module ICache #(
         .INDEX_W    (INDEX_W),
         .WORD_OFF_W (WORD_OFF_W)
     ) data_mem3(
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .we         (data_we & way_select[3]),
         .index      (index),
         .din        (data_write),
@@ -192,9 +240,9 @@ module ICache #(
         .N_WAYS (NUM_WAYS),
         .N_LINES(NUM_SETS)
     ) PLRU_replacement(
-        .clk            (clk),
-        .rst_n          (rst_n),
-        .we             (),
+        .clk            (ACLK),
+        .rst_n          (ARESETn),
+        .we             (hit),
         .way_hit        (way_hit),
         .addr           (index),
         .way_select     (way_select),
@@ -202,14 +250,44 @@ module ICache #(
     );
 
     //--------------------------------------- CACHE CONTROLLER ---------------------------------------
-    icache_control icache_controller (
-        .clk        (clk),
-        .rst_n      (rst_n),
+    icache_controller icache_controller (
+        .clk        (ACLK),
+        .rst_n      (ARESETn),
         .hit        (hit),
-        .Mem_Ready  (Mem_Ready),
         .data_we    (data_we),
         .tag_we     (tag_we),
-        .Mem_Valid  (Mem_Valid)
+
+        // cache <-> mem
+        .oAWID      (oAWID    ),
+        .oAWLEN     (oAWLEN   ),
+        .oAWSIZE    (oAWSIZE  ),
+        .oAWBURST   (oAWBURST ),
+        .oAWLOCK    (oAWLOCK  ),
+        .oAWCACHE   (oAWCACHE ),
+        .oAWPROT    (oAWPROT  ),
+        .oAWQOS     (oAWQOS   ),
+        .oAWREGION  (oAWREGION),
+        .oAWUSER    (oAWUSER  ),
+        .oAWVALID   (oAWVALID ),
+
+        .oWSTRB     (oWSTRB ),
+        .oWLAST     (oWLAST ),
+        .oWUSER     (oWUSER ),
+        .oWVALID    (oWVALID),
+
+        .oBREADY    (oBREADY),
+
+        .iARREADY   (iARREADY),
+        .oARID      (oARID   ),
+        .iARSIZE    (iARSIZE ),
+        .oARBURST   (oARBURST),
+        .oARCACHE   (oARCACHE),
+        .oARQUOS    (oARQUOS ),
+        .oARUSER    (oARUSER ),
+        .oARVALID   (oARVALID),
+
+        .iRLAST     (iRLAST ),
+        .oRREADY    (oRREADY)
     );
 
 endmodule 

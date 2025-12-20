@@ -14,27 +14,28 @@ module MDU #(
     wire    [DATA_WIDTH - 1:0]  E_quotient, E_remainder;
     wire    mul_busy, div_busy, done;
 
-    reg                         valid_inputMul, valid_inputDiv, reg_stall;
+    reg                         valid_inputMul, valid_inputDiv;
     reg     [1:0]               reg_control;
-    reg     [DATA_WIDTH-1:0]    reg_rs1, reg_rs2, A, B;
+//    reg     [DATA_WIDTH-1:0]    reg_rs1, reg_rs2, A, B;
+    reg     [DATA_WIDTH-1:0]    A, B;
 
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            reg_rs1     <= 32'd0;
-            reg_rs2     <= 32'd0;
-            reg_stall   <= 1'b0;
-        end 
-        else begin
-            if (valid_input) begin
-                reg_rs1     <= rs1;
-                reg_rs2     <= rs2;
-                reg_stall   <= 1'b1;
-                if (done) begin
-                    reg_stall <= 1'b0;
-                end 
-            end
-        end
-    end
+//    always @(posedge clk or negedge rst_n) begin
+//        if (~rst_n) begin
+////            reg_rs1     <= 32'd0;
+////            reg_rs2     <= 32'd0;
+////            reg_stall   <= 1'b0;
+//        end 
+//        else begin
+//            if (valid_input) begin
+////                reg_rs1     <= rs1;
+////                reg_rs2     <= rs2;
+//                reg_stall   <= 1'b1;
+//                if (done) begin
+//                    reg_stall <= 1'b0;
+//                end 
+//            end
+//        end
+//    end
 
     assign done = valid_outputDiv | valid_outputMul;
     assign stall = ((mul_busy | div_busy | valid_input) & (~done));

@@ -9,7 +9,6 @@ module MEM_WB #(
     input [4:0] M_rd,
     input [2:0] M_ResultSrc,
     input M_RegWrite, M_FRegWrite, M_MDU_FPUEn,
-    input M_is_atomic,                // atomic
     input [DATA_WIDTH-1:0] M_atomic_rdata,
     output reg [DATA_WIDTH - 1:0] W_Result, W_ReadData, W_ImmExt,
     output reg [ADDR_WIDTH - 1:0] W_ResPC,
@@ -31,7 +30,7 @@ module MEM_WB #(
         end 
         else begin
             W_Result    <= M_Result   ; 
-            W_ReadData  <= (M_is_atomic) ? M_atomic_rdata : M_ReadData; // atomic
+            W_ReadData  <= M_ReadData;
             W_ImmExt    <= M_ImmExt   ;
             W_ResPC     <= M_ResPC    ;
             W_rd        <= M_rd       ;
