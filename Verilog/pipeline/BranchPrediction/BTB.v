@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 // Branch Target Buffer
 // 4-way set associative, 8 sets
-// LRU replacement policy
+// PLRU replacement policy
 // From Lee Min Hunz with love
 module BTB #(
     parameter W_ADDR = 32
@@ -35,7 +35,7 @@ module BTB #(
     
     genvar g;
     generate
-        for(g=0; g<4; g=g+1) begin : read_check
+        for(g = 0; g < 4; g = g + 1) begin : read_check
             assign read_hit_ways[g] = (tag_mem[g][f_index] == f_tag) && valid[g][f_index];
         end
     endgenerate
@@ -54,7 +54,7 @@ module BTB #(
     
     wire [3:0] write_hit_ways;
     generate
-        for(g=0; g<4; g=g+1) begin : write_check_logic
+        for(g = 0; g < 4; g = g + 1) begin : write_check_logic
             assign write_hit_ways[g] = (tag_mem[g][e_index] == e_tag) && valid[g][e_index];
         end
     endgenerate
@@ -81,7 +81,7 @@ module BTB #(
     integer k;
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            for (k=0; k<8; k=k+1) begin
+            for (k = 0; k < 8; k = k + 1) begin
                 valid[0][k] <= 0; valid[1][k] <= 0; 
                 valid[2][k] <= 0; valid[3][k] <= 0;
             end

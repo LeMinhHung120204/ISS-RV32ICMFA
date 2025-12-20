@@ -11,11 +11,11 @@ module BPU #(
     input               E_branch,        
     input               E_jump,          
     input               taken,   
-    input [2:0]         E_GHSR          
+    input [2:0]         E_GHSR,          
 
     output              predict_taken,  
     output [W_ADDR-1:0] target_pc,      
-    output [2:0]        F_GHSR,   
+    output [2:0]        F_GHSR 
 );
     wire                btb_hit;
     wire                pht_predict_taken;
@@ -26,20 +26,20 @@ module BPU #(
 
     BTB #(
         .W_ADDR(W_ADDR)
-    ) btb_inst (
+    ) Branch_Target_Buffer (
         .clk            (clk),
         .rst_n          (rst_n),
         .F_PC           (F_PC),
         .E_PC           (E_PC),            
         .branch_target  (E_PCTarget),
         .E_branch       (E_branch),    
-        .E_jump         (E_jump)
+        .E_jump         (E_jump),
 
         .pc_prediction  (btb_pred_addr),
-        .hit            (btb_hit),       
+        .hit            (btb_hit)       
     );
 
-    PHT pht_inst (
+    PHT Pattern_History_Table (
         .clk            (clk),
         .rst_n          (rst_n),
         .E_branch       (E_branch),    
