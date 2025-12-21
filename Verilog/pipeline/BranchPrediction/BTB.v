@@ -13,8 +13,8 @@ module BTB #(
 
     input [W_ADDR-1:0]      E_PC,           
     input [W_ADDR-1:0]      branch_target,  
-    input                   E_branch,       
-    input                   E_jump          
+    input                   E_Branch,       
+    input                   E_Jump          
 );
     localparam INDEX_BITS = 3;            
     localparam TAG_BITS   = W_ADDR - 2 - INDEX_BITS;
@@ -25,7 +25,7 @@ module BTB #(
     wire [INDEX_BITS-1:0] e_index   = E_PC[4:2];
     wire [TAG_BITS-1:0]   e_tag     = E_PC[W_ADDR-1:5];
     
-    wire update_en                  = E_branch | E_jump;
+    wire update_en                  = E_Branch | E_Jump;
 
     reg [W_ADDR-1:0]    data_mem0 [0:7]; 
     reg [W_ADDR-1:0]    data_mem1 [0:7]; 

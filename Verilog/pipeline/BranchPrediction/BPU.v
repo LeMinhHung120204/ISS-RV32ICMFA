@@ -8,8 +8,8 @@ module BPU #(
     input [W_ADDR-1:0]  F_PC,                 
     input [W_ADDR-1:0]  E_PC,           
     input [W_ADDR-1:0]  E_PCTarget,  
-    input               E_branch,        
-    input               E_jump,          
+    input               E_Branch,        
+    input               E_Jump,          
     input               taken,   
     input [2:0]         E_GHSR,          
 
@@ -32,8 +32,8 @@ module BPU #(
         .F_PC           (F_PC),
         .E_PC           (E_PC),            
         .branch_target  (E_PCTarget),
-        .E_branch       (E_branch),    
-        .E_jump         (E_jump),
+        .E_Branch       (E_Branch),    
+        .E_Jump         (E_Jump),
 
         .pc_prediction  (btb_pred_addr),
         .hit            (btb_hit)       
@@ -42,8 +42,8 @@ module BPU #(
     PHT Pattern_History_Table (
         .clk            (clk),
         .rst_n          (rst_n),
-        .E_branch       (E_branch),    
-        .E_jump         (E_jump),      
+        .E_Branch       (E_Branch),    
+        .E_Jump         (E_Jump),      
         .Taken          (taken),      
         .E_PC           (E_PC[4:2]),
         .E_GHSR         (E_GHSR),                  
