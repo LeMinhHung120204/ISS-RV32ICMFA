@@ -9,7 +9,7 @@ module MEM_WB #(
     input [4:0] M_rd,
     input [2:0] M_ResultSrc,
     input M_RegWrite, M_FRegWrite, M_MDU_FPUEn,
-    input [DATA_WIDTH-1:0] M_atomic_rdata,
+    // input [DATA_WIDTH-1:0] M_atomic_rdata,
     output reg [DATA_WIDTH - 1:0] W_Result, W_ReadData, W_ImmExt,
     output reg [ADDR_WIDTH - 1:0] W_ResPC,
     output reg [4:0] W_rd,
