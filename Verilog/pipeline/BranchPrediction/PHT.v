@@ -5,8 +5,8 @@
 // From Lee Min Hunz with love
 module PHT(
     input           clk, rst_n,
-    input           E_branch,
-    input           E_jump,
+    input           E_Branch,
+    input           E_Jump,
     input           Taken,        // 1 if taken, 0 if not taken
     input [2:0]     F_PC,   
     input [2:0]     E_PC, 
@@ -23,7 +23,7 @@ module PHT(
     wire [2:0]  write_index     = E_PC ^ E_GHSR;
     wire [1:0]  current_state   = state[read_index]; 
     wire [1:0]  E_State         = state[write_index];
-    wire        final_taken     = Taken | E_jump;
+    wire        final_taken     = Taken | E_Jump;
 
     assign predict  = current_state[1];
     assign GHSR_out = GHSR;
@@ -45,7 +45,7 @@ module PHT(
                 state[i] <= 2'b10; // Init Weakly taken
         end
         else begin
-            if(E_branch | E_jump) begin
+            if(E_Branch | E_Jump) begin
                 // Cap nhat Global History
                 GHSR <= {GHSR[1:0], final_taken};
                 

@@ -71,12 +71,7 @@ module HazardUnit #(
     wire lw_Stall;
     assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
 
-    // ATOMIC: Add atomic stall when atomic operation is executing
-    wire atomic_Stall;
-    assign atomic_Stall = E_AtomicOp & (~E_atomic_done);
-
-    // ATOMIC: Combine all stalls including atomic
-    assign E_Stall = E_MulDivStall | E_FPUStall | atomic_Stall;
+    assign E_Stall = E_MulDivStall | E_FPUStall;
     assign F_Stall = lw_Stall | E_Stall;
     assign D_Stall = lw_Stall | E_Stall;
 

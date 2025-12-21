@@ -95,7 +95,7 @@ module RV32I #(
 
         // EX state
         .E_PC           (E_PC),
-        .E_Target_Real  (E_PCTarget), 
+        .E_PCTarget     (E_PCTarget), 
         .E_Branch       (E_Branch),
         .E_Jump         (E_Jump),
         .taken          (E_PCSrc),
