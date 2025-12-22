@@ -17,7 +17,8 @@ module MainDecoder(
     output reg  [2:0]   ResultSrc, 
     output reg  [2:0]   StoreSrc, 
     output reg  [2:0]   FPUOp,
-    output reg  AtomicOp  // ATOMIC: Atomic operation flag
+    output reg  data_req
+    // output reg  AtomicOp  // ATOMIC: Atomic operation flag
 );
 
     always @(*) begin
@@ -43,6 +44,7 @@ module MainDecoder(
                         StoreSrc = 3'b000;
                     end 
                 endcase 
+                data_req        = 1'b1;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -58,7 +60,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b0100011: begin          
                 case(funct3)
@@ -75,6 +77,7 @@ module MainDecoder(
                         StoreSrc = 3'b000;
                     end 
                 endcase 
+                data_req        = 1'b1;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -107,6 +110,7 @@ module MainDecoder(
                         ResExSel    = 2'b00;
                     end 
                 endcase
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResPCSel        = 1'b0;
                 FRegWrite       = 1'b0;
@@ -122,9 +126,10 @@ module MainDecoder(
                 ALUOp           = 2'b10;
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1100011: begin           // branch
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -141,9 +146,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b0010011: begin           // I-type ALU
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -160,9 +166,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1101111: begin           // jal
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b1;
@@ -179,9 +186,10 @@ module MainDecoder(
                 Jump            = 1'b1;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1100111: begin           // jalr
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b1;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b1;
@@ -198,9 +206,10 @@ module MainDecoder(
                 Jump            = 1'b1;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b0110111: begin           // lui
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -217,9 +226,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b0010111: begin           // auipc
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -236,9 +246,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end
             7'b0000111: begin           // flw
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -255,9 +266,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b0100111: begin           // fsw
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -274,9 +286,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1000011: begin           // fmadd
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
@@ -293,9 +306,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1000111: begin           // fmsub
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
@@ -312,9 +326,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1001111: begin           // fnmadd
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
@@ -331,9 +346,10 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1001011: begin           // fnmsub
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
@@ -350,20 +366,21 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b1010011: begin           // FPU instructions
                 case(funct7)
-                    7'b110_0000: begin
+                    7'b110_0000: begin      // fdiv.s, fsgnjn.s, fsgnjx.s
                         RegWrite = 1'b1;
                     end 
-                    7'b111_0000: begin
+                    7'b111_0000: begin      // fsqrt.s
                         RegWrite = 1'b1;
                     end 
                     default: begin
                         RegWrite = 1'b0;
                     end
                 endcase
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b10;
                 ResPCSel        = 1'b0;
@@ -379,27 +396,28 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
-            7'b0101111: begin // ATOMIC: Atomic instructions (LR/SC/AMO)
-                AtomicOp        = 1'b1;  // ATOMIC: Enable atomic operation
-                addr_addend_sel = 1'b0;
-                ResExSel        = 2'b00;
-                ResPCSel        = 1'b0;
-                FRegWrite       = 1'b0;
-                FPUOp           = 3'd0;
-                RegWrite        = 1'b1;
-                ImmSrc          = 3'b000;
-                ALUSrc          = 1'b0;
-                MemWrite        = 1'b0;
-                ResultSrc       = 3'b000;
-                Branch          = 1'b0;
-                ALUOp           = 2'b00;
-                Jump            = 1'b0;
-                StoreSrc        = 3'b000;
-                MDUOp           = 1'b0;
-            end
+            // 7'b0101111: begin // ATOMIC: Atomic instructions (LR/SC/AMO)
+            //     AtomicOp        = 1'b1;  // ATOMIC: Enable atomic operation
+            //     addr_addend_sel = 1'b0;
+            //     ResExSel        = 2'b00;
+            //     ResPCSel        = 1'b0;
+            //     FRegWrite       = 1'b0;
+            //     FPUOp           = 3'd0;
+            //     RegWrite        = 1'b1;
+            //     ImmSrc          = 3'b000;
+            //     ALUSrc          = 1'b0;
+            //     MemWrite        = 1'b0;
+            //     ResultSrc       = 3'b000;
+            //     Branch          = 1'b0;
+            //     ALUOp           = 2'b00;
+            //     Jump            = 1'b0;
+            //     StoreSrc        = 3'b000;
+            //     MDUOp           = 1'b0;
+            // end
             default: begin
+                data_req        = 1'b0;
                 addr_addend_sel = 1'b0;
                 ResExSel        = 2'b00;
                 ResPCSel        = 1'b0;
@@ -416,7 +434,7 @@ module MainDecoder(
                 Jump            = 1'b0;
                 StoreSrc        = 3'b000;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+                // AtomicOp        = 1'b0;  // ATOMIC
             end 
         endcase
     end

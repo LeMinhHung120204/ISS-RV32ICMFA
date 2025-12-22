@@ -21,7 +21,7 @@ module dCache #(
     input                       cpu_req, cpu_we,
     input   [1:0]               cpu_size, // 00: word, 01: byte, 10: half
     input                       data_valid,
-    input   [ADDR_W-1:0]        CPU_Addr,
+    input   [ADDR_W-1:0]        cpu_addr,
     input   [DATA_W-1:0]        cpu_din,
 
     output  reg [DATA_W-1:0]    data_rdata,
@@ -89,7 +89,7 @@ module dCache #(
     //  RRESP[1:0] (memory)
     input   [3:0]           iRRESP,
     input                   iRLAST,
-    input   [USER_W-1:0]    iRUSER,
+    input   [USER_W-1:0]    iRUSER,   // khong dun
     input                   iRVALID,
     output                  oRREADY,
 
@@ -130,9 +130,9 @@ module dCache #(
 
     // ---------------------------------------- cpu address request  ----------------------------------------
 
-    wire [WO-1:0]       cpu_word_off    = CPU_Addr[WO_MSB:BO];
-    wire [IX-1:0]       cpu_index       = CPU_Addr[IDX_MSB:IDX_LSB];
-    // wire [TAG_W-1:0]    cpu_tag         = CPU_Addr[TAG_MSB:TAG_LSB];
+    wire [WO-1:0]       cpu_word_off    = cpu_addr[WO_MSB:BO];
+    wire [IX-1:0]       cpu_index       = cpu_addr[IDX_MSB:IDX_LSB];
+    // wire [TAG_W-1:0]    cpu_tag         = cpu_addr[TAG_MSB:TAG_LSB];
 
     wire [TAG_W-1:0]    cpu_tag_reg     = reg_addr[TAG_MSB:TAG_LSB];
     wire [IX-1:0]       cpu_index_reg   = reg_addr[IDX_MSB:IDX_LSB];
@@ -246,7 +246,7 @@ module dCache #(
         end 
         else begin
             if (data_valid & (cache_state == 4'd1)) begin  // cpu request in TAG_CHECK
-                reg_addr    <= CPU_Addr;
+                reg_addr    <= cpu_addr;
                 reg_data    <= cpu_din;
                 reg_cpu_req <= cpu_req;
             end 

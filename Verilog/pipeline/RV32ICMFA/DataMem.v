@@ -3,7 +3,8 @@ module DataMem #(
     parameter WIDTH_ADDR = 8,
     parameter Data_WIDTH = 32
 )(
-    input   clk, rst_n, MemWrite,
+    input                       clk, rst_n, 
+    input                       MemWrite,
     input   [Data_WIDTH - 1:0]  addr,
     input   [Data_WIDTH - 1:0]  data_in,
     input   [2:0]               StoreSrc,

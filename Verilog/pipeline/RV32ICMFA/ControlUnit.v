@@ -18,6 +18,7 @@ module ControlUnit(
     output          Valid_FPU, 
     output          RegSrc1, 
     output          RegSrc2,
+    output          data_req,
     output  [4:0]   FPUControl,
     output  [3:0]   ALUControl,
     output  [2:0]   ImmSrc, 
@@ -48,7 +49,8 @@ module ControlUnit(
         .ResPCSel(ResPCSel),
         .ResExSel(ResExSel),
         .MDUOp(MDUOp),
-        .FPUOp(FPUOp)
+        .FPUOp(FPUOp),
+        .data_req(data_req)
     );
 
     AluDecoder aludecoder_inst(
