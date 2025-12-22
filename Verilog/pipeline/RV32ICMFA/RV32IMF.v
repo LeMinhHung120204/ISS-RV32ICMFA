@@ -161,6 +161,8 @@ module RV32IMF #(
         .E_Rs2          (E_rs2),
         .E_RsF3         (E_RsF3),
         .E_rd           (E_rd),
+        .icache_stall   (icache_stall),
+        .dcache_stall   (dcache_stall),
         // .E_PCSrc        (E_PCSrc),
         .E_MulDivStall  (E_MulDivStall),
         .E_FPUStall     (E_FPUStall),
