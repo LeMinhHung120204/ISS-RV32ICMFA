@@ -52,7 +52,8 @@ module RV32I #(
     wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
 
     // ----------------------- Tin hieu PC -----------------------
-    wire [WIDTH_ADDR - 1:0] F_PC, PCNext, F_PCPlus4;
+    reg [WIDTH_ADDR - 1:0] PCNext;
+    wire [WIDTH_ADDR - 1:0] F_PC, F_PCPlus4;
     wire [WIDTH_ADDR - 1:0] D_PC, D_PCPlus4;
     wire [WIDTH_ADDR - 1:0] E_PC, E_PCPlus4, E_PCTarget, E_PCtmp;
     wire [WIDTH_ADDR - 1:0] M_PCPlus4, M_ResPC, M_PCTarget;
@@ -75,9 +76,21 @@ module RV32I #(
     assign E_Mispredict = (E_PCSrc != E_Predict_Taken);
     assign E_Correct_PC = E_PCSrc ? E_PCTarget : E_PCPlus4;
     
-    assign PCNext = (E_Mispredict)    ? E_Correct_PC :     // Ưu tiên 1: Sửa sai
-                    (F_Predict_Taken) ? F_Predict_Target : // Ưu tiên 2: Dự đoán
-                                        F_PCPlus4;         // Ưu tiên 3: Tuần tự
+
+    always @(*) begin
+        case ({E_Mispredict, F_Predict_Taken})
+            // TH1: Mispredict = 1. uu tien sua sai
+            2'b10, 2'b11: PCNext = E_Correct_PC; 
+            
+            // TH2: Mispredict = 0, Predict_Taken = 1.
+            2'b01:        PCNext = F_Predict_Target;
+            default:      PCNext = F_PCPlus4;
+        endcase
+end
+
+    // assign PCNext = (E_Mispredict)    ? E_Correct_PC :     // Ưu tiên 1: Sửa sai
+    //                 (F_Predict_Taken) ? F_Predict_Target : // Ưu tiên 2: Dự đoán
+    //                                     F_PCPlus4;         // Ưu tiên 3: Tuần tự
 
     // assign PCNext           = (E_PCSrc == 1'b1) ? E_PCTarget : F_PCPlus4;
 
@@ -132,7 +145,7 @@ module RV32I #(
         .E_Rs2          (E_rs2),
         .E_RsF3         (E_RsF3),
         .E_rd           (E_rd),
-        .E_PCSrc        (E_PCSrc),
+        // .E_PCSrc        (E_PCSrc),
         .E_MulDivStall  (E_MulDivStall),
         .E_FPUStall     (E_FPUStall),
         .E_ResultSrc    (E_ResultSrc),

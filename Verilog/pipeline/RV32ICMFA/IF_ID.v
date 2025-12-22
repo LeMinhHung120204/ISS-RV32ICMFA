@@ -3,12 +3,15 @@ module IF_ID #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input                           clk, rst_n, EN, D_Flush,
+    input                           clk, rst_n, 
+    input                           EN, 
+    input                           D_Flush,
     input                           F_Predict_Taken,
     input       [DATA_WIDTH - 1:0]  F_RD, 
     input       [ADDR_WIDTH - 1:0]  F_PC,
     input       [ADDR_WIDTH - 1:0]  F_PCPlus4,
     input       [2:0]               F_GHSR,
+    
     output reg                      D_Predict_Taken,
     output reg  [DATA_WIDTH - 1:0]  D_Instr,
     output reg  [DATA_WIDTH - 1:0]  D_PC,

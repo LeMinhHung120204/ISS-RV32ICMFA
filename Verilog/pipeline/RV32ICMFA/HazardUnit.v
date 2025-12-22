@@ -3,13 +3,35 @@
 module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
-    input       M_RegWrite, W_RegWrite, E_PCSrc, E_MulDivStall, E_FPUStall, W_MDU_FPUEn,
-                M_FRegWrite, W_FRegWrite, E_RegSrc1, E_RegSrc2, E_Mispredict,
+    input       M_RegWrite, 
+    input       W_RegWrite, 
+    // input       E_PCSrc, 
+    input       E_MulDivStall, 
+    input       E_FPUStall, 
+    input       W_MDU_FPUEn,
+    input       M_FRegWrite, 
+    input       W_FRegWrite, 
+    input       E_RegSrc1, 
+    input       E_RegSrc2, 
+    input       E_Mispredict,
     input [2:0] E_ResultSrc,
-    input [4:0] D_Rs1, D_Rs2, E_Rs1, E_Rs2, E_RsF3, E_rd, M_Rd, W_Rd,
+    input [4:0] D_Rs1, 
+    input [4:0] D_Rs2, 
+    input [4:0] E_Rs1, 
+    input [4:0] E_Rs2, 
+    input [4:0] E_RsF3, 
+    input [4:0] E_rd, 
+    input [4:0] M_Rd, 
+    input [4:0] W_Rd,
 
-    output reg [1:0]    ForwardAE, ForwardBE, ForwardFCE,
-    output              F_Stall, D_Stall, E_Stall, D_Flush, E_Flush
+    output reg [1:0]    ForwardAE, 
+    output reg [1:0]    ForwardBE, 
+    output reg [1:0]    ForwardFCE,
+    output              F_Stall, 
+    output              D_Stall, 
+    output              E_Stall, 
+    output              D_Flush, 
+    output              E_Flush
 );
 
 // Solve Data Hazard
@@ -76,7 +98,8 @@ module HazardUnit #(
     assign D_Stall = lw_Stall | E_Stall;
 
     // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
-    assign E_Flush = lw_Stall | E_PCSrc | E_Mispredict;
-    assign D_Flush = E_PCSrc | E_Mispredict;
-
+    // assign E_Flush = lw_Stall | E_PCSrc | E_Mispredict;
+    // assign D_Flush = E_PCSrc | E_Mispredict;
+    assign E_Flush = lw_Stall | E_Mispredict;
+    assign D_Flush = E_Mispredict;
 endmodule

@@ -2,10 +2,21 @@
 module MainDecoder(
     input       [6:0] op, funct7,
     input       [2:0] funct3,
-    output reg  Branch, MemWrite, ALUSrc, RegWrite, Jump, addr_addend_sel,
-                FRegWrite, ResPCSel, MDUOp,
-    output reg  [1:0] ALUOp, ResExSel,
-    output reg  [2:0] ImmSrc, ResultSrc, StoreSrc, FPUOp,
+    output reg  Branch, 
+    output reg  MemWrite, 
+    output reg  ALUSrc, 
+    output reg  RegWrite, 
+    output reg  Jump, 
+    output reg  addr_addend_sel,
+    output reg  FRegWrite, 
+    output reg  ResPCSel, 
+    output reg  MDUOp,
+    output reg  [1:0]   ALUOp, 
+    output reg  [1:0]   ResExSel,
+    output reg  [2:0]   ImmSrc, 
+    output reg  [2:0]   ResultSrc, 
+    output reg  [2:0]   StoreSrc, 
+    output reg  [2:0]   FPUOp,
     output reg  AtomicOp  // ATOMIC: Atomic operation flag
 );
 

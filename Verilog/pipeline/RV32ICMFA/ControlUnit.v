@@ -4,12 +4,28 @@ module ControlUnit(
     input   [6:0]   funct7,
     input   [4:0]   funct5,
     input   [2:0]   funct3,
-    output          MemWrite, ALUSrc, RegWrite, Jump, Branch, is_high, addr_addend_sel, 
-                    ResPCSel, valid_MDU, FRegWrite, Valid_FPU, RegSrc1, RegSrc2,
+    
+    output          MemWrite, 
+    output          ALUSrc, 
+    output          RegWrite, 
+    output          Jump, 
+    output          Branch, 
+    output          is_high, 
+    output          addr_addend_sel, 
+    output          ResPCSel, 
+    output          valid_MDU, 
+    output          FRegWrite, 
+    output          Valid_FPU, 
+    output          RegSrc1, 
+    output          RegSrc2,
     output  [4:0]   FPUControl,
     output  [3:0]   ALUControl,
-    output  [2:0]   ImmSrc, ResultSrc, StoreSrc,
-    output  [1:0]   Mul_Div_unsigned, MulDivControl, ResExSel
+    output  [2:0]   ImmSrc, 
+    output  [2:0]   ResultSrc, 
+    output  [2:0]   StoreSrc,
+    output  [1:0]   Mul_Div_unsigned, 
+    output  [1:0]   MulDivControl, 
+    output  [1:0]   ResExSel
 );
     wire MDUOp;
     wire [1:0] ALUOp;
