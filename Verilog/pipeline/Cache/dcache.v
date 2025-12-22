@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module dCache #(
+module dcache #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,

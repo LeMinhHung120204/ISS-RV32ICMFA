@@ -13,6 +13,11 @@ module RV32IMF #(
     output  [WIDTH_ADDR - 1:0]  data_addr,
     output  [WIDTH_DATA - 1:0]  data_wdata,
 
+    // cpu <-> icache
+    input   [WIDTH_DATA - 1:0]  imem_instr,
+    output                      icache_req,
+    output  [WIDTH_ADDR - 1:0]  icache_addr,
+
     output  [WIDTH_DATA - 1:0]  W_Result_output
     // input   [WIDTH_DATA - 1:0]  imem_instr, dmem_rdata,
     // output  [WIDTH_ADDR - 1:0]  imem_addr, 
@@ -210,6 +215,9 @@ end
         .data_req           (data_req)
     );
     // ---------------------------------------- IF state ----------------------------------------
+    assign icache_addr = F_PC;
+    assign icache_req  = rst_n;     // luon yeu canh lenh khi khong reset
+    assign F_RD        = imem_instr;
     PC PC_inst(
         .clk    (clk),
         .rst_n  (rst_n),
@@ -218,10 +226,10 @@ end
         .PC     (F_PC)
     );
 
-    Ins_Mem instruction_memory(
-        .addr       (F_PC),
-        .instruction(F_RD)
-    );
+    // Ins_Mem instruction_memory(
+    //     .addr       (F_PC),
+    //     .instruction(F_RD)
+    // );
 
     IF_ID IF_ID_register(
         .clk                (clk),

@@ -26,29 +26,6 @@ module icache #(
     output                      cpu_hit,
 
     // (cache <-> cache L2)
-    // AW channel 
-    input                   iAWREADY,
-    output  [ID_W-1:0]      oAWID,
-    output  [ADDR_W-1:0]    oAWADDR,
-    output  [7:0]           oAWLEN,
-    output  [2:0]           oAWSIZE,
-    output  [1:0]           oAWBURST,   
-    output                  oAWVALID,
-    
-    // W channel
-    input                       iWREADY,
-    output  [ID_W-1:0]          oWID,
-    output reg  [DATA_W-1:0]    oWDATA,
-    output  [STRB_W-1:0]        oWSTRB,
-    output                      oWLAST,
-    output                      oWVALID,
-    
-    // B channel
-    input   [ID_W-1:0]      iBID,
-    input   [1:0]           iBRESP,
-    input                   iBVALID,
-    output                  oBREADY,
-
     // AR channel
     input                   iARREADY,
     output  [ID_W-1:0]      oARID,
