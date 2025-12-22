@@ -24,6 +24,7 @@ module icache #(
 
     output  reg [DATA_W-1:0]    data_rdata,
     output                      cpu_hit,
+    output                      cache_busy,
 
     // (cache <-> cache L2)
     // AR channel
@@ -78,7 +79,7 @@ module icache #(
     wire        valid_we;
     wire        tag_we;
     wire        refill_we;
-    wire        cache_busy;
+    // wire        cache_busy;
     wire [3:0]  burst_cnt;
 
     // tag_read and mem_Read
@@ -151,27 +152,6 @@ module icache #(
             end 
         endcase
     end 
-
-    // mux for write data in mem
-    always @(*) begin
-        case(way_select)
-            4'b0001: begin
-                oWDATA = data_read0[burst_cnt * DATA_W +: DATA_W];
-            end 
-            4'b0010: begin
-                oWDATA = data_read1[burst_cnt * DATA_W +: DATA_W];
-            end 
-            4'b0100: begin
-                oWDATA = data_read2[burst_cnt * DATA_W +: DATA_W];
-            end 
-            4'b1000: begin
-                oWDATA = data_read3[burst_cnt * DATA_W +: DATA_W];
-            end 
-            default: begin
-                oWDATA = 32'd0;
-            end 
-        endcase
-    end
     // ---------------------------------------- data mem ----------------------------------------
     integer i;
     always @(posedge ACLK or negedge ARESETn) begin

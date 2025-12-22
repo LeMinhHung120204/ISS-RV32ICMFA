@@ -5,92 +5,92 @@ module core_tile #(
     parameter ADDR_W = 32,
     parameter DATA_W = 32
 )(
-    input wire clk,
-    input wire rst_n,
+    input   clk,
+    input   rst_n,
 
     // DATA CACHE INTERFACE (AXI4 Full + ACE)
     // AW Channel
-    input  wire                m_d_axi_awready, 
-    output wire [3:0]          m_d_axi_awid,
-    output wire [ADDR_W-1:0]   m_d_axi_awaddr,
-    output wire [7:0]          m_d_axi_awlen,
-    output wire [2:0]          m_d_axi_awsize,
-    output wire [1:0]          m_d_axi_awburst,
-    output wire                m_d_axi_awvalid,
+    input                   m_d_axi_awready, 
+    output  [3:0]           m_d_axi_awid,
+    output  [ADDR_W-1:0]    m_d_axi_awaddr,
+    output  [7:0]           m_d_axi_awlen,
+    output  [2:0]           m_d_axi_awsize,
+    output  [1:0]           m_d_axi_awburst,
+    output                  m_d_axi_awvalid,
     // ACE Signals (Snoop cho D-Cache)
-    output wire [2:0]          m_d_ace_awsnoop,
-    output wire [1:0]          m_d_ace_awdomain,
-    output wire [1:0]          m_d_ace_awbar,
+    output  [2:0]   m_d_ace_awsnoop,
+    output  [1:0]   m_d_ace_awdomain,
+    output  [1:0]   m_d_ace_awbar,
     
     // W Channel
-    input  wire                m_d_axi_wready,
-    output wire [DATA_W-1:0]   m_d_axi_wdata,
-    output wire [DATA_W/8-1:0] m_d_axi_wstrb,
-    output wire                m_d_axi_wlast,
-    output wire                m_d_axi_wvalid,
+    input                   m_d_axi_wready,
+    output  [DATA_W-1:0]    m_d_axi_wdata,
+    output  [DATA_W/8-1:0]  m_d_axi_wstrb,
+    output                  m_d_axi_wlast,
+    output                  m_d_axi_wvalid,
 
     // B Channel
-    input  wire [3:0]          m_d_axi_bid,
-    input  wire [1:0]          m_d_axi_bresp,
-    input  wire                m_d_axi_bvalid,
-    output wire                m_d_axi_bready,
+    input   [3:0]   m_d_axi_bid,
+    input   [1:0]   m_d_axi_bresp,
+    input           m_d_axi_bvalid,
+    output          m_d_axi_bready,
 
     // AR Channel (Data Read)
-    input  wire                m_d_axi_arready,
-    output wire [3:0]          m_d_axi_arid,
-    output wire [ADDR_W-1:0]   m_d_axi_araddr,
-    output wire [7:0]          m_d_axi_arlen,
-    output wire [2:0]          m_d_axi_arsize,
-    output wire [1:0]          m_d_axi_arburst,
-    output wire                m_d_axi_arvalid,
+    input                   m_d_axi_arready,
+    output  [3:0]           m_d_axi_arid,
+    output  [ADDR_W-1:0]    m_d_axi_araddr,
+    output  [7:0]           m_d_axi_arlen,
+    output  [2:0]           m_d_axi_arsize,
+    output  [1:0]           m_d_axi_arburst,
+    output                  m_d_axi_arvalid,
     // ACE Signals
-    output wire [3:0]          m_d_ace_arsnoop,
-    output wire [1:0]          m_d_ace_ardomain,
-    output wire [1:0]          m_d_ace_arbar,
+    output  [3:0]   m_d_ace_arsnoop,
+    output  [1:0]   m_d_ace_ardomain,
+    output  [1:0]   m_d_ace_arbar,
 
     // R Channel (Data Read Response)
-    input  wire [3:0]          m_d_axi_rid,
-    input  wire [DATA_W-1:0]   m_d_axi_rdata,
-    input  wire [1:0]          m_d_axi_rresp,
-    input  wire                m_d_axi_rlast,
-    input  wire                m_d_axi_rvalid,
-    output wire                m_d_axi_rready,
+    input   [3:0]           m_d_axi_rid,
+    input   [DATA_W-1:0]    m_d_axi_rdata,
+    input   [1:0]           m_d_axi_rresp,
+    input                   m_d_axi_rlast,
+    input                   m_d_axi_rvalid,
+    output                  m_d_axi_rready,
 
     // AC, CR, CD Channels (Snoop)
     // AC Channel
-    input  wire                m_ace_acvalid,
-    input  wire [ADDR_W-1:0]   m_ace_acaddr,
-    input  wire [3:0]          m_ace_acsnoop,
-    output wire                m_ace_acready,
+    input                   m_ace_acvalid,
+    input   [ADDR_W-1:0]    m_ace_acaddr,
+    input   [3:0]           m_ace_acsnoop,
+    output                  m_ace_acready,
 
     // CR Channel
-    input  wire                m_ace_crready,
-    output wire                m_ace_crvalid,
-    output wire [4:0]          m_ace_crresp,
+    input               m_ace_crready,
+    output              m_ace_crvalid,
+    output  [4:0]       m_ace_crresp,
 
     // CD Channel
-    input  wire                m_ace_cdready,
-    output wire                m_ace_cdvalid,
-    output wire [DATA_W-1:0]   m_ace_cddata,
-    output wire                m_ace_cdlast,
+    input                   m_ace_cdready,
+    output                  m_ace_cdvalid,
+    output  [DATA_W-1:0]    m_ace_cddata,
+    output                  m_ace_cdlast,
 
     // INSTRUCTION CACHE INTERFACE (AXI4 Lite Read-Only)
     // AR Channel (Instruction Read)
-    input  wire                m_i_axi_arready,
-    output wire [3:0]          m_i_axi_arid,
-    output wire [ADDR_W-1:0]   m_i_axi_araddr,
-    output wire [7:0]          m_i_axi_arlen,
-    output wire [2:0]          m_i_axi_arsize,
-    output wire [1:0]          m_i_axi_arburst,
-    output wire                m_i_axi_arvalid,
+    input                   m_i_axi_arready,
+    output  [3:0]           m_i_axi_arid,
+    output  [ADDR_W-1:0]    m_i_axi_araddr,
+    output  [7:0]           m_i_axi_arlen,
+    output  [2:0]           m_i_axi_arsize,
+    output  [1:0]           m_i_axi_arburst,
+    output                  m_i_axi_arvalid,
 
     // R Channel (Instruction Read Response)
-    input  wire [3:0]          m_i_axi_rid,
-    input  wire [DATA_W-1:0]   m_i_axi_rdata,
-    input  wire [1:0]          m_i_axi_rresp,
-    input  wire                m_i_axi_rlast,
-    input  wire                m_i_axi_rvalid,
-    output wire                m_i_axi_rready
+    input   [3:0]           m_i_axi_rid,
+    input   [DATA_W-1:0]    m_i_axi_rdata,
+    input   [1:0]           m_i_axi_rresp,
+    input                   m_i_axi_rlast,
+    input                   m_i_axi_rvalid,
+    output                  m_i_axi_rready
 );
 
     wire [DATA_W-1:0]   data_rdata;
@@ -99,12 +99,12 @@ module core_tile #(
     wire [1:0]          data_size;
     wire                data_req;
     wire                data_wr;
-    wire                dcache_miss_stall;
+    wire                dcache_stall;
 
     wire [DATA_W-1:0]   imem_instr;
     wire [ADDR_W-1:0]   icache_addr;
     wire                icache_req;
-    wire                icache_miss_stall;
+    wire                icache_stall;
 
     dcache #(
         .ADDR_W(ADDR_W),
@@ -121,6 +121,7 @@ module core_tile #(
         .cpu_addr   (data_addr),
         .cpu_din    (data_wdata),
         .data_rdata (data_rdata),
+        .cache_busy (dcache_stall),
 
         // AW Channel
         .iAWREADY   (m_d_axi_awready),
@@ -201,9 +202,9 @@ module core_tile #(
         .data_valid (1'b1),
         .cpu_addr   (icache_addr),
         .data_rdata (imem_instr),
+        .cache_busy (icache_stall),
 
-        
-        // CHỈ NỐI KÊNH READ (AR, R)
+        // CHỈ N�?I KÊNH READ (AR, R)
         // AR Channel
         .iARREADY   (m_i_axi_arready),
         .oARID      (m_i_axi_arid),    // chưa biết như nào
@@ -230,20 +231,20 @@ module core_tile #(
         .rst_n      (rst_n),
 
         // dcache Interface
-        .data_rdata (data_rdata),
-        .data_req   (data_req),
-        .data_wr    (data_wr),
-        .data_size  (data_size),
-        .data_addr  (data_addr),
-        .data_wdata (data_wdata),
-        // .stall_i    (!dcache_valid_out), 
+        .data_rdata     (data_rdata),
+        .data_req       (data_req),
+        .data_wr        (data_wr),
+        .data_size      (data_size),
+        .data_addr      (data_addr),
+        .data_wdata     (data_wdata),
+        .dcache_stall   (dcache_stall),
+        
 
         // Icache Interface
         .imem_instr (imem_instr),
         .icache_req (icache_req),
-        .icache_addr(icache_addr)
-        // .stall_i    (!icache_valid_out) 
-
+        .icache_addr(icache_addr),
+        .icache_stall   (icache_stall)
     );
 
 endmodule

@@ -7,6 +7,7 @@ module RV32IMF #(
 
     // cpu <-> dcache
     input   [WIDTH_DATA-1:0]    data_rdata,
+    input                       dcache_stall,
     output                      data_req,
     output                      data_wr,
     output  [1:0]               data_size,
@@ -14,6 +15,7 @@ module RV32IMF #(
     output  [WIDTH_DATA - 1:0]  data_wdata,
 
     // cpu <-> icache
+    input                       icache_stall,
     input   [WIDTH_DATA - 1:0]  imem_instr,
     output                      icache_req,
     output  [WIDTH_ADDR - 1:0]  icache_addr,
@@ -100,7 +102,7 @@ module RV32IMF #(
             2'b01:        PCNext = F_Predict_Target;
             default:      PCNext = F_PCPlus4;
         endcase
-end
+    end
 
     // assign PCNext = (E_Mispredict)    ? E_Correct_PC :     // Ưu tiên 1: Sửa sai
     //                 (F_Predict_Taken) ? F_Predict_Target : // Ưu tiên 2: Dự đoán

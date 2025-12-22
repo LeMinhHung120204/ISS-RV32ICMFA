@@ -26,6 +26,7 @@ module dcache #(
 
     output  reg [DATA_W-1:0]    data_rdata,
     output                      cpu_hit,
+    output                      cache_busy,
 
     // (cache <-> cache L2)
     // AW channel 
@@ -173,7 +174,7 @@ module dcache #(
     wire        data_we;
     wire        main_tag_we, snoop_tag_we, tag_we;
     wire        refill_we;
-    wire        cache_busy;
+    // wire        cache_busy;
     wire        is_shared_response;
     wire        is_dirty_response;
     wire        wb_error;

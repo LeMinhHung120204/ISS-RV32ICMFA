@@ -93,7 +93,7 @@ module MainDecoder(
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;
                 MDUOp           = 1'b0;
-                AtomicOp        = 1'b0;  // ATOMIC
+//                AtomicOp        = 1'b0;  // ATOMIC
             end 
             7'b0110011: begin           // R-type, M-extension
                 case(funct7[0])
