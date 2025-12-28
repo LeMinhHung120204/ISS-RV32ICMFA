@@ -30,7 +30,7 @@
                     wptr <= wptr + 1;
                 end
                 if (pop && !empty) begin
-                    dout <= mem[rptr];
+                    // dout <= mem[rptr];
                     rptr <= rptr + 1;
                 end
             end
@@ -39,5 +39,5 @@
         //VD: wptr = 1000 (da quay vong), rptr = 0000 -> Full
         assign full     = (wptr[ADDR_W] != rptr[ADDR_W]) && (wptr[ADDR_W-1:0] == rptr[ADDR_W-1:0]);
         assign empty    = (wptr == rptr);
-        assign dout     = mem[rptr];
+        assign dout     = mem[rptr[ADDR_W-1:0]];
     endmodule 

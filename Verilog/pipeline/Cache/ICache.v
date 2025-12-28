@@ -9,6 +9,7 @@ module icache #(
     parameter BYTE_OFF_W    = 2,  // 4B/word
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
+    parameter CORE_ID       = 1'b0, // 0: core 0, 1: core 1
 
     parameter ID_W          = 2,    // ICACHE1: 2'b10, ICACHE2: 2'b11;
     parameter USER_W        = 4,
@@ -105,7 +106,7 @@ module icache #(
             refill_buffer <= {CACHE_DATA_W{1'b0}};
         end 
         else begin
-            if (iRVALID & oRREADY) begin
+            if (iRVALID & oRREADY & (iRID == {1'b0, CORE_ID})) begin
                 refill_buffer <= {refill_buffer[479:0], iRDATA};
             end 
         end 
@@ -336,6 +337,7 @@ module icache #(
         .ID_W       (ID_W),
         .USER_W     (USER_W),
         .STRB_W     (STRB_W),
+        .CORE_ID    (CORE_ID),
         .BURST_LEN  (15)
     ) icache_controller(
         .clk            (ACLK),

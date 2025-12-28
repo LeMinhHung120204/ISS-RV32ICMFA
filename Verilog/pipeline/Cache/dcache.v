@@ -9,8 +9,9 @@ module dcache #(
     parameter BYTE_OFF_W    = 2,  // 4B/word
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
+    parameter CORE_ID       = 1'b0,    // 0: core 0, 1: core 1
 
-    parameter ID_W          = 2,    // ICACHE1: 2'b10, ICACHE2: 2'b11;
+    parameter ID_W          = 2,
     parameter USER_W        = 4,
     parameter STRB_W        = (DATA_W/8)
 
@@ -51,7 +52,7 @@ module dcache #(
     
     // W channel
     input                       iWREADY,
-    output  [ID_W-1:0]          oWID,
+    // output  [ID_W-1:0]          oWID,
     output reg  [DATA_W-1:0]    oWDATA,
     output  [STRB_W-1:0]        oWSTRB,
     output                      oWLAST,
@@ -190,8 +191,8 @@ module dcache #(
     wire [NUM_WAYS-1:0]     way_select;
 
     // ---------------------------------------- gan ID  ----------------------------------------
-//    assign oAWID    = {ID_W{1'b0}};
-//    assign oWID     = {ID_W{1'b0}};
+    assign oAWID    = {1'b1, CORE_ID};
+    assign oARID    = {1'b1, CORE_ID};
 
     // ---------------------------------------- check hit  ----------------------------------------
     wire [TAG_W-1:0]    tag_compare_input;
@@ -230,7 +231,7 @@ module dcache #(
             refill_buffer <= {CACHE_DATA_W{1'b0}};
         end 
         else begin
-            if (iRVALID & oRREADY) begin
+            if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
                 refill_buffer <= {refill_buffer[479:0], iRDATA};
             end 
         end 
@@ -579,6 +580,7 @@ module dcache #(
         .ID_W       (ID_W),
         .USER_W     (USER_W),
         .STRB_W     (STRB_W),
+        .CORE_ID    (CORE_ID),
         .BURST_LEN  (15)
     ) dcache_controller(
         .clk            (ACLK),
@@ -610,7 +612,7 @@ module dcache #(
 
         // cache <-> mem
         // AW channel
-        .oAWID           (oAWID    ),
+        // .oAWID           (oAWID    ),
         // oAWADDR         (oAWADDR  ),
         .oAWLEN          (oAWLEN   ),
         .oAWSIZE         (oAWSIZE  ),
@@ -630,7 +632,7 @@ module dcache #(
         .oAWUNIQUE      (oAWUNIQUE),
 
         // W channel
-        .oWID            (oWID   ),  
+        // .oWID            (oWID   ),  
         // oWDATA          (oWDATA ),
         .oWSTRB          (oWSTRB ),
         .oWLAST          (oWLAST ),
@@ -646,7 +648,7 @@ module dcache #(
         .oBREADY         (oBREADY),
 
         // AR channel
-        .oARID           (oARID   ),
+        // .oARID           (oARID   ),
         // oARADDR         (oARADDR ),
         .oARLEN          (oARLEN  ),
         .oARSIZE         (oARSIZE ),

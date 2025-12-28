@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 
 module core_tile #(
-    parameter CORE_ID   = 0,
+    parameter CORE_ID   = 1'b0,
     parameter ID_W      = 2,
     parameter ADDR_W    = 32,
     parameter DATA_W    = 32
@@ -108,9 +108,17 @@ module core_tile #(
     wire                icache_req;
     wire                icache_stall;
 
+    /*
+    icache: ID = 2'b0x 
+    dcache: ID = 2'b1x
+    core0:  ID = 2'bx0
+    core1:  ID = 2'bx1
+    */
+
     dcache #(
-        .ADDR_W(ADDR_W),
-        .DATA_W(DATA_W)
+        .ADDR_W (ADDR_W),
+        .DATA_W (DATA_W),
+        .CORE_ID(CORE_ID)
     ) u_dcache (
         .ACLK       (clk),
         .ARESETn    (rst_n),
@@ -136,14 +144,13 @@ module core_tile #(
         
         // W Channel
         .iWREADY    (m_d_axi_wready),
-        .oWID       (m_d_axi_wid),      // chưa biết như nào
         .oWDATA     (m_d_axi_wdata),
         .oWSTRB     (m_d_axi_wstrb),
         .oWLAST     (m_d_axi_wlast),
         .oWVALID    (m_d_axi_wvalid),
 
         // B Channel
-        .iBID       (m_d_axi_bid),
+        .iBID       (m_d_axi_bid),      // chưa biết như nào
         .iBRESP     (m_d_axi_bresp),
         .iBVALID    (m_d_axi_bvalid),
         .oBREADY    (m_d_axi_bready),
@@ -158,7 +165,7 @@ module core_tile #(
         .oARVALID   (m_d_axi_arvalid),
 
         // R Channel
-        .iRID       (m_d_axi_rid),
+        .iRID       (m_d_axi_rid),      // // chưa biết như nào
         .iRDATA     (m_d_axi_rdata),
         .iRRESP     (m_d_axi_rresp),
         .iRLAST     (m_d_axi_rlast),
@@ -193,8 +200,9 @@ module core_tile #(
     );
 
     icache #(
-        .ADDR_W(ADDR_W),
-        .DATA_W(DATA_W)
+        .ADDR_W (ADDR_W),
+        .DATA_W (DATA_W),
+        .CORE_ID(CORE_ID)
     ) u_icache (
         .ACLK       (clk),
         .ARESETn    (rst_n),

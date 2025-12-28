@@ -5,6 +5,7 @@ module icache_controller #(
     parameter ID_W      = 2,    
     parameter USER_W    = 4,
     parameter STRB_W    = (DATA_W/8),
+    parameter CORE_ID   = 1'b0,
     parameter BURST_LEN = 15
 )(
     input           clk, rst_n,
@@ -109,7 +110,7 @@ module icache_controller #(
             end 
             
             ALLOC_R: begin  
-                if (iRVALID & iRLAST) begin
+                if (iRVALID & iRLAST & (iRID == {1'b0, CORE_ID})) begin
                     next_state = UPDATE;     
                 end 
                 else begin

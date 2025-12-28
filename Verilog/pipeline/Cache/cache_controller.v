@@ -5,7 +5,8 @@ module cache_controller #(
     parameter ID_W      = 2,    
     parameter USER_W    = 4,
     parameter STRB_W    = (DATA_W/8),
-    parameter BURST_LEN = 15
+    parameter BURST_LEN = 15,
+    parameter CORE_ID   = 1'b0  // 0: core 0, 1: core 1
 )(
     input           clk, rst_n,
 
@@ -41,7 +42,7 @@ module cache_controller #(
 
     // cache <-> mem
     // AW channel
-    output      [ID_W-1:0]      oAWID,
+    // output      [ID_W-1:0]      oAWID,
     // output      [ADDR_W-1:0]    oAWADDR,
     output      [7:0]           oAWLEN,
     output      [2:0]           oAWSIZE,
@@ -61,7 +62,7 @@ module cache_controller #(
     output                      oAWUNIQUE,
 
     // W channel
-    output      [ID_W-1:0]      oWID,       // chua biet gan sao
+    // output      [ID_W-1:0]      oWID,       // chua biet gan sao
     // output      [DATA_W-1:0]    oWDATA,
     output  reg [STRB_W-1:0]    oWSTRB,
     output  reg                 oWLAST,
@@ -77,7 +78,7 @@ module cache_controller #(
     output  reg                 oBREADY,
 
     // AR channel
-    output      [ID_W-1:0]      oARID,
+    // output      [ID_W-1:0]      oARID,
     // output      [ADDR_W-1:0]    oARADDR,
     output      [7:0]           oARLEN,
     output      [2:0]           oARSIZE,
@@ -146,9 +147,9 @@ module cache_controller #(
     assign oARSIZE      = 3'd2;
     assign oARBURST     = 2'b01;    // INCR
     
-    assign oARID        = {ID_W{1'b0}};
-    assign oWID         = {ID_W{1'b0}};
-    assign oAWID        = {ID_W{1'b0}};
+    // assign oARID        = {ID_W{1'b0}};
+    // assign oWID         = {ID_W{1'b0}};
+    // assign oAWID        = {ID_W{1'b0}};
     
     // ACE Constants
     assign oARDOMAIN    = 2'b01; // Inner Shareable
@@ -233,7 +234,7 @@ module cache_controller #(
                 next_state = (iWREADY & (burst_cnt == BURST_LEN)) ? WB_B : WB_W;
             end 
             WB_B: begin
-                if (iBVALID) begin
+                if (iBVALID & ({1'b1, CORE_ID} == iBID)) begin
                     next_state = (iBRESP[1]) ? FAULT : ALLOC_AR;
                 end 
                 else begin
@@ -242,7 +243,7 @@ module cache_controller #(
             end 
 
             FAULT: begin
-                next_state = FAULT;
+                next_state = WB_W;  // sau khi xu ly loi thi quay lai write back
             end
 
             // --- Allocation ---
@@ -250,10 +251,11 @@ module cache_controller #(
                 next_state = (iARREADY) ? ALLOC_R : ALLOC_AR;
             end 
             ALLOC_R: begin  // ghi data vao buffer
-                if (iRVALID & iRLAST) begin
-                    if (snoop_busy) begin
+                if (iRVALID & (iRID == {1'b1, CORE_ID}) & iRLAST) begin
+                    if (snoop_busy) begin                        
                         next_state = WAIT_SNOOP;
-                    end else begin
+                    end
+                    else begin
                         next_state = UPDATE;     
                     end
                 end 
