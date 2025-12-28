@@ -15,7 +15,7 @@ module DataMem_wrapper #(
     input [2:0]         i_axi_awsize,
     input [1:0]         i_axi_awburst,
     input               i_axi_awvalid,
-    output              0_axi_awready,
+    output              o_axi_awready,
     
     // W Channel
     output              o_axi_wready,
@@ -49,7 +49,7 @@ module DataMem_wrapper #(
 );  
     // ---------------------------------------- FIFO Width Definitions ----------------------------------------
     localparam FF_AW_W = DATA_W + ID_W + 8 + 3 + 2;     // AW: ADDR + ID + LEN + SIZE + BURST
-    localparam FF_W_W  = DATA_W + ID_W + STRB_W + 1;    // W: DATA + ID + STRB + LAST
+    localparam FF_W_W  = DATA_W + STRB_W + 1;           // W: DATA + STRB + LAST
     localparam FF_B_W  = ID_W + 2;                      // B: ID + RESP
     localparam FF_AR_W = DATA_W + ID_W + 8 + 3 + 2;     // AR: ADDR + ID + LEN + SIZE + BURST
     localparam FF_R_W  = DATA_W + ID_W + 2 + 1;         // R: DATA + ID + RESP + LAST
@@ -88,8 +88,7 @@ module DataMem_wrapper #(
 
     // W FIFO
     wire [DATA_W-1:0] fifo_wdata   = fifo_w_dout[FF_W_W-1 -: DATA_W];
-    // wire [ID_W-1:0] fifo_wid    (Not used in AXI4 write data channel usually)
-    wire [STRB_W-1:0] fifo_wstrb   = fifo_w_dout[FF_W_W-1 - DATA_W - ID_W -: STRB_W];
+    wire [STRB_W-1:0] fifo_wstrb   = fifo_w_dout[FF_W_W-1 - DATA_W  -: STRB_W];
     wire              fifo_wlast   = fifo_w_dout[0];
 
     // AR FIFO
@@ -102,7 +101,7 @@ module DataMem_wrapper #(
     // ---------------------------------------- LOGIC dieu khien ----------------------------------------
 
     // AXI OUTPUT ASSIGNMENTS
-    assign 0_axi_awready = ~fifo_aw_full;
+    assign o_axi_awready = ~fifo_aw_full;
     assign o_axi_wready  = ~fifo_w_full;
     assign o_axi_arready = ~fifo_ar_full;
 
@@ -130,8 +129,8 @@ module DataMem_wrapper #(
     // Push B_FIFO: Khi burst write xong.
     assign fifo_b_push      = write_burst_done & ~fifo_b_full;
     
-    // Pop AW_FIFO: CHỈ POP khi đã push xong Response vào B_FIFO
-    // Lý do: Cần giữ AWID ở đầu ra FIFO cho đến giây phút cuối cùng để đưa vào B_FIFO
+    // Pop AW_FIFO: CHi POP khi đa push xong Response vao B_FIFO
+    // Ly do: Can giu AWID o dau ra FIFO cho den giay phut cuoi cung de dua vao B_FIFO
     assign fifo_aw_pop      = fifo_b_push; 
     assign fifo_b_pop       = i_axi_bready & ~fifo_b_empty;
 
@@ -139,8 +138,8 @@ module DataMem_wrapper #(
     // ---------------------------------------- READ PATH ----------------------------------------
     assign fifo_r_push   = ctrl_r_valid & ~fifo_r_full;
 
-    // Pop AR_FIFO: CHỈ POP khi đã push beat CUỐI CÙNG (rlast) vào R_FIFO
-    // Lý do: Cần giữ ARID để gắn vào mọi beat dữ liệu trả về
+    // Pop AR_FIFO: CHi POP khi đa push beat cuoi cung (rlast) vao R_FIFO
+    // Ly do: Can giu ARID de gan vao moi beat du lieu tra ve?
     assign fifo_ar_pop   = fifo_r_push && ctrl_r_last;
     assign fifo_r_pop    = i_axi_rready & ~fifo_r_empty;
 
@@ -185,7 +184,7 @@ module DataMem_wrapper #(
         .araddr     (fifo_araddr),
 
         // R Channel Control
-        .rready     (~fifo_r_full), // R_FIFO con cha thi cu doc
+        .rready     (~fifo_r_full), // R_FIFO con cho thi cu doc
         .rlast      (ctrl_r_last), 
         .rvalid     (ctrl_r_valid),
         
@@ -234,7 +233,7 @@ module DataMem_wrapper #(
         .rst_n  (ARESETn),
         .push   (fifo_w_push), 
         .pop    (fifo_w_pop),
-        .din    ({i_axi_wdata, i_axi_wid, i_axi_wstrb, i_axi_wlast}),
+        .din    ({i_axi_wdata, i_axi_wstrb, i_axi_wlast}),
         .empty  (fifo_w_empty), 
         .full   (fifo_w_full), 
         .dout   (fifo_w_dout)

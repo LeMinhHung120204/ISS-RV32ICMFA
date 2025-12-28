@@ -1,13 +1,12 @@
 `timescale 1ns/1ps
-
 module core_tile #(
     parameter CORE_ID   = 1'b0,
     parameter ID_W      = 2,
     parameter ADDR_W    = 32,
     parameter DATA_W    = 32
 )(
-    input   clk,
-    input   rst_n,
+    input   ACLK,
+    input   ARESETn,
 
     // DATA CACHE INTERFACE (AXI4 Full + ACE)
     // AW Channel
@@ -120,8 +119,8 @@ module core_tile #(
         .DATA_W (DATA_W),
         .CORE_ID(CORE_ID)
     ) u_dcache (
-        .ACLK       (clk),
-        .ARESETn    (rst_n),
+        .ACLK       (ACLK),
+        .ARESETn    (ARESETn),
 
          // CPU Interface
         .cpu_req    (data_req),
@@ -204,8 +203,8 @@ module core_tile #(
         .DATA_W (DATA_W),
         .CORE_ID(CORE_ID)
     ) u_icache (
-        .ACLK       (clk),
-        .ARESETn    (rst_n),
+        .ACLK       (ACLK),
+        .ARESETn    (ARESETn),
 
         // CPU Interface
         .cpu_req    (icache_req),
@@ -237,8 +236,8 @@ module core_tile #(
         .WIDTH_ADDR (32),
         .WIDTH_DATA (32)
     ) u_RV32IMF (
-        .clk        (clk),
-        .rst_n      (rst_n),
+        .ACLK        (ACLK),
+        .ARESETn      (ARESETn),
 
         // dcache Interface
         .data_rdata     (data_rdata),

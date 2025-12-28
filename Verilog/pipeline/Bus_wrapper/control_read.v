@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module control_read #(
     parameter DATA_W = 32
 )(

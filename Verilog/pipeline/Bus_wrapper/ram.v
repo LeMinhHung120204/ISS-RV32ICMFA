@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module ram #(
     DATA_W = 32,
     ADDR_W = 8
@@ -5,9 +6,9 @@ module ram #(
     input clk, rst_n,
     input we,
     input re,
-    input [DATA_W-1:0] w_addr,
-    input [ADDR_W-1:0] r_addr,
-    input [DATA_W-1:0] w_data,
+    input [ADDR_W-1:0]  w_addr,
+    input [ADDR_W-1:0]  r_addr,
+    input [DATA_W-1:0]  w_data,
     output [DATA_W-1:0] r_data
 );
 
