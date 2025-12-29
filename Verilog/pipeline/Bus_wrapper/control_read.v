@@ -2,33 +2,34 @@
 module control_read #(
     parameter DATA_W = 32
 )(
-    input                       clk,
-    input                       rst_n,
+    input                               clk,
+    input                               rst_n,
     
     // AR Channel
-    input                       arvalid,
-    output reg                  arready,
-    input       [1:0]           arburst,
-    input       [2:0]           arsize,
-    input       [7:0]           arlen,
-    input       [DATA_W-1:0]    araddr,
+    input                               arvalid,
+    output reg                          arready,
+    input       [1:0]                   arburst,
+    input       [2:0]                   arsize,
+    input       [7:0]                   arlen,
+    input       [DATA_W-1:0]            araddr,
     
     // R Channel 
-    input                       rready,
-    output                      rlast,
-    output reg                  rvalid,
+    input                               fifo_r_push_able,
+    input                               fifo_r_pop_able,
+    input                               rvalid_from_mem,
+    output reg                          last_data_from_mem,
 
     // Memory Interface
-    output      [DATA_W-1:0]    r_addr,
-    output reg                  read_en
+    output      [DATA_W-1:0]            r_addr,
+    output reg                          read_en
 );
 
     localparam IDLE = 1'd0;
     localparam READ = 1'd1;
 
-    reg             state, next_state;
-    reg [7:0]       read_count;     
-    reg [DATA_W-1:0] reg_addr;
+    reg                 state, next_state;
+    reg [7:0]           count_addr, read_count;     
+    reg [DATA_W-1:0]    reg_addr;
 
     // Registers to latch Control info
     reg [1:0]       reg_arburst;
@@ -51,29 +52,21 @@ module control_read #(
         end
     end
 
-    // ---------------------------------------- DATA PATH ----------------------------------------
+    // ---------------------------------------- tinh address de doc data tu mem ----------------------------------------
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state       <= IDLE;
             reg_addr    <= {DATA_W{1'b0}};
-            read_count  <= 8'd0;
+            count_addr  <= 8'd0;
             reg_arburst <= 2'b00;
             reg_arsize  <= 3'b00;
             reg_arlen   <= 8'd0;
-            rvalid      <= 1'b0;
         end 
         else begin
             state <= next_state;
-            if (next_state == READ) begin 
-                rvalid <= 1'b1;
-            end
-            else begin                    
-                rvalid <= 1'b0;
-            end 
-
             case(state)
                 IDLE: begin
-                    read_count <= 8'd0;
+                    count_addr <= 8'd0;
                     if (arvalid && arready) begin
                         reg_addr    <= araddr;
                         reg_arburst <= arburst;
@@ -83,19 +76,21 @@ module control_read #(
                 end
 
                 READ: begin
-                    if (rvalid && rready) begin
-                        if (read_count < reg_arlen) begin
-                             read_count <= read_count + 1'b1;
-
+                    if (fifo_r_push_able) begin
+                        if (count_addr < reg_arlen) begin
+                             count_addr <= count_addr + 1'b1;
                              case (reg_arburst) 
                                 2'b00: reg_addr <= reg_addr; // FIXED
-                                2'b01: reg_addr <= reg_addr + (1 << reg_arsize); // INCR
-                                2'b10: reg_addr <= reg_addr + (1 << reg_arsize); // WRAP
+                                // 2'b01: reg_addr <= reg_addr + (1 << reg_arsize); // INCR
+                                // 2'b10: reg_addr <= reg_addr + (1 << reg_arsize); // WRAP
+                                
+                                2'b01: reg_addr <= reg_addr + 1'b1; // INCR
+                                2'b10: reg_addr <= reg_addr + 1'b1; // WRAP
                                 default: reg_addr <= reg_addr + (1 << reg_arsize);
                             endcase
                         end
                         else begin
-                            read_count <= 8'd0;
+                            count_addr <= 8'd0;
                         end
                     end
                 end
@@ -104,8 +99,29 @@ module control_read #(
     end
     
     // ---------------------------------------- OUTPUT ----------------------------------------
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            read_count <= 8'd0;
+            last_data_from_mem <= 1'b0;
+        end 
+        else begin
+            // Revision 1.1: Register output to match RAM latency
+            last_data_from_mem <= (count_addr == reg_arlen);
+
+            if (fifo_r_pop_able) begin
+                if (read_count < reg_arlen) begin
+                    read_count <= read_count + 1'b1;
+                end
+                else begin
+                    read_count <= 8'd0;
+                end
+            end
+        end
+    end
+
     assign r_addr = reg_addr;
-    assign rlast  = (read_count == reg_arlen) && rvalid; 
+
 
     // ---------------------------------------- FSM ----------------------------------------
     always @(*) begin
@@ -122,7 +138,7 @@ module control_read #(
             
             READ: begin
                 read_en = 1'b1;  
-                if (rlast && rready) begin 
+                if ((count_addr == reg_arlen) && fifo_r_push_able) begin 
                     next_state = IDLE; 
                 end 
                 else begin                 

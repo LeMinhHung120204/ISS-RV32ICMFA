@@ -72,11 +72,12 @@ module DataMem_wrapper #(
     wire                    core_write_en, core_read_en;
     wire [DATA_W-1:0]       cnt_addr_write, cnt_addr_read;
     wire [DATA_W-1:0]       ram_r_data;
+    wire                    rvalid_from_mem;
+    wire                    last_data_from_mem;
     
     // Signals from control modules
     wire                    ctrl_w_ready;
-    wire                    ctrl_r_valid;
-    wire                    ctrl_r_last; 
+    // wire                    ctrl_r_last; 
     
     // ---------------------------------------- Unpack FIFOs (Tach day) ----------------------------------------
     // AW FIFO
@@ -88,7 +89,7 @@ module DataMem_wrapper #(
 
     // W FIFO
     wire [DATA_W-1:0] fifo_wdata   = fifo_w_dout[FF_W_W-1 -: DATA_W];
-    wire [STRB_W-1:0] fifo_wstrb   = fifo_w_dout[FF_W_W-1 - DATA_W  -: STRB_W];
+    wire [STRB_W-1:0] fifo_wstrb   = fifo_w_dout[FF_W_W-1 - DATA_W  -: STRB_W]; // chua dung
     wire              fifo_wlast   = fifo_w_dout[0];
 
     // AR FIFO
@@ -136,13 +137,12 @@ module DataMem_wrapper #(
 
 
     // ---------------------------------------- READ PATH ----------------------------------------
-    assign fifo_r_push   = ctrl_r_valid & ~fifo_r_full;
+    assign fifo_r_push   = rvalid_from_mem & ~fifo_r_full;
 
-    // Pop AR_FIFO: CHi POP khi đa push beat cuoi cung (rlast) vao R_FIFO
+    // Pop AR_FIFO: CHi POP khi đa push beat cuoi cung vao R_FIFO
     // Ly do: Can giu ARID de gan vao moi beat du lieu tra ve?
-    assign fifo_ar_pop   = fifo_r_push && ctrl_r_last;
+    assign fifo_ar_pop   = fifo_r_push && last_data_from_mem;
     assign fifo_r_pop    = i_axi_rready & ~fifo_r_empty;
-
 
     // ----------------------------------------- INSTANTIATE MODULES -----------------------------------------
     control_write #(
@@ -183,13 +183,14 @@ module DataMem_wrapper #(
         .arlen      (fifo_arlen),
         .araddr     (fifo_araddr),
 
-        // R Channel Control
-        .rready     (~fifo_r_full), // R_FIFO con cho thi cu doc
-        .rlast      (ctrl_r_last), 
-        .rvalid     (ctrl_r_valid),
+        .fifo_r_push_able   (~fifo_r_full),     // R_FIFO con' cho~ thi cu doc tu mem ra fifo
+        .fifo_r_pop_able    (~fifo_r_empty),    // R_FIFO con' data thi moi doc tu fifo ra AXI
         
-        .r_addr     (cnt_addr_read),
-        .read_en    (core_read_en)          
+        // Memory Interface
+        .r_addr             (cnt_addr_read),
+        .read_en            (core_read_en),
+        .rvalid_from_mem    (rvalid_from_mem),
+        .last_data_from_mem (last_data_from_mem)
     );
 
     ram #(
@@ -207,7 +208,8 @@ module DataMem_wrapper #(
         // Port B: Read
         .re         (core_read_en),   
         .r_addr     (cnt_addr_read[WIDTH_ADDR-1:0]),
-        .r_data     (ram_r_data)
+        .r_data     (ram_r_data),
+        .valid      (rvalid_from_mem)
     );
 
     // ----------------------------------------- INSTANTIATE FIFOs -----------------------------------------
@@ -275,8 +277,9 @@ module DataMem_wrapper #(
         .clk    (ACLK), 
         .rst_n  (ARESETn),
         .push   (fifo_r_push), 
+        // .push   (reg_fifo_r_push), 
         .pop    (fifo_r_pop),
-        .din    ({ram_r_data, fifo_arid, 2'b00, ctrl_r_last}),
+        .din    ({ram_r_data, fifo_arid, 2'b00, last_data_from_mem}),
         .empty  (fifo_r_empty), 
         .full   (fifo_r_full), 
         .dout   (fifo_r_dout)

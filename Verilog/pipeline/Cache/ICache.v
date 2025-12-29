@@ -107,7 +107,7 @@ module icache #(
         end 
         else begin
             if (iRVALID & oRREADY & (iRID == {1'b0, CORE_ID})) begin
-                refill_buffer <= {refill_buffer[479:0], iRDATA};
+                refill_buffer <= {iRDATA, refill_buffer[511:32]};
             end 
         end 
     end 

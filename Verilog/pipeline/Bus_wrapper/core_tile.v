@@ -213,7 +213,6 @@ module core_tile #(
         .data_rdata (imem_instr),
         .cache_busy (icache_stall),
 
-        // CHỈ N�?I KÊNH READ (AR, R)
         // AR Channel
         .iARREADY   (m_i_axi_arready),
         .oARID      (m_i_axi_arid),    // chưa biết như nào
@@ -236,8 +235,8 @@ module core_tile #(
         .WIDTH_ADDR (32),
         .WIDTH_DATA (32)
     ) u_RV32IMF (
-        .ACLK        (ACLK),
-        .ARESETn      (ARESETn),
+        .clk            (ACLK),
+        .rst_n          (ARESETn),
 
         // dcache Interface
         .data_rdata     (data_rdata),
@@ -248,7 +247,6 @@ module core_tile #(
         .data_wdata     (data_wdata),
         .dcache_stall   (dcache_stall),
         
-
         // Icache Interface
         .imem_instr (imem_instr),
         .icache_req (icache_req),

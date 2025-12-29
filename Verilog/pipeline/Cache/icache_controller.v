@@ -52,12 +52,12 @@ module icache_controller #(
     output  reg                 oRREADY
 );
 
-    localparam TAG_CHECK    = 4'd1;
-    localparam ALLOC_AR     = 4'd5;
-    localparam ALLOC_R      = 4'd6;
-    localparam UPDATE       = 4'd7;
+    localparam TAG_CHECK    = 3'd1;
+    localparam ALLOC_AR     = 3'd2;
+    localparam ALLOC_R      = 3'd3;
+    localparam UPDATE       = 3'd4;
 
-    reg [3:0] state, next_state;
+    reg [2:0] state, next_state;
 
     // --- AXI4 Constant Assignments ---
     assign oARID        = {ID_W{1'b0}};
