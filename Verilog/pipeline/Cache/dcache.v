@@ -612,8 +612,6 @@ module dcache #(
 
         // cache <-> mem
         // AW channel
-        // .oAWID           (oAWID    ),
-        // oAWADDR         (oAWADDR  ),
         .oAWLEN          (oAWLEN   ),
         .oAWSIZE         (oAWSIZE  ),
         .oAWBURST        (oAWBURST ),
@@ -632,8 +630,6 @@ module dcache #(
         .oAWUNIQUE      (oAWUNIQUE),
 
         // W channel
-        // .oWID            (oWID   ),  
-        // oWDATA          (oWDATA ),
         .oWSTRB          (oWSTRB ),
         .oWLAST          (oWLAST ),
         .oWUSER          (oWUSER ),
@@ -648,8 +644,6 @@ module dcache #(
         .oBREADY         (oBREADY),
 
         // AR channel
-        // .oARID           (oARID   ),
-        // oARADDR         (oARADDR ),
         .oARLEN          (oARLEN  ),
         .oARSIZE         (oARSIZE ),
         .oARBURST        (oARBURST),
@@ -667,7 +661,6 @@ module dcache #(
 
         // R channel
         .iRID            (iRID   ),  
-        // iRDATA          (iRDATA ),
         .iRRESP          (iRRESP ),
         .iRLAST          (iRLAST ),
         .iRUSER          (iRUSER ),

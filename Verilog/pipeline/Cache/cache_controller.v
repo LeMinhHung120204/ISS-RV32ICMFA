@@ -313,8 +313,8 @@ module cache_controller #(
             // end 
             TAG_CHECK: begin
                 snoop_can_access_ram    = 1'b0;
+                cache_busy              = 1'b0;
                 if (hit & (~need_upgrade)) begin
-                    cache_busy = 1'b0;
                     plru_we    = 1'b1;
                     if (cpu_we) begin
                         // tag_we      = 1'b1;

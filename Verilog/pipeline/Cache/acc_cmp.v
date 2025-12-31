@@ -1,0 +1,83 @@
+`timescale 1ns/1ps
+
+module acc_cmp #(
+    parameter ADDR_W        = 32,
+    parameter DATA_W        = 32,
+    parameter NUM_SETS      = 16,
+    parameter INDEX_W       = $clog2(NUM_SETS),
+    parameter WORD_OFF_W    = 4,  // 16 words/line
+    parameter BYTE_OFF_W    = 2,  // 4B/word
+    parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
+)(
+    input                       clk,
+    input                       rst_n,
+    input                       stall,
+    input                       flush,
+    input                       s1_req,    
+    input                       s1_we,      
+    input  [1:0]                s1_size,    
+    input  [DATA_W-1:0]         s1_wdata,  
+    input  [TAG_W-1:0]          s1_tag,    
+    input  [INDEX_W-1:0]        s1_index,   
+    input  [WORD_OFF_W-1:0]     s1_word_off,
+    input  [BYTE_OFF_W-1:0]     s1_byte_off,
+
+    input   [TAG_W-1:0]         s1_snoop_tag,
+    input   [INDEX_W-1:0]       s1_snoop_index,
+
+    output reg                  s2_req,
+    output reg                  s2_we,
+    output reg [1:0]            s2_size,
+    output reg [DATA_W-1:0]     s2_wdata,
+    output reg [TAG_W-1:0]      s2_tag,
+    output reg [INDEX_W-1:0]    s2_index,
+    output reg [WORD_OFF_W-1:0] s2_word_off,
+    output reg [BYTE_OFF_W-1:0] s2_byte_off,
+
+    output reg [TAG_W-1:0]        s2_snoop_tag,
+    output reg [INDEX_W-1:0]      s2_snoop_index
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            s2_req          <= 1'b0;
+            s2_we           <= 1'b0;
+            s2_size         <= 2'b00;
+            s2_wdata        <= {DATA_W{1'b0}};
+            s2_tag          <= {TAG_W{1'b0}};
+            s2_index        <= {INDEX_W{1'b0}};
+            s2_word_off     <= {WORD_OFF_W{1'b0}};
+            s2_byte_off     <= {BYTE_OFF_W{1'b0}};
+            s2_snoop_tag    <= {TAG_W{1'b0}};
+            s2_snoop_index  <= {INDEX_W{1'b0}};
+        end
+        else begin
+            if (flush) begin
+                s2_req          <= 1'b0;
+                s2_we           <= 1'b0;
+                s2_size         <= 2'b00;
+                s2_wdata        <= {DATA_W{1'b0}};
+                s2_tag          <= {TAG_W{1'b0}};
+                s2_index        <= {INDEX_W{1'b0}};
+                s2_word_off     <= {WORD_OFF_W{1'b0}};
+                s2_byte_off     <= {BYTE_OFF_W{1'b0}};
+                s2_snoop_tag    <= {TAG_W{1'b0}};
+                s2_snoop_index  <= {INDEX_W{1'b0}};
+            end 
+            else if (~stall) begin
+                s2_req          <= s1_req;
+                s2_we           <= s1_we;
+                s2_size         <= s1_size;
+                s2_wdata        <= s1_wdata;
+                s2_tag          <= s1_tag;
+                s2_index        <= s1_index;
+                s2_word_off     <= s1_word_off;
+                s2_byte_off     <= s1_byte_off;            
+                s2_snoop_tag    <= s1_snoop_tag;
+                s2_snoop_index  <= s1_snoop_index;
+                
+            end
+        end
+
+    end 
+
+endmodule

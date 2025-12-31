@@ -114,7 +114,7 @@ module core_tile #(
     core1:  ID = 2'bx1
     */
 
-    dcache #(
+    dcache_v2 #(
         .ADDR_W (ADDR_W),
         .DATA_W (DATA_W),
         .CORE_ID(CORE_ID)
@@ -125,7 +125,7 @@ module core_tile #(
          // CPU Interface
         .cpu_req    (data_req),
         .cpu_size   (data_size),
-        .data_valid (1'b1),
+        // .data_valid (1'b1),
         .cpu_we     (data_wr),
         .cpu_addr   (data_addr),
         .cpu_din    (data_wdata),
@@ -198,7 +198,7 @@ module core_tile #(
         .oCDLAST    (m_ace_cdlast)
     );
 
-    icache #(
+    icache_v2 #(
         .ADDR_W (ADDR_W),
         .DATA_W (DATA_W),
         .CORE_ID(CORE_ID)
@@ -208,7 +208,7 @@ module core_tile #(
 
         // CPU Interface
         .cpu_req    (icache_req),
-        .data_valid (1'b1),
+        // .data_valid (1'b1),
         .cpu_addr   (icache_addr),
         .data_rdata (imem_instr),
         .cache_busy (icache_stall),

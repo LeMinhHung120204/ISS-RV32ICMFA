@@ -10,7 +10,7 @@ module tb_single_core;
     parameter ID_W       = 2;
     parameter ADDR_W     = 32;
     parameter DATA_W     = 32;
-    parameter RAM_ADDR_W = 4;
+    parameter RAM_ADDR_W = 5;
 
     reg ACLK;
     reg ARESETn;
