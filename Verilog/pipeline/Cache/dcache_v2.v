@@ -117,10 +117,6 @@ module dcache_v2 #(
     wire [INDEX_W-1:0]      s1_index;
     wire [WORD_OFF_W-1:0]   s1_word_off;
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
-    wire                    s1_req_wire;
-    wire                    s1_we_wire;
-    wire [1:0]              s1_size_wire;
-    wire [DATA_W-1:0]       s1_wdata_wire;
 
     wire                    s2_req;
     wire                    s2_we;
@@ -155,7 +151,7 @@ module dcache_v2 #(
     wire                    main_tag_we, snoop_tag_we, tag_we;
     wire                    refill_we;
     wire                    data_we;
-    
+
     reg  [CACHE_DATA_W-1:0] refill_buffer;
     wire [3:0]              burst_cnt;
     wire [3:0]              burst_cnt_snoop;
@@ -169,7 +165,7 @@ module dcache_v2 #(
         .DATA_W     (DATA_W),
         .NUM_SETS   (NUM_SETS)
     ) access_inst (
-        .cpu_addr      (cpu_addr),
+        .cpu_addr       (cpu_addr),
         
         .cpu_tag        (s1_tag),            
         .cpu_index      (s1_index),   
@@ -245,10 +241,10 @@ module dcache_v2 #(
         .flush          (pipeline_flush),
 
         // Stage 1
-        .s1_req         (s1_req_wire),    
-        .s1_we          (s1_we_wire),      
-        .s1_size        (s1_size_wire),    
-        .s1_wdata       (s1_wdata_wire),  
+        .s1_req         (cpu_req),    
+        .s1_we          (cpu_we),      
+        .s1_size        (cpu_size),    
+        .s1_wdata       (cpu_din),  
         .s1_tag         (s1_tag),    
         .s1_index       (s1_index),   
         .s1_word_off    (s1_word_off),
@@ -335,7 +331,7 @@ module dcache_v2 #(
             if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
                 refill_buffer <= {iRDATA, refill_buffer[CACHE_DATA_W - DATA_W : DATA_W]};
             end 
-            if (~any_hit & s2_req & ~cache_busy)
+            if (~any_hit & s2_req)
                 reg_way_select <= way_select;
         end 
     end 

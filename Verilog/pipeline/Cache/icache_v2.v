@@ -25,6 +25,7 @@ module icache_v2 #(
     output   [DATA_W-1:0]       data_rdata,
     output                      cpu_hit,
     output                      cache_busy,
+    output                      pipeline_stall,
 
     // (cache <-> cache L2) - AXI Read Only
     // AR channel
@@ -50,7 +51,6 @@ module icache_v2 #(
     wire [INDEX_W-1:0]      s1_index;
     wire [WORD_OFF_W-1:0]   s1_word_off;
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
-    wire                    s1_req;
     
     // --- Stage 2 Signals ---
     wire [TAG_W-1:0]        s2_tag;
@@ -70,11 +70,12 @@ module icache_v2 #(
     wire                refill_we;
     wire                plru_we;
     wire                plru_src;
+    wire                index_src;
     wire [3:0]          cache_state;
     wire [3:0]          burst_cnt;
     wire [NUM_WAYS-1:0] way_select;
 
-    reg [NUM_WAYS-1:0]      reg_way_select;
+    // reg [NUM_WAYS-1:0]      reg_way_select;
     reg [CACHE_DATA_W-1:0]  refill_buffer;
     
     // Hit Logic
@@ -96,8 +97,8 @@ module icache_v2 #(
     );
 
     // ---------------------------------------- PIPELINE REGISTER (ACC_CMP) ----------------------------------------
-    wire pipeline_stall = cache_busy; 
-    wire pipeline_flush = 1'b0;
+    assign pipeline_stall   = s2_req & ~any_hit; 
+    wire pipeline_flush     = 1'b0;
 
     acc_cmp #(
         .ADDR_W     (ADDR_W),
@@ -110,7 +111,7 @@ module icache_v2 #(
         .flush          (pipeline_flush),
 
         // Stage 1
-        .s1_req         (s1_req),    
+        .s1_req         (cpu_req),    
         .s1_we          (1'b0),             // I-Cache khong dung write
         .s1_size        (2'b00),    
         .s1_wdata       ({DATA_W{1'b0}}),  
@@ -218,13 +219,18 @@ module icache_v2 #(
     // Mux dau ra
     reg [DATA_W-1:0] word_select;
     always @(*) begin
-        case(way_hit)
-            4'b0001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
-            4'b0010: word_select = data_read[1][s2_word_off * DATA_W +: DATA_W];
-            4'b0100: word_select = data_read[2][s2_word_off * DATA_W +: DATA_W];
-            4'b1000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
-            default: word_select = 32'd0;
-        endcase
+        if (index_src) begin
+            word_select = refill_buffer[s2_word_off * DATA_W +: DATA_W];
+        end 
+        else begin
+            case(way_hit)
+                4'b0001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
+                4'b0010: word_select = data_read[1][s2_word_off * DATA_W +: DATA_W];
+                4'b0100: word_select = data_read[2][s2_word_off * DATA_W +: DATA_W];
+                4'b1000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
+                default: word_select = 32'd0;
+            endcase
+        end 
     end 
     
     assign data_rdata = word_select;
@@ -233,14 +239,14 @@ module icache_v2 #(
     always @(posedge ACLK or negedge ARESETn) begin
         if (~ARESETn) begin
             refill_buffer   <= {CACHE_DATA_W{1'b0}};
-            reg_way_select  <= {NUM_WAYS{1'b0}};
+            // reg_way_select  <= {NUM_WAYS{1'b0}};
         end 
         else begin
             if (iRVALID & oRREADY & (iRID == {1'b0, CORE_ID})) begin
                 refill_buffer[burst_cnt * DATA_W +: DATA_W] <= iRDATA;
             end 
-            if (~any_hit & s2_req & ~cache_busy)
-                reg_way_select <= way_select;
+            // if (~any_hit & s2_req)
+            //     reg_way_select <= way_select;
         end 
     end 
 
@@ -251,9 +257,9 @@ module icache_v2 #(
     ) cache_replacement (
         .clk            (ACLK),
         .rst_n          (ARESETn),
-        .we             (plru_we),
+        .we             (any_hit),
 
-        .way_hit        ((plru_src) ? reg_way_select : way_hit), 
+        .way_hit        ((any_hit) ? way_hit : way_select), 
         .addr           (s2_index),
 
         .way_select     (way_select)
@@ -287,6 +293,7 @@ module icache_v2 #(
         .cache_busy     (cache_busy),
         .cache_state    (cache_state),
         .burst_cnt      (burst_cnt),
+        .index_src      (index_src),
 
         // AXI Read Channels
         .oARID          (oARID),

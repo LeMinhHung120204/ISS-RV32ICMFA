@@ -8,7 +8,6 @@ module access #(
     parameter BYTE_OFF_W    = 2,  // 4B/word
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
 )(
-    input clk, rst_n,
     input   [ADDR_W-1:0]        cpu_addr,
 
     output  [TAG_W-1:0]         cpu_tag,

@@ -211,7 +211,8 @@ module core_tile #(
         // .data_valid (1'b1),
         .cpu_addr   (icache_addr),
         .data_rdata (imem_instr),
-        .cache_busy (icache_stall),
+        // .cache_busy (icache_stall),
+        .pipeline_stall(icache_stall),
 
         // AR Channel
         .iARREADY   (m_i_axi_arready),

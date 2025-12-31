@@ -23,7 +23,8 @@ module icache_controller #(
     output  reg     valid_we, 
     
     output  reg     refill_we,
-    output  reg     cache_busy,         // 1: CPU stall, 0: CPU continue
+    output  reg     cache_busy,     // 1: CPU stall, 0: CPU continue
+    output  reg     index_src,      // 0: s1 index, 1: s2 index
     
     output  [3:0]   cache_state,
     output  reg [3:0]   burst_cnt,
@@ -56,6 +57,7 @@ module icache_controller #(
     localparam ALLOC_AR     = 3'd2;
     localparam ALLOC_R      = 3'd3;
     localparam UPDATE       = 3'd4;
+    localparam WAIT_RAM     = 3'd5;
 
     reg [2:0] state, next_state;
 
@@ -119,6 +121,10 @@ module icache_controller #(
             end 
 
             UPDATE: begin
+                next_state = WAIT_RAM;
+            end 
+
+            WAIT_RAM: begin
                 next_state = TAG_CHECK;
             end 
 
@@ -135,14 +141,14 @@ module icache_controller #(
         refill_we   = 1'd0;
         valid_we    = 1'd0;
         plru_we     = 1'd0;
-        plru_src    = 1'b0;
-        
-        cache_busy  = 1'b1; // Mặc định báo bận để Stall CPU
+        plru_src    = 1'b0;        
+        index_src   = 1'b0; // Default lay s1 index
+        cache_busy  = 1'b1; // Default bao Stall CPU
 
         case(state)
             TAG_CHECK: begin
+                cache_busy = 1'b0;
                 if (hit) begin
-                    cache_busy = 1'b0;
                     plru_we    = 1'b1;
                 end 
             end 
@@ -161,6 +167,10 @@ module icache_controller #(
                 plru_we     = 1'b1; 
                 plru_src    = 1'b1; 
                 refill_we   = 1'b1; 
+            end 
+
+            WAIT_RAM: begin
+                index_src = 1'b1;
             end 
             
             default: begin

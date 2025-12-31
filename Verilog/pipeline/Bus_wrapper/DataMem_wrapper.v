@@ -215,7 +215,7 @@ module DataMem_wrapper #(
     // ----------------------------------------- INSTANTIATE FIFOs -----------------------------------------
     FIFO #(
         .DATA_W (FF_AW_W), 
-        .DEPTH  (4)
+        .DEPTH  (WIDTH_ADDR)
     ) u_AW_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -229,7 +229,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_W_W), 
-        .DEPTH  (16)
+        .DEPTH  (1 << WIDTH_ADDR)
     ) u_W_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -243,7 +243,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_B_W), 
-        .DEPTH  (4)
+        .DEPTH  (WIDTH_ADDR)
     ) u_B_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -258,7 +258,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_AR_W), 
-        .DEPTH  (4)
+        .DEPTH  (WIDTH_ADDR)
     ) u_AR_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -272,7 +272,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_R_W), 
-        .DEPTH  (16)
+        .DEPTH  (1 << WIDTH_ADDR)
     ) u_R_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),

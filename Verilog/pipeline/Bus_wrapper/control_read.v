@@ -106,8 +106,8 @@ module control_read #(
             last_data_from_mem <= 1'b0;
         end 
         else begin
-            // Revision 1.1: Register output to match RAM latency
-            last_data_from_mem <= (count_addr == reg_arlen);
+            if (state == READ)
+                last_data_from_mem <= (count_addr == reg_arlen);
 
             if (fifo_r_pop_able) begin
                 if (read_count < reg_arlen) begin
