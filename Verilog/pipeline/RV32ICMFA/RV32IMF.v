@@ -17,7 +17,9 @@ module RV32IMF #(
     // cpu <-> icache
     input                       icache_stall,
     input   [WIDTH_DATA - 1:0]  imem_instr,
+
     output                      icache_req,
+    output                      icache_flush,
     output  [WIDTH_ADDR - 1:0]  icache_addr,
 
     output  [WIDTH_DATA - 1:0]  W_Result_output
@@ -31,9 +33,14 @@ module RV32IMF #(
     wire [WIDTH_DATA - 1:0] E_RD1, E_RD2, E_RDF2, E_RD3;
     wire [WIDTH_DATA - 1:0] D_Instr, D_ImmExt;
     wire [WIDTH_DATA - 1:0] E_ImmExt, E_ALUResult;
-    wire [WIDTH_DATA - 1:0] M_Result, M_ReadData, M_ALUResult, M_WriteData, M_ImmExt;
-    wire [WIDTH_DATA - 1:0] W_ImmExt, W_ReadData, W_Result, WB_Result;
-    wire [4:0]              E_rs1, E_rs2, E_rd, E_RsF3, M_rd, W_rd, A1, A2, A3, WD3;
+    wire [WIDTH_DATA - 1:0] M_Result, C_Result;
+    wire [WIDTH_DATA - 1:0] M_ReadData, M_ALUResult, M_WriteData;
+    wire [WIDTH_DATA - 1:0] M_ImmExt, C_ImmExt;
+    wire [WIDTH_DATA - 1:0] C_mux_result, C_ReadData;
+    wire [WIDTH_DATA - 1:0] W_ImmExt, W_ReadData, W_Result, WB_Result, W_mux_result;
+    wire [4:0]              E_rs1, E_rs2, E_rd, E_RsF3;
+    wire [4:0]              M_rd, C_rd, W_rd;
+    wire [4:0]              A1, A2, A3, WD3;
 
     wire [WIDTH_DATA - 1:0] E_SrcA, E_SrcB, E_SrcFA, E_SrcFB, E_SrcFC;
     wire [WIDTH_DATA - 1:0] E_WriteData;
@@ -44,12 +51,13 @@ module RV32IMF #(
     wire    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel,
             E_valid_MDU, E_FRegWrite, E_Valid_FPU, E_MDU_FPUEn, E_RegSrc1;
     wire    M_RegWrite, M_MemWrite, M_FRegWrite, M_ResPCSel, M_MDU_FPUEn;
+    wire    C_RegWrite, C_FRegWrite, C_MDU_FPUEn;
     wire    W_RegWrite, W_FRegWrite, W_MDU_FPUEn;
     wire    D_is_high, E_is_high;
     
     wire [4:0] D_FPUControl, E_FPUControl;
     wire [3:0] D_ALUControl, E_ALUControl;
-    wire [2:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, W_ResultSrc;
+    wire [2:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, C_ResultSrc, W_ResultSrc;
     wire [2:0] D_ImmSrc, E_funct3;
     wire [2:0] D_StoreSrc, E_StoreSrc, M_StoreSrc;
     wire [1:0] D_ResExSel, D_Mul_Div_unsigned, D_MulDivControl, E_Mul_Div_unsigned, E_MulDivControl, E_ResExSel, M_ResExSel;
@@ -63,17 +71,13 @@ module RV32IMF #(
     wire [WIDTH_DATA-1:0] E_FPUResult, M_FPUResult;
     // wire E_FPU_done, E_FPUStall;
 
-    // ----------------------- Tin hieu Hazard -----------------------
-    wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;
-    wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
-
     // ----------------------- Tin hieu PC -----------------------
     reg [WIDTH_ADDR - 1:0] PCNext;
-    wire [WIDTH_ADDR - 1:0] F_PC, F_PCPlus4;
-    wire [WIDTH_ADDR - 1:0] D_PC, D_PCPlus4;
-    wire [WIDTH_ADDR - 1:0] E_PC, E_PCPlus4, E_PCTarget, E_PCtmp;
-    wire [WIDTH_ADDR - 1:0] M_PCPlus4, M_ResPC, M_PCTarget;
-    wire [WIDTH_ADDR - 1:0] W_PCPlus4, W_ResPC;
+    wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC;
+    wire [WIDTH_ADDR - 1:0] F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4;
+    wire [WIDTH_ADDR - 1:0] E_PCtmp;
+    wire [WIDTH_ADDR - 1:0] M_ResPC, C_ResPC, W_ResPC;
+    wire [WIDTH_ADDR - 1:0] E_PCTarget, M_PCTarget;
 
     // ----------------------- Tin hieu Branch prediction -----------------------
     wire        F_Predict_Taken, D_Predict_Taken, E_Predict_Taken;  
@@ -84,7 +88,7 @@ module RV32IMF #(
     wire [31:0] E_Correct_PC;
     
 
-    assign W_Result_output  = WB_Result;
+    assign W_Result_output  = W_mux_result;
     
 
     // ---------------------------------------- Branch prediction ----------------------------------------
@@ -103,12 +107,6 @@ module RV32IMF #(
             default:      PCNext = F_PCPlus4;
         endcase
     end
-
-    // assign PCNext = (E_Mispredict)    ? E_Correct_PC :     // Ưu tiên 1: Sửa sai
-    //                 (F_Predict_Taken) ? F_Predict_Target : // Ưu tiên 2: Dự đoán
-    //                                     F_PCPlus4;         // Ưu tiên 3: Tuần tự
-
-    // assign PCNext           = (E_PCSrc == 1'b1) ? E_PCTarget : F_PCPlus4;
 
     BPU #(
         .W_ADDR(WIDTH_ADDR)
@@ -140,15 +138,20 @@ module RV32IMF #(
         .E_PCSrc        (E_PCSrc)
     );
     // ---------------------------------------- WB state ----------------------------------------
+    // ----------------------- Tin hieu Hazard -----------------------
+    wire F_Stall, D_Stall, E_Stall;
+    wire D_Flush, fetch_pipe_Flush, E_Flush;
+    wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
 
-    mux4_1 mux_W_Result (
-        .in0    (W_Result),
-        .in1    (W_ReadData),
-        .in2    (W_ResPC),
-        .in3    (W_ImmExt),
-        .sel    (W_ResultSrc[1:0]),
-        .res    (WB_Result)
-    );
+    assign icache_flush = fetch_pipe_Flush;
+    // mux4_1 mux_W_Result (
+    //     .in0    (W_Result),
+    //     .in1    (W_ReadData),
+    //     .in2    (W_ResPC),
+    //     .in3    (W_ImmExt),
+    //     .sel    (W_ResultSrc[1:0]),
+    //     .res    (WB_Result)
+    // );
 
     assign A1   = D_Instr[19:15];
     assign A2   = D_Instr[24:20];
@@ -172,22 +175,24 @@ module RV32IMF #(
         .E_Mispredict   (E_Mispredict),
         .M_RegWrite     (M_RegWrite),
         .M_FRegWrite    (M_FRegWrite),
+        .C_RegWrite     (C_RegWrite),
+        .C_FRegWrite    (C_FRegWrite),
         .M_Rd           (M_rd),
+        .C_Rd           (C_rd),
         .W_Rd           (W_rd),
         .W_RegWrite     (W_RegWrite),
         .W_FRegWrite    (W_FRegWrite),
         .W_MDU_FPUEn    (W_MDU_FPUEn),
         
-        .F_Stall        (F_Stall),
-        .D_Stall        (D_Stall),
-        .E_Stall        (E_Stall),
-        .D_Flush        (D_Flush),
-        .E_Flush        (E_Flush),
-        .ForwardAE      (ForwardAE),
-        .ForwardBE      (ForwardBE),
-        // .ForwardFAE(ForwardFAE),
-        // .ForwardFBE(ForwardFBE),
-        .ForwardFCE     (ForwardFCE)
+        .F_Stall            (F_Stall),
+        .D_Stall            (D_Stall),
+        .E_Stall            (E_Stall),
+        .D_Flush            (D_Flush),
+        .fetch_pipe_Flush   (fetch_pipe_Flush),
+        .E_Flush            (E_Flush),
+        .ForwardAE          (ForwardAE),
+        .ForwardBE          (ForwardBE),
+        .ForwardFCE         (ForwardFCE)
     );
 
     ControlUnit ControlUnit_ins(
@@ -219,9 +224,6 @@ module RV32IMF #(
         .data_req           (data_req)
     );
     // ---------------------------------------- IF state ----------------------------------------
-    assign icache_addr = F_PC;
-    assign icache_req  = rst_n;     // luon yeu canh lenh khi khong reset
-    assign F_RD        = imem_instr;
     PC PC_inst(
         .clk    (clk),
         .rst_n  (rst_n),
@@ -230,10 +232,39 @@ module RV32IMF #(
         .PC     (F_PC)
     );
 
+    // ---------------------------------------- CACHE CONNECTION ----------------------------------------
+    wire                    s2_Predict_Taken;
+    wire [2:0]              s2_GHSR         ;
+    wire [WIDTH_ADDR-1:0]   s2_PC           ;
+    wire [WIDTH_ADDR-1:0]   s2_PCPlus4      ;
+
+    assign icache_addr = F_PC;          // S1: dua di chi vao cache
+    assign icache_req  = rst_n;         // luon yeu canh lenh khi khong reset
+    assign F_RD        = imem_instr;    // S2: Du lieu tu cache tra ve
+
     // Ins_Mem instruction_memory(
     //     .addr       (F_PC),
     //     .instruction(F_RD)
     // );
+
+    fetch_pipe fetch_pipe_register (
+        .clk    (clk),
+        .rst_n  (rst_n),
+        .EN     (icache_stall),
+        .Flush  (fetch_pipe_Flush),
+
+        .s1_Predict_Taken   (F_Predict_Taken),
+        .s1_GHSR            (F_GHSR),
+        .s1_PC              (F_PC),
+        .s1_PCPlus4         (F_PCPlus4),
+
+        .s2_Predict_Taken   (s2_Predict_Taken),
+        .s2_GHSR            (s2_GHSR         ),
+        .s2_PC              (s2_PC           ),
+        .s2_PCPlus4         (s2_PCPlus4      )
+    );
+
+    // ---------------------------------------- IF/ID REGISTER (S2 -> Decode) ----------------------------------------
 
     IF_ID IF_ID_register(
         .clk                (clk),
@@ -241,10 +272,10 @@ module RV32IMF #(
         .EN                 (D_Stall),
         .D_Flush            (D_Flush),
         .F_RD               (F_RD),
-        .F_PC               (F_PC),
-        .F_PCPlus4          (F_PCPlus4),
-        .F_GHSR             (F_GHSR),
-        .F_Predict_Taken    (F_Predict_Taken),
+        .F_PC               (s2_PC),
+        .F_PCPlus4          (s2_PCPlus4),
+        .F_GHSR             (s2_GHSR),
+        .F_Predict_Taken    (s2_Predict_Taken),
 
         .D_Instr            (D_Instr),
         .D_PC               (D_PC),
@@ -261,7 +292,7 @@ module RV32IMF #(
         .rs1    (A1),
         .rs2    (A2),
         .rd     (W_rd),
-        .wd     (WB_Result),
+        .wd     (W_mux_result),
         .rd1    (RDX1),
         .rd2    (RDX2)
     );
@@ -274,7 +305,7 @@ module RV32IMF #(
         .rs2    (A2),
         .rs3    (A3),
         .rd     (W_rd),
-        .wd     (WB_Result),
+        .wd     (W_mux_result),
         .rd1    (RDF1),
         .rd2    (RDF2),
         .rd3    (RDF3)
@@ -425,45 +456,27 @@ module RV32IMF #(
 
     mux4_1 mux_ForwardAE (
         .in0    (E_RD1),
-        .in1    (WB_Result),
-        .in2    (M_Result),
-        .in3    (32'd0),
+        .in1    (M_Result),
+        .in2    (C_mux_result),
+        .in3    (W_mux_result),
         .sel    (ForwardAE),
         .res    (E_SrcA)
     );
 
     mux4_1 mux_ForwardBE (
         .in0    (E_RD2),
-        .in1    (WB_Result),
-        .in2    (M_Result),
-        .in3    (32'd0),
+        .in1    (M_Result),
+        .in2    (C_mux_result),
+        .in3    (W_mux_result),
         .sel    (ForwardBE),
         .res    (E_WriteData)
     );
 
-    // mux4_1 mux_ForwardFAE (
-    //     .in0(E_RD1),
-    //     .in1(WB_Result),
-    //     .in2(M_FPUResult),
-    //     .in3(M_XResult),
-    //     .sel(ForwardFAE),
-    //     .res(E_SrcFA)
-    // );
-
-    // mux4_1 mux_ForwardFBE (
-    //     .in0(E_RDF2),
-    //     .in1(WB_Result),
-    //     .in2(M_FPUResult),
-    //     .in3(32'd0),
-    //     .sel(ForwardFBE),
-    //     .res(E_SrcFB)
-    // );
-
     mux4_1 mux_ForwardFCE (
         .in0    (E_RD3),
-        .in1    (WB_Result),
-        .in2    (M_FPUResult),
-        .in3    (32'd0),
+        .in1    (M_FPUResult),
+        .in2    (C_mux_result),
+        .in3    (W_mux_result),
         .sel    (ForwardFCE),
         .res    (E_SrcFC)
     );
@@ -523,32 +536,9 @@ module RV32IMF #(
     assign data_size    = M_StoreSrc;
     assign data_addr    = M_ALUResult;
     assign data_wdata   = M_WriteData;
-    assign M_ReadData   = data_rdata;
+    assign C_ReadData   = data_rdata;
 
-    // DataMem data_memory(
-    //     .clk        (clk),
-    //     .rst_n      (rst_n),
-    //     .StoreSrc   (M_StoreSrc),
-    //     .MemWrite   (M_MemWrite),
-    //     .addr       (M_ALUResult),
-    //     .data_in    (M_WriteData),
-    //     .rd         (M_ReadData)
-    // );
-
-    // mux2_1 mux_XResult (
-    //     .in0(M_ALUResult),
-    //     .in1(M_MDUResult),
-    //     .sel(M_ResExSel[0]),
-    //     .res(M_XResult)
-    // );
-
-    // mux2_1 mux_Result (
-    //     .in0(M_XResult),
-    //     .in1(M_FPUResult),
-    //     .sel(M_ResExSel[1]),
-    //     .res(M_Result)
-    // );
-
+    // ---------------------------------------- Cache state ----------------------------------------
     mux4_1 mux_Result (
         .in0    (M_ALUResult),
         .in1    (M_MDUResult),
@@ -565,11 +555,11 @@ module RV32IMF #(
         .res    (M_ResPC)
     );
 
-    MEM_WB MEM_WB_register(
+    // thanh ghi pipeline trong cache 
+    MEM_CACHE MEM_CACHE_register(
         .clk            (clk),
         .rst_n          (rst_n),
         .M_Result       (M_Result),
-        .M_ReadData     (M_ReadData),
         .M_ImmExt       (M_ImmExt),
         .M_ResPC        (M_ResPC),
         .M_rd           (M_rd),
@@ -578,14 +568,58 @@ module RV32IMF #(
         .M_ResultSrc    (M_ResultSrc),
         .M_MDU_FPUEn    (M_MDU_FPUEn),
 
-        .W_Result       (W_Result),
-        .W_ReadData     (W_ReadData),
-        .W_ImmExt       (W_ImmExt),
-        .W_ResPC        (W_ResPC),
+        .C_Result       (C_Result),
+        .C_ImmExt       (C_ImmExt),
+        .C_ResPC        (C_ResPC),
+        .C_rd           (C_rd),
+        .C_RegWrite     (C_RegWrite),
+        .C_FRegWrite    (C_FRegWrite),
+        .C_ResultSrc    (C_ResultSrc),
+        .C_MDU_FPUEn    (C_MDU_FPUEn)
+    );
+
+    mux4_1 mux_C_Result (
+        .in0    (C_Result),
+        .in1    (C_ReadData),
+        .in2    (C_ResPC),
+        .in3    (C_ImmExt),
+        .sel    (C_ResultSrc[1:0]),
+        .res    (C_mux_result)
+    );
+
+    // DataMem data_memory(
+    //     .clk        (clk),
+    //     .rst_n      (rst_n),
+    //     .StoreSrc   (M_StoreSrc),
+    //     .MemWrite   (M_MemWrite),
+    //     .addr       (M_ALUResult),
+    //     .data_in    (M_WriteData),
+    //     .rd         (M_ReadData)
+    // );
+
+    MEM_WB MEM_WB_register(
+        .clk            (clk),
+        .rst_n          (rst_n),
+        // .M_Result       (C_Result),
+        // .M_ReadData     (C_ReadData),
+        // .M_ImmExt       (C_ImmExt),
+        // .M_ResPC        (C_ResPC),
+        .M_rd           (C_rd),
+        .M_RegWrite     (C_RegWrite),
+        .M_FRegWrite    (C_FRegWrite),
+        .M_ResultSrc    (C_ResultSrc),
+        .M_MDU_FPUEn    (C_MDU_FPUEn),
+        .C_mux_result   (C_mux_result),
+
+        // .W_Result       (W_Result),
+        // .W_ReadData     (W_ReadData),
+        // .W_ImmExt       (W_ImmExt),
+        // .W_ResPC        (W_ResPC),
         .W_rd           (W_rd),
         .W_RegWrite     (W_RegWrite),
         .W_FRegWrite    (W_FRegWrite),
         .W_ResultSrc    (W_ResultSrc),
-        .W_MDU_FPUEn    (W_MDU_FPUEn)
+        .W_MDU_FPUEn    (W_MDU_FPUEn),
+        .W_mux_result   (W_mux_result)
     );
 endmodule

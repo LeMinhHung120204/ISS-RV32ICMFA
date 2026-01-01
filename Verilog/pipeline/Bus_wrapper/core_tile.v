@@ -105,6 +105,7 @@ module core_tile #(
     wire [DATA_W-1:0]   imem_instr;
     wire [ADDR_W-1:0]   icache_addr;
     wire                icache_req;
+    wire                icache_flush;          
     wire                icache_stall;
 
     /*
@@ -207,12 +208,11 @@ module core_tile #(
         .ARESETn    (ARESETn),
 
         // CPU Interface
-        .cpu_req    (icache_req),
-        // .data_valid (1'b1),
-        .cpu_addr   (icache_addr),
-        .data_rdata (imem_instr),
-        // .cache_busy (icache_stall),
-        .pipeline_stall(icache_stall),
+        .cpu_req        (icache_req),
+        .cpu_addr       (icache_addr),
+        .data_rdata     (imem_instr),
+        .pipeline_stall (icache_stall),
+        .icache_flush   (icache_flush),
 
         // AR Channel
         .iARREADY   (m_i_axi_arready),
@@ -249,9 +249,10 @@ module core_tile #(
         .dcache_stall   (dcache_stall),
         
         // Icache Interface
-        .imem_instr (imem_instr),
-        .icache_req (icache_req),
-        .icache_addr(icache_addr),
+        .imem_instr     (imem_instr),
+        .icache_req     (icache_req),
+        .icache_flush   (icache_flush),
+        .icache_addr    (icache_addr),
         .icache_stall   (icache_stall)
     );
 

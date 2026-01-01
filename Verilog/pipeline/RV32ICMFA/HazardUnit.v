@@ -3,17 +3,20 @@
 module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
-    input       M_RegWrite, 
-    input       W_RegWrite, 
     // input       E_PCSrc, 
     input       E_MulDivStall, 
     input       E_FPUStall, 
-    input       W_MDU_FPUEn,
-    input       M_FRegWrite, 
-    input       W_FRegWrite, 
     input       E_RegSrc1, 
     input       E_RegSrc2, 
     input       E_Mispredict,
+    input       M_FRegWrite, 
+    input       M_RegWrite, 
+    input       C_RegWrite,
+    input       C_FRegWrite,
+    input       W_FRegWrite, 
+    input       W_MDU_FPUEn,
+    input       W_RegWrite, 
+    
     input       icache_stall,
     input       dcache_stall,
     input [2:0] E_ResultSrc,
@@ -23,7 +26,8 @@ module HazardUnit #(
     input [4:0] E_Rs2, 
     input [4:0] E_RsF3, 
     input [4:0] E_rd, 
-    input [4:0] M_Rd, 
+    input [4:0] M_Rd,
+    input [4:0] C_Rd, 
     input [4:0] W_Rd,
 
     output reg [1:0]    ForwardAE, 
@@ -33,50 +37,29 @@ module HazardUnit #(
     output              D_Stall, 
     output              E_Stall, 
     output              D_Flush, 
+    output              fetch_pipe_Flush,
     output              E_Flush
 );
 
 // Solve Data Hazard
     always @(*) begin
-        if ((E_Rs1 == M_Rd) & (E_Rs1 != 5'd0)) begin // Forward tu Memory stage
-            if ((M_RegWrite & (~E_RegSrc1)) | (M_FRegWrite & E_RegSrc1)) begin
-                ForwardAE = 2'b10;
-            end
-            else begin
-                ForwardAE = 2'b00;
-            end
-        end
-        else if ((E_Rs1 == W_Rd) & (E_Rs1 != 5'd0)) begin // Forward tu Writeback stage
-            if ((W_RegWrite & (~E_RegSrc1)) | (W_FRegWrite & E_RegSrc1)) begin
-                ForwardAE = 2'b01;
-            end
-            else begin
-                ForwardAE = 2'b00;
-            end
-        end
-        else begin
-            ForwardAE = 2'b00; // Khong forwarding (dung RF output)
-        end
+        if ((E_Rs1 == M_Rd) && (E_Rs1 != 0) && ((M_RegWrite & ~E_RegSrc1) | (M_FRegWrite & E_RegSrc1)))
+            ForwardAE = 2'b01;
+        else if ((E_Rs1 == C_Rd) && (E_Rs1 != 0) && ((C_RegWrite & ~E_RegSrc1) | (C_FRegWrite & E_RegSrc1)))
+            ForwardAE = 2'b10;
+        else if ((E_Rs1 == W_Rd) && (E_Rs1 != 0) && ((W_RegWrite & ~E_RegSrc1) | (W_FRegWrite & E_RegSrc1)))
+            ForwardAE = 2'b11;
+        else
+            ForwardAE = 2'b00;
 
-        if ((E_Rs2 == M_Rd) & (E_Rs2 != 5'd0)) begin
-            if ((M_RegWrite & (~E_RegSrc2)) | (M_FRegWrite & E_RegSrc2)) begin
-                ForwardBE = 2'b10;
-            end
-            else begin
-                ForwardBE = 2'b00;
-            end
-        end
-        else if ((E_Rs2 == W_Rd) & (E_Rs2 != 5'd0)) begin
-            if ((W_RegWrite & (~E_RegSrc2)) | (W_FRegWrite & E_RegSrc2)) begin
-                ForwardBE = 2'b01;
-            end
-            else begin
-                ForwardBE = 2'b00;
-            end
-        end
-        else begin
+        if ((E_Rs2 == M_Rd) && (E_Rs2 != 0) && ((M_RegWrite & ~E_RegSrc2) | (M_FRegWrite & E_RegSrc2)))
+            ForwardBE = 2'b01;
+        else if ((E_Rs2 == C_Rd) && (E_Rs2 != 0) && ((C_RegWrite & ~E_RegSrc2) | (C_FRegWrite & E_RegSrc2)))
+            ForwardBE = 2'b10;
+        else if ((E_Rs2 == W_Rd) && (E_Rs2 != 0) && ((W_RegWrite & ~E_RegSrc2) | (W_FRegWrite & E_RegSrc2)))
+            ForwardBE = 2'b11;
+        else
             ForwardBE = 2'b00;
-        end
     end
 
     always @(*) begin
@@ -102,6 +85,7 @@ module HazardUnit #(
     // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
     // assign E_Flush = lw_Stall | E_PCSrc | E_Mispredict;
     // assign D_Flush = E_PCSrc | E_Mispredict;
-    assign E_Flush = lw_Stall | E_Mispredict;
-    assign D_Flush = E_Mispredict;
+    assign E_Flush          = lw_Stall | E_Mispredict;
+    assign D_Flush          = E_Mispredict;
+    assign fetch_pipe_Flush = E_Mispredict;
 endmodule

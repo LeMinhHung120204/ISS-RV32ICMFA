@@ -20,6 +20,7 @@ module icache_v2 #(
 
     // (cache <-> cpu)
     input                       cpu_req,
+    input                       icache_flush,
     input   [ADDR_W-1:0]        cpu_addr,
 
     output   [DATA_W-1:0]       data_rdata,
@@ -98,7 +99,6 @@ module icache_v2 #(
 
     // ---------------------------------------- PIPELINE REGISTER (ACC_CMP) ----------------------------------------
     assign pipeline_stall   = s2_req & ~any_hit; 
-    wire pipeline_flush     = 1'b0;
 
     acc_cmp #(
         .ADDR_W     (ADDR_W),
@@ -108,7 +108,7 @@ module icache_v2 #(
         .clk            (ACLK),
         .rst_n          (ARESETn),
         .stall          (pipeline_stall),
-        .flush          (pipeline_flush),
+        .flush          (icache_flush),
 
         // Stage 1
         .s1_req         (cpu_req),    

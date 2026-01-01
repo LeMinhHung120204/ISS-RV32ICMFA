@@ -8,6 +8,7 @@ module MEM_WB #(
     input                       M_FRegWrite, 
     input                       M_MDU_FPUEn,
     input [DATA_WIDTH - 1:0]    M_Result, 
+    input [DATA_WIDTH - 1:0]    C_mux_result,
     input [DATA_WIDTH - 1:0]    M_ReadData, 
     input [DATA_WIDTH - 1:0]    M_ImmExt,
     input [ADDR_WIDTH - 1:0]    M_ResPC,
@@ -19,6 +20,7 @@ module MEM_WB #(
     output reg                      W_FRegWrite, 
     output reg                      W_MDU_FPUEn,
     output reg [DATA_WIDTH - 1:0]   W_Result, 
+    output reg [DATA_WIDTH - 1:0]   W_mux_result,
     output reg [DATA_WIDTH - 1:0]   W_ReadData, 
     output reg [DATA_WIDTH - 1:0]   W_ImmExt,
     output reg [ADDR_WIDTH - 1:0]   W_ResPC,
@@ -31,6 +33,7 @@ module MEM_WB #(
             W_Result    <= 32'd0; 
             W_ReadData  <= 32'd0;
             W_ImmExt    <= 32'd0;
+            W_mux_result    <= 32'd0;
             W_ResPC     <= 32'd0;
             W_rd        <= 5'd0;
             W_ResultSrc <= 3'b0;
@@ -40,8 +43,9 @@ module MEM_WB #(
         end 
         else begin
             W_Result    <= M_Result   ; 
-            W_ReadData  <= M_ReadData;
+            W_ReadData  <= M_ReadData ;
             W_ImmExt    <= M_ImmExt   ;
+            W_mux_result    <= C_mux_result;
             W_ResPC     <= M_ResPC    ;
             W_rd        <= M_rd       ;
             W_ResultSrc <= M_ResultSrc;

@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module acc_cmp #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
