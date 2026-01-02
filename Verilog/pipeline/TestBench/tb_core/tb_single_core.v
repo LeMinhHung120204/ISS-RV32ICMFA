@@ -2,6 +2,7 @@
 
 module tb_single_core;
     parameter HEX_FILE = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt"; 
+    parameter INPUT_DRAM = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/input_dram.txt";
 
     // -------------------------------------------------------------------------
     // 1. Parameters
@@ -174,7 +175,7 @@ module tb_single_core;
         .ARESETn(ARESETn),
         .i_axi_awvalid  (d_axi_awvalid), 
         .o_axi_awready  (d_axi_awready), 
-        .i_axi_awid     (d_axi_awid), 
+        // .i_axi_awid     (d_axi_awid), 
         .i_axi_awaddr   (d_axi_awaddr),
         .i_axi_awlen    (d_axi_awlen), 
         .i_axi_awsize   (d_axi_awsize), 
@@ -227,6 +228,7 @@ module tb_single_core;
 
         // nap file hex vao Instruction Memory
         $readmemh(HEX_FILE, u_i_mem.u_DataMem.mem);
+        $readmemh(INPUT_DRAM, u_d_mem.u_DataMem.mem);
         
         // Debug check: in thu 2 dia chi dau tien
         $display("Check Addr 0: %h", u_i_mem.u_DataMem.mem[0]);

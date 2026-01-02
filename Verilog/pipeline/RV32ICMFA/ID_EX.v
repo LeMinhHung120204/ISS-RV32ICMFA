@@ -20,6 +20,7 @@ module ID_EX #(
     input   D_RegSrc1, 
     input   D_RegSrc2,
     input   D_Predict_Taken,
+    input   D_data_req,
     input   [DATA_WIDTH - 1:0]  D_RD1, 
     input   [DATA_WIDTH - 1:0]  D_RD2, 
     input   [DATA_WIDTH - 1:0]  D_RDF2, 
@@ -62,6 +63,7 @@ module ID_EX #(
     output reg  E_RegSrc1, 
     output reg  E_RegSrc2,
     output reg  E_Predict_Taken,
+    output reg  E_data_req,
     output reg  [DATA_WIDTH - 1:0]  E_RD1, 
     output reg  [DATA_WIDTH - 1:0]  E_RD2, 
     output reg  [DATA_WIDTH - 1:0]  E_RDF2, 
@@ -126,6 +128,7 @@ module ID_EX #(
             E_RegSrc1           <= 1'd0;
             E_RegSrc2           <= 1'd0;
             E_Predict_Taken     <= 1'b0;
+            E_data_req          <= 1'b0;
             
             // reset atomic
             // E_is_atomic         <= 1'b0;
@@ -170,6 +173,7 @@ module ID_EX #(
                 E_RegSrc1           <= 1'd0;
                 E_RegSrc2           <= 1'd0;
                 E_Predict_Taken     <= 1'b0;
+                E_data_req          <= 1'b0;
                 
                 // flush atomic
                 // E_is_atomic         <= 1'b0;
@@ -214,6 +218,7 @@ module ID_EX #(
                     E_RegSrc1           <= D_RegSrc1         ;
                     E_RegSrc2           <= D_RegSrc2         ;
                     E_Predict_Taken     <= D_Predict_Taken   ;
+                    E_data_req          <= D_data_req;
                     
                     // forward atomic
                     // E_is_atomic         <= D_is_atomic;

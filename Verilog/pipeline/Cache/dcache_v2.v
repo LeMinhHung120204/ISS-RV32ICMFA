@@ -128,10 +128,11 @@ module dcache_v2 #(
     wire [BYTE_OFF_W-1:0]   s2_byte_off;
 
     // ---------------------------------------- Snoop & Control Signals ----------------------------------------
-    wire snoop_busy;
-    wire snoop_can_access_ram;
-    wire [INDEX_W-1:0] snoop_index = iACADDR[BYTE_OFF_W + WORD_OFF_W + INDEX_W - 1 : BYTE_OFF_W + WORD_OFF_W];
-    wire [TAG_W-1:0]   snoop_tag   = iACADDR[ADDR_W-1 : ADDR_W - TAG_W];
+    wire                snoop_busy;
+    wire                snoop_hit;
+    wire                snoop_can_access_ram;
+    wire [INDEX_W-1:0]  snoop_index = iACADDR[BYTE_OFF_W + WORD_OFF_W + INDEX_W - 1 : BYTE_OFF_W + WORD_OFF_W];
+    wire [TAG_W-1:0]    snoop_tag   = iACADDR[ADDR_W-1 : ADDR_W - TAG_W];
 
     // ---------------------------------------- Memory Interface Signals ----------------------------------------
     wire [INDEX_W-1:0]      ram_access_index;
@@ -140,6 +141,7 @@ module dcache_v2 #(
     
     // ---------------------------------------- Hit/Miss & MOESI ----------------------------------------
     wire [3:0]  way_hit;
+    wire [3:0]  way_hit_snoop;
     wire        any_hit;
     wire [2:0]  moesi_current_state     [0:NUM_WAYS-1];
     reg  [2:0]  moesi_selected_state;
@@ -158,6 +160,10 @@ module dcache_v2 #(
 
     wire [NUM_WAYS-1:0]     way_select;
     reg  [NUM_WAYS-1:0]     reg_way_select;
+
+    // ---------------------------------------- Gan ID ----------------------------------------
+    assign oAWID    = {1'b1, CORE_ID};
+    assign oARID    = {1'b1, CORE_ID};
     
     // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
     access #(
@@ -266,18 +272,26 @@ module dcache_v2 #(
     );
 
     // ---------------------------------------- STAGE 2: COMPARE & HIT LOGIC ----------------------------------------
-    wire [TAG_W-1:0] tag_compare_input = (snoop_busy) ? snoop_tag : s2_tag;
+    // wire [TAG_W-1:0]    tag_compare_input = (snoop_busy) ? snoop_tag : s2_tag;
+    wire [NUM_WAYS-1:0] active_way_select;
 
-    assign way_hit[0]   = (tag_read[0] == tag_compare_input) & (moesi_current_state[0] != 3'd4); // 4 = Invalid
-    assign way_hit[1]   = (tag_read[1] == tag_compare_input) & (moesi_current_state[1] != 3'd4);
-    assign way_hit[2]   = (tag_read[2] == tag_compare_input) & (moesi_current_state[2] != 3'd4);
-    assign way_hit[3]   = (tag_read[3] == tag_compare_input) & (moesi_current_state[3] != 3'd4);
+    assign way_hit[0]       = (tag_read[0] == s2_tag)       & (moesi_current_state[0] != 3'd4); // 4 = Invalid
+    assign way_hit[1]       = (tag_read[1] == s2_tag)       & (moesi_current_state[1] != 3'd4);
+    assign way_hit[2]       = (tag_read[2] == s2_tag)       & (moesi_current_state[2] != 3'd4);
+    assign way_hit[3]       = (tag_read[3] == s2_tag)       & (moesi_current_state[3] != 3'd4);
 
-    assign any_hit      = |way_hit;
-    assign cpu_hit      = (snoop_busy) ? 1'b0 : any_hit;
+    assign way_hit_snoop[0] = (tag_read[0] == snoop_tag)    & (moesi_current_state[0] != 3'd4); // 4 = Invalid
+    assign way_hit_snoop[1] = (tag_read[1] == snoop_tag)    & (moesi_current_state[1] != 3'd4);
+    assign way_hit_snoop[2] = (tag_read[2] == snoop_tag)    & (moesi_current_state[2] != 3'd4);
+    assign way_hit_snoop[3] = (tag_read[3] == snoop_tag)    & (moesi_current_state[3] != 3'd4);
+  
+    assign cpu_hit              = |way_hit;
+    assign snoop_hit            = |way_hit_snoop;
+    assign any_hit              = cpu_hit | snoop_hit;
+    assign active_way_select    = (any_hit) ? way_hit : way_select;
     
     always @(*) begin
-        case (way_hit)
+        case (active_way_select)
             4'b0001: moesi_selected_state = moesi_current_state[0];
             4'b0010: moesi_selected_state = moesi_current_state[1];
             4'b0100: moesi_selected_state = moesi_current_state[2];
@@ -329,7 +343,7 @@ module dcache_v2 #(
         end 
         else begin 
             if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
-                refill_buffer <= {iRDATA, refill_buffer[CACHE_DATA_W - DATA_W : DATA_W]};
+                refill_buffer[burst_cnt * DATA_W +: DATA_W] <= iRDATA;
             end 
             if (~any_hit & s2_req)
                 reg_way_select <= way_select;
@@ -447,6 +461,8 @@ module dcache_v2 #(
     assign oARADDR = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // ---------------------------------------- Snoop Controller & MOESI Controller ----------------------------------------
+    wire snoop_hit;
+
     snoop_controller #( 
         .ADDR_W(ADDR_W) 
     ) u_snoop_ctrl (
@@ -485,7 +501,7 @@ module dcache_v2 #(
     moesi_controller u_moesi_ctrl (
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response ),
-        .current_state      (choosen_moesi),
+        .current_state      (moesi_selected_state),
 
         .cpu_req_valid      (cpu_req),
         .cpu_hit            (cpu_hit),

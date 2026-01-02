@@ -71,6 +71,11 @@ module RV32IMF #(
     wire [WIDTH_DATA-1:0] E_FPUResult, M_FPUResult;
     // wire E_FPU_done, E_FPUStall;
 
+    // ----------------------- Tin hieu Hazard -----------------------
+    wire F_Stall, D_Stall, E_Stall;
+    wire D_Flush, fetch_pipe_Flush, E_Flush;
+    wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
+
     // ----------------------- Tin hieu PC -----------------------
     reg [WIDTH_ADDR - 1:0] PCNext;
     wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC;
@@ -138,10 +143,6 @@ module RV32IMF #(
         .E_PCSrc        (E_PCSrc)
     );
     // ---------------------------------------- WB state ----------------------------------------
-    // ----------------------- Tin hieu Hazard -----------------------
-    wire F_Stall, D_Stall, E_Stall;
-    wire D_Flush, fetch_pipe_Flush, E_Flush;
-    wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
 
     assign icache_flush = fetch_pipe_Flush;
     // mux4_1 mux_W_Result (
@@ -194,35 +195,6 @@ module RV32IMF #(
         .ForwardBE          (ForwardBE),
         .ForwardFCE         (ForwardFCE)
     );
-
-    ControlUnit ControlUnit_ins(
-        .op                 (D_Instr[6:0]),
-        .funct3             (D_Instr[14:12]),
-        .funct7             (D_Instr[31:25]),
-        .funct5             (D_Instr[24:20]),
-        .ResultSrc          (D_ResultSrc),
-        .MemWrite           (D_MemWrite),
-        .ALUControl         (D_ALUControl),
-        .ALUSrc             (D_ALUSrc),
-        .ImmSrc             (D_ImmSrc),
-        .RegWrite           (D_RegWrite),
-        .Branch             (D_Branch),
-        .Jump               (D_Jump),
-        .StoreSrc           (D_StoreSrc),
-        .ResExSel           (D_ResExSel),
-        .Mul_Div_unsigned   (D_Mul_Div_unsigned),
-        .MulDivControl      (D_MulDivControl),
-        .addr_addend_sel    (D_addr_addend_sel),
-        .ResPCSel           (D_ResPCSel),
-        .valid_MDU          (D_valid_MDU),
-        .is_high            (D_is_high),
-        .Valid_FPU          (D_Valid_FPU),
-        .RegSrc1            (D_RegSrc1),
-        .RegSrc2            (D_RegSrc2),
-        .FPUControl         (D_FPUControl),
-        .FRegWrite          (D_FRegWrite),
-        .data_req           (data_req)
-    );
     // ---------------------------------------- IF state ----------------------------------------
     PC PC_inst(
         .clk    (clk),
@@ -238,14 +210,15 @@ module RV32IMF #(
     wire [WIDTH_ADDR-1:0]   s2_PC           ;
     wire [WIDTH_ADDR-1:0]   s2_PCPlus4      ;
 
-    assign icache_addr = F_PC;          // S1: dua di chi vao cache
+    assign icache_addr = F_PC;          // S1 -> Cache
     assign icache_req  = rst_n;         // luon yeu canh lenh khi khong reset
-    assign F_RD        = imem_instr;    // S2: Du lieu tu cache tra ve
+    assign F_RD        = imem_instr;    // S2 (Cache) -> 
 
     // Ins_Mem instruction_memory(
     //     .addr       (F_PC),
     //     .instruction(F_RD)
     // );
+    // ---------------------------------------- fetch_pipe REGISTER (IF -> S2) ----------------------------------------
 
     fetch_pipe fetch_pipe_register (
         .clk    (clk),
@@ -285,6 +258,37 @@ module RV32IMF #(
     );
 
     // ---------------------------------------- ID state ----------------------------------------
+    wire D_data_req, E_data_req;
+    
+    ControlUnit ControlUnit_ins(
+        .op                 (D_Instr[6:0]),
+        .funct3             (D_Instr[14:12]),
+        .funct7             (D_Instr[31:25]),
+        .funct5             (D_Instr[24:20]),
+        .ResultSrc          (D_ResultSrc),
+        .MemWrite           (D_MemWrite),
+        .ALUControl         (D_ALUControl),
+        .ALUSrc             (D_ALUSrc),
+        .ImmSrc             (D_ImmSrc),
+        .RegWrite           (D_RegWrite),
+        .Branch             (D_Branch),
+        .Jump               (D_Jump),
+        .StoreSrc           (D_StoreSrc),
+        .ResExSel           (D_ResExSel),
+        .Mul_Div_unsigned   (D_Mul_Div_unsigned),
+        .MulDivControl      (D_MulDivControl),
+        .addr_addend_sel    (D_addr_addend_sel),
+        .ResPCSel           (D_ResPCSel),
+        .valid_MDU          (D_valid_MDU),
+        .is_high            (D_is_high),
+        .Valid_FPU          (D_Valid_FPU),
+        .RegSrc1            (D_RegSrc1),
+        .RegSrc2            (D_RegSrc2),
+        .FPUControl         (D_FPUControl),
+        .FRegWrite          (D_FRegWrite),
+        .data_req           (D_data_req)
+    );
+
     RegFile register_file(
         .clk    (clk),
         .rst_n  (rst_n),
@@ -370,7 +374,8 @@ module RV32IMF #(
         .D_Mul_Div_unsigned (D_Mul_Div_unsigned),
         .D_MulDivControl    (D_MulDivControl),
         .D_ResExSel         (D_ResExSel),  
-        .D_Predict_Taken    (D_Predict_Taken),      
+        .D_Predict_Taken    (D_Predict_Taken),    
+        .D_data_req         (D_data_req),  
 
         .E_RD1              (E_RD1),
         .E_RD2              (E_RD2),
@@ -405,10 +410,13 @@ module RV32IMF #(
         .E_Mul_Div_unsigned (E_Mul_Div_unsigned),
         .E_MulDivControl    (E_MulDivControl),
         .E_ResExSel         (E_ResExSel),
-        .E_Predict_Taken    (E_Predict_Taken)
+        .E_Predict_Taken    (E_Predict_Taken),
+        .E_data_req         (E_data_req)
     );
 
     // ---------------------------------------- Ex state ----------------------------------------
+    wire M_data_req;
+
     ALU alu_inst(
         .ALUControl (E_ALUControl),
         .in1        (E_SrcA),
@@ -511,6 +519,7 @@ module RV32IMF #(
         .E_ResExSel     (E_ResExSel),
         .E_ResPCSel     (E_ResPCSel),
         .E_MDU_FPUEn    (E_MDU_FPUEn),
+        .E_data_req     (E_data_req),
 
         .M_ALUResult    (M_ALUResult),
         .M_MDUResult    (M_MDUResult),
@@ -527,18 +536,18 @@ module RV32IMF #(
         .M_StoreSrc     (M_StoreSrc),
         .M_ResExSel     (M_ResExSel),
         .M_ResPCSel     (M_ResPCSel),
-        .M_MDU_FPUEn    (M_MDU_FPUEn)
+        .M_MDU_FPUEn    (M_MDU_FPUEn),
+        .M_data_req     (M_data_req)
     );
 
-    // ---------------------------------------- MEM state ----------------------------------------
-
+    // ---------------------------------------- DATA CACHE INTERFACE ----------------------------------------
     assign data_wr      = M_MemWrite;
     assign data_size    = M_StoreSrc;
     assign data_addr    = M_ALUResult;
     assign data_wdata   = M_WriteData;
-    assign C_ReadData   = data_rdata;
+    assign data_req     = M_data_req;
 
-    // ---------------------------------------- Cache state ----------------------------------------
+    // ---------------------------------------- Execution Result Mux ----------------------------------------
     mux4_1 mux_Result (
         .in0    (M_ALUResult),
         .in1    (M_MDUResult),
@@ -548,6 +557,7 @@ module RV32IMF #(
         .res    (M_Result)
     );
 
+    // ---------------------------------------- PC Result Mux ----------------------------------------
     mux2_1 mux_ResPC(
         .in0    (M_PCTarget),
         .in1    (M_PCPlus4),
@@ -555,7 +565,7 @@ module RV32IMF #(
         .res    (M_ResPC)
     );
 
-    // thanh ghi pipeline trong cache 
+    // ---------------------------------------- [PIPELINE REGISTER] MEM -> CACHE ----------------------------------------
     MEM_CACHE MEM_CACHE_register(
         .clk            (clk),
         .rst_n          (rst_n),
@@ -578,6 +588,8 @@ module RV32IMF #(
         .C_MDU_FPUEn    (C_MDU_FPUEn)
     );
 
+    // ---------------------------------------- CACHE RESPONSE & FINAL SELECTION ----------------------------------------
+    assign C_ReadData   = data_rdata;
     mux4_1 mux_C_Result (
         .in0    (C_Result),
         .in1    (C_ReadData),
@@ -596,6 +608,9 @@ module RV32IMF #(
     //     .data_in    (M_WriteData),
     //     .rd         (M_ReadData)
     // );
+
+
+    // ---------------------------------------- [PIPELINE REGISTER] CACHE -> WRITEBACK ----------------------------------------
 
     MEM_WB MEM_WB_register(
         .clk            (clk),

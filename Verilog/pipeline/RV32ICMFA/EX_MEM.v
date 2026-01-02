@@ -9,6 +9,7 @@ module EX_MEM #(
     input   E_FRegWrite, 
     input   E_ResPCSel, 
     input   E_MDU_FPUEn,
+    input   E_data_req,
     input   [DATA_WIDTH - 1:0]  E_ALUResult, 
     input   [DATA_WIDTH - 1:0]  E_WriteData, 
     input   [DATA_WIDTH - 1:0]  E_ImmExt, 
@@ -26,6 +27,7 @@ module EX_MEM #(
     output reg  M_FRegWrite, 
     output reg  M_ResPCSel, 
     output reg  M_MDU_FPUEn,
+    output reg  M_data_req,
     output reg [DATA_WIDTH - 1:0]   M_ALUResult, 
     output reg [DATA_WIDTH - 1:0]   M_WriteData, 
     output reg [DATA_WIDTH - 1:0]   M_ImmExt, 
@@ -56,6 +58,7 @@ module EX_MEM #(
             M_FRegWrite <= 1'd0;
             M_ResPCSel  <= 1'd0;
             M_MDU_FPUEn <= 1'd0;
+            M_data_req  <= 1'b0;
             // M_is_atomic     <= 1'b0;            // atomic
             // M_atomic_rdata  <= 32'd0;
             // M_atomic_done   <= 1'b0;
@@ -77,6 +80,7 @@ module EX_MEM #(
             M_FRegWrite <= E_FRegWrite;
             M_ResPCSel  <= E_ResPCSel ;
             M_MDU_FPUEn <= E_MDU_FPUEn;
+            M_data_req  <= E_data_req;
             // M_is_atomic     <= E_is_atomic;     // atomic
             // M_atomic_rdata  <= E_atomic_rdata;
             // M_atomic_done   <= E_atomic_done;

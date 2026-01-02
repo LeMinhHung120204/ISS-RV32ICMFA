@@ -57,11 +57,11 @@ module snoop_controller #(
         case (reg_ACSNOOP)    
             4'b0000: begin // ReadOnce
                 snoop_requires_data       = 1'b1;
-					 snoop_requires_invalidate = 1'b0;
+				snoop_requires_invalidate = 1'b0;
             end
             4'b0001, 4'b0010, 4'b0011: begin // ReadShared, ReadClean, ReadNotSharedDirty
                 snoop_requires_data       = 1'b1;
-					 snoop_requires_invalidate = 1'b0;
+				snoop_requires_invalidate = 1'b0;
             end
             4'b0111: begin // ReadUnique
                 snoop_requires_data       = 1'b1;
@@ -79,10 +79,10 @@ module snoop_controller #(
                 snoop_requires_invalidate = 1'b1;
                 snoop_requires_data       = 1'b0;
             end
-				default: begin
-            snoop_requires_data       = 1'b0;
-            snoop_requires_invalidate = 1'b0;
-        end
+			default: begin
+                snoop_requires_data       = 1'b0;
+                snoop_requires_invalidate = 1'b0;
+            end
         endcase
     end
 
