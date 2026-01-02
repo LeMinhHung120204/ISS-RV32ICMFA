@@ -30,11 +30,11 @@ module MEM_WB #(
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            W_Result    <= 32'd0; 
-            W_ReadData  <= 32'd0;
-            W_ImmExt    <= 32'd0;
+//            W_Result    <= 32'd0; 
+//            W_ReadData  <= 32'd0;
+//            W_ImmExt    <= 32'd0;
             W_mux_result    <= 32'd0;
-            W_ResPC     <= 32'd0;
+//            W_ResPC     <= 32'd0;
             W_rd        <= 5'd0;
             W_ResultSrc <= 3'b0;
             W_RegWrite  <= 1'b0;
