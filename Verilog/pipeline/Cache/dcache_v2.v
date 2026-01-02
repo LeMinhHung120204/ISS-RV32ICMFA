@@ -28,6 +28,7 @@ module dcache_v2 #(
     output  reg [DATA_W-1:0]    data_rdata,
     output                      cpu_hit,
     output                      cache_busy, // Stall CPU
+    output                      pipeline_stall,
 
     // (cache <-> cache L2)
     // AW channel 
@@ -233,7 +234,8 @@ module dcache_v2 #(
     endgenerate
 
     // ---------------------------------------- PIPELINE REGISTER (ACC_CMP) ----------------------------------------
-    wire pipeline_stall = cache_busy | (snoop_busy & !snoop_can_access_ram); 
+    // wire pipeline_stall = cache_busy | (snoop_busy & !snoop_can_access_ram); 
+    assign pipeline_stall = s2_req & ~any_hit; 
     wire pipeline_flush = 1'b0;
 
     acc_cmp #(
@@ -387,7 +389,7 @@ module dcache_v2 #(
         .current_moesi_state    (moesi_selected_state),
 
         // Outputs
-        .cache_busy         (cache_busy),
+        // .cache_busy         (cache_busy),
         .data_we            (data_we),
         .tag_we             (main_tag_we),
         .moesi_we           (moesi_we),
@@ -501,6 +503,7 @@ module dcache_v2 #(
     moesi_controller u_moesi_ctrl (
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response ),
+        .refill_we          (refill_we),
         .current_state      (moesi_selected_state),
 
         .cpu_req_valid      (cpu_req),

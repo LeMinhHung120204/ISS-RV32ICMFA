@@ -3,22 +3,23 @@ module moesi_controller(
     input   [2:0]   current_state,
     input           is_shared_response,
     input           is_dirty_response,
+    input           refill_we,
 
     // Request from CPU 
     input           cpu_req_valid,
     input           cpu_hit,
     input           cpu_rw,         // 1: Write, 0: Read
 
-    // Request from Bus 
+    // Request from Bus (Snoop)
     input           bus_snoop_valid,
     input           snoop_hit,      
     input           bus_rw,         
 
     // Outputs
-    output          is_dirty,       // Bao cho Snoop/WB: Can write back data
-    output          is_unique,      // Bao cho Snoop: dang giu doc quyen (M/E)
-    output          is_owner,       // Bao cho Snoop: dang la Owner (M/O)
-    output          is_valid,       // Bao cho Snoop: Dong nay co hop le (khong phai I)
+    output          is_dirty,       
+    output          is_unique,      
+    output          is_owner,       
+    output          is_valid,       
     output reg [2:0] next_state
 );
     localparam  STATE_M = 3'd0,
@@ -27,60 +28,45 @@ module moesi_controller(
                 STATE_S = 3'd3,
                 STATE_I = 3'd4;
     
-    
     assign is_dirty     = (current_state == STATE_M) | (current_state == STATE_O);
     assign is_unique    = (current_state == STATE_M) | (current_state == STATE_E);
     assign is_owner     = (current_state == STATE_M) | (current_state == STATE_O);
     assign is_valid     = (current_state != STATE_I);
 
-    // --- Next State Logic ---
     always @(*) begin
-        next_state = current_state; 
+        next_state = current_state;
         // SNOOP REQUEST
         if (bus_snoop_valid && snoop_hit) begin
-            if (bus_rw) begin 
+            if (bus_rw) begin   // Bus write
                 next_state = STATE_I; 
             end
-            else begin 
+            else begin // Bus read (ReadShared)
                 case (current_state)
-                    STATE_M, STATE_O: begin
-                        next_state = STATE_O; 
-                    end
-                    STATE_E: begin
-                        next_state = STATE_S;
-                    end
-                    STATE_S: begin
-                        next_state = STATE_S;
-                    end
-                    default: next_state = STATE_I;
+                    STATE_M, STATE_O:   next_state = STATE_O; // Chia se du lieu Dirty -> Owned
+                    STATE_E:            next_state = STATE_S; // E -> S
+                    STATE_S:            next_state = STATE_S;
+                    default:            next_state = STATE_I;
                 endcase
             end
         end
 
-        // CPU REQUEST
-        else if (cpu_req_valid) begin
-            if (cpu_hit) begin
-                if (cpu_rw) begin // Write Hit
-                    next_state = STATE_M; 
-                end 
-                else begin // Read Hit
-                    next_state = current_state; 
-                end 
-            end 
-            else begin
-                if (cpu_rw) begin 
-                    // Write Miss: Ghi de len dong moi nap -> Modified
-                    next_state = STATE_M; 
-                end
+        // REFILL / UPDATE (Xu ly Miss)
+        else if (refill_we) begin
+            if (cpu_rw) begin 
+                // Write Miss: Refill xong ghi đe luon -> Modified
+                next_state = STATE_M; 
+            end
+            else begin 
+                // Read Miss
                 if (is_dirty_response) begin
-                        // Nhan du lieu Dirty tu cache khac
-                        if (is_shared_response) 
-                            next_state = STATE_O; // Dirty + Shared -> Owned
-                        else 
-                            next_state = STATE_M; // Dirty + Unique -> Modified
-                    end 
+                    // Nhan data Dirty tu cache khac
+                    if (is_shared_response) 
+                        next_state = STATE_O; // Dirty + Shared -> Owned
+                    else 
+                        next_state = STATE_M; // Dirty + Unique -> Modified
+                end 
                 else begin
-                    // Nhan du lieu Clean (tu RAM hoac cache khac)
+                    // Nhan data Clean (tu RAM / Cache khac)
                     if (is_shared_response) 
                         next_state = STATE_S; // Clean + Shared -> Shared
                     else      
@@ -88,5 +74,15 @@ module moesi_controller(
                 end
             end
         end
+
+        // CPU HIT (Xu ly Hit)
+        else if (cpu_req_valid && cpu_hit) begin
+            if (cpu_rw) begin // Write Hit
+                next_state = STATE_M; 
+            end 
+            else begin // Read Hit
+                next_state = current_state; 
+            end 
+        end 
     end 
 endmodule

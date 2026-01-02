@@ -4,6 +4,7 @@ module EX_MEM #(
     parameter ADDR_WIDTH = 32
 )(
     input   clk, rst_n, 
+    input   EN,
     input   E_RegWrite, 
     input   E_MemWrite, 
     input   E_FRegWrite, 
@@ -63,7 +64,7 @@ module EX_MEM #(
             // M_atomic_rdata  <= 32'd0;
             // M_atomic_done   <= 1'b0;
         end 
-        else begin
+        else if (~EN) begin
             M_ALUResult <= E_ALUResult;
             M_WriteData <= E_WriteData;
             M_ImmExt    <= E_ImmExt   ;

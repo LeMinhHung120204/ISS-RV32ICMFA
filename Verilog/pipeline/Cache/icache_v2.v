@@ -25,8 +25,11 @@ module icache_v2 #(
 
     output   [DATA_W-1:0]       data_rdata,
     output                      cpu_hit,
-    output                      cache_busy,
+    // output                      cache_busy,
     output                      pipeline_stall,
+
+    // (icache <-> dcache)
+    input                   dcache_stall,
 
     // (cache <-> cache L2) - AXI Read Only
     // AR channel
@@ -98,7 +101,7 @@ module icache_v2 #(
     );
 
     // ---------------------------------------- PIPELINE REGISTER (ACC_CMP) ----------------------------------------
-    assign pipeline_stall   = s2_req & ~any_hit; 
+    assign pipeline_stall   = (s2_req & ~any_hit) | dcache_stall; 
 
     acc_cmp #(
         .ADDR_W     (ADDR_W),
@@ -290,7 +293,7 @@ module icache_v2 #(
         .tag_we         (tag_we),
         .valid_we       (valid_we),
         .refill_we      (refill_we),
-        .cache_busy     (cache_busy),
+        // .cache_busy     (cache_busy),
         .cache_state    (cache_state),
         .burst_cnt      (burst_cnt),
         .index_src      (index_src),

@@ -36,6 +36,7 @@ module HazardUnit #(
     output              F_Stall, 
     output              D_Stall, 
     output              E_Stall, 
+    output              M_Stall,
     output              D_Flush, 
     output              fetch_pipe_Flush,
     output              E_Flush
@@ -78,10 +79,11 @@ module HazardUnit #(
     wire lw_Stall;
     assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
 
+    assign M_Stall = dcache_stall;
     assign E_Stall = dcache_stall | E_MulDivStall | E_FPUStall;
-    assign F_Stall = dcache_stall | icache_stall | lw_Stall | E_Stall;
     assign D_Stall = dcache_stall | lw_Stall | E_Stall;
-
+    assign F_Stall = dcache_stall | icache_stall | lw_Stall | E_Stall;
+    
     // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
     // assign E_Flush = lw_Stall | E_PCSrc | E_Mispredict;
     // assign D_Flush = E_PCSrc | E_Mispredict;

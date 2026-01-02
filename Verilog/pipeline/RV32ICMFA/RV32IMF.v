@@ -143,7 +143,7 @@ module RV32IMF #(
         .E_PCSrc        (E_PCSrc)
     );
     // ---------------------------------------- WB state ----------------------------------------
-
+    wire M_Stall;
     assign icache_flush = fetch_pipe_Flush;
     // mux4_1 mux_W_Result (
     //     .in0    (W_Result),
@@ -188,6 +188,7 @@ module RV32IMF #(
         .F_Stall            (F_Stall),
         .D_Stall            (D_Stall),
         .E_Stall            (E_Stall),
+        .M_Stall            (M_Stall),
         .D_Flush            (D_Flush),
         .fetch_pipe_Flush   (fetch_pipe_Flush),
         .E_Flush            (E_Flush),
@@ -500,8 +501,9 @@ module RV32IMF #(
     assign E_MDU_FPUEn  = E_valid_MDU | E_Valid_FPU;
 
     EX_MEM EX_MEM_register(
-        .clk(clk),
-        .rst_n(rst_n),
+        .clk    (clk),
+        .rst_n  (rst_n),
+        .EN     (M_Stall),
 
         .E_ALUResult    (E_ALUResult),
         .E_MDUResult    (E_MDUResult),

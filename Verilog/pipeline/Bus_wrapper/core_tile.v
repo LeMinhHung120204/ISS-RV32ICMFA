@@ -52,7 +52,7 @@ module core_tile #(
     // R Channel (Data Read Response)
     input   [ID_W-1:0]      m_d_axi_rid,
     input   [DATA_W-1:0]    m_d_axi_rdata,
-    input   [1:0]           m_d_axi_rresp,
+    input   [3:0]           m_d_axi_rresp,
     input                   m_d_axi_rlast,
     input                   m_d_axi_rvalid,
     output                  m_d_axi_rready,
@@ -131,7 +131,8 @@ module core_tile #(
         .cpu_addr   (data_addr),
         .cpu_din    (data_wdata),
         .data_rdata (data_rdata),
-        .cache_busy (dcache_stall),
+        // .cache_busy (dcache_stall),
+        .pipeline_stall (dcache_stall),
 
         // AW Channel
         .iAWREADY   (m_d_axi_awready),
@@ -213,6 +214,8 @@ module core_tile #(
         .data_rdata     (imem_instr),
         .pipeline_stall (icache_stall),
         .icache_flush   (icache_flush),
+
+        .dcache_stall   (dcache_stall),
 
         // AR Channel
         .iARREADY   (m_i_axi_arready),
