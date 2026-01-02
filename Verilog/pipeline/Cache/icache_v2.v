@@ -24,7 +24,7 @@ module icache_v2 #(
     input   [ADDR_W-1:0]        cpu_addr,
 
     output   [DATA_W-1:0]       data_rdata,
-    output                      cpu_hit,
+    // output                      cpu_hit,
     output                      pipeline_stall,
 
     // (icache <-> dcache)
@@ -214,7 +214,7 @@ module icache_v2 #(
     assign way_hit[3] = (tag_read[3] == s2_tag) & current_valid_bits[3];
 
     assign any_hit    = |way_hit;
-    assign cpu_hit    = any_hit;
+    // assign cpu_hit    = any_hit;
 
     // Mux dau ra
     // dang phan van cho nay

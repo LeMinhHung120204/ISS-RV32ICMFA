@@ -37,7 +37,7 @@ module cache_controller #(
     output  reg     is_dirty_response,  // 1: Dirty, 0: Clean
     // output  reg     way_src,            // 0: way_hit, 1: way_victim
     
-    output  [3:0]   cache_state,
+    // output  [3:0]   cache_state,
     output  reg [3:0]   burst_cnt,
 
     // cache <-> mem
@@ -159,7 +159,7 @@ module cache_controller #(
     assign oARBAR       = 2'b00;
     assign oAWUNIQUE    = 1'b0;
 
-    assign cache_state  = state;
+    // assign cache_state  = state;
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin

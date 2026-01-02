@@ -26,7 +26,7 @@ module dcache_v2 #(
     input   [DATA_W-1:0]        cpu_din,
 
     output  reg [DATA_W-1:0]    data_rdata,
-    output                      cpu_hit,
+    // output                      cpu_hit,
     // output                      cache_busy, // Stall CPU
     output                      pipeline_stall,
 
@@ -134,6 +134,9 @@ module dcache_v2 #(
     wire                snoop_can_access_ram;
     wire [INDEX_W-1:0]  snoop_index = iACADDR[BYTE_OFF_W + WORD_OFF_W + INDEX_W - 1 : BYTE_OFF_W + WORD_OFF_W];
     wire [TAG_W-1:0]    snoop_tag   = iACADDR[ADDR_W-1 : ADDR_W - TAG_W];
+
+    wire [TAG_W-1:0]    s2_snoop_tag;
+    wire [INDEX_W-1:0]  s2_snoop_index;
 
     // ---------------------------------------- Memory Interface Signals ----------------------------------------
     wire [INDEX_W-1:0]      ram_access_index;
@@ -284,15 +287,15 @@ module dcache_v2 #(
     assign way_hit[2]       = (tag_read[2] == s2_tag)       & (moesi_current_state[2] != 3'd4);
     assign way_hit[3]       = (tag_read[3] == s2_tag)       & (moesi_current_state[3] != 3'd4);
 
-    assign way_hit_snoop[0] = (tag_read[0] == snoop_tag)    & (moesi_current_state[0] != 3'd4); // 4 = Invalid
-    assign way_hit_snoop[1] = (tag_read[1] == snoop_tag)    & (moesi_current_state[1] != 3'd4);
-    assign way_hit_snoop[2] = (tag_read[2] == snoop_tag)    & (moesi_current_state[2] != 3'd4);
-    assign way_hit_snoop[3] = (tag_read[3] == snoop_tag)    & (moesi_current_state[3] != 3'd4);
+    assign way_hit_snoop[0] = (tag_read[0] == s2_snoop_tag)    & (moesi_current_state[0] != 3'd4); // 4 = Invalid
+    assign way_hit_snoop[1] = (tag_read[1] == s2_snoop_tag)    & (moesi_current_state[1] != 3'd4);
+    assign way_hit_snoop[2] = (tag_read[2] == s2_snoop_tag)    & (moesi_current_state[2] != 3'd4);
+    assign way_hit_snoop[3] = (tag_read[3] == s2_snoop_tag)    & (moesi_current_state[3] != 3'd4);
   
-    assign cpu_hit              = |way_hit;
-    assign snoop_hit            = |way_hit_snoop;
-    assign any_hit              = cpu_hit | snoop_hit;
-    assign active_way_select    = (any_hit) ? way_hit : way_select;
+    wire    cpu_hit             = |way_hit;
+    assign  snoop_hit           = |way_hit_snoop;
+    assign  any_hit             = cpu_hit | snoop_hit;
+    assign  active_way_select   = (any_hit) ? way_hit : way_select;
     
     always @(*) begin
         case (active_way_select)
@@ -352,7 +355,7 @@ module dcache_v2 #(
     end 
 
     // Cache Replacement Policy (PLRU)
-    wire [INDEX_W-1:0] plru_target_index = (snoop_busy) ? snoop_index : s2_index;
+    wire [INDEX_W-1:0] plru_target_index = (snoop_busy) ? s2_snoop_index : s2_index;
     
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS), 
@@ -394,7 +397,7 @@ module dcache_v2 #(
         .burst_cnt          (burst_cnt),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response ),
-        .cache_state        (cache_state),
+        // .cache_state        (cache_state),
 
         // cache <-> mem
         // AW channel

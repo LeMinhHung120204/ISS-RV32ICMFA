@@ -124,13 +124,13 @@ module core_tile #(
         .ARESETn    (ARESETn),
 
          // CPU Interface
-        .cpu_req    (data_req),
-        .cpu_size   (data_size),
+        .cpu_req        (data_req),
+        .cpu_size       (data_size),
         // .data_valid (1'b1),
-        .cpu_we     (data_wr),
-        .cpu_addr   (data_addr),
-        .cpu_din    (data_wdata),
-        .data_rdata (data_rdata),
+        .cpu_we         (data_wr),
+        .cpu_addr       (data_addr),
+        .cpu_din        (data_wdata),
+        .data_rdata     (data_rdata),
         .pipeline_stall (dcache_stall),
 
         // AW Channel
