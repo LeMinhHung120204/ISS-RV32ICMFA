@@ -50,29 +50,13 @@ module moesi_controller(
             end
         end
 
-        // REFILL / UPDATE (Xu ly Miss)
+        // REFILL
         else if (refill_we) begin
-            if (cpu_rw) begin 
-                // Write Miss: Refill xong ghi đe luon -> Modified
-                next_state = STATE_M; 
-            end
-            else begin 
-                // Read Miss
-                if (is_dirty_response) begin
-                    // Nhan data Dirty tu cache khac
-                    if (is_shared_response) 
-                        next_state = STATE_O; // Dirty + Shared -> Owned
-                    else 
-                        next_state = STATE_M; // Dirty + Unique -> Modified
-                end 
-                else begin
-                    // Nhan data Clean (tu RAM / Cache khac)
-                    if (is_shared_response) 
-                        next_state = STATE_S; // Clean + Shared -> Shared
-                    else      
-                        next_state = STATE_E; // Clean + Unique -> Exclusive
-                end
-            end
+            // Nhan data Clean (tu RAM / Cache khac)
+            if (is_shared_response) 
+                next_state = STATE_S; // Clean + Shared -> Shared
+            else      
+                next_state = STATE_E; // Clean + Unique -> Exclusive
         end
 
         // CPU HIT (Xu ly Hit)

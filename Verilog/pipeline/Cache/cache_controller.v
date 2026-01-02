@@ -23,8 +23,8 @@ module cache_controller #(
     input   [2:0]   current_moesi_state,
 
     // control plru
-    output  reg     plru_we,
-    output  reg     plru_src, // 0: way_hit, 1: way_victim
+    // output  reg     plru_we,
+    // output  reg     plru_src, // 0: way_hit, 1: way_victim
 
     // control datapath
     output  reg     data_we,
@@ -32,7 +32,7 @@ module cache_controller #(
     output  reg     moesi_we,
     
     output  reg     refill_we,
-    output  reg     cache_busy,         // 1: CPU stall, 0: CPU continue
+    // output  reg     cache_busy,         // 1: CPU stall, 0: CPU continue
     output  reg     is_shared_response, // 1: Shared, 0: Exclusive
     output  reg     is_dirty_response,  // 1: Dirty, 0: Clean
     // output  reg     way_src,            // 0: way_hit, 1: way_victim
@@ -114,6 +114,7 @@ module cache_controller #(
     localparam UPDATE       = 4'd7;
     localparam FAULT        = 4'd8;
     localparam WAIT_SNOOP   = 4'd9;
+    localparam WAIT_RAM     = 4'd10;
 
     localparam  STATE_M = 3'd0,
                 STATE_O = 3'd1,
@@ -274,9 +275,12 @@ module cache_controller #(
             end
 
             UPDATE: begin
-                next_state = TAG_CHECK;
+                next_state = WAIT_RAM;
             end 
 
+            WAIT_RAM: begin
+                next_state = TAG_CHECK;
+            end 
             default: begin
                 // next_state = IDLE;
                 next_state = TAG_CHECK;
@@ -301,10 +305,10 @@ module cache_controller #(
         refill_we   = 1'd0;
         // way_src     = 1'b0;
         moesi_we    = 1'd0;
-        plru_we     = 1'd0;
-        plru_src    = 1'b0;
+        // plru_we     = 1'd0;
+        // plru_src    = 1'b0;
         
-        cache_busy  = 1'b1; // mac dinh la ban (tru IDLE)
+        // cache_busy  = 1'b1; // mac dinh la ban (tru IDLE)
         snoop_can_access_ram = 1'b1; // mac dinh la co the truy cap (tru tagcheck | update)
 
         case(state)
@@ -313,9 +317,9 @@ module cache_controller #(
             // end 
             TAG_CHECK: begin
                 snoop_can_access_ram    = 1'b0;
-                cache_busy              = 1'b0;
+                // cache_busy              = 1'b0;
                 if (hit & (~need_upgrade)) begin
-                    plru_we    = 1'b1;
+                    // plru_we    = 1'b1;
                     if (cpu_we) begin
                         // tag_we      = 1'b1;
                         moesi_we    = 1'b1; // update dirty bit state -> M;
@@ -368,11 +372,17 @@ module cache_controller #(
                 snoop_can_access_ram = 1'b0;
                 tag_we      = 1'b1;
                 moesi_we    = 1'b1;
-                plru_we     = 1'b1;
-                plru_src    = 1'b1;
+                // plru_we     = 1'b1;
+                // plru_src    = 1'b1;
                 // data_we     = 1'b1;
                 refill_we   = 1'b1;
                 // way_src     = 1'b1;
+            end 
+
+            WAIT_SNOOP: begin
+            end 
+
+            WAIT_RAM: begin
             end 
             
             default: begin

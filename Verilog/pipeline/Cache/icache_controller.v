@@ -14,16 +14,11 @@ module icache_controller #(
     input           cpu_req,
     input           hit,           
 
-    // --- Control PLRU ---
-    output  reg     plru_we,
-    output  reg     plru_src, // 0: way_hit, 1: way_victim
-
     // --- Control Datapath ---
     output  reg     tag_we, 
     output  reg     valid_we, 
     
     output  reg     refill_we,
-    output  reg     cache_busy,     // 1: CPU stall, 0: CPU continue
     output  reg     index_src,      // 0: s1 index, 1: s2 index
     
     output  [3:0]   cache_state,
@@ -139,18 +134,11 @@ module icache_controller #(
         oRREADY     = 1'd0;
         tag_we      = 1'd0;
         refill_we   = 1'd0;
-        valid_we    = 1'd0;
-        plru_we     = 1'd0;
-        plru_src    = 1'b0;        
+        valid_we    = 1'd0;     
         index_src   = 1'b0; // Default lay s1 index
-        cache_busy  = 1'b1; // Default bao Stall CPU
 
         case(state)
             TAG_CHECK: begin
-                cache_busy = 1'b0;
-                if (hit) begin
-                    plru_we    = 1'b1;
-                end 
             end 
 
             ALLOC_AR: begin
@@ -164,8 +152,6 @@ module icache_controller #(
             UPDATE: begin
                 tag_we      = 1'b1;    
                 valid_we    = 1'b1; 
-                plru_we     = 1'b1; 
-                plru_src    = 1'b1; 
                 refill_we   = 1'b1; 
             end 
 

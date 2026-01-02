@@ -275,7 +275,7 @@ module tb_single_core;
         $display("--------------------------------------------------");
         $display("Loading Hex File...");
         $readmemh(HEX_FILE, u_i_mem.u_DataMem.mem);
-        $readmemh(INPUT_DRAM, u_d_mem.u_DataMem.mem);
+        // $readmemh(INPUT_DRAM, u_d_mem.u_DataMem.mem);
         $display("--------------------------------------------------");
 
         // 3. Scenario 1: Refill voi trang thai Exclusive (E)

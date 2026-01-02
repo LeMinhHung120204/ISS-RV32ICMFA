@@ -25,7 +25,6 @@ module icache_v2 #(
 
     output   [DATA_W-1:0]       data_rdata,
     output                      cpu_hit,
-    // output                      cache_busy,
     output                      pipeline_stall,
 
     // (icache <-> dcache)
@@ -72,8 +71,6 @@ module icache_v2 #(
     wire                tag_we;
     wire                valid_we;
     wire                refill_we;
-    wire                plru_we;
-    wire                plru_src;
     wire                index_src;
     wire [3:0]          cache_state;
     wire [3:0]          burst_cnt;
@@ -220,6 +217,7 @@ module icache_v2 #(
     assign cpu_hit    = any_hit;
 
     // Mux dau ra
+    // dang phan van cho nay
     reg [DATA_W-1:0] word_select;
     always @(*) begin
         if (index_src) begin
@@ -288,12 +286,9 @@ module icache_v2 #(
         .hit            (any_hit),
         
         // Control signals output
-        .plru_we        (plru_we),
-        .plru_src       (plru_src),
         .tag_we         (tag_we),
         .valid_we       (valid_we),
         .refill_we      (refill_we),
-        // .cache_busy     (cache_busy),
         .cache_state    (cache_state),
         .burst_cnt      (burst_cnt),
         .index_src      (index_src),

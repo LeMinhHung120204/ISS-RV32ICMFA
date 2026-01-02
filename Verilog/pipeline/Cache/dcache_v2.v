@@ -27,7 +27,7 @@ module dcache_v2 #(
 
     output  reg [DATA_W-1:0]    data_rdata,
     output                      cpu_hit,
-    output                      cache_busy, // Stall CPU
+    // output                      cache_busy, // Stall CPU
     output                      pipeline_stall,
 
     // (cache <-> cache L2)
@@ -160,7 +160,6 @@ module dcache_v2 #(
     wire [3:0]              burst_cnt_snoop;
 
     wire [NUM_WAYS-1:0]     way_select;
-    reg  [NUM_WAYS-1:0]     reg_way_select;
 
     // ---------------------------------------- Gan ID ----------------------------------------
     assign oAWID    = {1'b1, CORE_ID};
@@ -180,7 +179,7 @@ module dcache_v2 #(
         .cpu_byte_off   (s1_byte_off)
     );
 
-    assign ram_access_index = (snoop_can_access_ram) ? snoop_index : s1_index;
+    assign ram_access_index = (snoop_busy) ? snoop_index : s1_index;
 
     // ---------------------------------------- SRAM ARRAYS (DATA & TAG) ----------------------------------------
     assign tag_we = main_tag_we | snoop_tag_we;
@@ -241,7 +240,10 @@ module dcache_v2 #(
     acc_cmp #(
         .ADDR_W     (ADDR_W),
         .DATA_W     (DATA_W),
-        .NUM_SETS   (NUM_SETS)
+        .NUM_SETS   (NUM_SETS),
+        .WORD_OFF_W (WORD_OFF_W),
+        .BYTE_OFF_W (BYTE_OFF_W)
+
     ) acc_cmp_inst (
         .clk            (ACLK),
         .rst_n          (ARESETn),
@@ -341,20 +343,16 @@ module dcache_v2 #(
     always @(posedge ACLK or negedge ARESETn) begin
         if (~ARESETn) begin
             refill_buffer   <= {CACHE_DATA_W{1'b0}};
-            reg_way_select  <= {NUM_WAYS{1'b0}};
         end 
         else begin 
             if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
                 refill_buffer[burst_cnt * DATA_W +: DATA_W] <= iRDATA;
             end 
-            if (~any_hit & s2_req)
-                reg_way_select <= way_select;
         end 
     end 
 
     // Cache Replacement Policy (PLRU)
     wire [INDEX_W-1:0] plru_target_index = (snoop_busy) ? snoop_index : s2_index;
-    wire plru_we;
     
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS), 
@@ -362,8 +360,8 @@ module dcache_v2 #(
     ) u_replacement (
         .clk        (ACLK),
         .rst_n      (ARESETn),
-        .we         (plru_we),
-        .way_hit    (plru_src ? way_hit : reg_way_select),
+        .we         (any_hit),
+        .way_hit    (any_hit ? way_hit : way_select),
         .addr       (plru_target_index),
         .way_select (way_select)
     );
@@ -389,14 +387,11 @@ module dcache_v2 #(
         .current_moesi_state    (moesi_selected_state),
 
         // Outputs
-        // .cache_busy         (cache_busy),
         .data_we            (data_we),
         .tag_we             (main_tag_we),
         .moesi_we           (moesi_we),
         .refill_we          (refill_we),
         .burst_cnt          (burst_cnt),
-        .plru_we            (plru_we  ),
-        .plru_src           (plru_src ),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response ),
         .cache_state        (cache_state),
@@ -463,7 +458,8 @@ module dcache_v2 #(
     assign oARADDR = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // ---------------------------------------- Snoop Controller & MOESI Controller ----------------------------------------
-    wire snoop_hit;
+    wire bus_rw;
+    wire bus_snoop_valid;
 
     snoop_controller #( 
         .ADDR_W(ADDR_W) 
@@ -506,9 +502,9 @@ module dcache_v2 #(
         .refill_we          (refill_we),
         .current_state      (moesi_selected_state),
 
-        .cpu_req_valid      (cpu_req),
+        .cpu_req_valid      (s2_req),
         .cpu_hit            (cpu_hit),
-        .cpu_rw             (cpu_we ),
+        .cpu_rw             (s2_we ),
 
         
         .bus_snoop_valid    (bus_snoop_valid),

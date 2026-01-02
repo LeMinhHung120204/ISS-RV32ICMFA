@@ -131,7 +131,6 @@ module core_tile #(
         .cpu_addr   (data_addr),
         .cpu_din    (data_wdata),
         .data_rdata (data_rdata),
-        // .cache_busy (dcache_stall),
         .pipeline_stall (dcache_stall),
 
         // AW Channel
