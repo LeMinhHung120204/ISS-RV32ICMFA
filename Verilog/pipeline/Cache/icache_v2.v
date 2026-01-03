@@ -98,7 +98,7 @@ module icache_v2 #(
     );
 
     // ---------------------------------------- PIPELINE REGISTER (ACC_CMP) ----------------------------------------
-    assign pipeline_stall   = (s2_req & ~any_hit) | dcache_stall; 
+    assign pipeline_stall   = (s2_req & ~any_hit); 
 
     acc_cmp #(
         .ADDR_W     (ADDR_W),
@@ -107,7 +107,7 @@ module icache_v2 #(
     ) acc_cmp_inst (
         .clk            (ACLK),
         .rst_n          (ARESETn),
-        .stall          (pipeline_stall),
+        .stall          (pipeline_stall | dcache_stall),
         .flush          (icache_flush),
 
         // Stage 1

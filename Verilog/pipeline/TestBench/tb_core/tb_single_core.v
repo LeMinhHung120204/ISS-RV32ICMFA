@@ -193,7 +193,7 @@ module tb_single_core;
         .i_axi_wvalid   (1'b0), 
         .i_axi_bready   (1'b1),
         .i_axi_awaddr   ({DATA_W{1'b0}}), 
-        .i_axi_awid     ({ID_W{1'b0}}), 
+        
         .i_axi_awlen    (8'b0), 
         .i_axi_awsize   (3'b0), 
         .i_axi_awburst  (2'b0),
@@ -214,6 +214,7 @@ module tb_single_core;
     ) u_d_mem (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
+        .i_axi_awid     (d_axi_awid), 
         .i_axi_awvalid  (d_axi_awvalid), 
         .o_axi_awready  (d_axi_awready), 
         .i_axi_awaddr   (d_axi_awaddr),
