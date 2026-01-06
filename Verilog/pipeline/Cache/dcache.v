@@ -4,725 +4,361 @@ module dcache #(
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
+    parameter BURST_LEN     = 15,
+    parameter CORE_ID       = 1'b0,
+    
+    // Derived parameters
     parameter INDEX_W       = $clog2(NUM_SETS),
-    parameter WORD_OFF_W    = 4,  // 16 words/line
-    parameter BYTE_OFF_W    = 2,  // 4B/word
+    parameter WORD_OFF_W    = 4, // 16 words
+    parameter BYTE_OFF_W    = 2,
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
-    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
-    parameter CORE_ID       = 1'b0,    // 0: core 0, 1: core 1
-
-    parameter ID_W          = 2,
-    parameter USER_W        = 4,
-    parameter STRB_W        = (DATA_W/8)
-
+    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
 )(
-    input ACLK, ARESETn,
+    input clk, rst_n,
 
-    // (cache <-> cpu)
+    // cache <-> CPU
     input                       cpu_req, cpu_we,
-    input   [1:0]               cpu_size, // 00: word, 01: byte, 10: half
-    input                       data_valid,
     input   [ADDR_W-1:0]        cpu_addr,
     input   [DATA_W-1:0]        cpu_din,
-
+    input   [1:0]               cpu_size,
     output  reg [DATA_W-1:0]    data_rdata,
-    output                      cpu_hit,
-    output                      cache_busy,
+    output                      pipeline_stall,
 
-    // (cache <-> cache L2)
-    // AW channel 
-    input                   iAWREADY,
-    output  [ID_W-1:0]      oAWID,
-    output  [ADDR_W-1:0]    oAWADDR,
-    output  [7:0]           oAWLEN,
-    output  [2:0]           oAWSIZE,
-    output  [1:0]           oAWBURST,   
-    output                  oAWLOCK,    // khong dun
-    output  [3:0]           oAWCACHE,   // khong dun
-    output  [2:0]           oAWPROT,    // khong dung
-    output  [3:0]           oAWQOS,     // khong dung
-    output  [3:0]           oAWREGION,  // khong dung
-    output  [USER_W-1:0]    oAWUSER,    // khong dung
-    output                  oAWVALID,
-    // tin hieu them
-    output  [2:0]           oAWSNOOP,
-    output  [1:0]           oAWDOMAIN,
-    output  [1:0]           oAWBAR,     // must be 1'b0: normal access
-    output                  oAWUNIQUE,  // khong dung (=0) vi khong co cache L3
+    // cache <-> L2
+    // Request
+    output                      o_l2_req_valid,
+    input                       i_l2_req_ready,
+    output  [1:0]               o_l2_req_cmd,   // 0: Read, 1: WriteBack
+    output  [ADDR_W-1:0]        o_l2_req_addr,
     
-    // W channel
-    input                       iWREADY,
-    // output  [ID_W-1:0]          oWID,
-    output reg  [DATA_W-1:0]    oWDATA,
-    output  [STRB_W-1:0]        oWSTRB,
-    output                      oWLAST,
-    output  [USER_W-1:0]        oWUSER,     // khong dun
-    output                      oWVALID,
+    // Write Data (WB)
+    output  reg [DATA_W-1:0]    o_l2_wdata,
+    output                      o_l2_wdata_valid,
+    output                      o_l2_wdata_last,
+    input                       i_l2_wdata_ready,
+
+    // Read Data (Refill)
+    input                       i_l2_rdata_valid,
+    input                       i_l2_rdata_last,
+    input   [DATA_W-1:0]        i_l2_rdata,
+    output                      o_l2_rdata_ready,
+
+    // Snoop Interface
+    input                       i_snoop_valid,
+    input   [ADDR_W-1:0]        i_snoop_addr,
+    input   [1:0]               i_snoop_type,
     
-    // B channel
-    input   [ID_W-1:0]      iBID,
-    input   [1:0]           iBRESP,
-    input   [USER_W-1:0]    iBUSER,     // khong dun
-    input                   iBVALID,
-    output                  oBREADY,
-
-    // AR channel
-    input                   iARREADY,
-    output  [ID_W-1:0]      oARID,
-    output  [ADDR_W-1:0]    oARADDR,
-    output  [7:0]           oARLEN,
-    output  [2:0]           oARSIZE,
-    output  [1:0]           oARBURST,
-    output                  oARLOCK,    // khong dun
-    output  [3:0]           oARCACHE,   // khong dun
-    output  [2:0]           oARPROT,    // khong dung
-    output  [3:0]           oARQOS,     // khong dun
-    output  [USER_W-1:0]    oARUSER,    // khong dun
-    output                  oARVALID,
-    // tin hieu them
-    output  [3:0]           oARSNOOP,
-    output  [1:0]           oARDOMAIN,
-    output  [1:0]           oARBAR,     // must be 1'b0: normal access
-
-    // R channel
-    input   [ID_W-1:0]      iRID,
-    input   [DATA_W-1:0]    iRDATA,
-    //  RRESP[3:2] (interconnect)
-    //  RRESP[1:0] (memory)
-    input   [3:0]           iRRESP,
-    input                   iRLAST,
-    input   [USER_W-1:0]    iRUSER,   // khong dun
-    input                   iRVALID,
-    output                  oRREADY,
-
-    // Snoop channel
-    // AC channel
-    input                   iACVALID,
-    input   [ADDR_W-1:0]    iACADDR,
-    input   [3:0]           iACSNOOP,
-    input   [2:0]           iACPROT,    // khong dung
-    output                  oACREADY,
-
-    // CR channel
-    input                   iCRREADY,
-    output                  oCRVALID,
-    output  [4:0]           oCRRESP,
-    
-    // CD channel
-    input                       iCDREADY,
-    output                      oCDVALID,
-    output reg  [DATA_W-1:0]    oCDDATA,
-    output                      oCDLAST
+    output  reg                 o_snoop_hit,
+    output  reg                 o_snoop_dirty,
+    output  reg [DATA_W-1:0]    o_snoop_data
 );
-    localparam BO       = BYTE_OFF_W;
-    localparam WO       = WORD_OFF_W;
-    localparam IX       = INDEX_W;
-    localparam TAG_LSB  = BO + WO + IX;
-    localparam TAG_MSB  = ADDR_W-1;
-    localparam IDX_MSB  = TAG_LSB-1;
-    localparam IDX_LSB  = BO + WO;
-    localparam WO_MSB   = IDX_LSB-1;
 
-    reg [ADDR_W-1:0]        reg_addr;
-    reg [DATA_W-1:0]        reg_data;
-    reg [ADDR_W-1:0]        reg_ACADDR;
-    reg [NUM_WAYS-1:0]      reg_way_select;
-    reg                     reg_cpu_req;
-    reg [CACHE_DATA_W-1:0]  refill_buffer;
-
-    // ---------------------------------------- cpu address request  ----------------------------------------
-
-    wire [WO-1:0]       cpu_word_off    = cpu_addr[WO_MSB:BO];
-    wire [IX-1:0]       cpu_index       = cpu_addr[IDX_MSB:IDX_LSB];
-    // wire [TAG_W-1:0]    cpu_tag         = cpu_addr[TAG_MSB:TAG_LSB];
-
-    wire [TAG_W-1:0]    cpu_tag_reg     = reg_addr[TAG_MSB:TAG_LSB];
-    wire [IX-1:0]       cpu_index_reg   = reg_addr[IDX_MSB:IDX_LSB];
-    wire [WO-1:0]       cpu_word_off_reg= reg_addr[WO_MSB:BO];
-    wire [BO-1:0]       cpu_byte_off    = reg_addr[BO-1:0]; 
-
-    // ---------------------------------------- snoop address request  ----------------------------------------
-    wire [TAG_W-1:0]    snoop_tag       = reg_ACADDR[TAG_MSB:TAG_LSB];
-    wire [IX-1:0]       snoop_index     = reg_ACADDR[IDX_MSB:IDX_LSB];
-    // wire [WO-1:0]       snoop_word_off  = reg_ACADDR[WO_MSB:BO];
-    // wire [BO-1:0]       snoop_byte_off  = reg_ACADDR[BO-1:0]; 
-
-    wire victim_dirty;
-    wire is_valid;
-
-    // plru control
-    wire plru_we;
-    wire plru_src;
-
-    // snoop_control
-    wire snoop_hit, snoop_busy;
-    wire snoop_we_state;
-    wire snoop_can_access_ram;
-    wire bus_rw;
-    wire bus_snoop_valid;
-    // control moesi
-    wire        moesi_we;
-    reg  [2:0]  moesi_selected_state;
-    wire [2:0]  moesi_current_state0;
-    wire [2:0]  moesi_current_state1;
-    wire [2:0]  moesi_current_state2;
-    wire [2:0]  moesi_current_state3;
-    wire [2:0]  moesi_next_state;
-    wire        is_unique, is_dirty, is_owner ;
-
-    // control cache
-    wire [3:0]  cache_state;
-    wire        data_we;
-    wire        main_tag_we, snoop_tag_we, tag_we;
-    wire        refill_we;
-    // wire        cache_busy;
-    wire        is_shared_response;
-    wire        is_dirty_response;
-    wire        wb_error;
-    wire [3:0]  burst_cnt;
-    wire [3:0]  burst_cnt_snoop;
-
-    // tag_read and mem_Read
-    wire [INDEX_W-1:0]      target_index;
-    wire [TAG_W-1:0]        tag_read0, tag_read1, tag_read2, tag_read3;
-    wire [CACHE_DATA_W-1:0] data_read0, data_read1, data_read2, data_read3;
-
-    // select way
-    wire [NUM_WAYS-1:0]     way_select;
-
-    // ---------------------------------------- gan ID  ----------------------------------------
-    assign oAWID    = {1'b1, CORE_ID};
-    assign oARID    = {1'b1, CORE_ID};
-
-    // ---------------------------------------- check hit  ----------------------------------------
-    wire [TAG_W-1:0]    tag_compare_input;
-    wire [3:0]          way_hit;
-
-    assign tag_compare_input    = (snoop_busy) ? snoop_tag : cpu_tag_reg;
-    assign way_hit[0]           = (tag_read0 == tag_compare_input) & (moesi_current_state0 != 3'd4);
-    assign way_hit[1]           = (tag_read1 == tag_compare_input) & (moesi_current_state1 != 3'd4);
-    assign way_hit[2]           = (tag_read2 == tag_compare_input) & (moesi_current_state2 != 3'd4);
-    assign way_hit[3]           = (tag_read3 == tag_compare_input) & (moesi_current_state3 != 3'd4);
-
-    wire any_hit                = |way_hit;
-    assign cpu_hit              = (snoop_busy) ? 1'b0       : any_hit;
-    assign snoop_hit            = (snoop_busy) ? any_hit    : 1'b0;
-
-    // ---------------------------------------- mux moesi  ----------------------------------------
     
-    always @(*) begin
-        // Mặc định
-        moesi_selected_state = 3'd4;    // Invalid
+    // ---------------------------------------- INTERNAL SIGNALS ----------------------------------------
+    wire [TAG_W-1:0]        s1_tag, s2_tag;
+    wire [INDEX_W-1:0]      s1_index, s2_index;
+    wire [WORD_OFF_W-1:0]   s1_word_off, s2_word_off;
+    wire [BYTE_OFF_W-1:0]   s1_byte_off, s2_byte_off;
+    
+    wire                    s2_req;
+    wire                    s2_we;
+    wire [1:0]              s2_size;
+    wire [DATA_W-1:0]       s2_wdata;
+    
+    wire                    s2_is_snoop;
 
+    // Arrays & Counters
+    wire [3:0]              burst_cnt;
+    wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
+    wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
+    reg  [CACHE_DATA_W-1:0] refill_buffer;
+
+    // Controller signals
+    wire                    tag_we, data_we, refill_we;
+    wire [NUM_WAYS-1:0]     way_hit;
+    wire [NUM_WAYS-1:0]     way_select;
+    wire                    cpu_hit;
+
+    // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
+    wire [ADDR_W-1:0] s1_mux_addr   = (i_snoop_valid) ? i_snoop_addr : cpu_addr;
+    access #(
+        .ADDR_W     (ADDR_W), 
+        .DATA_W     (DATA_W), 
+        .NUM_SETS   (NUM_SETS)
+    ) access_inst (
+        .cpu_addr       (s1_mux_addr),
+        .cpu_tag        (s1_tag),            
+        .cpu_index      (s1_index),   
+        .cpu_word_off   (s1_word_off),
+        .cpu_byte_off   (s1_byte_off)
+    );
+    
+    // ---------------------------------------- SRAM ARRAYS (DATA & TAG) ----------------------------------------
+    genvar i;
+    generate
+        for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
+            // Tag RAM
+            tag_mem #(
+                .NUM_SETS   (NUM_SETS), 
+                .TAG_W      (TAG_W)
+            ) u_tag_mem (
+                .clk            (clk), 
+                .rst_n          (rst_n),
+                .tag_we         (tag_we & way_select[i]),
+                .read_index     (s1_index),         
+                .write_index    (s2_index),          
+                .din_tag        (s2_tag),
+                .dout_tag       (tag_read[i])
+            );
+
+            // Data RAM
+            data_mem #(
+                .DATA_W     (DATA_W), 
+                .NUM_SETS   (NUM_SETS)
+            ) u_data_mem (
+                .clk            (clk), 
+                .rst_n          (rst_n),
+                .read_index     (s1_index),
+                .write_index    (s2_index),
+                .refill_we      (refill_we & way_select[i]),
+                .refill_din     (refill_buffer),
+                .cpu_we         (data_we),
+                .cpu_din        (s2_wdata),
+                .cpu_wstrb      (4'b1111),
+                .cpu_offset     (s2_word_off),
+                .dout           (data_read[i])
+            );
+        end
+    endgenerate
+
+    // ---------------------------------------- PIPELINE REGISTER (Stage 1 -> Stage 2) ----------------------------------------
+    assign pipeline_stall           = (s2_req & ~cpu_hit & ~s2_is_snoop) | i_snoop_valid;
+    acc_cmp #(
+        .ADDR_W     (ADDR_W), 
+        .DATA_W     (DATA_W), 
+        .NUM_SETS   (NUM_SETS)
+    ) acc_cmp_inst (
+        .clk            (clk), 
+        .rst_n          (rst_n),
+        .stall          (pipeline_stall),
+        .flush          (1'b0),
+
+        // Inputs
+        .s1_req         (cpu_req | i_snoop_valid),
+        .s1_we          (cpu_we),
+        .s1_size        (cpu_size),
+        .s1_wdata       (cpu_din),
+        .s1_tag         (s1_tag),
+        .s1_index       (s1_index),
+        .s1_word_off    (s1_word_off),
+        .s1_byte_off    (s1_byte_off),
+        
+        .s1_is_snoop    (i_snoop_valid), 
+
+        // Outputs (Stage 2)
+        .s2_req         (s2_req),
+        .s2_we          (s2_we),
+        .s2_size        (s2_size),
+        .s2_wdata       (s2_wdata),
+        .s2_tag         (s2_tag),
+        .s2_index       (s2_index),
+        .s2_word_off    (s2_word_off),
+        .s2_byte_off    (s2_byte_off)
+
+        .s2_is_snoop    (s2_is_snoop)
+    );
+
+    // ---------------------------------------- STAGE 2: HIT LOGIC & SNOOP CHECK ----------------------------------------
+    reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
+    reg [NUM_WAYS-1:0]  dirty_array [0:NUM_SETS-1];
+    wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
+    wire [NUM_WAYS-1:0] current_dirty = dirty_array[s2_index];
+    
+    assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
+    assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
+    assign way_hit[2] = (tag_read[2] == s2_tag) & current_valid[2];
+    assign way_hit[3] = (tag_read[3] == s2_tag) & current_valid[3];
+
+    assign cpu_hit = (|way_hit) & s2_req & ~s2_is_snoop;
+
+    always @(*) begin
+        if (s2_is_snoop) begin
+            o_snoop_hit     = |way_hit;
+            o_snoop_dirty   = |(way_hit & current_dirty);
+        end 
+        else begin
+            o_snoop_hit     = 1'b0;
+            o_snoop_dirty   = 1'b0;
+        end
+    end
+
+    always @(*) begin
         case (way_hit)
-            4'b0001: moesi_selected_state = moesi_current_state0;
-            4'b0010: moesi_selected_state = moesi_current_state1;
-            4'b0100: moesi_selected_state = moesi_current_state2;
-            4'b1000: moesi_selected_state = moesi_current_state3;
-            default: begin
-                moesi_selected_state = 3'd4;    // Invalid
-            end
+            4'b0001: o_snoop_data = data_read[0][burst_cnt * DATA_W +: DATA_W];
+            4'b0010: o_snoop_data = data_read[1][burst_cnt * DATA_W +: DATA_W];
+            4'b0100: o_snoop_data = data_read[2][burst_cnt * DATA_W +: DATA_W];
+            4'b1000: o_snoop_data = data_read[3][burst_cnt * DATA_W +: DATA_W];
+            default: o_snoop_data = {DATA_W{1'b0}};
+        endcase
+
+    end
+
+    // ---------------------------------------- L2 INTERFACE LOGIC (MUX ADDRESS) ----------------------------------------
+    reg [TAG_W-1:0] victim_tag;
+    always @(*) begin
+        case(way_select)
+            4'b0001: victim_tag = tag_read[0];
+            4'b0010: victim_tag = tag_read[1];
+            4'b0100: victim_tag = tag_read[2];
+            4'b1000: victim_tag = tag_read[3];
+            default: victim_tag = {TAG_W{1'b0}};
+        endcase
+    end
+    
+    wire [ADDR_W-1:0] victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    wire [ADDR_W-1:0] refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+
+    // Mux address gui L2:
+    // cmd = 1 (WriteBack) -> Dung Victim Addr
+    // cmd = 0 (Read Req)  -> Dung CPU Req Addr (Refill)
+    assign o_l2_req_addr = (o_l2_req_cmd[0]) ? victim_addr_full : refill_addr_full;
+
+    // Data Mux cho WriteBack
+    always @(*) begin
+        case(way_select)
+            4'b0001: o_l2_wdata = data_read[0][burst_cnt * DATA_W +: DATA_W];
+            4'b0010: o_l2_wdata = data_read[1][burst_cnt * DATA_W +: DATA_W];
+            4'b0100: o_l2_wdata = data_read[2][burst_cnt * DATA_W +: DATA_W];
+            4'b1000: o_l2_wdata = data_read[3][burst_cnt * DATA_W +: DATA_W];
+            default: o_l2_wdata = 32'd0;
         endcase
     end
 
-    // ---------------------------------------- refill buffer  ----------------------------------------
-    always @(posedge ACLK or negedge ARESETn) begin
-        if (~ARESETn) begin
+    // ---------------------------------------- REFILL BUFFER & UPDATE LOGIC ----------------------------------------
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
             refill_buffer <= {CACHE_DATA_W{1'b0}};
+        end else begin
+            if (i_l2_rdata_valid && o_l2_rdata_ready) begin
+                refill_buffer[burst_cnt * DATA_W +: DATA_W] <= i_l2_rdata;
+            end
+        end
+    end
+
+    // Invalidate (Core khac ghi), 0: Clean/Check (Core khac đọc)
+    wire snoop_is_invalidate = (i_snoop_type == 2'b01); 
+
+    integer k;
+    always @(posedge clk or negedge rst_n) begin
+        if(~rst_n) begin
+            for(k = 0; k < NUM_SETS; k = k + 1) begin 
+                valid_array[k] <= {NUM_WAYS{1'b0}};
+                dirty_array[k] <= {NUM_WAYS{1'b0}};
+            end
         end 
         else begin
-            if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
-                refill_buffer <= {refill_buffer[479:0], iRDATA};
+            if (refill_we) begin 
+                valid_array[s2_index] <= valid_array[s2_index] | way_select;
             end 
-        end 
-    end 
+            else if (s2_is_snoop && o_snoop_hit && snoop_is_invalidate) begin
+                // Snoop Invalidate -> Clear Valid cua way bi Hit
+                valid_array[s2_index] <= valid_array[s2_index] & (~way_hit);
+            end
 
-    // ---------------------------------------- sequent ----------------------------------------
-    always @(posedge ACLK or negedge ARESETn) begin
-        if (~ARESETn) begin
-            reg_addr        <= 32'd0;
-            reg_data        <= 32'd0;
-            reg_ACADDR      <= 32'd0;
-            reg_way_select  <= {NUM_WAYS{1'b0}};
-            reg_cpu_req     <= 1'b0;
-        end 
-        else begin
-            if (data_valid & (cache_state == 4'd1)) begin  // cpu request in TAG_CHECK
-                reg_addr    <= cpu_addr;
-                reg_data    <= cpu_din;
-                reg_cpu_req <= cpu_req;
+            if (refill_we) begin
+                dirty_array[s2_index] <= dirty_array[s2_index] & (~way_select);
             end 
-            else begin
-                reg_cpu_req <= 1'b0;
-            end 
-            if (iACVALID & (~snoop_busy)) begin  // snoop request
-                reg_ACADDR  <= iACADDR;
-            end 
-            if (~any_hit) begin
-                reg_way_select <= way_select;
-            end 
-        end 
-    end 
+            else if (s2_we && cpu_hit && ~s2_is_snoop) begin
+                // Write Hit -> Set Dirty
+                dirty_array[s2_index] <= dirty_array[s2_index] | way_hit;
+            end
+            // Case 3 (Optional): Nếu Snoop Clean (Read Request), ta có thể xóa Dirty
+            // sau khi đã gửi data xuống L2. Nhưng giữ Dirty = 1 cũng không sai (State Owned).
+        end
+    end
 
-    // ---------------------------------------- Mux output ----------------------------------------
-    // mux for data_rdata
-    // always @(*) begin
-    //     case(way_hit)
-    //         4'b0001: begin
-    //             data_rdata = data_read0[cpu_word_off_reg * DATA_W +: DATA_W];
-    //         end 
-    //         4'b0010: begin
-    //             data_rdata = data_read1[cpu_word_off_reg * DATA_W +: DATA_W];
-    //         end 
-    //         4'b0100: begin
-    //             data_rdata = data_read2[cpu_word_off_reg * DATA_W +: DATA_W];
-    //         end 
-    //         4'b1000: begin
-    //             data_rdata = data_read3[cpu_word_off_reg * DATA_W +: DATA_W];
-    //         end 
-    //         default: begin
-    //             data_rdata = 32'd0;
-    //         end 
-    //     endcase
-    // end 
-    reg [DATA_W-1:0]  word_select;
+    // ---------------------------------------- MODULE INSTANTIATION ----------------------------------------
+    // Cache Replacement Policy (PLRU)
+    cache_replacement #( 
+        .N_WAYS     (NUM_WAYS), 
+        .N_LINES    (NUM_SETS) 
+    ) u_replacement (
+        .clk        (clk), 
+        .rst_n      (rst_n),
+        .we         (cpu_hit),
+        .way_hit    (way_hit),
+        .addr       (s2_index),
+        .way_select (way_select)
+    );
+
+    wire victim_dirty_bit = |(current_dirty & way_select);
+    wire victim_valid_bit = |(current_valid & way_select);
+
+    dcache_controller_v2 #( 
+        .CORE_ID    (CORE_ID), 
+        .BURST_LEN  (BURST_LEN)
+    ) u_controller (
+        .clk                (clk), 
+        .rst_n              (rst_n),
+        
+        .cpu_req            (s2_req), 
+        .hit                (cpu_hit),
+        .victim_dirty       (victim_dirty_bit), // bao victim co valid ko
+        .victim_valid       (victim_valid_bit), // bao victim co dirty khong
+        .snoop_busy         (i_snoop_valid),
+
+        // Outputs to Datapath
+        .data_we    (data_we), 
+        .tag_we     (tag_we), 
+        .refill_we  (refill_we),
+        .burst_cnt  (burst_cnt),
+
+        // Custom L2 Interface
+        .o_mem_req_valid    (o_l2_req_valid),
+        .i_mem_req_ready    (i_l2_req_ready),
+        .o_mem_req_cmd      (o_l2_req_cmd),
+
+        .o_mem_wdata_valid  (o_l2_wdata_valid),
+        .i_mem_wdata_ready  (i_l2_wdata_ready),
+        .o_mem_wdata_last   (o_l2_wdata_last),
+
+        .i_mem_rdata_valid  (i_l2_rdata_valid),
+        .i_mem_rdata_last   (i_l2_rdata_last),
+        .o_mem_rdata_ready  (o_l2_rdata_ready)
+    );
+
+    // ---------------------------------------- DATA OUTPUT MUX (READ LOGIC) ----------------------------------------
+    reg [DATA_W-1:0] word_select;
+    
     always @(*) begin
         case(way_hit)
-            4'b0001: begin
-                word_select = data_read0[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            4'b0010: begin
-                word_select = data_read1[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            4'b0100: begin
-                word_select = data_read2[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            4'b1000: begin
-                word_select = data_read3[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            default: begin
-                word_select = 32'd0;
-            end 
+            4'b0001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
+            4'b0010: word_select = data_read[1][s2_word_off * DATA_W +: DATA_W];
+            4'b0100: word_select = data_read[2][s2_word_off * DATA_W +: DATA_W];
+            4'b1000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
+            default: word_select = 32'd0;
         endcase
     end 
 
     always @(*) begin
-        case(cpu_size)
-            2'b00: begin
-                data_rdata = word_select;
-            end 
-            2'b01: begin
-                case(cpu_byte_off)
+        case(s2_size)
+            2'b00: data_rdata = word_select; // Word
+            2'b01: begin // Byte
+                case(s2_byte_off)
                     2'b00: data_rdata = {24'd0, word_select[7:0]};
                     2'b01: data_rdata = {24'd0, word_select[15:8]};
                     2'b10: data_rdata = {24'd0, word_select[23:16]};
                     2'b11: data_rdata = {24'd0, word_select[31:24]};
-                    default: data_rdata = {24'd0, word_select[7:0]};
                 endcase
             end 
-            2'b10: begin
-                case(cpu_byte_off[0])
+            2'b10: begin // Half
+                case(s2_byte_off[1])
                     1'b0: data_rdata = {16'd0, word_select[15:0]};
                     1'b1: data_rdata = {16'd0, word_select[31:16]};
-                    default: data_rdata = {16'd0, word_select[15:0]};
                 endcase
             end
             default: data_rdata = word_select;
         endcase
     end
 
-    // mux for write data in mem
-    always @(*) begin
-        case(way_select)
-            4'b0001: begin
-                oWDATA = data_read0[burst_cnt * DATA_W +: DATA_W];
-            end 
-            4'b0010: begin
-                oWDATA = data_read1[burst_cnt * DATA_W +: DATA_W];
-            end 
-            4'b0100: begin
-                oWDATA = data_read2[burst_cnt * DATA_W +: DATA_W];
-            end 
-            4'b1000: begin
-                oWDATA = data_read3[burst_cnt * DATA_W +: DATA_W];
-            end 
-            default: begin
-                oWDATA = 32'd0;
-            end 
-        endcase
-    end
-
-    // mux for CD data output
-    always @(*) begin
-        case(way_select)
-            4'b0001: begin
-                oCDDATA = data_read0[burst_cnt_snoop * DATA_W +: DATA_W];
-            end 
-            4'b0010: begin
-                oCDDATA = data_read1[burst_cnt_snoop * DATA_W +: DATA_W];
-            end 
-            4'b0100: begin
-                oCDDATA = data_read2[burst_cnt_snoop * DATA_W +: DATA_W];
-            end 
-            4'b1000: begin
-                oCDDATA = data_read3[burst_cnt_snoop * DATA_W +: DATA_W];
-            end 
-            default: begin
-                oCDDATA = 32'd0;
-            end 
-        endcase
-    end
-
-    // ---------------------------------------- data mem ----------------------------------------
-    // way 0
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-        // .BURST_LEN_W(4)
-    ) data_mem_way0 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
-
-        .refill_we  (refill_we & way_select[0]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (data_we),        
-        .cpu_din    (reg_data),
-        .cpu_wstrb  (4'b1111),      // tam de 1111
-        .cpu_offset (cpu_word_off),
-
-        .dout       (data_read0)        
-    );
-
-    // way 1
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-    ) data_mem_way1 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
-
-        .refill_we  (refill_we & way_select[1]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (data_we),        
-        .cpu_din    (reg_data),
-        .cpu_wstrb  (4'b1111),      // tam de 1111
-        .cpu_offset (cpu_word_off),
-
-        .dout       (data_read1)        
-    );
-
-    // way 2
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-    ) data_mem_way2 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
-
-        .refill_we  (refill_we & way_select[2]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (data_we),        
-        .cpu_din    (reg_data),
-        .cpu_wstrb  (4'b1111),      // tam de 1111
-        .cpu_offset (cpu_word_off),
-
-        .dout       (data_read2)        
-    );
-
-    // way 3
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-    ) data_mem_way3 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
-
-        .refill_we  (refill_we & way_select[3]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (data_we),        
-        .cpu_din    (reg_data),
-        .cpu_wstrb  (4'b1111),      // tam de 1111
-        .cpu_offset (cpu_word_off),
-
-        .dout       (data_read3)        
-    );
-
-    // ---------------------------------------- xu ly address read ----------------------------------------
-
-    assign oARADDR = {cpu_tag_reg, cpu_index_reg, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    assign oAWADDR = {cpu_tag_reg, cpu_index_reg, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    // ---------------------------------------- cpu_tag mem ----------------------------------------
-
-
-
-    wire [3:0] choosen_way;
-    reg  [2:0] choosen_moesi;
-
-    assign choosen_way      = (any_hit) ? way_hit : way_select;
-    assign tag_we           = main_tag_we | snoop_tag_we;
-    
-    always @(*) begin
-        case (choosen_way)
-            4'b0001: begin
-                choosen_moesi = moesi_current_state0;
-            end 
-            4'b0010: begin
-                choosen_moesi = moesi_current_state1;
-            end 
-            4'b0100: begin
-                choosen_moesi = moesi_current_state2;
-            end 
-            4'b1000: begin
-                choosen_moesi = moesi_current_state3;
-            end 
-            default: begin
-                choosen_moesi = moesi_current_state0;
-            end 
-        endcase
-    end
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way0 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[0]),
-        .moesi_we           (moesi_we & choosen_way[0]),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read0),
-        .moesi_next_state   (moesi_next_state   ),
-        .moesi_current_state(moesi_current_state0)
-    ); 
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way1 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[1]),
-        .moesi_we           (moesi_we & choosen_way[1]),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read1),
-        .moesi_next_state   (moesi_next_state   ),
-        .moesi_current_state(moesi_current_state1)
-    ); 
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way2 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[2]),
-        .moesi_we           (moesi_we & choosen_way[2]),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read2),
-        .moesi_next_state   (moesi_next_state   ),
-        .moesi_current_state(moesi_current_state2)
-    ); 
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way3 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[3]),
-        .moesi_we           (moesi_we & choosen_way[3]),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read3),
-        .moesi_next_state   (moesi_next_state   ),
-        .moesi_current_state(moesi_current_state3)
-    ); 
-    // ---------------------------------------- policy replacement ----------------------------------------
-
-    assign target_index = (snoop_busy) ? snoop_index : cpu_index_reg;
-
-    cache_replacement #(
-        .N_WAYS     (NUM_WAYS),
-        .N_LINES    (NUM_SETS)
-    ) cache_replacement (
-        .clk            (ACLK   ),
-        .rst_n          (ARESETn),
-        .we             (plru_we),
-        .way_hit        ((plru_src) ? reg_way_select : way_hit),
-        .addr           (target_index),
-
-        .way_select     (way_select)
-        // .way_select_bin (way_select_bin )
-    );
-    // ---------------------------------------- controller ----------------------------------------
-    cache_controller #(
-        .DATA_W     (DATA_W),
-        .ADDR_W     (ADDR_W),
-        .ID_W       (ID_W),
-        .USER_W     (USER_W),
-        .STRB_W     (STRB_W),
-        .CORE_ID    (CORE_ID),
-        .BURST_LEN  (15)
-    ) dcache_controller(
-        .clk            (ACLK),
-        .rst_n          (ARESETn),
-
-        .snoop_busy             (snoop_busy),
-        .snoop_can_access_ram   (snoop_can_access_ram),
-        .wb_error               (wb_error),
-
-        .cpu_req                (reg_cpu_req),
-        .cpu_we                 (cpu_we  ),
-        .hit                    (any_hit ),
-        .victim_dirty           (is_dirty),
-        .is_valid               (is_valid),
-        .current_moesi_state    (moesi_selected_state),
-
-        // control datapath
-        .data_we            (data_we   ),
-        .tag_we             (main_tag_we),
-        .moesi_we           (moesi_we ),
-        .plru_we            (plru_we  ),
-        .plru_src           (plru_src ),
-        .refill_we          (refill_we ),
-        .cache_busy         (cache_busy),
-        .is_shared_response (is_shared_response),
-        .is_dirty_response  (is_dirty_response ),
-        .cache_state        (cache_state),
-        .burst_cnt          (burst_cnt),
-
-        // cache <-> mem
-        // AW channel
-        .oAWLEN          (oAWLEN   ),
-        .oAWSIZE         (oAWSIZE  ),
-        .oAWBURST        (oAWBURST ),
-        .oAWLOCK         (oAWLOCK  ),
-        .oAWCACHE        (oAWCACHE ),
-        .oAWPROT         (oAWPROT  ),
-        .oAWQOS          (oAWQOS   ),
-        .oAWREGION       (oAWREGION),
-        .oAWUSER         (oAWUSER  ),
-        .oAWVALID        (oAWVALID ),
-        .iAWREADY        (iAWREADY ),
-        // ACE extenstion
-        .oAWSNOOP       (oAWSNOOP ),
-        .oAWDOMAIN      (oAWDOMAIN),
-        .oAWBAR         (oAWBAR   ),
-        .oAWUNIQUE      (oAWUNIQUE),
-
-        // W channel
-        .oWSTRB          (oWSTRB ),
-        .oWLAST          (oWLAST ),
-        .oWUSER          (oWUSER ),
-        .oWVALID         (oWVALID),
-        .iWREADY         (iWREADY),
-
-        // B channel
-        .iBID            (iBID   ),   
-        .iBRESP          (iBRESP ), 
-        .iBUSER          (iBUSER ),
-        .iBVALID         (iBVALID),
-        .oBREADY         (oBREADY),
-
-        // AR channel
-        .oARLEN          (oARLEN  ),
-        .oARSIZE         (oARSIZE ),
-        .oARBURST        (oARBURST),
-        .oARLOCK         (oARLOCK ),
-        .oARCACHE        (oARCACHE),
-        .oARPROT         (oARPROT ),
-        .oARQOS          (oARQOS  ),
-        .oARUSER         (oARUSER ),
-        .oARVALID        (oARVALID),
-        .iARREADY        (iARREADY),
-        // ACE extension
-        .oARSNOOP        (oARSNOOP ),
-        .oARDOMAIN       (oARDOMAIN),
-        .oARBAR          (oARBAR   ),
-
-        // R channel
-        .iRID            (iRID   ),  
-        .iRRESP          (iRRESP ),
-        .iRLAST          (iRLAST ),
-        .iRUSER          (iRUSER ),
-        .iRVALID         (iRVALID),
-        .oRREADY         (oRREADY)
-    );
-
-    snoop_controller #(
-        .ADDR_W (ADDR_W)
-    ) snoop_controller (
-        .clk                    (ACLK),
-        .rst_n                  (ARESETn),
-        .snoop_hit              (snoop_hit),
-
-        .is_unique              (is_unique),
-        .is_dirty               (is_dirty ),
-        .is_owner               (is_owner ),
-
-        .snoop_can_access_ram   (snoop_can_access_ram),
-        .tag_we                 (snoop_tag_we        ),
-        .snoop_busy             (snoop_busy          ),
-        .bus_rw                 (bus_rw              ),
-        .bus_snoop_valid        (bus_snoop_valid     ),
-        .burst_cnt_snoop        (burst_cnt_snoop     ),
-
-        // AC channel
-        .ACVALID    (iACVALID),
-        .ACSNOOP    (iACSNOOP),
-        .ACPROT     (iACPROT ),
-//        .ACADDR     (iACADDR ),
-        .ACREADY    (oACREADY),
-
-        // CR channel
-        .CRREADY    (iCRREADY),
-        .CRVALID    (oCRVALID),
-        .CRRESP     (oCRRESP ),
-
-        // CD channel
-        .CDREADY    (iCDREADY),
-        .CDLAST     (oCDLAST ),
-        .CDVALID    (oCDVALID)
-    );
-
-    moesi_controller moesi_controller (
-        .is_shared_response (is_shared_response),
-        .is_dirty_response  (is_dirty_response ),
-        .current_state      (choosen_moesi),
-
-        .cpu_req_valid      (cpu_req),
-        .cpu_hit            (cpu_hit),
-        .cpu_rw             (cpu_we ),
-
-        
-        .bus_snoop_valid    (bus_snoop_valid),
-        .snoop_hit          (snoop_hit      ),
-        .bus_rw             (bus_rw         ),
-        
-        .is_dirty           (is_dirty ),
-        .is_unique          (is_unique),
-        .is_owner           (is_owner ),
-        .is_valid           (is_valid ),
-
-        .next_state         (moesi_next_state)
-    );
-endmodule 
+endmodule
