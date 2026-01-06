@@ -10,7 +10,7 @@ module Ins_Mem #(
 //    reg [31:0] out;
     
     initial begin: init_and_load
-        $readmemh("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt", rom);
+        $readmemh("C:/Law/ISS-RV32ICMFA/Verilog/hexfile.txt", rom);
     end
     // always @(posedge clk) begin
     //     out <= rom[(addr >> 2)];
