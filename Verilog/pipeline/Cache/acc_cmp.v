@@ -21,6 +21,7 @@ module acc_cmp #(
     input  [WORD_OFF_W-1:0]     s1_word_off,
     input  [BYTE_OFF_W-1:0]     s1_byte_off,
 
+    input                       s1_is_snoop,
     input   [TAG_W-1:0]         s1_snoop_tag,
     input   [INDEX_W-1:0]       s1_snoop_index,
 
@@ -33,8 +34,9 @@ module acc_cmp #(
     output reg [WORD_OFF_W-1:0] s2_word_off,
     output reg [BYTE_OFF_W-1:0] s2_byte_off,
 
-    output reg [TAG_W-1:0]        s2_snoop_tag,
-    output reg [INDEX_W-1:0]      s2_snoop_index
+    output                          s2_is_snoop,
+    output reg [TAG_W-1:0]          s2_snoop_tag,
+    output reg [INDEX_W-1:0]        s2_snoop_index
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -46,6 +48,8 @@ module acc_cmp #(
             s2_index        <= {INDEX_W{1'b0}};
             s2_word_off     <= {WORD_OFF_W{1'b0}};
             s2_byte_off     <= {BYTE_OFF_W{1'b0}};
+
+            s2_is_snoop     <= 1'b0;
             s2_snoop_tag    <= {TAG_W{1'b0}};
             s2_snoop_index  <= {INDEX_W{1'b0}};
         end
@@ -59,6 +63,8 @@ module acc_cmp #(
                 s2_index        <= {INDEX_W{1'b0}};
                 s2_word_off     <= {WORD_OFF_W{1'b0}};
                 s2_byte_off     <= {BYTE_OFF_W{1'b0}};
+
+                s2_is_snoop     <= 1'b0;
                 s2_snoop_tag    <= {TAG_W{1'b0}};
                 s2_snoop_index  <= {INDEX_W{1'b0}};
             end 
@@ -70,7 +76,9 @@ module acc_cmp #(
                 s2_tag          <= s1_tag;
                 s2_index        <= s1_index;
                 s2_word_off     <= s1_word_off;
-                s2_byte_off     <= s1_byte_off;            
+                s2_byte_off     <= s1_byte_off;     
+
+                s2_is_snoop     <= s1_is_snoop;       
                 s2_snoop_tag    <= s1_snoop_tag;
                 s2_snoop_index  <= s1_snoop_index;
                 
