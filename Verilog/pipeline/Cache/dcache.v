@@ -163,7 +163,7 @@ module dcache #(
         .s2_tag         (s2_tag),
         .s2_index       (s2_index),
         .s2_word_off    (s2_word_off),
-        .s2_byte_off    (s2_byte_off)
+        .s2_byte_off    (s2_byte_off),
 
         .s2_is_snoop    (s2_is_snoop)
     );
@@ -238,14 +238,15 @@ module dcache #(
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             refill_buffer <= {CACHE_DATA_W{1'b0}};
-        end else begin
+        end 
+        else begin
             if (i_l2_rdata_valid && o_l2_rdata_ready) begin
                 refill_buffer[burst_cnt * DATA_W +: DATA_W] <= i_l2_rdata;
             end
         end
     end
 
-    // Invalidate (Core khac ghi), 0: Clean/Check (Core khac đọc)
+    // Invalidate (Core khac ghi), 0: Clean/Check (Core khac đ�?c)
     wire snoop_is_invalidate = (i_snoop_type == 2'b01); 
 
     integer k;

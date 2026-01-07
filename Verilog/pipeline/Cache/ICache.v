@@ -4,367 +4,228 @@ module icache #(
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
+    parameter BURST_LEN     = 15,
+    parameter CORE_ID       = 1'b0,
+    
+    // Derived parameters
     parameter INDEX_W       = $clog2(NUM_SETS),
-    parameter WORD_OFF_W    = 4,  // 16 words/line
-    parameter BYTE_OFF_W    = 2,  // 4B/word
+    parameter WORD_OFF_W    = 4, 
+    parameter BYTE_OFF_W    = 2,
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
-    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
-    parameter CORE_ID       = 1'b0, // 0: core 0, 1: core 1
-
-    parameter ID_W          = 2,    // ICACHE1: 2'b10, ICACHE2: 2'b11;
-    parameter USER_W        = 4,
-    parameter STRB_W        = (DATA_W/8)
-
+    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
 )(
-    input ACLK, ARESETn,
+    input clk, rst_n,
 
-    // (cache <-> cpu)
+    // cache <-> CPU
     input                       cpu_req,
-    input                       data_valid,
+    input                       icache_flush,
     input   [ADDR_W-1:0]        cpu_addr,
+    input                       dcache_stall, // Stall tu D-cache
+    output  [DATA_W-1:0]        data_rdata,
+    output                      pipeline_stall,
 
-    output  reg [DATA_W-1:0]    data_rdata,
-    output                      cpu_hit,
-    output                      cache_busy,
+    // cache <-> L2
+    // Request
+    output                      o_l2_req_valid,
+    input                       i_l2_req_ready,
+    output  [ADDR_W-1:0]        o_l2_req_addr,
 
-    // (cache <-> cache L2)
-    // AR channel
-    input                   iARREADY,
-    output  [ID_W-1:0]      oARID,
-    output  [ADDR_W-1:0]    oARADDR,
-    output  [7:0]           oARLEN,
-    output  [2:0]           oARSIZE,
-    output  [1:0]           oARBURST,
-    output                  oARVALID,
-
-    // R channel
-    input   [ID_W-1:0]      iRID,
-    input   [DATA_W-1:0]    iRDATA,
-    //  RRESP[1:0] (memory)
-    input   [1:0]           iRRESP,
-    input                   iRLAST,
-    input                   iRVALID,
-    output                  oRREADY
+    // Read Data (Refill)
+    input                       i_l2_rdata_valid,
+    input                       i_l2_rdata_last,
+    input   [DATA_W-1:0]        i_l2_rdata,
+    output                      o_l2_rdata_ready
 );
-    localparam BO       = BYTE_OFF_W;
-    localparam WO       = WORD_OFF_W;
-    localparam IX       = INDEX_W;
-    localparam TAG_LSB  = BO + WO + IX;
-    localparam TAG_MSB  = ADDR_W-1;
-    localparam IDX_MSB  = TAG_LSB-1;
-    localparam IDX_LSB  = BO + WO;
-    localparam WO_MSB   = IDX_LSB-1;
 
-    reg [ADDR_W-1:0]        reg_addr;
-    reg [NUM_WAYS-1:0]      reg_way_select;
-    reg                     reg_cpu_req;
-    reg [CACHE_DATA_W-1:0]  refill_buffer;
-    reg [NUM_WAYS-1:0]      valid [0:NUM_SETS-1];
+    // ---------------------------------------- INTERNAL SIGNALS ----------------------------------------
+    wire [TAG_W-1:0]        s1_tag, s2_tag;
+    wire [INDEX_W-1:0]      s1_index, s2_index;
+    wire [WORD_OFF_W-1:0]   s1_word_off, s2_word_off;
+    wire [BYTE_OFF_W-1:0]   s1_byte_off, s2_byte_off;
+    
+    wire                    s2_req;
 
-    // ---------------------------------------- cpu address request  ----------------------------------------
+    // Arrays & Counters
+    wire [3:0]              burst_cnt;
+    wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
+    wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
+    reg  [CACHE_DATA_W-1:0] refill_buffer;
 
-    wire [WO-1:0]       cpu_word_off    = cpu_addr[WO_MSB:BO];
-    wire [IX-1:0]       cpu_index       = cpu_addr[IDX_MSB:IDX_LSB];
-
-    wire [TAG_W-1:0]    cpu_tag_reg     = reg_addr[TAG_MSB:TAG_LSB];
-    wire [IX-1:0]       cpu_index_reg   = reg_addr[IDX_MSB:IDX_LSB];
-    wire [WO-1:0]       cpu_word_off_reg= reg_addr[WO_MSB:BO];
-    wire [BO-1:0]       cpu_byte_off    = reg_addr[BO-1:0]; 
-
-    // plru control
-    wire plru_we;
-    wire plru_src;
-
-    // control cache
-    wire [3:0]  cache_state;
-    wire        valid_we;
-    wire        tag_we;
-    wire        refill_we;
-    // wire        cache_busy;
-    wire [3:0]  burst_cnt;
-
-    // tag_read and mem_Read
-    wire [TAG_W-1:0]        tag_read0, tag_read1, tag_read2, tag_read3;
-    wire [CACHE_DATA_W-1:0] data_read0, data_read1, data_read2, data_read3;
-
-    // select way
+    // Controller signals
+    wire                    tag_we, refill_we;
+    wire [NUM_WAYS-1:0]     way_hit;
     wire [NUM_WAYS-1:0]     way_select;
-    // ---------------------------------------- check hit  ----------------------------------------
-    wire [3:0] way_hit;
+    wire                    cpu_hit;
 
-    assign way_hit[0]   = (tag_read0 == cpu_tag_reg) & valid[cpu_index_reg][0];
-    assign way_hit[1]   = (tag_read1 == cpu_tag_reg) & valid[cpu_index_reg][1];
-    assign way_hit[2]   = (tag_read2 == cpu_tag_reg) & valid[cpu_index_reg][2];
-    assign way_hit[3]   = (tag_read3 == cpu_tag_reg) & valid[cpu_index_reg][3];
+    // ---------------------------------------- STAGE 1: ACCESS ----------------------------------------
+    access #(
+        .ADDR_W     (ADDR_W), 
+        .DATA_W     (DATA_W), 
+        .NUM_SETS   (NUM_SETS)
+    ) access_inst (
+        .cpu_addr       (cpu_addr),
+        .cpu_tag        (s1_tag),            
+        .cpu_index      (s1_index),   
+        .cpu_word_off   (s1_word_off),
+        .cpu_byte_off   (s1_byte_off)
+    );
+    
+    // ---------------------------------------- SRAM ARRAYS ----------------------------------------
+    genvar i;
+    generate
+        for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
+            // Tag RAM
+            tag_mem #(
+                .NUM_SETS   (NUM_SETS), 
+                .TAG_W      (TAG_W)
+            ) u_tag_mem (
+                .clk            (clk), 
+                .rst_n          (rst_n),
+                .tag_we         (tag_we & way_select[i]),
+                .read_index     (s1_index),        
+                .write_index    (s2_index),          
+                .din_tag        (s2_tag),
+                .dout_tag       (tag_read[i])
+            );
 
-    wire any_hit        = |way_hit;
-    assign cpu_hit      = any_hit;
+            // Data RAM (Read Only cho CPU)
+            data_mem #(
+                .DATA_W     (DATA_W), 
+                .NUM_SETS   (NUM_SETS)
+            ) u_data_mem (
+                .clk            (clk), 
+                .rst_n          (rst_n),
+                .read_index     (s1_index),
 
-    // ---------------------------------------- refill buffer  ----------------------------------------
-    always @(posedge ACLK or negedge ARESETn) begin
-        if (~ARESETn) begin
+                 // refill
+                .write_index    (s2_index),
+                .refill_we      (refill_we & way_select[i]),
+                .refill_din     (refill_buffer),
+
+                // kkhong dung
+                .cpu_we         (1'b0), 
+                .cpu_din        ({DATA_W{1'b0}}),          
+                .cpu_wstrb      (4'b0),           
+                .cpu_offset     (4'd0),
+                .dout           (data_read[i])
+            );
+        end
+    endgenerate
+
+    // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
+    assign pipeline_stall = s2_req & ~cpu_hit;
+    
+    acc_cmp #(
+        .ADDR_W     (ADDR_W), 
+        .DATA_W     (DATA_W), 
+        .NUM_SETS   (NUM_SETS)
+    ) acc_cmp_inst (
+        .clk            (clk), 
+        .rst_n          (rst_n),
+        .stall          (pipeline_stall | dcache_stall),
+        .flush          (icache_flush),
+
+        // Inputs
+        .s1_req         (cpu_req),
+        .s1_we          (1'b0), 
+        .s1_size        (2'b00),    
+        .s1_wdata       ({DATA_W{1'b0}}), 
+        .s1_tag         (s1_tag),
+        .s1_index       (s1_index),
+        .s1_word_off    (s1_word_off),
+        .s1_byte_off    (s1_byte_off),
+    
+        // Outputs (Stage 2) 
+        .s2_req         (s2_req),
+        .s2_tag         (s2_tag),
+        .s2_index       (s2_index),
+        .s2_word_off    (s2_word_off),
+        .s2_byte_off    (s2_byte_off)
+    );
+
+    // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
+    reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
+    wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
+    
+    assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
+    assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
+    assign way_hit[2] = (tag_read[2] == s2_tag) & current_valid[2];
+    assign way_hit[3] = (tag_read[3] == s2_tag) & current_valid[3];
+
+    assign cpu_hit = (|way_hit) & s2_req;
+
+    // ---------------------------------------- L2 INTERFACE ----------------------------------------
+    assign o_l2_req_addr = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+
+    // ---------------------------------------- LOGIC VALID ARRAY ----------------------------------------
+    integer k;
+    always @(posedge clk or negedge rst_n) begin
+        if(~rst_n) begin
+            for(k = 0; k < NUM_SETS; k = k + 1) valid_array[k] <= {NUM_WAYS{1'b0}};
+        end 
+        else begin
+            if (refill_we) begin 
+                valid_array[s2_index] <= valid_array[s2_index] | way_select;
+            end 
+        end
+    end
+    
+    // Refill Buffer
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin 
             refill_buffer <= {CACHE_DATA_W{1'b0}};
         end 
-        else begin
-            if (iRVALID & oRREADY & (iRID == {1'b0, CORE_ID})) begin
-                refill_buffer <= {iRDATA, refill_buffer[511:32]};
-            end 
-        end 
-    end 
-
-    // ---------------------------------------- sequent ----------------------------------------
-    always @(posedge ACLK or negedge ARESETn) begin
-        if (~ARESETn) begin
-            reg_addr        <= 32'd0;
-            reg_way_select  <= {NUM_WAYS{1'b0}};
-            reg_cpu_req     <= 1'b0;
-        end 
-        else begin
-            if (data_valid & (cache_state == 4'd1)) begin  // cpu request in TAG_CHECK
-                reg_addr    <= cpu_addr;
-                reg_cpu_req <= cpu_req;
-            end 
-            else begin
-                reg_cpu_req <= 1'b0;
-            end 
-            if (~any_hit) begin
-                reg_way_select <= way_select;
-            end 
-        end 
-    end 
-
-    // ---------------------------------------- Mux output ----------------------------------------
-    always @(*) begin
-        case(way_hit)
-            4'b0001: begin
-                data_rdata = data_read0[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            4'b0010: begin
-                data_rdata = data_read1[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            4'b0100: begin
-                data_rdata = data_read2[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            4'b1000: begin
-                data_rdata = data_read3[cpu_word_off_reg * DATA_W +: DATA_W];
-            end 
-            default: begin
-                data_rdata = 32'd0;
-            end 
-        endcase
-    end 
-    // ---------------------------------------- data mem ----------------------------------------
-    integer i;
-    always @(posedge ACLK or negedge ARESETn) begin
-        if (~ARESETn) begin
-            for (i = 0; i < NUM_SETS; i = i + 1) begin
-                valid[i] <= {NUM_WAYS{1'b0}};
-            end
-        end 
-        else begin
-            if (valid_we) begin
-                valid[cpu_index_reg] <= valid[cpu_index_reg] | way_select;
-            end 
-        end 
+        else if (i_l2_rdata_valid && o_l2_rdata_ready) begin
+             refill_buffer[burst_cnt * DATA_W +: DATA_W] <= i_l2_rdata;
+        end
     end
 
-    // way 0
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-        // .BURST_LEN_W(4)
-    ) data_mem_way0 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
-
-        .refill_we  (refill_we & way_select[0]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (1'b0),        
-        .cpu_din    (32'd0),
-        .cpu_wstrb  (4'd0),
-        .cpu_offset (4'd0),
-
-        .dout       (data_read0)        
+    // ---------------------------------------- CONTROLLER ----------------------------------------
+    cache_replacement #( 
+        .N_WAYS     (NUM_WAYS), 
+        .N_LINES    (NUM_SETS) 
+    ) u_replacement (
+        .clk        (clk), 
+        .rst_n      (rst_n),
+        .we         (cpu_hit),
+        .way_hit    (way_hit),
+        .addr       (s2_index),
+        .way_select (way_select)
     );
 
-    // way 1
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-    ) data_mem_way1 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
+    icache_controller #( 
+        .CORE_ID    (CORE_ID), 
+        .BURST_LEN  (BURST_LEN)
+    ) icache_controller (
+        .clk                (clk), 
+        .rst_n              (rst_n),
+        
+        .cpu_req            (s2_req), 
+        .hit                (cpu_hit),
 
-        .refill_we  (refill_we & way_select[1]),    
-        .refill_din (refill_buffer),
+        .tag_we     (tag_we), 
+        .refill_we  (refill_we),
+        .burst_cnt  (burst_cnt),
 
-        .cpu_we     (1'b0),        
-        .cpu_din    (32'd0),
-        .cpu_wstrb  (4'd0),
-        .cpu_offset (4'd0),
+        .o_mem_req_valid    (o_l2_req_valid),
+        .i_mem_req_ready    (i_l2_req_ready),
 
-        .dout       (data_read1)        
+        .i_mem_rdata_valid  (i_l2_rdata_valid),
+        .i_mem_rdata_last   (i_l2_rdata_last),
+        .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 
-    // way 2
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-    ) data_mem_way2 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
+    // ---------------------------------------- OUTPUT MUX ----------------------------------------
+    reg [DATA_W-1:0] word_select;
+    always @(*) begin
+        case(way_hit)
+            4'b0001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
+            4'b0010: word_select = data_read[1][s2_word_off * DATA_W +: DATA_W];
+            4'b0100: word_select = data_read[2][s2_word_off * DATA_W +: DATA_W];
+            4'b1000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
+            default: word_select = 32'd0;
+        endcase
+    end 
+    assign data_rdata = word_select;
 
-        .refill_we  (refill_we & way_select[2]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (1'b0),        
-        .cpu_din    (32'd0),
-        .cpu_wstrb  (4'd0),
-        .cpu_offset (4'd0),
-
-        .dout       (data_read2)        
-    );
-
-    // way 3
-    data_mem #(
-        .DATA_W     (DATA_W  ),
-        .NUM_SETS   (NUM_SETS)
-    ) data_mem_way3 (
-        .clk        (ACLK   ),
-        .rst_n      (ARESETn),
-        .read_index (cpu_index    ),
-        .write_index(cpu_index_reg),
-
-        .refill_we  (refill_we & way_select[3]),    
-        .refill_din (refill_buffer),
-
-        .cpu_we     (1'b0),        
-        .cpu_din    (32'd0),
-        .cpu_wstrb  (4'd0),
-        .cpu_offset (4'd0),
-
-        .dout       (data_read3)        
-    );
-
-    // ---------------------------------------- xu ly address read ----------------------------------------
-
-    assign oARADDR = {cpu_tag_reg, cpu_index_reg, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    assign oAWADDR = {cpu_tag_reg, cpu_index_reg, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    // ---------------------------------------- cpu_tag mem ----------------------------------------
-    wire [3:0] choosen_way;
-    assign choosen_way = (any_hit) ? way_hit : way_select;
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way0 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[0]),
-        .moesi_we           (1'b0),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read0)
-    ); 
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way1 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[1]),
-        .moesi_we           (1'b0),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read1)
-    ); 
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way2 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[2]),
-        .moesi_we           (1'b0),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read2)
-    ); 
-
-    tag_mem #(
-        .NUM_SETS   (NUM_SETS),
-        .TAG_W      (TAG_W   )
-    ) tag_mem_way3 (
-        .clk                (ACLK   ),
-        .rst_n              (ARESETn),
-        .tag_we             (tag_we & way_select[3]),
-        .moesi_we           (1'b0),
-        .read_index         (cpu_index    ),
-        .write_index        (cpu_index_reg),
-        .din_tag            (cpu_tag_reg  ),
-        .dout_tag           (tag_read3)
-    ); 
-    // ---------------------------------------- policy replacement ----------------------------------------
-    cache_replacement #(
-        .N_WAYS     (NUM_WAYS),
-        .N_LINES    (NUM_SETS)
-    ) cache_replacement (
-        .clk            (ACLK   ),
-        .rst_n          (ARESETn),
-        .we             (plru_we),
-        .way_hit        ((plru_src) ? reg_way_select : way_hit),
-        .addr           (cpu_index_reg),
-
-        .way_select     (way_select)
-        // .way_select_bin (way_select_bin )
-    );
-    // ---------------------------------------- controller ----------------------------------------
-    icache_controller #(
-        .DATA_W     (DATA_W),
-        .ADDR_W     (ADDR_W),
-        .ID_W       (ID_W),
-        .USER_W     (USER_W),
-        .STRB_W     (STRB_W),
-        .CORE_ID    (CORE_ID),
-        .BURST_LEN  (15)
-    ) icache_controller(
-        .clk            (ACLK),
-        .rst_n          (ARESETn),
-
-        .cpu_req        (reg_cpu_req),
-        .hit            (any_hit),
-        .plru_we        (plru_we),
-        .plru_src       (plru_src),
-        .tag_we         (tag_we),
-        .valid_we       (valid_we),
-        .refill_we      (refill_we),
-        .cache_busy     (cache_busy),
-        .cache_state    (cache_state),
-        .burst_cnt      (burst_cnt),
-
-        .oARID          (oARID),
-        .oARLEN         (oARLEN),
-        .oARSIZE        (oARSIZE),
-        .oARBURST       (oARBURST),
-        .oARVALID       (oARVALID),
-        .iARREADY       (iARREADY),
-
-        .iRID           (iRID),
-        .iRRESP         (iRRESP),
-        .iRLAST         (iRLAST),
-        .iRVALID        (iRVALID),
-        .oRREADY        (oRREADY)  
-    );
-endmodule 
+endmodule

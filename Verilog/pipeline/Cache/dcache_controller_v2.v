@@ -13,7 +13,7 @@ module dcache_controller_v2 #(
     input               cpu_we,
     input               hit,           
     input               victim_dirty,  
-    input               is_valid,      
+    input               victim_valid,      
 
     output  reg         data_we,
     output  reg         tag_we, 
@@ -54,10 +54,12 @@ module dcache_controller_v2 #(
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             burst_cnt <= 4'd0;
-        end else begin
+        end 
+        else begin
             if ( (state == WB_DATA && i_mem_wdata_ready) || (state == ALLOC_WAIT && i_mem_rdata_valid) ) begin
                 burst_cnt <= burst_cnt + 1'b1;
-            end else if (state != WB_DATA && state != ALLOC_WAIT) begin
+            end 
+            else if (state != WB_DATA && state != ALLOC_WAIT) begin
                 burst_cnt <= 4'd0;
             end
         end
@@ -81,7 +83,7 @@ module dcache_controller_v2 #(
                         next_state = TAG_CHECK;
                     end 
                     else begin
-                        if ((~is_valid) || (~victim_dirty))
+                        if ((~victim_valid) || (~victim_dirty))
                             next_state = ALLOC_REQ; // Clean -> Read L2
                         else
                             next_state = WB_REQ;    // Dirty -> Write L2
