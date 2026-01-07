@@ -417,7 +417,6 @@ module L2_cache #(
         .iRID       (iRID), 
         .iRRESP     (iRRESP), 
         .iRLAST     (iRLAST), 
-        .iRUSER     (iRUSER), 
         .iRVALID    (iRVALID), 
         .oRREADY    (oRREADY)
     );

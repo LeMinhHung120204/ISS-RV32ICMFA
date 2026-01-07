@@ -34,7 +34,7 @@ module acc_cmp #(
     output reg [WORD_OFF_W-1:0] s2_word_off,
     output reg [BYTE_OFF_W-1:0] s2_byte_off,
 
-    output                          s2_is_snoop,
+    output reg                      s2_is_snoop,
     output reg [TAG_W-1:0]          s2_snoop_tag,
     output reg [INDEX_W-1:0]        s2_snoop_index
 );
