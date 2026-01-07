@@ -2,8 +2,7 @@
 module dcache_controller_v2 #(
     parameter DATA_W    = 32,
     parameter ADDR_W    = 32,
-    parameter BURST_LEN = 15, // 16 words = 64 bytes cache line
-    parameter CORE_ID   = 1'b0
+    parameter BURST_LEN = 15 // 16 words = 64 bytes cache line
 )(
     input               clk, rst_n,
     output  reg         wb_error,

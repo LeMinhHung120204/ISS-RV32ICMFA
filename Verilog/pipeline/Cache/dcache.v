@@ -5,7 +5,6 @@ module dcache #(
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
     parameter BURST_LEN     = 15,
-    parameter CORE_ID       = 1'b0,
     
     // Derived parameters
     parameter INDEX_W       = $clog2(NUM_SETS),
@@ -295,8 +294,7 @@ module dcache #(
     wire victim_dirty_bit = |(current_dirty & way_select);
     wire victim_valid_bit = |(current_valid & way_select);
 
-    dcache_controller_v2 #( 
-        .CORE_ID    (CORE_ID), 
+    dcache_controller_v2 #(
         .BURST_LEN  (BURST_LEN)
     ) u_controller (
         .clk                (clk), 

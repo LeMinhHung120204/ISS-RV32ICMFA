@@ -5,7 +5,6 @@ module icache #(
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
     parameter BURST_LEN     = 15,
-    parameter CORE_ID       = 1'b0,
     
     // Derived parameters
     parameter INDEX_W       = $clog2(NUM_SETS),
@@ -193,8 +192,7 @@ module icache #(
         .way_select (way_select)
     );
 
-    icache_controller #( 
-        .CORE_ID    (CORE_ID), 
+    icache_controller #(
         .BURST_LEN  (BURST_LEN)
     ) icache_controller (
         .clk                (clk), 

@@ -2,8 +2,7 @@
 module icache_controller #(
     parameter DATA_W    = 32,
     parameter ADDR_W    = 32,
-    parameter BURST_LEN = 15, // 16 words = 64 bytes cache line
-    parameter CORE_ID   = 1'b0
+    parameter BURST_LEN = 15 // 16 words = 64 bytes cache line
 )(
     input               clk, rst_n,
 
@@ -77,8 +76,7 @@ module icache_controller #(
                         next_state = TAG_CHECK;
                     end 
                     else begin
-                        if ((~victim_valid))
-                            next_state = ALLOC_REQ; // Clean -> Read L2
+                        next_state = ALLOC_REQ; // Clean -> Read L2
                     end
                 end
             end
