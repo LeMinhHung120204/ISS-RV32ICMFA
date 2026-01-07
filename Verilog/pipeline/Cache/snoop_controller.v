@@ -26,12 +26,12 @@ module snoop_controller #(
     output reg              bus_snoop_valid,    // Trigger update MOESI state
     
     output  [3:0]           burst_cnt_snoop,
-    output reg              use_l1_data_mux,    // Chon data từ L1 hay L2 RAM
+    output reg              use_l1_data_mux,    // Chon data tu L1 hay L2 RAM
 
     // AC channel (Address / Control Input)
     input                   ACVALID,
     input   [3:0]           ACSNOOP,
-    input   [2:0]           ACPROT,
+    // input   [2:0]           ACPROT,
     output  reg             ACREADY,
 
     // CR channel (Response Output)
@@ -141,14 +141,14 @@ module snoop_controller #(
                 reg_ACSNOOP <= ACSNOOP;
             end
 
-            // Logic Latch Response (CRRESP) và Mux Select
-            // L2 Miss tại LOOKUP
+            // Logic Latch Response (CRRESP) va Mux Select
+            // L2 Miss tai LOOKUP
             // L2 Hit va L1 da tra loi xong tai WAIT_L1
             if ( (state == LOOKUP && snoop_can_access_ram && !snoop_hit) || (state == WAIT_L1 && i_l1_snoop_complete) ) begin
                 reg_CRRESP <= {resp_wu, resp_is, resp_pd, 1'b0, resp_dt};
                 
                 // quyet dinh xem Data gui di (neu co) lay tu dau?
-                // Neu L1 bao Dirty -> uu tien lay data moi nhat từ L1
+                // Neu L1 bao Dirty -> uu tien lay data moi nhat tu L1
                 if (snoop_hit && i_l1_is_dirty) 
                     use_l1_data_mux <= 1'b1;
                 else

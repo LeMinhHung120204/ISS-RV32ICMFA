@@ -5,7 +5,7 @@ module dcache_controller_v2 #(
     parameter BURST_LEN = 15 // 16 words = 64 bytes cache line
 )(
     input               clk, rst_n,
-    output  reg         wb_error,
+//    output  reg         wb_error,
 
     // Cache <-> CPU
     input               cpu_req,

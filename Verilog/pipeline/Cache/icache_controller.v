@@ -8,15 +8,11 @@ module icache_controller #(
 
     // Cache <-> CPU
     input               cpu_req,
-    input               cpu_we,
-    input               hit,           
-    input               victim_dirty,  
-    input               victim_valid,      
+    input               hit,               
 
     output  reg         tag_we, 
     output  reg         refill_we,
     output  reg [3:0]   burst_cnt,
-    input               snoop_busy, 
 
    
     // request L1 -> L2 

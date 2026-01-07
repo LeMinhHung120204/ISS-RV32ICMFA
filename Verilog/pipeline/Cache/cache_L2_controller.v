@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module l2_cache_controller #(
+module cache_L2_controller #(
     parameter DATA_W    = 32,
     parameter ADDR_W    = 32,
     parameter ID_W      = 2,    
@@ -12,7 +12,7 @@ module l2_cache_controller #(
     // --- Control Signals ---
     input           snoop_busy,          
     output  reg     snoop_can_access_ram,
-    output  reg     wb_error,
+    // output  reg     wb_error,
 
     // --- L1 Interface (Thay cho CPU) ---
     input           i_req_valid,         
@@ -33,7 +33,7 @@ module l2_cache_controller #(
     input   [2:0]   current_moesi_state,
 
     // --- Control Datapath ---
-    output  reg     data_we,
+    // output  reg     data_we,
     output  reg     tag_we, 
     output  reg     moesi_we,
     output  reg     refill_we,
@@ -105,9 +105,14 @@ module l2_cache_controller #(
     assign oARDOMAIN    = 2'b01; 
     assign oAWDOMAIN    = 2'b01; 
 
+    wire need_upgrade;
+    assign need_upgrade = (i_req_cmd == CMD_WRITE) && hit && ((current_moesi_state == 3'd3) || (current_moesi_state == 3'd1)); // 3=Shared, 1=Owned
+
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
-            burst_cnt <= 4'd0;
+            burst_cnt           <= 4'd0;
+            is_shared_response  <= 1'b0;
+            is_dirty_response   <= 1'b0;
         end 
         else begin
             // Tang counter khi nhan Data L1 hoac Mem
@@ -117,6 +122,12 @@ module l2_cache_controller #(
             else if (state != WB_W && state != ALLOC_R && state != L1_WB_RX) begin
                 burst_cnt <= 4'd0; 
             end 
+
+            // Capture Response bits from AXI Read
+            if ((state == ALLOC_R) & (iRVALID && iRLAST)) begin
+                is_shared_response  <= iRRESP[2];
+                is_dirty_response   <= iRRESP[3];
+            end
         end 
     end 
 
@@ -133,11 +144,15 @@ module l2_cache_controller #(
         next_state = state;
         case(state)
             TAG_CHECK: begin
-                if (!snoop_busy && i_req_valid) begin
+                if (~snoop_busy && i_req_valid) begin
                     // Case: L1 Writeback (Evict)
                     if (i_req_cmd == CMD_WRITE) begin
+                        if (hit && need_upgrade) begin
+                            // Hit nhung quyen Share -> Phai ra Bus xin quyen Unique truoc
+                            next_state = ALLOC_AR; 
+                        end
                         // Neu L2 Miss nhung Victim Dirty -> Phai WB Victim truoc
-                        if (!hit && is_valid && victim_dirty) begin 
+                        else if (~hit && is_valid && victim_dirty) begin 
                             next_state = WB_AW; 
                         end
                         else begin                                 
@@ -215,17 +230,22 @@ module l2_cache_controller #(
     end 
 
     always @(*) begin
-        oAWVALID        = 0; 
-        oWVALID         = 0; 
-        oBREADY         = 0; 
-        oARVALID        = 0; 
-        oRREADY         = 0;
-        tag_we          = 0; 
-        refill_we       = 0; 
-        o_wdata_ready   = 0; 
-        o_rdata_ready   = 0;
-        o_req_ready     = 1'b0;
-        snoop_can_access_ram = 1'b1;
+        oAWVALID                = 1'b1; 
+        oWVALID                 = 1'b1; 
+        oBREADY                 = 1'b1; 
+        oARVALID                = 1'b1; 
+        oRREADY                 = 1'b1;
+        tag_we                  = 1'b1; 
+        moesi_we                = 1'b1;
+        refill_we               = 1'b1; 
+        o_wdata_ready           = 1'b1; 
+        o_rdata_ready           = 1'b1;
+        oWLAST                  = 1'b0;
+        snoop_can_access_ram    = 1'b1;
+        o_req_ready             = 1'b0;
+        oAWSNOOP                = 3'b0; 
+        oARSNOOP                = 4'b0;
+        oWSTRB                  = 8'b0;
 
         case(state)
             TAG_CHECK: begin
@@ -259,7 +279,14 @@ module l2_cache_controller #(
             end 
             ALLOC_AR: begin 
                 oARVALID = 1'b1; 
-                oARSNOOP = 4'b0001; 
+                if (need_upgrade) begin
+                    // CleanUnique: Bao moi nguoi Invalidate, tao giu data (vi tao sap ghi de)
+                    oARSNOOP = 4'b1011; 
+                end
+                else begin
+                    // ReadShared: Doc thong thuong (Miss)
+                    oARSNOOP = 4'b0001; 
+                end
             end
             ALLOC_R: begin  
                 oRREADY = 1'b1; 
@@ -267,6 +294,7 @@ module l2_cache_controller #(
             UPDATE: begin
                 snoop_can_access_ram    = 1'b0;
                 tag_we                  = 1'b1;
+                moesi_we                = 1'b1;
                 refill_we               = 1'b1; 
             end 
         endcase

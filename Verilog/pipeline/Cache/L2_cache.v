@@ -147,7 +147,7 @@ module L2_cache #(
     // Controller Output Signals
     wire                    main_tag_we, snoop_tag_we, tag_we;
     wire                    refill_we;
-    wire                    data_we;
+    // wire                    data_we;
     reg  [CACHE_DATA_W-1:0] refill_buffer;
     wire [3:0]              burst_cnt;
     wire [3:0]              burst_cnt_snoop;
@@ -350,7 +350,7 @@ module L2_cache #(
     // ---------------------------------------- MAIN CONTROLLER ----------------------------------------
     wire is_shared_response;
     wire is_dirty_response;
-    l2_cache_controller #(
+    cache_L2_controller #(
         .DATA_W     (DATA_W), 
         .ADDR_W     (ADDR_W), 
         .CORE_ID    (CORE_ID)
@@ -378,7 +378,7 @@ module L2_cache #(
         .o_rdata_ready      (o_rdata_ready_ctrl),
 
         // Outputs to Datapath
-        .data_we            (data_we),
+        // .data_we            (data_we),
         .tag_we             (main_tag_we),
         .moesi_we           (moesi_we),
         .refill_we          (refill_we),
@@ -465,7 +465,7 @@ module L2_cache #(
         // AXI Snoop Channels
         .ACVALID    (iACVALID), 
         .ACSNOOP    (iACSNOOP), 
-        .ACPROT     (3'b000), 
+        // .ACPROT     (3'b000), 
         .ACREADY    (oACREADY),
 
         .CRREADY    (iCRREADY), 

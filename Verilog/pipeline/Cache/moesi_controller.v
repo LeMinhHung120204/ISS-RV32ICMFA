@@ -52,11 +52,20 @@ module moesi_controller(
 
         // REFILL
         else if (refill_we) begin
-            // Nhan data Clean (tu RAM / Cache khac)
-            if (is_shared_response) 
-                next_state = STATE_S; // Clean + Shared -> Shared
-            else      
-                next_state = STATE_E; // Clean + Unique -> Exclusive
+            if (is_dirty_response) begin
+                // Nhan data Dirty ty Cache khac
+                if (is_shared_response) 
+                    next_state = STATE_O; // Dirty + Shared -> Owned
+                else 
+                    next_state = STATE_M; // Dirty + Unique -> Modified
+            end
+            else begin
+                // Nhan data Clean tu RAM hoac Cache khac
+                if (is_shared_response) 
+                    next_state = STATE_S; // Clean + Shared -> Shared
+                else      
+                    next_state = STATE_E; // Clean + Unique -> Exclusive
+            end
         end
 
         // CPU HIT (Xu ly Hit)
