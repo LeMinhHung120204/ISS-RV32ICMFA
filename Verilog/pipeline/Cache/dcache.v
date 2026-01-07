@@ -24,7 +24,7 @@ module dcache #(
     output                      pipeline_stall,
 
     // cache <-> L2
-    // Request
+    // Request address
     output                      o_l2_req_valid,
     input                       i_l2_req_ready,
     output  [1:0]               o_l2_req_cmd,   // 0: Read, 1: WriteBack
@@ -131,7 +131,7 @@ module dcache #(
     endgenerate
 
     // ---------------------------------------- PIPELINE REGISTER (Stage 1 -> Stage 2) ----------------------------------------
-    assign pipeline_stall           = (s2_req & ~cpu_hit & ~s2_is_snoop) | i_snoop_valid;
+    assign pipeline_stall  = (s2_req & ~cpu_hit & ~s2_is_snoop) | i_snoop_valid;
     acc_cmp #(
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W), 

@@ -92,7 +92,7 @@ module dcache_controller_v2 #(
 
             // --- WRITE BACK FLOW ---
             WB_REQ: begin
-                // Gui lenh Write sang L2, doi L2 Ready
+                // Gui address write back xuong L2
                 if (i_mem_req_ready) begin
                     next_state = WB_DATA;
                 end
@@ -105,11 +105,10 @@ module dcache_controller_v2 #(
 
             // --- ALLOCATION FLOW (REFILL) ---
             ALLOC_REQ: begin
-                // Gui lenh Read sang L2
+                // Gui address read xuong L2
                 if (i_mem_req_ready) next_state = ALLOC_WAIT;
             end
             ALLOC_WAIT: begin
-                // doii du lieu tu L2 do ve
                 if (i_mem_rdata_valid && i_mem_rdata_last) begin
                     // Neu dang co Snoop chen ngang thi doi
                     if (snoop_busy) begin 

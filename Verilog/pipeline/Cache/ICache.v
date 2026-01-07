@@ -19,17 +19,17 @@ module icache #(
     input                       cpu_req,
     input                       icache_flush,
     input   [ADDR_W-1:0]        cpu_addr,
-    input                       dcache_stall, // Stall tu D-cache
+    input                       dcache_stall,
     output  [DATA_W-1:0]        data_rdata,
     output                      pipeline_stall,
 
     // cache <-> L2
     // Request
-    output                      o_l2_req_valid,
     input                       i_l2_req_ready,
+    output                      o_l2_req_valid,
     output  [ADDR_W-1:0]        o_l2_req_addr,
 
-    // Read Data (Refill)
+    // Read Data (Refill L2 -> icache)
     input                       i_l2_rdata_valid,
     input                       i_l2_rdata_last,
     input   [DATA_W-1:0]        i_l2_rdata,
@@ -80,11 +80,15 @@ module icache #(
             ) u_tag_mem (
                 .clk            (clk), 
                 .rst_n          (rst_n),
-                .tag_we         (tag_we & way_select[i]),
+
+                // Port read
                 .read_index     (s1_index),        
+                .dout_tag       (tag_read[i]),
+
+                // Port write
+                .tag_we         (tag_we & way_select[i]),                
                 .write_index    (s2_index),          
-                .din_tag        (s2_tag),
-                .dout_tag       (tag_read[i])
+                .din_tag        (s2_tag)  
             );
 
             // Data RAM (Read Only cho CPU)
@@ -94,19 +98,21 @@ module icache #(
             ) u_data_mem (
                 .clk            (clk), 
                 .rst_n          (rst_n),
+
+                // Port read
                 .read_index     (s1_index),
+                .dout           (data_read[i]),
 
                  // refill
                 .write_index    (s2_index),
                 .refill_we      (refill_we & way_select[i]),
                 .refill_din     (refill_buffer),
 
-                // kkhong dung
+                // not used
                 .cpu_we         (1'b0), 
                 .cpu_din        ({DATA_W{1'b0}}),          
                 .cpu_wstrb      (4'b0),           
-                .cpu_offset     (4'd0),
-                .dout           (data_read[i])
+                .cpu_offset     (4'd0)
             );
         end
     endgenerate
@@ -160,7 +166,9 @@ module icache #(
     integer k;
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
-            for(k = 0; k < NUM_SETS; k = k + 1) valid_array[k] <= {NUM_WAYS{1'b0}};
+            for(k = 0; k < NUM_SETS; k = k + 1) begin 
+                valid_array[k] <= {NUM_WAYS{1'b0}};
+            end 
         end 
         else begin
             if (refill_we) begin 
@@ -193,6 +201,8 @@ module icache #(
     );
 
     icache_controller #(
+        .DATA_W     (DATA_W),
+        .ADDR_W     (ADDR_W),
         .BURST_LEN  (BURST_LEN)
     ) icache_controller (
         .clk                (clk), 
@@ -201,9 +211,9 @@ module icache #(
         .cpu_req            (s2_req), 
         .hit                (cpu_hit),
 
-        .tag_we     (tag_we), 
-        .refill_we  (refill_we),
-        .burst_cnt  (burst_cnt),
+        .tag_we             (tag_we), 
+        .refill_we          (refill_we),
+        .burst_cnt          (burst_cnt),
 
         .o_mem_req_valid    (o_l2_req_valid),
         .i_mem_req_ready    (i_l2_req_ready),

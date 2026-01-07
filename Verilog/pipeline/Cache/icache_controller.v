@@ -22,11 +22,6 @@ module icache_controller #(
     // request L1 -> L2 
     input           i_mem_req_ready, // L2 san sang nhan
     output  reg     o_mem_req_valid, // Bao co request
-    
-    // address writeback L1 -> L2
-    input           i_mem_wdata_ready,
-    output  reg     o_mem_wdata_last,
-    output  reg     o_mem_wdata_valid,
 
     // read data L2 -> L1
     input           i_mem_rdata_valid,
@@ -83,22 +78,25 @@ module icache_controller #(
 
             // --- ALLOCATION FLOW (REFILL) ---
             ALLOC_REQ: begin
-                // Gui lenh Read sang L2
+                // Gui request address len cache L2
                 if (i_mem_req_ready) begin
                     next_state = ALLOC_WAIT;
                 end 
             end
             ALLOC_WAIT: begin
+                // Nhan Data vao refill buffer
                 if (i_mem_rdata_valid && i_mem_rdata_last) begin
                     next_state = UPDATE;
                 end
             end
 
             UPDATE: begin
+                // ghi refill buffer vao cache
                 next_state = WAIT_RAM;
             end
 
             WAIT_RAM: begin
+                // cho 1 cky de ghi
                 next_state = TAG_CHECK;
             end 
             default: next_state = TAG_CHECK;
@@ -107,8 +105,6 @@ module icache_controller #(
 
     always @(*) begin
         o_mem_req_valid     = 1'b0;
-        o_mem_wdata_valid   = 1'b0;
-        o_mem_wdata_last    = 1'b0;
         o_mem_rdata_ready   = 1'b0;
         tag_we              = 1'b0;
         refill_we           = 1'b0;
@@ -119,7 +115,7 @@ module icache_controller #(
             end
 
             ALLOC_WAIT: begin
-                o_mem_rdata_ready = 1'b1; // san sang nhan data
+                o_mem_rdata_ready = 1'b1; // san sang nhan data vao refill buffer
             end
 
             UPDATE: begin

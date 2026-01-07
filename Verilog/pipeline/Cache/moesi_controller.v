@@ -16,11 +16,11 @@ module moesi_controller(
     input           bus_rw,         
 
     // Outputs
-    output          is_dirty,       
-    output          is_unique,      
-    output          is_owner,       
-    output          is_valid,       
-    output reg [2:0] next_state
+    output              is_dirty,       
+    output              is_unique,      
+    output              is_owner,       
+    output              is_valid,       
+    output reg [2:0]    next_state
 );
     localparam  STATE_M = 3'd0,
                 STATE_O = 3'd1,
