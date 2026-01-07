@@ -272,8 +272,8 @@ module dcache #(
                 // Write Hit -> Set Dirty
                 dirty_array[s2_index] <= dirty_array[s2_index] | way_hit;
             end
-            // Case 3 (Optional): Nếu Snoop Clean (Read Request), ta có thể xóa Dirty
-            // sau khi đã gửi data xuống L2. Nhưng giữ Dirty = 1 cũng không sai (State Owned).
+            // Case 3 (Optional): Neu Snoop Clean (Read Request), ta có the xoa Dirty
+            // sau khi da gui data xuong L2. Nhung giu Dirty = 1 cung khong sai (State Owned).
         end
     end
 

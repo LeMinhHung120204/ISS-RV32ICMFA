@@ -26,87 +26,67 @@ module dcache_v2 #(
     input   [DATA_W-1:0]        cpu_din,
 
     output  reg [DATA_W-1:0]    data_rdata,
-    // output                      cpu_hit,
-    // output                      cache_busy, // Stall CPU
     output                      pipeline_stall,
 
     // (cache <-> cache L2)
     // AW channel 
-    input                   iAWREADY,
-    output  [ID_W-1:0]      oAWID,
-    output  [ADDR_W-1:0]    oAWADDR,
-    output  [7:0]           oAWLEN,
-    output  [2:0]           oAWSIZE,
-    output  [1:0]           oAWBURST,   
-    output                  oAWLOCK,    // khong dun
-    output  [3:0]           oAWCACHE,   // khong dun
-    output  [2:0]           oAWPROT,    // khong dung
-    output  [3:0]           oAWQOS,     // khong dung
-    output  [3:0]           oAWREGION,  // khong dung
-    output  [USER_W-1:0]    oAWUSER,    // khong dung
-    output                  oAWVALID,
+    input                       iAWREADY,
+    output  [ID_W-1:0]          oAWID,
+    output  [ADDR_W-1:0]        oAWADDR,
+    output  [7:0]               oAWLEN,
+    output  [2:0]               oAWSIZE,
+    output  [1:0]               oAWBURST,
+    output                      oAWVALID,
     // tin hieu them
-    output  [2:0]           oAWSNOOP,
-    output  [1:0]           oAWDOMAIN,
-    output  [1:0]           oAWBAR,     // must be 1'b0: normal access
-    output                  oAWUNIQUE,  // khong dung (=0) vi khong co cache L3
+    output  [2:0]               oAWSNOOP,
+    output  [1:0]               oAWDOMAIN,
     
     // W channel
     input                       iWREADY,
     output reg  [DATA_W-1:0]    oWDATA,
     output  [STRB_W-1:0]        oWSTRB,
     output                      oWLAST,
-    output  [USER_W-1:0]        oWUSER,     // khong dun
     output                      oWVALID,
     
     // B channel
-    input   [ID_W-1:0]      iBID,
-    input   [1:0]           iBRESP,
-    input   [USER_W-1:0]    iBUSER,     // khong dun
-    input                   iBVALID,
-    output                  oBREADY,
+    input   [ID_W-1:0]          iBID,
+    input   [1:0]               iBRESP,
+    input                       iBVALID,
+    output                      oBREADY,
 
     // AR channel
-    input                   iARREADY,
-    output  [ID_W-1:0]      oARID,
-    output  [ADDR_W-1:0]    oARADDR,
-    output  [7:0]           oARLEN,
-    output  [2:0]           oARSIZE,
-    output  [1:0]           oARBURST,
-    output                  oARLOCK,    // khong dun
-    output  [3:0]           oARCACHE,   // khong dun
-    output  [2:0]           oARPROT,    // khong dung
-    output  [3:0]           oARQOS,     // khong dun
-    output  [USER_W-1:0]    oARUSER,    // khong dun
-    output                  oARVALID,
+    input                       iARREADY,
+    output  [ID_W-1:0]          oARID,
+    output  [ADDR_W-1:0]        oARADDR,
+    output  [7:0]               oARLEN,
+    output  [2:0]               oARSIZE,
+    output  [1:0]               oARBURST,
+    output                      oARVALID,
     // tin hieu them
-    output  [3:0]           oARSNOOP,
-    output  [1:0]           oARDOMAIN,
-    output  [1:0]           oARBAR,     // must be 1'b0: normal access
+    output  [3:0]               oARSNOOP,
+    output  [1:0]               oARDOMAIN,
 
     // R channel
-    input   [ID_W-1:0]      iRID,
-    input   [DATA_W-1:0]    iRDATA,
+    input   [ID_W-1:0]          iRID,
+    input   [DATA_W-1:0]        iRDATA,
     //  RRESP[3:2] (interconnect)
     //  RRESP[1:0] (memory)
-    input   [3:0]           iRRESP,
-    input                   iRLAST,
-    input   [USER_W-1:0]    iRUSER,   // khong dun
-    input                   iRVALID,
-    output                  oRREADY,
+    input   [3:0]               iRRESP,
+    input                       iRLAST,
+    input                       iRVALID,
+    output                      oRREADY,
 
     // Snoop channel
     // AC channel
-    input                   iACVALID,
-    input   [ADDR_W-1:0]    iACADDR,
-    input   [3:0]           iACSNOOP,
-    input   [2:0]           iACPROT,    // khong dung
-    output                  oACREADY,
+    input                       iACVALID,
+    input   [ADDR_W-1:0]        iACADDR,
+    input   [3:0]               iACSNOOP,
+    output                      oACREADY,
 
     // CR channel
-    input                   iCRREADY,
-    output                  oCRVALID,
-    output  [4:0]           oCRRESP,
+    input                       iCRREADY,
+    output                      oCRVALID,
+    output  [4:0]               oCRRESP,
     
     // CD channel
     input                       iCDREADY,
@@ -130,13 +110,14 @@ module dcache_v2 #(
 
     // ---------------------------------------- Snoop & Control Signals ----------------------------------------
     wire                snoop_busy;
-    wire                snoop_hit;
+    reg                 snoop_hit;
     wire                snoop_can_access_ram;
-    wire [INDEX_W-1:0]  snoop_index = iACADDR[BYTE_OFF_W + WORD_OFF_W + INDEX_W - 1 : BYTE_OFF_W + WORD_OFF_W];
-    wire [TAG_W-1:0]    snoop_tag   = iACADDR[ADDR_W-1 : ADDR_W - TAG_W];
+    // wire [INDEX_W-1:0]  snoop_index = iACADDR[BYTE_OFF_W + WORD_OFF_W + INDEX_W - 1 : BYTE_OFF_W + WORD_OFF_W];
+    // wire [TAG_W-1:0]    snoop_tag   = iACADDR[ADDR_W-1 : ADDR_W - TAG_W];
 
-    wire [TAG_W-1:0]    s2_snoop_tag;
-    wire [INDEX_W-1:0]  s2_snoop_index;
+    // wire [TAG_W-1:0]    s2_snoop_tag;
+    // wire [INDEX_W-1:0]  s2_snoop_index;
+    wire                s2_is_snoop;
 
     // ---------------------------------------- Memory Interface Signals ----------------------------------------
     wire [INDEX_W-1:0]      ram_access_index;
@@ -145,7 +126,7 @@ module dcache_v2 #(
     
     // ---------------------------------------- Hit/Miss & MOESI ----------------------------------------
     wire [3:0]  way_hit;
-    wire [3:0]  way_hit_snoop;
+    // wire [3:0]  way_hit_snoop;
     wire        any_hit;
     wire [2:0]  moesi_current_state     [0:NUM_WAYS-1];
     reg  [2:0]  moesi_selected_state;
@@ -169,12 +150,13 @@ module dcache_v2 #(
     assign oARID    = {1'b1, CORE_ID};
     
     // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
+    wire [ADDR_W-1:0] s1_mux_addr   = (iACVALID) ? iACADDR : cpu_addr;
     access #(
         .ADDR_W     (ADDR_W),
         .DATA_W     (DATA_W),
         .NUM_SETS   (NUM_SETS)
     ) access_inst (
-        .cpu_addr       (cpu_addr),
+        .cpu_addr       (s1_mux_addr),
         
         .cpu_tag        (s1_tag),            
         .cpu_index      (s1_index),   
@@ -182,7 +164,7 @@ module dcache_v2 #(
         .cpu_byte_off   (s1_byte_off)
     );
 
-    assign ram_access_index = (snoop_busy) ? snoop_index : s1_index;
+    // assign ram_access_index = (snoop_busy) ? snoop_index : s1_index;
 
     // ---------------------------------------- SRAM ARRAYS (DATA & TAG) ----------------------------------------
     assign tag_we = main_tag_we | snoop_tag_we;
@@ -200,7 +182,7 @@ module dcache_v2 #(
                 .rst_n          (ARESETn),
                 .tag_we         (tag_we & way_select[i]),
                 .moesi_we       (moesi_we & choosen_way[i]),
-                .read_index     (ram_access_index),   
+                .read_index     (s1_index),   
                 .write_index    (s2_index),           
                 .din_tag        (s2_tag),            
                 
@@ -219,7 +201,7 @@ module dcache_v2 #(
             ) u_data_mem (
                 .clk            (ACLK),
                 .rst_n          (ARESETn),
-                .read_index     (ram_access_index),  
+                .read_index     (s1_index),  
                 .write_index    (s2_index),
                 
                 .refill_we      (refill_we & way_select[i]),
@@ -254,7 +236,7 @@ module dcache_v2 #(
         .flush          (pipeline_flush),
 
         // Stage 1
-        .s1_req         (cpu_req),    
+        .s1_req         (cpu_req | iACVALID),    
         .s1_we          (cpu_we),      
         .s1_size        (cpu_size),    
         .s1_wdata       (cpu_din),  
@@ -262,8 +244,10 @@ module dcache_v2 #(
         .s1_index       (s1_index),   
         .s1_word_off    (s1_word_off),
         .s1_byte_off    (s1_byte_off),
-        .s1_snoop_tag   (snoop_tag),
-        .s1_snoop_index (snoop_index),
+        // .s1_snoop_tag   (snoop_tag),
+        // .s1_snoop_index (snoop_index),
+
+        .s1_is_snoop    (i_snoop_valid), 
 
         // Stage 2
         .s2_req         (s2_req),
@@ -274,27 +258,40 @@ module dcache_v2 #(
         .s2_index       (s2_index),
         .s2_word_off    (s2_word_off),
         .s2_byte_off    (s2_byte_off),
-        .s2_snoop_tag   (s2_snoop_tag),
-        .s2_snoop_index (s2_snoop_index)
+        // .s2_snoop_tag   (s2_snoop_tag),
+        // .s2_snoop_index (s2_snoop_index),
+
+        .s2_is_snoop    (s2_is_snoop)
     );
 
     // ---------------------------------------- STAGE 2: COMPARE & HIT LOGIC ----------------------------------------
-    // wire [TAG_W-1:0]    tag_compare_input = (snoop_busy) ? snoop_tag : s2_tag;
     wire [NUM_WAYS-1:0] active_way_select;
 
-    assign way_hit[0]       = (tag_read[0] == s2_tag)       & (moesi_current_state[0] != 3'd4); // 4 = Invalid
-    assign way_hit[1]       = (tag_read[1] == s2_tag)       & (moesi_current_state[1] != 3'd4);
-    assign way_hit[2]       = (tag_read[2] == s2_tag)       & (moesi_current_state[2] != 3'd4);
-    assign way_hit[3]       = (tag_read[3] == s2_tag)       & (moesi_current_state[3] != 3'd4);
+    assign way_hit[0]       = (tag_read[0] == s2_tag) & (moesi_current_state[0] != 3'd4); // 4 = Invalid
+    assign way_hit[1]       = (tag_read[1] == s2_tag) & (moesi_current_state[1] != 3'd4);
+    assign way_hit[2]       = (tag_read[2] == s2_tag) & (moesi_current_state[2] != 3'd4);
+    assign way_hit[3]       = (tag_read[3] == s2_tag) & (moesi_current_state[3] != 3'd4);
 
-    assign way_hit_snoop[0] = (tag_read[0] == s2_snoop_tag)    & (moesi_current_state[0] != 3'd4); // 4 = Invalid
-    assign way_hit_snoop[1] = (tag_read[1] == s2_snoop_tag)    & (moesi_current_state[1] != 3'd4);
-    assign way_hit_snoop[2] = (tag_read[2] == s2_snoop_tag)    & (moesi_current_state[2] != 3'd4);
-    assign way_hit_snoop[3] = (tag_read[3] == s2_snoop_tag)    & (moesi_current_state[3] != 3'd4);
-  
-    wire    cpu_hit             = |way_hit;
-    assign  snoop_hit           = |way_hit_snoop;
-    assign  any_hit             = cpu_hit | snoop_hit;
+    // assign way_hit_snoop[0] = (tag_read[0] == s2_snoop_tag) & (moesi_current_state[0] != 3'd4); // 4 = Invalid
+    // assign way_hit_snoop[1] = (tag_read[1] == s2_snoop_tag) & (moesi_current_state[1] != 3'd4);
+    // assign way_hit_snoop[2] = (tag_read[2] == s2_snoop_tag) & (moesi_current_state[2] != 3'd4);
+    // assign way_hit_snoop[3] = (tag_read[3] == s2_snoop_tag) & (moesi_current_state[3] != 3'd4);
+    // assign  snoop_hit           = |way_hit_snoop;
+
+    wire cpu_hit  = (|way_hit) & s2_req & ~s2_is_snoop;
+
+    always @(*) begin
+        if (s2_is_snoop) begin
+            snoop_hit = |way_hit;
+            // o_snoop_dirty   = |(way_hit & current_dirty);
+        end 
+        else begin
+            snoop_hit = 1'b0;
+            // o_snoop_dirty   = 1'b0;
+        end
+    end
+    
+    assign  any_hit             = |way_hit;
     assign  active_way_select   = (any_hit) ? way_hit : way_select;
     
     always @(*) begin
@@ -355,7 +352,7 @@ module dcache_v2 #(
     end 
 
     // Cache Replacement Policy (PLRU)
-    wire [INDEX_W-1:0] plru_target_index = (snoop_busy) ? s2_snoop_index : s2_index;
+    // wire [INDEX_W-1:0] plru_target_index = (snoop_busy) ? s2_snoop_index : s2_index;
     
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS), 
@@ -365,7 +362,7 @@ module dcache_v2 #(
         .rst_n      (ARESETn),
         .we         (any_hit),
         .way_hit    (any_hit ? way_hit : way_select),
-        .addr       (plru_target_index),
+        .addr       (s2_index),
         .way_select (way_select)
     );
 
@@ -397,64 +394,46 @@ module dcache_v2 #(
         .burst_cnt          (burst_cnt),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response ),
-        // .cache_state        (cache_state),
 
         // cache <-> mem
         // AW channel
-        .oAWLEN          (oAWLEN   ),
-        .oAWSIZE         (oAWSIZE  ),
-        .oAWBURST        (oAWBURST ),
-        .oAWLOCK         (oAWLOCK  ),
-        .oAWCACHE        (oAWCACHE ),
-        .oAWPROT         (oAWPROT  ),
-        .oAWQOS          (oAWQOS   ),
-        .oAWREGION       (oAWREGION),
-        .oAWUSER         (oAWUSER  ),
-        .oAWVALID        (oAWVALID ),
-        .iAWREADY        (iAWREADY ),
+        .oAWLEN         (oAWLEN   ),
+        .oAWSIZE        (oAWSIZE  ),
+        .oAWBURST       (oAWBURST ),
+        .oAWVALID       (oAWVALID ),
+        .iAWREADY       (iAWREADY ),
         // ACE extenstion
         .oAWSNOOP       (oAWSNOOP ),
         .oAWDOMAIN      (oAWDOMAIN),
-        .oAWBAR         (oAWBAR   ),
-        .oAWUNIQUE      (oAWUNIQUE),
 
         // W channel
-        .oWSTRB          (oWSTRB ),
-        .oWLAST          (oWLAST ),
-        .oWUSER          (oWUSER ),
-        .oWVALID         (oWVALID),
-        .iWREADY         (iWREADY),
+        .oWSTRB         (oWSTRB ),
+        .oWLAST         (oWLAST ),
+        .oWVALID        (oWVALID),
+        .iWREADY        (iWREADY),
 
         // B channel
-        .iBID            (iBID   ),   
-        .iBRESP          (iBRESP ), 
-        .iBUSER          (iBUSER ),
-        .iBVALID         (iBVALID),
-        .oBREADY         (oBREADY),
+        .iBID           (iBID   ),   
+        .iBRESP         (iBRESP ), 
+        .iBVALID        (iBVALID),
+        .oBREADY        (oBREADY),
 
         // AR channel
-        .oARLEN          (oARLEN  ),
-        .oARSIZE         (oARSIZE ),
-        .oARBURST        (oARBURST),
-        .oARLOCK         (oARLOCK ),
-        .oARCACHE        (oARCACHE),
-        .oARPROT         (oARPROT ),
-        .oARQOS          (oARQOS  ),
-        .oARUSER         (oARUSER ),
-        .oARVALID        (oARVALID),
-        .iARREADY        (iARREADY),
+        .oARLEN         (oARLEN  ),
+        .oARSIZE        (oARSIZE ),
+        .oARBURST       (oARBURST),
+        .oARVALID       (oARVALID),
+        .iARREADY       (iARREADY),
         // ACE extension
-        .oARSNOOP        (oARSNOOP ),
-        .oARDOMAIN       (oARDOMAIN),
-        .oARBAR          (oARBAR   ),
+        .oARSNOOP       (oARSNOOP ),
+        .oARDOMAIN      (oARDOMAIN),
 
         // R channel
-        .iRID            (iRID   ),  
-        .iRRESP          (iRRESP ),
-        .iRLAST          (iRLAST ),
-        .iRUSER          (iRUSER ),
-        .iRVALID         (iRVALID),
-        .oRREADY         (oRREADY)
+        .iRID           (iRID   ),  
+        .iRRESP         (iRRESP ),
+        .iRLAST         (iRLAST ),
+        .iRVALID        (iRVALID),
+        .oRREADY        (oRREADY)
     );
     
     assign oAWADDR = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
@@ -524,7 +503,7 @@ module dcache_v2 #(
 
     // Mux Write Data cho Bus (Evict/Snoop Response)
     always @(*) begin
-        case(choosen_way)
+        case(way_select)
             4'b0001: oWDATA = data_read[0][burst_cnt * DATA_W +: DATA_W];
             4'b0010: oWDATA = data_read[1][burst_cnt * DATA_W +: DATA_W];
             4'b0100: oWDATA = data_read[2][burst_cnt * DATA_W +: DATA_W];
