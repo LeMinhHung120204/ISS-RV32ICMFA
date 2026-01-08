@@ -2,8 +2,7 @@
 
 module tb_single_core;
     parameter HEX_FILE = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt"; 
-    parameter INPUT_DRAM = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/input_dram.txt";
-
+    
     // -------------------------------------------------------------------------
     // 1. Parameters & Signals
     // -------------------------------------------------------------------------
@@ -11,76 +10,56 @@ module tb_single_core;
     parameter ID_W       = 2;
     parameter ADDR_W     = 32;
     parameter DATA_W     = 32;
+    parameter STRB_W     = DATA_W/8;
     parameter RAM_ADDR_W = 5;
 
     reg ACLK;
     reg ARESETn;
 
     // --- Control Simulation ---
-    // Biến này dung de gia lap phan hoi cua he thong: 
-    // 0: Trả về Exclusive (Không ai có bản copy)
-    // 1: Trả về Shared (Có người khác có bản copy)
+    // 0: Exclusive (E), 1: Shared (S)
     reg sim_force_shared_response; 
 
     // -------------------------------------------------------------------------
-    // D-Cache Interfaces (AXI4 + ACE-Lite Extensions)
+    // Unified AXI4 Interface (L2 <-> Memory)
     // -------------------------------------------------------------------------
-    wire [ID_W-1:0]     d_axi_awid, d_axi_bid, d_axi_arid, d_axi_rid;
-    wire [ADDR_W-1:0]   d_axi_awaddr, d_axi_araddr;
-    wire [7:0]          d_axi_awlen, d_axi_arlen;
-    wire [2:0]          d_axi_awsize, d_axi_arsize;
-    wire [1:0]          d_axi_awburst, d_axi_arburst;
-    wire                d_axi_awvalid, d_axi_awready;
-    wire [DATA_W-1:0]   d_axi_wdata, d_axi_rdata;
-    wire [DATA_W/8-1:0] d_axi_wstrb;
-    wire                d_axi_wlast, d_axi_wvalid, d_axi_wready;
-    wire [1:0]          d_axi_bresp;
-    wire [3:0]          d_axi_rresp; 
+    wire [ID_W-1:0]     axi_awid, axi_bid, axi_arid, axi_rid;
+    wire [ADDR_W-1:0]   axi_awaddr, axi_araddr;
+    wire [7:0]          axi_awlen, axi_arlen;
+    wire [2:0]          axi_awsize, axi_arsize;
+    wire [1:0]          axi_awburst, axi_arburst;
+    wire                axi_awvalid, axi_awready;
+    wire [DATA_W-1:0]   axi_wdata, axi_rdata;
+    wire [STRB_W-1:0]   axi_wstrb;
+    wire                axi_wlast, axi_wvalid, axi_wready;
+    wire [1:0]          axi_bresp;
+    wire [3:0]          axi_rresp; // 4-bit (2 bit AXI + 2 bit ACE)
     
-    wire                d_axi_bvalid, d_axi_bready;
-    wire                d_axi_rlast, d_axi_rvalid, d_axi_rready;
+    wire                axi_bvalid, axi_bready;
+    wire                axi_rlast, axi_rvalid, axi_rready;
+
+    // ACE Signals (Output from Core - ignored by simple RAM)
+    wire [2:0]          axi_awsnoop;
+    wire [3:0]          axi_arsnoop;
+    wire [1:0]          axi_awdomain, axi_ardomain;
 
     // -------------------------------------------------------------------------
-    // I-Cache Interfaces (AXI4 Read Only)
+    // Snoop Channels (Input to Core - Single Core Testbench -> Tie low)
     // -------------------------------------------------------------------------
-    wire [ID_W-1:0]     i_axi_arid, i_axi_rid;
-    wire [ADDR_W-1:0]   i_axi_araddr;
-    wire [7:0]          i_axi_arlen;
-    wire [2:0]          i_axi_arsize;
-    wire [1:0]          i_axi_arburst;
-    wire                i_axi_arvalid, i_axi_arready;
-    wire [DATA_W-1:0]   i_axi_rdata;
-    wire [1:0]          i_axi_rresp;
-    wire                i_axi_rlast, i_axi_rvalid, i_axi_rready;
+    // Vì đây là Single Core TB, không có ai snoop nó cả.
+    reg                 s_ace_acvalid = 0;
+    reg  [ADDR_W-1:0]   s_ace_acaddr  = 0;
+    reg  [3:0]          s_ace_acsnoop = 0;
+    wire                s_ace_acready;
+
+    wire                s_ace_crvalid, s_ace_cdvalid; // Outputs monitor
+    wire [4:0]          s_ace_crresp;
+    wire [DATA_W-1:0]   s_ace_cddata;
 
     // -------------------------------------------------------------------------
-    // ACE Signals (Snoop Channels)
+    // 2. Instantiate DUT (Single Core)
     // -------------------------------------------------------------------------
-    // Output from Core (Asking snoop)
-    wire [3:0]          m_d_ace_arsnoop; 
-    wire [2:0]          m_d_ace_awsnoop; // it dùng cho WriteBack/Evict
-    wire [1:0]          m_d_ace_awdomain, m_d_ace_awbar;
-    wire [1:0]          m_d_ace_ardomain, m_d_ace_arbar;
-
-    // Input to Core (Snoop requests from system - Single Core thi khong ai hoi no)
-    wire                m_ace_acvalid = 1'b0; 
-    wire [ADDR_W-1:0]   m_ace_acaddr  = {ADDR_W{1'b0}};
-    wire [3:0]          m_ace_acsnoop = 4'b0;
-    wire                m_ace_acready; // Core ready to accept snoop
-
-    // Responses from Core (If it was snooped)
-    wire                m_ace_crvalid, m_ace_cdvalid, m_ace_cdlast;
-    wire [4:0]          m_ace_crresp;
-    wire [DATA_W-1:0]   m_ace_cddata;
-    
-    // Testbench tie-offs (Fake Interconnect)
-    wire m_ace_crready = 1'b1; // Always ready to receive snoop response
-    wire m_ace_cdready = 1'b1; // Always ready to receive snoop data
-
-    // -------------------------------------------------------------------------
-    // 2. Instantiate Instances
-    // -------------------------------------------------------------------------
-    core_tile #(
+    single_core #(
         .CORE_ID(CORE_ID), 
         .ID_W   (ID_W), 
         .ADDR_W (ADDR_W), 
@@ -89,172 +68,127 @@ module tb_single_core;
         .ACLK(ACLK), 
         .ARESETn(ARESETn),
 
-        // --- D-Cache AXI ---
-        .m_d_axi_awready    (d_axi_awready), 
-        .m_d_axi_awid       (d_axi_awid), 
-        .m_d_axi_awaddr     (d_axi_awaddr), 
-        .m_d_axi_awlen      (d_axi_awlen), 
-        .m_d_axi_awsize     (d_axi_awsize), 
-        .m_d_axi_awburst    (d_axi_awburst), 
-        .m_d_axi_awvalid    (d_axi_awvalid),
-        .m_d_axi_wready     (d_axi_wready), 
-        .m_d_axi_wdata      (d_axi_wdata), 
-        .m_d_axi_wstrb      (d_axi_wstrb), 
-        .m_d_axi_wlast      (d_axi_wlast), 
-        .m_d_axi_wvalid     (d_axi_wvalid),
-        .m_d_axi_bid        (d_axi_bid), 
-        .m_d_axi_bresp      (d_axi_bresp), 
-        .m_d_axi_bvalid     (d_axi_bvalid), 
-        .m_d_axi_bready     (d_axi_bready),
-        .m_d_axi_arready    (d_axi_arready), 
-        .m_d_axi_arid       (d_axi_arid), 
-        .m_d_axi_araddr     (d_axi_araddr), 
-        .m_d_axi_arlen      (d_axi_arlen), 
-        .m_d_axi_arsize     (d_axi_arsize), 
-        .m_d_axi_arburst    (d_axi_arburst), 
-        .m_d_axi_arvalid    (d_axi_arvalid),
-        .m_d_axi_rid        (d_axi_rid), 
-        .m_d_axi_rdata      (d_axi_rdata), 
-        
-        // [QUAN TRỌNG] Nối RRESP 4 bit
-        .m_d_axi_rresp      (d_axi_rresp), 
-        
-        .m_d_axi_rlast      (d_axi_rlast), 
-        .m_d_axi_rvalid     (d_axi_rvalid), 
-        .m_d_axi_rready     (d_axi_rready),
-        
-        // --- ACE Tie-offs & Signals ---
-        .m_ace_acvalid  (m_ace_acvalid), 
-        .m_ace_acaddr   (m_ace_acaddr), 
-        .m_ace_acsnoop  (m_ace_acsnoop), 
-        .m_ace_acready  (m_ace_acready),
-        
-        .m_ace_crready  (m_ace_crready), 
-        .m_ace_crvalid  (m_ace_crvalid), 
-        .m_ace_crresp   (m_ace_crresp),
-        
-        .m_ace_cdready  (m_ace_cdready), 
-        .m_ace_cdvalid  (m_ace_cdvalid), 
-        .m_ace_cddata   (m_ace_cddata), 
-        .m_ace_cdlast   (m_ace_cdlast),
+        // --- AXI4 ACE Master Interface ---
+        // Write Address
+        .m_axi_awid     (axi_awid),
+        .m_axi_awaddr   (axi_awaddr),
+        .m_axi_awlen    (axi_awlen),
+        .m_axi_awsize   (axi_awsize),
+        .m_axi_awburst  (axi_awburst),
+        .m_axi_awvalid  (axi_awvalid),
+        .m_axi_awready  (axi_awready),
+        .m_axi_awsnoop  (axi_awsnoop),
+        .m_axi_awdomain (axi_awdomain),
 
-        // ACE Outputs (Core asking questions)
-        .m_d_ace_awsnoop    (m_d_ace_awsnoop), 
-        .m_d_ace_awdomain   (m_d_ace_awdomain), 
-        .m_d_ace_awbar      (m_d_ace_awbar),
-        .m_d_ace_arsnoop    (m_d_ace_arsnoop),
-        .m_d_ace_ardomain   (m_d_ace_ardomain), 
-        .m_d_ace_arbar      (m_d_ace_arbar),
+        // Write Data
+        .m_axi_wdata    (axi_wdata),
+        .m_axi_wstrb    (axi_wstrb),
+        .m_axi_wlast    (axi_wlast),
+        .m_axi_wvalid   (axi_wvalid),
+        .m_axi_wready   (axi_wready),
 
-        // --- I-Cache AXI ---
-        .m_i_axi_arready    (i_axi_arready), 
-        .m_i_axi_arid       (i_axi_arid), 
-        .m_i_axi_araddr     (i_axi_araddr), 
-        .m_i_axi_arlen      (i_axi_arlen), 
-        .m_i_axi_arsize     (i_axi_arsize), 
-        .m_i_axi_arburst    (i_axi_arburst), 
-        .m_i_axi_arvalid    (i_axi_arvalid),
-        .m_i_axi_rid        (i_axi_rid), 
-        .m_i_axi_rdata      (i_axi_rdata), 
-        .m_i_axi_rresp      (i_axi_rresp), 
-        .m_i_axi_rlast      (i_axi_rlast), 
-        .m_i_axi_rvalid     (i_axi_rvalid), 
-        .m_i_axi_rready     (i_axi_rready)
+        // Write Response
+        .m_axi_bid      (axi_bid),
+        .m_axi_bresp    (axi_bresp),
+        .m_axi_bvalid   (axi_bvalid),
+        .m_axi_bready   (axi_bready),
+
+        // Read Address
+        .m_axi_arid     (axi_arid),
+        .m_axi_araddr   (axi_araddr),
+        .m_axi_arlen    (axi_arlen),
+        .m_axi_arsize   (axi_arsize),
+        .m_axi_arburst  (axi_arburst),
+        .m_axi_arvalid  (axi_arvalid),
+        .m_axi_arready  (axi_arready),
+        .m_axi_arsnoop  (axi_arsnoop),
+        .m_axi_ardomain (axi_ardomain),
+
+        // Read Data
+        .m_axi_rid      (axi_rid),
+        .m_axi_rdata    (axi_rdata),
+        .m_axi_rresp    (axi_rresp), // 4 bit RRESP
+        .m_axi_rlast    (axi_rlast),
+        .m_axi_rvalid   (axi_rvalid),
+        .m_axi_rready   (axi_rready),
+
+        // --- Snoop Interface (Tie Off for Single Core TB) ---
+        .s_ace_acvalid  (s_ace_acvalid),
+        .s_ace_acaddr   (s_ace_acaddr),
+        .s_ace_acsnoop  (s_ace_acsnoop),
+        .s_ace_acready  (s_ace_acready),
+
+        // Response channels (Outputs)
+        .s_ace_crready  (1'b1), // Always ready to sink
+        .s_ace_crvalid  (s_ace_crvalid),
+        .s_ace_crresp   (s_ace_crresp),
+        
+        .s_ace_cdready  (1'b1), // Always ready to sink
+        .s_ace_cdvalid  (s_ace_cdvalid),
+        .s_ace_cddata   (s_ace_cddata),
+        .s_ace_cdlast   ()
     );
 
     // -------------------------------------------------------------------------
-    // 3. Memory Models & Interconnect Logic
+    // 3. Unified Memory Model (Fake Interconnect + RAM)
     // -------------------------------------------------------------------------
-
-    // INSTRUCTION RAM
-    DataMem_wrapper #(
-        .WIDTH_ADDR (RAM_ADDR_W), 
-        .ID_W       (ID_W), 
-        .DATA_W     (DATA_W)
-    ) u_i_mem (
-        .ACLK           (ACLK), 
-        .ARESETn        (ARESETn),
-        .i_axi_arvalid  (i_axi_arvalid), 
-        .o_axi_arready  (i_axi_arready), 
-        .i_axi_arid     (i_axi_arid), 
-        .i_axi_araddr   (i_axi_araddr),
-        .i_axi_arlen    (i_axi_arlen), 
-        .i_axi_arsize   (i_axi_arsize), 
-        .i_axi_arburst  (i_axi_arburst),
-        .o_axi_rvalid   (i_axi_rvalid), 
-        .i_axi_rready   (i_axi_rready), 
-        .o_axi_rid      (i_axi_rid), 
-        .o_axi_rdata    (i_axi_rdata),
-        .o_axi_rresp    (i_axi_rresp),
-        .o_axi_rlast    (i_axi_rlast),
-        
-        // Tie off writes
-        .i_axi_awvalid  (1'b0), 
-        .i_axi_wvalid   (1'b0), 
-        .i_axi_bready   (1'b1),
-        .i_axi_awaddr   ({DATA_W{1'b0}}), 
-        
-        .i_axi_awlen    (8'b0), 
-        .i_axi_awsize   (3'b0), 
-        .i_axi_awburst  (2'b0),
-        .i_axi_wdata    ({DATA_W{1'b0}}), 
-        .i_axi_wstrb    ({(DATA_W/8){1'b0}}), 
-        .i_axi_wlast    (1'b0)
-    );
-
-    // -------------------------------------------------------------------------
-    // DATA RAM (Fake Interconnect Logic for ACE)
-    // -------------------------------------------------------------------------
-    wire [1:0] mem_rresp_lower; // Phan hoi goc tu Memory (OKAY, EXOKAY...)
+    // Vì L2 Unified nên ta chỉ cần 1 cục RAM chung cho cả I và D
+    
+    wire [1:0] mem_rresp_lower; // 2 bit chuẩn từ RAM (OKAY...)
 
     DataMem_wrapper #(
         .WIDTH_ADDR (RAM_ADDR_W), 
         .ID_W       (ID_W), 
         .DATA_W     (DATA_W)
-    ) u_d_mem (
+    ) u_unified_mem (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
-        .i_axi_awid     (d_axi_awid), 
-        .i_axi_awvalid  (d_axi_awvalid), 
-        .o_axi_awready  (d_axi_awready), 
-        .i_axi_awaddr   (d_axi_awaddr),
-        .i_axi_awlen    (d_axi_awlen), 
-        .i_axi_awsize   (d_axi_awsize), 
-        .i_axi_awburst  (d_axi_awburst),
-        .i_axi_wvalid   (d_axi_wvalid), 
-        .o_axi_wready   (d_axi_wready), 
-        .i_axi_wdata    (d_axi_wdata), 
-        .i_axi_wstrb    (d_axi_wstrb), 
-        .i_axi_wlast    (d_axi_wlast),
-        .o_axi_bvalid   (d_axi_bvalid), 
-        .i_axi_bready   (d_axi_bready), 
-        .o_axi_bid      (d_axi_bid), 
-        .o_axi_bresp    (d_axi_bresp),
-        .i_axi_arvalid  (d_axi_arvalid), 
-        .o_axi_arready  (d_axi_arready), 
-        .i_axi_arid     (d_axi_arid), 
-        .i_axi_araddr   (d_axi_araddr),
-        .i_axi_arlen    (d_axi_arlen), 
-        .i_axi_arsize   (d_axi_arsize), 
-        .i_axi_arburst  (d_axi_arburst),
-        .o_axi_rvalid   (d_axi_rvalid), 
-        .i_axi_rready   (d_axi_rready), 
-        .o_axi_rid      (d_axi_rid), 
-        .o_axi_rdata    (d_axi_rdata),
         
-        .o_axi_rresp    (mem_rresp_lower), // Chi lay 2 bit chuan tu Memory
+        // Write Path
+        .i_axi_awid     (axi_awid), 
+        .i_axi_awvalid  (axi_awvalid), 
+        .o_axi_awready  (axi_awready), 
+        .i_axi_awaddr   (axi_awaddr),
+        .i_axi_awlen    (axi_awlen), 
+        .i_axi_awsize   (axi_awsize), 
+        .i_axi_awburst  (axi_awburst),
         
-        .o_axi_rlast    (d_axi_rlast)
+        .i_axi_wvalid   (axi_wvalid), 
+        .o_axi_wready   (axi_wready), 
+        .i_axi_wdata    (axi_wdata), 
+        .i_axi_wstrb    (axi_wstrb), 
+        .i_axi_wlast    (axi_wlast),
+        
+        .o_axi_bvalid   (axi_bvalid), 
+        .i_axi_bready   (axi_bready), 
+        .o_axi_bid      (axi_bid), 
+        .o_axi_bresp    (axi_bresp),
+
+        // Read Path
+        .i_axi_arvalid  (axi_arvalid), 
+        .o_axi_arready  (axi_arready), 
+        .i_axi_arid     (axi_arid), 
+        .i_axi_araddr   (axi_araddr),
+        .i_axi_arlen    (axi_arlen), 
+        .i_axi_arsize   (axi_arsize), 
+        .i_axi_arburst  (axi_arburst),
+        
+        .o_axi_rvalid   (axi_rvalid), 
+        .i_axi_rready   (axi_rready), 
+        .o_axi_rid      (axi_rid), 
+        .o_axi_rdata    (axi_rdata),
+        .o_axi_rresp    (mem_rresp_lower), // RAM trả về 2 bit chuẩn
+        .o_axi_rlast    (axi_rlast)
     );
 
     // -------------------------------------------------------------------------
-    // [LOGIC GIA LAP SNOOP RESPONSE]
+    // [LOGIC GIẢ LẬP SNOOP RESPONSE]
     // -------------------------------------------------------------------------
-    // Ghep 2 bit ACE (IsShared, PassDirty) vao 2 bit AXI chuan
-    // RRESP[3] = PassDirty (O day gia su luon = 0)
-    // RRESP[2] = IsShared (Dieu khien boi sim_force_shared_response)
-    // RRESP[1:0] = OKAY (00) tu Memory
-    assign d_axi_rresp = {1'b0, sim_force_shared_response, mem_rresp_lower};
+    // Ghép 2 bit ACE (PassDirty, IsShared) vào 2 bit AXI chuẩn
+    // RRESP[3] = PassDirty (Ở đây giả sử luôn = 0 vì Memory không Dirty)
+    // RRESP[2] = IsShared (Điều khiển bởi sim_force_shared_response)
+    // RRESP[1:0] = OKAY (00) từ Memory
+    assign axi_rresp = {1'b0, sim_force_shared_response, mem_rresp_lower};
 
     // -------------------------------------------------------------------------
     // 4. Simulation Process
@@ -272,53 +206,53 @@ module tb_single_core;
         ARESETn = 1;
         #20;
 
-        // 2. Load Memory
+        // 2. Load Memory (Unified)
         $display("--------------------------------------------------");
-        $display("Loading Hex File...");
-        $readmemh(HEX_FILE, u_i_mem.u_DataMem.mem);
-        // $readmemh(INPUT_DRAM, u_d_mem.u_DataMem.mem);
+        $display("Loading Hex File into Unified Memory...");
+        // Lưu ý: Đảm bảo DataMem_wrapper bên trong có instance RAM tên là u_DataMem.mem
+        $readmemh(HEX_FILE, u_unified_mem.u_DataMem.mem); 
         $display("--------------------------------------------------");
 
-        // 3. Scenario 1: Refill voi trang thai Exclusive (E)
-        // Cache se hoat dong binh thuong, line moi se o state E
-        $display("[SCENARIO 1] Running with RRESP[2]=0 (Not Shared / Exclusive)");
-        sim_force_shared_response = 1'b0; 
-        #2000; 
-
-        // // 4. Scenario 2: Refill voi trang thai Shared (S)
-        // // Gia lap tinh huong co Core khac cung dang giu data nay
-        // // Cache line moi se o state S.
-        // $display("[SCENARIO 2] Switching to RRESP[2]=1 (Is Shared)");
-        // sim_force_shared_response = 1'b1;
-        // #2000;
-
-        // // 5. Quay lai Exclusive
-        // $display("[SCENARIO 3] Switching back to Exclusive");
-        // sim_force_shared_response = 1'b0;
-        #2000;
+        // 3. Scenario: Chạy bình thường
+        // Core sẽ tự nạp lệnh qua L1 I-Cache -> Miss -> L2 -> Miss -> Memory
+        // Sau đó chạy lệnh load/store -> L1 D-Cache -> Miss -> L2 -> ...
+        $display("[SCENARIO] Running simulation...");
+        
+        #50000; // Chạy đủ lâu để quan sát
 
         $display("Simulation Finished.");
         $finish;
     end
     
     // -------------------------------------------------------------------------
-    // 5. Advanced Monitor (Hien thi thong tin ACE)
+    // 5. Monitor
     // -------------------------------------------------------------------------
     always @(posedge ACLK) begin
-        // Monitor khi Core gui AR Request (Refill)
-        if (d_axi_arvalid && d_axi_arready) begin
+        // Monitor Read Request (Refill)
+        if (axi_arvalid && axi_arready) begin
             $display("[AXI-AR] Time=%t | Addr=0x%h | ARSNOOP=%b (%s)", 
-                     $time, d_axi_araddr, m_d_ace_arsnoop,
-                     (m_d_ace_arsnoop == 4'b0000) ? "ReadNoSnoop" :
-                     (m_d_ace_arsnoop == 4'b0001) ? "ReadShared" :
-                     (m_d_ace_arsnoop == 4'b0010) ? "ReadClean" :
-                     (m_d_ace_arsnoop == 4'b0011) ? "ReadNotSharedDirty" : "Other");
+                     $time, axi_araddr, axi_arsnoop,
+                     (axi_arsnoop == 4'b0000) ? "ReadNoSnoop" :
+                     (axi_arsnoop == 4'b0001) ? "ReadShared" :
+                     (axi_arsnoop == 4'b0010) ? "ReadClean" :
+                     (axi_arsnoop == 4'b0011) ? "ReadNotSharedDirty" : 
+                     (axi_arsnoop == 4'b0111) ? "ReadUnique" : 
+                     (axi_arsnoop == 4'b1011) ? "CleanUnique" : "Other");
         end
 
-        // Monitor khi Core nhan Data Response (Kem thong tin Snoop)
-        if (d_axi_rvalid && d_axi_rready && d_axi_rlast) begin
-            $display("[AXI-R ] Time=%t | Data=0x%h | RRESP=%b (IsShared=%b)", 
-                     $time, d_axi_rdata, d_axi_rresp, d_axi_rresp[2]);
+        // Monitor Write Request (WriteBack)
+        if (axi_awvalid && axi_awready) begin
+            $display("[AXI-AW] Time=%t | Addr=0x%h | AWSNOOP=%b (%s)", 
+                     $time, axi_awaddr, axi_awsnoop,
+                     (axi_awsnoop == 3'b000) ? "WriteNoSnoop" :
+                     (axi_awsnoop == 3'b001) ? "WriteUnique" :
+                     (axi_awsnoop == 3'b011) ? "WriteBack" : "Other");
+        end
+
+        // Monitor Read Data Response
+        if (axi_rvalid && axi_rready && axi_rlast) begin
+            $display("[AXI-R ] Time=%t | Data=0x%h... | RRESP=%b (IsShared=%b)", 
+                     $time, axi_rdata, axi_rresp, axi_rresp[2]);
         end
     end
 

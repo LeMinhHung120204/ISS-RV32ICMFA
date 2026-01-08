@@ -118,7 +118,8 @@ module icache #(
     endgenerate
 
     // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
-    assign pipeline_stall = s2_req & ~cpu_hit;
+    wire stall_contoller;
+    assign pipeline_stall = (s2_req & ~cpu_hit) | stall_contoller;
     
     acc_cmp #(
         .ADDR_W     (ADDR_W), 
@@ -214,6 +215,7 @@ module icache #(
         .tag_we             (tag_we), 
         .refill_we          (refill_we),
         .burst_cnt          (burst_cnt),
+        .stall              (stall_contoller),
 
         .o_mem_req_valid    (o_l2_req_valid),
         .i_mem_req_ready    (i_l2_req_ready),
@@ -233,7 +235,8 @@ module icache #(
             4'b1000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
             default: word_select = 32'd0;
         endcase
-    end 
+    end
+    
     assign data_rdata = word_select;
 
 endmodule

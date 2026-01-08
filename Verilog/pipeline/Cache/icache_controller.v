@@ -12,6 +12,7 @@ module icache_controller #(
 
     output  reg         tag_we, 
     output  reg         refill_we,
+    output  reg         stall,
     output  reg [3:0]   burst_cnt,
 
    
@@ -32,6 +33,7 @@ module icache_controller #(
     localparam ALLOC_WAIT   = 4'd3;
     localparam UPDATE       = 4'd4;
     localparam WAIT_RAM     = 4'd5;
+    // localparam WAIT_READ    = 4'd6;
 
     reg [3:0] state, next_state;
 
@@ -95,6 +97,10 @@ module icache_controller #(
                 // cho 1 cky de ghi
                 next_state = TAG_CHECK;
             end 
+
+            // WAIT_READ: begin
+            //     next_state = TAG_CHECK;
+            // end 
             default: next_state = TAG_CHECK;
         endcase
     end
@@ -103,6 +109,7 @@ module icache_controller #(
         o_mem_req_valid     = 1'b0;
         o_mem_rdata_ready   = 1'b0;
         tag_we              = 1'b0;
+        stall               = 1'b0;
         refill_we           = 1'b0;
 
         case(state)
@@ -118,6 +125,10 @@ module icache_controller #(
                 tag_we      = 1'b1;
                 refill_we   = 1'b1;
             end
+
+            WAIT_RAM: begin
+                stall       = 1'b1;
+            end 
         endcase
     end
 

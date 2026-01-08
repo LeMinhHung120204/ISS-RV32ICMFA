@@ -230,18 +230,18 @@ module cache_L2_controller #(
     end 
 
     always @(*) begin
-        oAWVALID                = 1'b1; 
-        oWVALID                 = 1'b1; 
-        oBREADY                 = 1'b1; 
-        oARVALID                = 1'b1; 
-        oRREADY                 = 1'b1;
-        tag_we                  = 1'b1; 
-        moesi_we                = 1'b1;
-        refill_we               = 1'b1; 
-        o_wdata_ready           = 1'b1; 
-        o_rdata_ready           = 1'b1;
+        oAWVALID                = 1'b0; 
+        oWVALID                 = 1'b0; 
+        oBREADY                 = 1'b0; 
+        oARVALID                = 1'b0; 
+        oRREADY                 = 1'b0;
+        tag_we                  = 1'b0; 
+        moesi_we                = 1'b0;
+        refill_we               = 1'b0; 
+        o_wdata_ready           = 1'b0; 
+        o_rdata_ready           = 1'b0;
         oWLAST                  = 1'b0;
-        snoop_can_access_ram    = 1'b1;
+        snoop_can_access_ram    = 1'b0;
         o_req_ready             = 1'b0;
         oAWSNOOP                = 3'b0; 
         oARSNOOP                = 4'b0;
