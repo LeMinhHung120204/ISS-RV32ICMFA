@@ -16,10 +16,10 @@ module arbiter #(
     output  reg             o_c1_req_ready,
 
     // --- Output to L2 Cache ---
-    input                   i_l2_ready,
-    output  reg             o_l2_valid,
-    output  reg [1:0]       o_l2_cmd,
-    output  reg [ADDR_W-1:0]o_l2_addr
+    input                       i_l2_ready,
+    output  reg                 o_l2_valid,
+    output  reg [1:0]           o_l2_cmd,
+    output  reg [ADDR_W-1:0]    o_l2_addr
 );
 
     reg priority_ptr;

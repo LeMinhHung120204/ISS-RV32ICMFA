@@ -218,7 +218,7 @@ module tb_single_core;
         // Sau đó chạy lệnh load/store -> L1 D-Cache -> Miss -> L2 -> ...
         $display("[SCENARIO] Running simulation...");
         
-        #50000; // Chạy đủ lâu để quan sát
+        #2000; // Chạy đủ lâu để quan sát
 
         $display("Simulation Finished.");
         $finish;

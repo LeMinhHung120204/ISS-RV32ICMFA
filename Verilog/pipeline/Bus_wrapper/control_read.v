@@ -68,7 +68,7 @@ module control_read #(
                 IDLE: begin
                     count_addr <= 8'd0;
                     if (arvalid && arready) begin
-                        reg_addr    <= araddr;
+                        reg_addr    <= araddr >> 2; // dang de address / 4 de doc file hex
                         reg_arburst <= arburst;
                         reg_arsize  <= arsize;
                         reg_arlen   <= arlen;

@@ -202,11 +202,13 @@ module single_core #(
         .i_c0_req_valid     (l1i_req_valid), 
         .i_c0_req_addr      (l1i_req_addr), 
         .o_c0_req_ready     (l1i_req_ready),
+        
         .i_c1_req_valid     (l1d_req_valid), 
         .i_c1_req_cmd       (l1d_req_cmd), 
         .i_c1_req_addr      (l1d_req_addr), 
         .o_c1_req_ready     (l1d_req_ready),
         .i_l2_ready         (l2_req_ready), 
+        
         .o_l2_valid         (l2_req_valid), 
         .o_l2_cmd           (l2_req_cmd), 
         .o_l2_addr          (l2_req_addr)

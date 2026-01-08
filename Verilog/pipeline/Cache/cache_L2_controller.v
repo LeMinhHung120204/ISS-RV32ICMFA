@@ -37,6 +37,7 @@ module cache_L2_controller #(
     output  reg     tag_we, 
     output  reg     moesi_we,
     output  reg     refill_we,
+    output  reg     stall,
     
     output  reg         is_shared_response, 
     output  reg         is_dirty_response,  
@@ -89,6 +90,7 @@ module cache_L2_controller #(
     localparam FAULT        = 4'd8;
     localparam WAIT_SNOOP   = 4'd9;
     localparam WAIT_RAM     = 4'd10;
+    // localparam WAIT_READ    = 4'd11;
 
     localparam CMD_READ     = 2'b00;
     localparam CMD_WRITE    = 2'b01; 
@@ -225,6 +227,10 @@ module cache_L2_controller #(
             WAIT_RAM: begin   
                 next_state = TAG_CHECK;
             end 
+
+            // WAIT_READ: begin
+            //     next_state = TAG_CHECK;
+            // end 
             default:    next_state = TAG_CHECK;
         endcase
     end 
@@ -243,6 +249,7 @@ module cache_L2_controller #(
         oWLAST                  = 1'b0;
         snoop_can_access_ram    = 1'b0;
         o_req_ready             = 1'b0;
+        stall                   = 1'b0;   
         oAWSNOOP                = 3'b0; 
         oARSNOOP                = 4'b0;
         oWSTRB                  = 8'b0;
@@ -296,6 +303,10 @@ module cache_L2_controller #(
                 tag_we                  = 1'b1;
                 moesi_we                = 1'b1;
                 refill_we               = 1'b1; 
+            end 
+
+            WAIT_RAM: begin   
+                stall = 1'b1;
             end 
         endcase
     end 

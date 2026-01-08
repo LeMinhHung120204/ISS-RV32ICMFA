@@ -118,7 +118,8 @@ module icache_controller #(
             end
 
             ALLOC_WAIT: begin
-                o_mem_rdata_ready = 1'b1; // san sang nhan data vao refill buffer
+                o_mem_req_valid     = 1'b1;
+                o_mem_rdata_ready   = 1'b1; // san sang nhan data vao refill buffer
             end
 
             UPDATE: begin

@@ -38,31 +38,17 @@ module dcache_controller_v2 #(
 );
 
     // State Encoding
-    localparam IDLE         = 4'd0;
-    localparam TAG_CHECK    = 4'd1;
-    localparam ALLOC_REQ    = 4'd2;
-    localparam ALLOC_WAIT   = 4'd3;
-    localparam WB_REQ       = 4'd4;
-    localparam WB_DATA      = 4'd5;
-    localparam UPDATE       = 4'd6;
-    localparam WAIT_SNOOP   = 4'd7;
-    localparam WAIT_RAM     = 4'd8;
+    // localparam IDLE         = 4'd0;
+    localparam TAG_CHECK    = 4'd0;
+    localparam ALLOC_REQ    = 4'd1;
+    localparam ALLOC_WAIT   = 4'd2;
+    localparam WB_REQ       = 4'd3;
+    localparam WB_DATA      = 4'd4;
+    localparam UPDATE       = 4'd5;
+    localparam WAIT_SNOOP   = 4'd6;
+    localparam WAIT_RAM     = 4'd7;
 
     reg [3:0] state, next_state;
-
-    // always @(posedge clk or negedge rst_n) begin
-    //     if(~rst_n) begin
-    //         burst_cnt <= 4'd0;
-    //     end 
-    //     else begin
-    //         if ( (state == WB_DATA && i_mem_wdata_ready) || (state == ALLOC_WAIT && i_mem_rdata_valid) ) begin
-    //             burst_cnt <= burst_cnt + 1'b1;
-    //         end 
-    //         else if (state != WB_DATA && state != ALLOC_WAIT) begin
-    //             burst_cnt <= 4'd0;
-    //         end
-    //     end
-    // end
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
@@ -171,7 +157,8 @@ module dcache_controller_v2 #(
             end
 
             ALLOC_WAIT: begin
-                o_mem_rdata_ready = 1'b1; // san sang nhan data
+                o_mem_req_valid     = 1'b1;
+                o_mem_rdata_ready   = 1'b1; // san sang nhan data
             end
 
             UPDATE: begin

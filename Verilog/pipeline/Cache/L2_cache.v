@@ -220,10 +220,10 @@ module L2_cache #(
                 
                 // Ghi nguyen dong cache
                 .refill_we      (refill_we & way_select[i]),
+                .write_index    (s2_index),
                 .refill_din     (refill_buffer),
                 
                 // Ghi tung word (hien tai ko dung o L2)
-                .write_index    (32'd0),
                 .cpu_din        (32'd0), 
                 .cpu_we         (1'b0), 
                 .cpu_wstrb      (4'b0),           
@@ -233,7 +233,8 @@ module L2_cache #(
     endgenerate
 
     // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
-    assign pipeline_stall = s2_req & ~any_hit; 
+    wire stall_contoller;
+    assign pipeline_stall = (s2_req & ~any_hit) | stall_contoller; 
     
     acc_cmp #(
         .ADDR_W     (ADDR_W), 
@@ -382,6 +383,7 @@ module L2_cache #(
         .moesi_we           (moesi_we),
         .refill_we          (refill_we),
         .burst_cnt          (burst_cnt),
+        .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),
         .o_req_ready        (controller_ready),
