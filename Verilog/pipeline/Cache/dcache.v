@@ -65,6 +65,7 @@ module dcache #(
     wire [DATA_W-1:0]       s2_wdata;
     
     wire                    s2_is_snoop;
+    wire                    snoop_is_invalidate;
 
     // Arrays & Counters
     wire [3:0]              burst_cnt;
@@ -93,6 +94,10 @@ module dcache #(
     );
     
     // ---------------------------------------- SRAM ARRAYS (DATA & TAG) ----------------------------------------
+    wire [NUM_WAYS-1:0] current_valid;
+    wire invalid;
+
+    assign invalid = s2_is_snoop && o_snoop_hit && snoop_is_invalidate;
     genvar i;
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
@@ -104,9 +109,13 @@ module dcache #(
                 .clk            (clk), 
                 .rst_n          (rst_n),
                 .tag_we         (tag_we & way_select[i]),
+                .valid_we       (refill_we & way_select[i]),
+                .invalid        (invalid & way_hit[i]),
                 .read_index     (s1_index),         
                 .write_index    (s2_index),          
                 .din_tag        (s2_tag),
+
+                .valid          (current_valid[i]),
                 .dout_tag       (tag_read[i])
             );
 
@@ -119,12 +128,15 @@ module dcache #(
                 .rst_n          (rst_n),
                 .read_index     (s1_index),
                 .write_index    (s2_index),
+
                 .refill_we      (refill_we & way_select[i]),
                 .refill_din     (refill_buffer),
-                .cpu_we         (data_we),
+
+                .cpu_we         (data_we & way_hit[i]),
                 .cpu_din        (s2_wdata),
                 .cpu_wstrb      (4'b1111),
                 .cpu_offset     (s2_word_off),
+
                 .dout           (data_read[i])
             );
         end
@@ -168,9 +180,9 @@ module dcache #(
     );
 
     // ---------------------------------------- STAGE 2: HIT LOGIC & SNOOP CHECK ----------------------------------------
-    reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
+    // reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
     reg [NUM_WAYS-1:0]  dirty_array [0:NUM_SETS-1];
-    wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
+    // wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
     wire [NUM_WAYS-1:0] current_dirty = dirty_array[s2_index];
     
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
@@ -245,25 +257,25 @@ module dcache #(
         end
     end
 
-    // Invalidate (Core khac ghi), 0: Clean/Check (Core khac đ�?c)
-    wire snoop_is_invalidate = (i_snoop_type == 2'b01); 
+    // Invalidate (Core khac ghi), 0: Clean/Check (Core khac doc)
+    assign snoop_is_invalidate = (i_snoop_type == 2'b01); 
 
     integer k;
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             for(k = 0; k < NUM_SETS; k = k + 1) begin 
-                valid_array[k] <= {NUM_WAYS{1'b0}};
+                // valid_array[k] <= {NUM_WAYS{1'b0}};
                 dirty_array[k] <= {NUM_WAYS{1'b0}};
             end
         end 
         else begin
-            if (refill_we) begin 
-                valid_array[s2_index] <= valid_array[s2_index] | way_select;
-            end 
-            else if (s2_is_snoop && o_snoop_hit && snoop_is_invalidate) begin
-                // Snoop Invalidate -> Clear Valid cua way bi Hit
-                valid_array[s2_index] <= valid_array[s2_index] & (~way_hit);
-            end
+            // if (refill_we) begin 
+            //     valid_array[s2_index] <= valid_array[s2_index] | way_select;
+            // end 
+            // else if (s2_is_snoop && o_snoop_hit && snoop_is_invalidate) begin
+            //     // Snoop Invalidate -> Clear Valid cua way bi Hit
+            //     valid_array[s2_index] <= valid_array[s2_index] & (~way_hit);
+            // end
 
             if (refill_we) begin
                 dirty_array[s2_index] <= dirty_array[s2_index] & (~way_select);
@@ -301,6 +313,7 @@ module dcache #(
         .rst_n              (rst_n),
         
         .cpu_req            (s2_req), 
+        .cpu_we             (s2_we),
         .hit                (cpu_hit),
         .victim_dirty       (victim_dirty_bit), // bao victim co valid ko
         .victim_valid       (victim_valid_bit), // bao victim co dirty khong
