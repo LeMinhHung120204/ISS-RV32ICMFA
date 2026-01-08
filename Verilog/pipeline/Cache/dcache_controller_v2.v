@@ -17,7 +17,7 @@ module dcache_controller_v2 #(
     output  reg         data_we,
     output  reg         tag_we, 
     output  reg         refill_we,
-    output  reg [3:0]   burst_cnt,
+    // output  reg [3:0]   burst_cnt,
     input               snoop_busy, 
 
    
@@ -28,12 +28,12 @@ module dcache_controller_v2 #(
     
     // address writeback L1 -> L2
     input                       i_mem_wdata_ready,
-    output  reg                 o_mem_wdata_last,
+    // output  reg                 o_mem_wdata_last,
     output  reg                 o_mem_wdata_valid,
 
     // read data L2 -> L1
     input                       i_mem_rdata_valid,
-    input                       i_mem_rdata_last,
+    // input                       i_mem_rdata_last,
     output  reg                 o_mem_rdata_ready
 );
 
@@ -50,19 +50,19 @@ module dcache_controller_v2 #(
 
     reg [3:0] state, next_state;
 
-    always @(posedge clk or negedge rst_n) begin
-        if(~rst_n) begin
-            burst_cnt <= 4'd0;
-        end 
-        else begin
-            if ( (state == WB_DATA && i_mem_wdata_ready) || (state == ALLOC_WAIT && i_mem_rdata_valid) ) begin
-                burst_cnt <= burst_cnt + 1'b1;
-            end 
-            else if (state != WB_DATA && state != ALLOC_WAIT) begin
-                burst_cnt <= 4'd0;
-            end
-        end
-    end
+    // always @(posedge clk or negedge rst_n) begin
+    //     if(~rst_n) begin
+    //         burst_cnt <= 4'd0;
+    //     end 
+    //     else begin
+    //         if ( (state == WB_DATA && i_mem_wdata_ready) || (state == ALLOC_WAIT && i_mem_rdata_valid) ) begin
+    //             burst_cnt <= burst_cnt + 1'b1;
+    //         end 
+    //         else if (state != WB_DATA && state != ALLOC_WAIT) begin
+    //             burst_cnt <= 4'd0;
+    //         end
+    //     end
+    // end
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
@@ -99,7 +99,7 @@ module dcache_controller_v2 #(
             end
             WB_DATA: begin
                 // gui tung word ra L2
-                if (i_mem_wdata_ready && burst_cnt == BURST_LEN)
+                if (i_mem_wdata_ready )
                     next_state = ALLOC_REQ; 
             end
 
@@ -109,7 +109,7 @@ module dcache_controller_v2 #(
                 if (i_mem_req_ready) next_state = ALLOC_WAIT;
             end
             ALLOC_WAIT: begin
-                if (i_mem_rdata_valid && i_mem_rdata_last) begin
+                if (i_mem_rdata_valid) begin
                     // Neu dang co Snoop chen ngang thi doi
                     if (snoop_busy) begin 
                         next_state = WAIT_SNOOP;
@@ -141,7 +141,7 @@ module dcache_controller_v2 #(
         o_mem_req_valid     = 1'b0;
         o_mem_req_cmd       = 2'b00;
         o_mem_wdata_valid   = 1'b0;
-        o_mem_wdata_last    = 1'b0;
+        // o_mem_wdata_last    = 1'b0;
         o_mem_rdata_ready   = 1'b0;
         
         data_we             = 1'b0;
@@ -162,7 +162,7 @@ module dcache_controller_v2 #(
 
             WB_DATA: begin
                 o_mem_wdata_valid = 1'b1;
-                o_mem_wdata_last  = (burst_cnt == BURST_LEN);
+                // o_mem_wdata_last  = (burst_cnt == BURST_LEN);
             end
 
             ALLOC_REQ: begin

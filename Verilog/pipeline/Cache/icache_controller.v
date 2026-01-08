@@ -21,7 +21,7 @@ module icache_controller #(
 
     // read data L2 -> L1
     input           i_mem_rdata_valid,
-    input           i_mem_rdata_last,
+    // input           i_mem_rdata_last,
     output  reg     o_mem_rdata_ready
 );
 
@@ -81,7 +81,7 @@ module icache_controller #(
             end
             ALLOC_WAIT: begin
                 // Nhan Data vao refill buffer
-                if (i_mem_rdata_valid && i_mem_rdata_last) begin
+                if (i_mem_rdata_valid) begin
                     next_state = UPDATE;
                 end
             end

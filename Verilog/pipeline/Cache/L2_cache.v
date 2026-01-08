@@ -4,10 +4,10 @@ module L2_cache #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
-    parameter NUM_SETS      = 16,
+    parameter NUM_SETS      = 256,
     parameter INDEX_W       = $clog2(NUM_SETS),
-    parameter WORD_OFF_W    = 4,  // 16 words/line (64 bytes)
-    parameter BYTE_OFF_W    = 2,  // 4B/word
+    parameter WORD_OFF_W    = 4,  
+    parameter BYTE_OFF_W    = 2,
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32, // 512 bits
     parameter CORE_ID       = 1'b0,    
@@ -25,15 +25,13 @@ module L2_cache #(
     output                      o_req_ready,  
 
     // Write Data (Data from L1 writeback)
-    input  [DATA_W-1:0]         i_wdata,     
+    input  [CACHE_DATA_W-1:0]   i_wdata,     
     input                       i_wdata_valid,
-    input                       i_wdata_last,
     output                      o_wdata_ready,
 
     // Read Data (Data to L1 refill)
-    output [DATA_W-1:0]         o_rdata,      
+    output [CACHE_DATA_W-1:0]   o_rdata,      
     output                      o_rdata_valid,
-    output                      o_rdata_last,
     input                       i_rdata_ready, // Signal from L1 indicating it's ready
 
     // Snoop Internal (Forwarding -> L1)
@@ -42,7 +40,7 @@ module L2_cache #(
     output [1:0]                o_int_snoop_type,
     input                       i_int_snoop_hit,
     input                       i_int_snoop_dirty,
-    input  [DATA_W-1:0]         i_int_snoop_data,
+    input  [CACHE_DATA_W-1:0]   i_int_snoop_data,
 
     // (cache L2 <-> cache L3)
     // AW channel 
@@ -299,20 +297,21 @@ module L2_cache #(
     end
 
     // ---------------------------------------- OUTPUT DATA LOGIC (L2 -> L1) ----------------------------------------
-    reg [DATA_W-1:0] read_word_mux;
+    reg [CACHE_DATA_W-1:0] line_select;
+    
     always @(*) begin
         case(way_hit)
-            4'b0001: read_word_mux = data_read[0][burst_cnt * DATA_W +: DATA_W];
-            4'b0010: read_word_mux = data_read[1][burst_cnt * DATA_W +: DATA_W];
-            4'b0100: read_word_mux = data_read[2][burst_cnt * DATA_W +: DATA_W];
-            4'b1000: read_word_mux = data_read[3][burst_cnt * DATA_W +: DATA_W];
-            default: read_word_mux = 32'd0;
+            4'b0001: line_select = data_read[0];
+            4'b0010: line_select = data_read[1];
+            4'b0100: line_select = data_read[2];
+            4'b1000: line_select = data_read[3];
+            default: line_select = {CACHE_DATA_W{1'b0}};
         endcase
     end
     
-    assign o_rdata          = read_word_mux;
+    assign o_rdata          = line_select;
     assign o_rdata_valid    = o_rdata_ready_ctrl; // Controller báo valid
-    assign o_rdata_last     = (burst_cnt == 15);
+    // assign o_rdata_last     = (burst_cnt == 15);
 
     // ---------------------------------------- REFILL BUFFER LOGIC ----------------------------------------
     // Nhan data tu 2 nguon: Memory (Refill) hoac L1 (Writeback)
@@ -327,8 +326,8 @@ module L2_cache #(
             end 
             // Case 2: Writeback from L1 (L1 Interface)
             // Khi Controller bat o_wdata_ready_ctrl (State L1_WB_RX)
-            else if (i_wdata_valid && o_wdata_ready_ctrl) begin
-                refill_buffer[burst_cnt * DATA_W +: DATA_W] <= i_wdata;
+            else if (i_wdata_valid && o_wdata_ready) begin
+                refill_buffer <= i_wdata;
             end
         end 
     end 
@@ -372,7 +371,7 @@ module L2_cache #(
         
         // Data Path Handshake
         .i_wdata_valid      (i_wdata_valid), // Input tu L1
-        .i_wdata_last       (i_wdata_last),
+        // .i_wdata_last       (i_wdata_last),
         .o_wdata_ready      (o_wdata_ready_ctrl),
 
         .o_rdata_ready      (o_rdata_ready_ctrl),
@@ -517,7 +516,7 @@ module L2_cache #(
     always @(*) begin
         if (use_l1_data_mux) begin
             // Neu Snoop Controller bao lay tu L1 (vi L1 co ban Dirty moi hon)
-            oCDDATA = i_int_snoop_data; 
+            oCDDATA = i_int_snoop_data[burst_cnt_snoop * DATA_W +: DATA_W];
         end
         else begin
             case(way_hit)

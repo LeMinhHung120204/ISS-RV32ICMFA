@@ -1,10 +1,11 @@
 `timescale 1ns / 1ps
 module single_core #(
-    parameter CORE_ID   = 1'b0,
-    parameter ID_W      = 2,
-    parameter ADDR_W    = 32,
-    parameter DATA_W    = 32,
-    parameter STRB_W    = DATA_W/8
+    parameter CORE_ID       = 1'b0,
+    parameter ID_W          = 2,
+    parameter ADDR_W        = 32,
+    parameter DATA_W        = 32,
+    parameter STRB_W        = DATA_W/8,
+    parameter CACHE_DATA_W  = 512
 )(
     input   ACLK,
     input   ARESETn,
@@ -85,24 +86,24 @@ module single_core #(
     wire                icache_req, icache_flush, icache_stall;
 
     // L1 <-> Arbiter <-> L2 Wires
-    wire                l1i_req_valid, l1i_req_ready, l1i_rdata_valid, l1i_rdata_last;
+    wire                l1i_req_valid, l1i_req_ready, l1i_rdata_valid;
     wire [ADDR_W-1:0]   l1i_req_addr;
     
     wire                l1d_req_valid, l1d_req_ready;
     wire [1:0]          l1d_req_cmd;
     wire [ADDR_W-1:0]   l1d_req_addr;
-    wire                l1d_wdata_valid, l1d_wdata_ready, l1d_wdata_last;
-    wire [DATA_W-1:0]   l1d_wdata;
-    wire                l1d_rdata_valid, l1d_rdata_last;
+    wire                l1d_wdata_valid, l1d_wdata_ready;
+    wire [CACHE_DATA_W-1:0]   l1d_wdata;
+    wire                l1d_rdata_valid;
 
     // Arbiter to L2
     wire                l2_req_valid, l2_req_ready;
     wire [1:0]          l2_req_cmd;
     wire [ADDR_W-1:0]   l2_req_addr;
-    wire [DATA_W-1:0]   l2_wdata;       
-    wire                l2_wdata_valid, l2_wdata_ready, l2_wdata_last;
-    wire [DATA_W-1:0]   l2_rdata;       
-    wire                l2_rdata_valid, l2_rdata_last, l2_rdata_ready;
+    wire [CACHE_DATA_W-1:0]   l2_wdata;       
+    wire                l2_wdata_valid, l2_wdata_ready;
+    wire [CACHE_DATA_W-1:0]   l2_rdata;       
+    wire                l2_rdata_valid, l2_rdata_ready;
 
     // Internal Snoop (L2 -> L1 D-Cache)
     wire                int_snoop_valid;
@@ -110,7 +111,7 @@ module single_core #(
     wire [1:0]          int_snoop_type;
     wire                int_snoop_hit;
     wire                int_snoop_dirty;
-    wire [DATA_W-1:0]   int_snoop_data;
+    wire [CACHE_DATA_W-1:0]   int_snoop_data;
 
     // ---------------------------------------- MODULE INSTANTIATIONS ----------------------------------------
     RV32IMF #( 
@@ -151,7 +152,6 @@ module single_core #(
         .o_l2_req_valid     (l1i_req_valid), 
         .o_l2_req_addr      (l1i_req_addr),
         .i_l2_rdata_valid   (l1i_rdata_valid), 
-        .i_l2_rdata_last    (l1i_rdata_last),
         .i_l2_rdata         (l2_rdata), 
         .o_l2_rdata_ready   ()
     );
@@ -179,10 +179,8 @@ module single_core #(
         .i_l2_wdata_ready   (l1d_wdata_ready), 
         .o_l2_wdata         (l1d_wdata),
         .o_l2_wdata_valid   (l1d_wdata_valid), 
-        .o_l2_wdata_last    (l1d_wdata_last),
         
         .i_l2_rdata_valid   (l1d_rdata_valid), 
-        .i_l2_rdata_last    (l1d_rdata_last),
         .i_l2_rdata         (l2_rdata), 
         .o_l2_rdata_ready   (),
 
@@ -216,13 +214,10 @@ module single_core #(
 
     assign l2_wdata         = l1d_wdata;
     assign l2_wdata_valid   = l1d_wdata_valid;
-    assign l2_wdata_last    = l1d_wdata_last;
     assign l1d_wdata_ready  = l2_wdata_ready; 
 
     assign l1d_rdata_valid  = l2_rdata_valid;
-    assign l1d_rdata_last   = l2_rdata_last;
     assign l1i_rdata_valid  = l2_rdata_valid;
-    assign l1i_rdata_last   = l2_rdata_last;
 
     // ---------------------------------------- L2 CACHE (The Wrapper) ----------------------------------------
     L2_cache #( 
@@ -243,13 +238,11 @@ module single_core #(
         // Write Data (Data from L1 writeback)
         .i_wdata        (l2_wdata),
         .i_wdata_valid  (l2_wdata_valid),
-        .i_wdata_last   (l2_wdata_last),
         .o_wdata_ready  (l2_wdata_ready),
 
         // Read Data (Data to L1 refill)
         .o_rdata        (l2_rdata),
         .o_rdata_valid  (l2_rdata_valid),
-        .o_rdata_last   (l2_rdata_last),
         .i_rdata_ready  (1'b1),             // tam de vay
 
         // Internal Snoop Forwarding

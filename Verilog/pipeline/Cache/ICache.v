@@ -31,8 +31,8 @@ module icache #(
 
     // Read Data (Refill L2 -> icache)
     input                       i_l2_rdata_valid,
-    input                       i_l2_rdata_last,
-    input   [DATA_W-1:0]        i_l2_rdata,
+    // input                       i_l2_rdata_last,
+    input   [CACHE_DATA_W-1:0]  i_l2_rdata,
     output                      o_l2_rdata_ready
 );
 
@@ -183,7 +183,7 @@ module icache #(
             refill_buffer <= {CACHE_DATA_W{1'b0}};
         end 
         else if (i_l2_rdata_valid && o_l2_rdata_ready) begin
-             refill_buffer[burst_cnt * DATA_W +: DATA_W] <= i_l2_rdata;
+             refill_buffer <= i_l2_rdata;
         end
     end
 
@@ -219,7 +219,7 @@ module icache #(
         .i_mem_req_ready    (i_l2_req_ready),
 
         .i_mem_rdata_valid  (i_l2_rdata_valid),
-        .i_mem_rdata_last   (i_l2_rdata_last),
+        // .i_mem_rdata_last   (i_l2_rdata_last),
         .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 

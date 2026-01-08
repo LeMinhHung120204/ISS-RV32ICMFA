@@ -31,15 +31,15 @@ module dcache #(
     output  [ADDR_W-1:0]        o_l2_req_addr,
     
     // Write Data (WB)
-    output  reg [DATA_W-1:0]    o_l2_wdata,
-    output                      o_l2_wdata_valid,
-    output                      o_l2_wdata_last,
-    input                       i_l2_wdata_ready,
+    output  reg [CACHE_DATA_W-1:0]  o_l2_wdata,
+    output                          o_l2_wdata_valid,
+    // output                          o_l2_wdata_last,
+    input                           i_l2_wdata_ready,
 
     // Read Data (Refill)
     input                       i_l2_rdata_valid,
-    input                       i_l2_rdata_last,
-    input   [DATA_W-1:0]        i_l2_rdata,
+    // input                       i_l2_rdata_last,
+    input   [CACHE_DATA_W-1:0]  i_l2_rdata,
     output                      o_l2_rdata_ready,
 
     // Snoop Interface
@@ -47,9 +47,9 @@ module dcache #(
     input   [ADDR_W-1:0]        i_snoop_addr,
     input   [1:0]               i_snoop_type,
     
-    output  reg                 o_snoop_hit,
-    output  reg                 o_snoop_dirty,
-    output  reg [DATA_W-1:0]    o_snoop_data
+    output  reg                     o_snoop_hit,
+    output  reg                     o_snoop_dirty,
+    output  reg [CACHE_DATA_W-1:0]  o_snoop_data
 );
 
     
@@ -193,10 +193,10 @@ module dcache #(
 
     always @(*) begin
         case (way_hit)
-            4'b0001: o_snoop_data = data_read[0][burst_cnt * DATA_W +: DATA_W];
-            4'b0010: o_snoop_data = data_read[1][burst_cnt * DATA_W +: DATA_W];
-            4'b0100: o_snoop_data = data_read[2][burst_cnt * DATA_W +: DATA_W];
-            4'b1000: o_snoop_data = data_read[3][burst_cnt * DATA_W +: DATA_W];
+            4'b0001: o_snoop_data = data_read[0];
+            4'b0010: o_snoop_data = data_read[1];
+            4'b0100: o_snoop_data = data_read[2];
+            4'b1000: o_snoop_data = data_read[3];
             default: o_snoop_data = {DATA_W{1'b0}};
         endcase
 
@@ -225,10 +225,10 @@ module dcache #(
     // Data Mux cho WriteBack
     always @(*) begin
         case(way_select)
-            4'b0001: o_l2_wdata = data_read[0][burst_cnt * DATA_W +: DATA_W];
-            4'b0010: o_l2_wdata = data_read[1][burst_cnt * DATA_W +: DATA_W];
-            4'b0100: o_l2_wdata = data_read[2][burst_cnt * DATA_W +: DATA_W];
-            4'b1000: o_l2_wdata = data_read[3][burst_cnt * DATA_W +: DATA_W];
+            4'b0001: o_l2_wdata = data_read[0];
+            4'b0010: o_l2_wdata = data_read[1];
+            4'b0100: o_l2_wdata = data_read[2];
+            4'b1000: o_l2_wdata = data_read[3];
             default: o_l2_wdata = 32'd0;
         endcase
     end
@@ -240,7 +240,7 @@ module dcache #(
         end 
         else begin
             if (i_l2_rdata_valid && o_l2_rdata_ready) begin
-                refill_buffer[burst_cnt * DATA_W +: DATA_W] <= i_l2_rdata;
+                refill_buffer <= i_l2_rdata;
             end
         end
     end
@@ -310,7 +310,7 @@ module dcache #(
         .data_we    (data_we), 
         .tag_we     (tag_we), 
         .refill_we  (refill_we),
-        .burst_cnt  (burst_cnt),
+        // .burst_cnt  (burst_cnt),
 
         // Custom L2 Interface
         .o_mem_req_valid    (o_l2_req_valid),
@@ -319,10 +319,10 @@ module dcache #(
 
         .o_mem_wdata_valid  (o_l2_wdata_valid),
         .i_mem_wdata_ready  (i_l2_wdata_ready),
-        .o_mem_wdata_last   (o_l2_wdata_last),
+        // .o_mem_wdata_last   (o_l2_wdata_last),
 
         .i_mem_rdata_valid  (i_l2_rdata_valid),
-        .i_mem_rdata_last   (i_l2_rdata_last),
+        // .i_mem_rdata_last   (i_l2_rdata_last),
         .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 

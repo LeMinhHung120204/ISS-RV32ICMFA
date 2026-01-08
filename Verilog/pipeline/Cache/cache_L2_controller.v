@@ -20,7 +20,7 @@ module cache_L2_controller #(
     
     // nhan data tu L1
     input           i_wdata_valid,
-    input           i_wdata_last,
+    // input           i_wdata_last,
     output  reg     o_wdata_ready,       
 
     // tra data cho L1
@@ -178,8 +178,8 @@ module cache_L2_controller #(
 
             // --- L1 Writeback Receiver ---
             L1_WB_RX: begin
-                // doii nhan du 16 words tu L1
-                if (i_wdata_valid && i_wdata_last) next_state = UPDATE; 
+                // ghi 1 luc 512 bit 
+                if (i_wdata_valid) next_state = UPDATE; 
             end
 
             // --- Writeback ---

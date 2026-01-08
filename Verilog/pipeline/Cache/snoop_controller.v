@@ -157,7 +157,8 @@ module snoop_controller #(
 
             if ((state == DATA) & CDVALID & CDREADY) begin
                 burst_cnt <= burst_cnt + 1'b1;
-            end else if (state != DATA) begin
+            end 
+            else if (state != DATA) begin
                 burst_cnt <= 4'd0;
             end
         end
