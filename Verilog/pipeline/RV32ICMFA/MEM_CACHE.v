@@ -4,6 +4,7 @@ module MEM_CACHE #(
     parameter ADDR_WIDTH = 32
 )(
     input                       clk, rst_n,
+    input                       EN, 
     input                       M_RegWrite, 
     input                       M_FRegWrite, 
     input                       M_MDU_FPUEn,
@@ -37,7 +38,7 @@ module MEM_CACHE #(
             C_FRegWrite <= 1'b0;
             C_MDU_FPUEn <= 1'b0;
         end 
-        else begin
+        else if (~EN) begin
             C_Result    <= M_Result   ; 
             // C_ReadData  <= M_ReadData;
             C_ImmExt    <= M_ImmExt   ;

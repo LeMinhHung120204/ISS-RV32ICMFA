@@ -27,13 +27,11 @@ module icache_controller #(
 );
 
     // State Encoding
-    localparam IDLE         = 4'd0;
-    localparam TAG_CHECK    = 4'd1;
-    localparam ALLOC_REQ    = 4'd2;
-    localparam ALLOC_WAIT   = 4'd3;
-    localparam UPDATE       = 4'd4;
-    localparam WAIT_RAM     = 4'd5;
-    // localparam WAIT_READ    = 4'd6;
+    localparam TAG_CHECK    = 4'd0;
+    localparam ALLOC_REQ    = 4'd1;
+    localparam ALLOC_WAIT   = 4'd2;
+    localparam UPDATE       = 4'd3;
+    localparam WAIT_RAM     = 4'd4;
 
     reg [3:0] state, next_state;
 

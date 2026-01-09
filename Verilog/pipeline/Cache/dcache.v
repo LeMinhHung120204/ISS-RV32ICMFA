@@ -22,6 +22,7 @@ module dcache #(
     input   [1:0]               cpu_size,
     output  reg [DATA_W-1:0]    data_rdata,
     output                      pipeline_stall,
+    output                      raw_hazard,
 
     // cache <-> L2
     // Request address
@@ -33,12 +34,10 @@ module dcache #(
     // Write Data (WB)
     output  reg [CACHE_DATA_W-1:0]  o_l2_wdata,
     output                          o_l2_wdata_valid,
-    // output                          o_l2_wdata_last,
     input                           i_l2_wdata_ready,
 
     // Read Data (Refill)
     input                       i_l2_rdata_valid,
-    // input                       i_l2_rdata_last,
     input   [CACHE_DATA_W-1:0]  i_l2_rdata,
     output                      o_l2_rdata_ready,
 
@@ -143,7 +142,10 @@ module dcache #(
     endgenerate
 
     // ---------------------------------------- PIPELINE REGISTER (Stage 1 -> Stage 2) ----------------------------------------
-    assign pipeline_stall  = (s2_req & ~cpu_hit & ~s2_is_snoop) | i_snoop_valid;
+    wire stall_contoller;
+    assign pipeline_stall   = (s2_req & ~cpu_hit & ~s2_is_snoop) | stall_contoller | i_snoop_valid;
+
+    assign raw_hazard       = cpu_req & data_we & (s1_index == s2_index); 
     acc_cmp #(
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W), 
@@ -180,9 +182,7 @@ module dcache #(
     );
 
     // ---------------------------------------- STAGE 2: HIT LOGIC & SNOOP CHECK ----------------------------------------
-    // reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
     reg [NUM_WAYS-1:0]  dirty_array [0:NUM_SETS-1];
-    // wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
     wire [NUM_WAYS-1:0] current_dirty = dirty_array[s2_index];
     
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
@@ -264,19 +264,10 @@ module dcache #(
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             for(k = 0; k < NUM_SETS; k = k + 1) begin 
-                // valid_array[k] <= {NUM_WAYS{1'b0}};
                 dirty_array[k] <= {NUM_WAYS{1'b0}};
             end
         end 
         else begin
-            // if (refill_we) begin 
-            //     valid_array[s2_index] <= valid_array[s2_index] | way_select;
-            // end 
-            // else if (s2_is_snoop && o_snoop_hit && snoop_is_invalidate) begin
-            //     // Snoop Invalidate -> Clear Valid cua way bi Hit
-            //     valid_array[s2_index] <= valid_array[s2_index] & (~way_hit);
-            // end
-
             if (refill_we) begin
                 dirty_array[s2_index] <= dirty_array[s2_index] & (~way_select);
             end 
@@ -323,7 +314,7 @@ module dcache #(
         .data_we    (data_we), 
         .tag_we     (tag_we), 
         .refill_we  (refill_we),
-        // .burst_cnt  (burst_cnt),
+        .stall      (stall_contoller),
 
         // Custom L2 Interface
         .o_mem_req_valid    (o_l2_req_valid),
@@ -332,10 +323,8 @@ module dcache #(
 
         .o_mem_wdata_valid  (o_l2_wdata_valid),
         .i_mem_wdata_ready  (i_l2_wdata_ready),
-        // .o_mem_wdata_last   (o_l2_wdata_last),
 
         .i_mem_rdata_valid  (i_l2_rdata_valid),
-        // .i_mem_rdata_last   (i_l2_rdata_last),
         .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 

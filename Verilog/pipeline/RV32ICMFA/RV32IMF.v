@@ -8,6 +8,7 @@ module RV32IMF #(
     // cpu <-> dcache
     input   [WIDTH_DATA-1:0]    data_rdata,
     input                       dcache_stall,
+    input                       raw_hazard,
     output                      data_req,
     output                      data_wr,
     output  [1:0]               data_size,
@@ -167,6 +168,8 @@ module RV32IMF #(
         .E_rd           (E_rd),
         .icache_stall   (icache_stall),
         .dcache_stall   (dcache_stall),
+        .raw_hazard     (raw_hazard),
+        
         // .E_PCSrc        (E_PCSrc),
         .E_MulDivStall  (E_MulDivStall),
         .E_FPUStall     (E_FPUStall),
@@ -224,7 +227,7 @@ module RV32IMF #(
     fetch_pipe fetch_pipe_register (
         .clk    (clk),
         .rst_n  (rst_n),
-        .EN     (icache_stall),
+        .EN     (F_Stall),
         .Flush  (fetch_pipe_Flush),
 
         .s1_Predict_Taken   (F_Predict_Taken),
@@ -571,6 +574,8 @@ module RV32IMF #(
     MEM_CACHE MEM_CACHE_register(
         .clk            (clk),
         .rst_n          (rst_n),
+        .EN             (dcache_stall),
+
         .M_Result       (M_Result),
         .M_ImmExt       (M_ImmExt),
         .M_ResPC        (M_ResPC),

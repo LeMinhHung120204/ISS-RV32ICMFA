@@ -79,7 +79,7 @@ module single_core #(
     wire [DATA_W-1:0]   data_rdata, data_wdata;
     wire [ADDR_W-1:0]   data_addr;
     wire [1:0]          data_size;
-    wire                data_req, data_wr, dcache_stall;
+    wire                data_req, data_wr, dcache_stall, raw_hazard;
 
     wire [DATA_W-1:0]   imem_instr;
     wire [ADDR_W-1:0]   icache_addr;
@@ -120,6 +120,7 @@ module single_core #(
     ) u_RV32IMF (
         .clk            (ACLK), 
         .rst_n          (ARESETn),
+
         .data_rdata     (data_rdata), 
         .data_req       (data_req), 
         .data_wr        (data_wr),
@@ -127,6 +128,8 @@ module single_core #(
         .data_addr      (data_addr), 
         .data_wdata     (data_wdata),
         .dcache_stall   (dcache_stall),
+        .raw_hazard     (raw_hazard),
+
         .imem_instr     (imem_instr), 
         .icache_req     (icache_req),
         .icache_flush   (icache_flush), 
@@ -144,7 +147,10 @@ module single_core #(
         .cpu_req        (icache_req), 
         .cpu_addr       (icache_addr), 
         .icache_flush   (icache_flush),
+
         .dcache_stall   (dcache_stall), 
+        .raw_hazard     (raw_hazard),
+        
         .pipeline_stall (icache_stall),
         .data_rdata     (imem_instr),
         
@@ -170,6 +176,7 @@ module single_core #(
         .cpu_size           (data_size), 
         .data_rdata         (data_rdata),
         .pipeline_stall     (dcache_stall),
+        .raw_hazard         (raw_hazard),
 
         .i_l2_req_ready     (l1d_req_ready), 
         .o_l2_req_valid     (l1d_req_valid),
@@ -207,8 +214,8 @@ module single_core #(
         .i_c1_req_cmd       (l1d_req_cmd), 
         .i_c1_req_addr      (l1d_req_addr), 
         .o_c1_req_ready     (l1d_req_ready),
-        .i_l2_ready         (l2_req_ready), 
         
+        .i_l2_ready         (l2_req_ready), 
         .o_l2_valid         (l2_req_valid), 
         .o_l2_cmd           (l2_req_cmd), 
         .o_l2_addr          (l2_req_addr)

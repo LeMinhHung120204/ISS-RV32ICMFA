@@ -255,18 +255,33 @@ module cache_L2_controller #(
         oWSTRB                  = 8'b0;
 
         case(state)
+            // TAG_CHECK: begin
+            //     snoop_can_access_ram = 1'b0;
+            //     if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
+            //         o_rdata_ready = 1'b1;
+            //     end
+            //     if (~snoop_busy) begin
+            //         // L2 chi nhan lenh moi khi:
+            //         // dang o trang thai cho (TAG_CHECK)
+            //         // khong bi Snoop Controller chiem quyen (snoop_busy = 0)
+            //         o_req_ready = 1'b1; 
+            //     end
+            // end 
+
             TAG_CHECK: begin
                 snoop_can_access_ram = 1'b0;
+                
                 if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
                     o_rdata_ready = 1'b1;
                 end
-                if (~snoop_busy) begin
-                    // L2 chi nhan lenh moi khi:
-                    // dang o trang thai cho (TAG_CHECK)
-                    // khong bi Snoop Controller chiem quyen (snoop_busy = 0)
+                
+                if (~snoop_busy && (next_state == TAG_CHECK)) begin
                     o_req_ready = 1'b1; 
                 end
-            end 
+                else begin
+                    o_req_ready = 1'b0;
+                end
+            end
 
             L1_WB_RX: begin
                 o_wdata_ready = 1'b1; // Bat co nhan data tu L1

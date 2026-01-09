@@ -19,9 +19,12 @@ module icache #(
     input                       cpu_req,
     input                       icache_flush,
     input   [ADDR_W-1:0]        cpu_addr,
-    input                       dcache_stall,
     output  [DATA_W-1:0]        data_rdata,
     output                      pipeline_stall,
+
+    // icache <-> dcache
+    input                       dcache_stall,
+    input                       raw_hazard, 
 
     // cache <-> L2
     // Request
@@ -70,6 +73,7 @@ module icache #(
     );
     
     // ---------------------------------------- SRAM ARRAYS ----------------------------------------
+    wire [NUM_WAYS-1:0] current_valid;
     genvar i;
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
@@ -84,9 +88,11 @@ module icache #(
                 // Port read
                 .read_index     (s1_index),        
                 .dout_tag       (tag_read[i]),
+                .valid          (current_valid[i]),
 
                 // Port write
-                .tag_we         (tag_we & way_select[i]),                
+                .tag_we         (tag_we & way_select[i]),        
+                .valid_we       (refill_we & way_select[i]),        
                 .write_index    (s2_index),          
                 .din_tag        (s2_tag)  
             );
@@ -128,7 +134,7 @@ module icache #(
     ) acc_cmp_inst (
         .clk            (clk), 
         .rst_n          (rst_n),
-        .stall          (pipeline_stall | dcache_stall),
+        .stall          (pipeline_stall | dcache_stall | raw_hazard),
         .flush          (icache_flush),
 
         // Inputs
@@ -150,8 +156,8 @@ module icache #(
     );
 
     // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
-    reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
-    wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
+    // reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
+    // wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
     
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
     assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
@@ -164,19 +170,19 @@ module icache #(
     assign o_l2_req_addr = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // ---------------------------------------- LOGIC VALID ARRAY ----------------------------------------
-    integer k;
-    always @(posedge clk or negedge rst_n) begin
-        if(~rst_n) begin
-            for(k = 0; k < NUM_SETS; k = k + 1) begin 
-                valid_array[k] <= {NUM_WAYS{1'b0}};
-            end 
-        end 
-        else begin
-            if (refill_we) begin 
-                valid_array[s2_index] <= valid_array[s2_index] | way_select;
-            end 
-        end
-    end
+    // integer k;
+    // always @(posedge clk or negedge rst_n) begin
+    //     if(~rst_n) begin
+    //         for(k = 0; k < NUM_SETS; k = k + 1) begin 
+    //             valid_array[k] <= {NUM_WAYS{1'b0}};
+    //         end 
+    //     end 
+    //     else begin
+    //         if (refill_we) begin 
+    //             valid_array[s2_index] <= valid_array[s2_index] | way_select;
+    //         end 
+    //     end
+    // end
     
     // Refill Buffer
     always @(posedge clk or negedge rst_n) begin
@@ -228,11 +234,11 @@ module icache #(
     // ---------------------------------------- OUTPUT MUX ----------------------------------------
     reg [DATA_W-1:0] word_select;
     always @(*) begin
-        case(way_hit)
-            4'b0001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
-            4'b0010: word_select = data_read[1][s2_word_off * DATA_W +: DATA_W];
-            4'b0100: word_select = data_read[2][s2_word_off * DATA_W +: DATA_W];
-            4'b1000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
+        case({s2_req, way_hit})
+            5'b10001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
+            5'b10010: word_select = data_read[1][s2_word_off * DATA_W +: DATA_W];
+            5'b10100: word_select = data_read[2][s2_word_off * DATA_W +: DATA_W];
+            5'b11000: word_select = data_read[3][s2_word_off * DATA_W +: DATA_W];
             default: word_select = 32'd0;
         endcase
     end

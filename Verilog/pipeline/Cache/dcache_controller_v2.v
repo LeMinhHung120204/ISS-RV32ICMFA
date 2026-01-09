@@ -5,7 +5,6 @@ module dcache_controller_v2 #(
     parameter BURST_LEN = 15 // 16 words = 64 bytes cache line
 )(
     input               clk, rst_n,
-//    output  reg         wb_error,
 
     // Cache <-> CPU
     input               cpu_req,
@@ -17,7 +16,7 @@ module dcache_controller_v2 #(
     output  reg         data_we,
     output  reg         tag_we, 
     output  reg         refill_we,
-    // output  reg [3:0]   burst_cnt,
+    output  reg         stall,
     input               snoop_busy, 
 
    
@@ -28,17 +27,14 @@ module dcache_controller_v2 #(
     
     // address writeback L1 -> L2
     input                       i_mem_wdata_ready,
-    // output  reg                 o_mem_wdata_last,
     output  reg                 o_mem_wdata_valid,
 
     // read data L2 -> L1
     input                       i_mem_rdata_valid,
-    // input                       i_mem_rdata_last,
     output  reg                 o_mem_rdata_ready
 );
 
     // State Encoding
-    // localparam IDLE         = 4'd0;
     localparam TAG_CHECK    = 4'd0;
     localparam ALLOC_REQ    = 4'd1;
     localparam ALLOC_WAIT   = 4'd2;
@@ -127,12 +123,12 @@ module dcache_controller_v2 #(
         o_mem_req_valid     = 1'b0;
         o_mem_req_cmd       = 2'b00;
         o_mem_wdata_valid   = 1'b0;
-        // o_mem_wdata_last    = 1'b0;
         o_mem_rdata_ready   = 1'b0;
         
         data_we             = 1'b0;
         tag_we              = 1'b0;
         refill_we           = 1'b0;
+        stall               = 1'b0;
 
         case(state)
             TAG_CHECK: begin
@@ -148,7 +144,6 @@ module dcache_controller_v2 #(
 
             WB_DATA: begin
                 o_mem_wdata_valid = 1'b1;
-                // o_mem_wdata_last  = (burst_cnt == BURST_LEN);
             end
 
             ALLOC_REQ: begin
@@ -165,6 +160,10 @@ module dcache_controller_v2 #(
                 tag_we      = 1'b1;
                 refill_we   = 1'b1;
             end
+
+            WAIT_RAM: begin
+                stall       = 1'b1;
+            end 
         endcase
     end
 
