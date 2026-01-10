@@ -311,7 +311,6 @@ module L2_cache #(
     
     assign o_rdata          = line_select;
     assign o_rdata_valid    = o_rdata_ready_ctrl; // Controller báo valid
-    // assign o_rdata_last     = (burst_cnt == 15);
 
     // ---------------------------------------- REFILL BUFFER LOGIC ----------------------------------------
     // Nhan data tu 2 nguon: Memory (Refill) hoac L1 (Writeback)
@@ -371,17 +370,14 @@ module L2_cache #(
         
         // Data Path Handshake
         .i_wdata_valid      (i_wdata_valid), // Input tu L1
-        // .i_wdata_last       (i_wdata_last),
         .o_wdata_ready      (o_wdata_ready_ctrl),
 
         .o_rdata_ready      (o_rdata_ready_ctrl),
 
         // Outputs to Datapath
-        // .data_we            (data_we),
         .tag_we             (main_tag_we),
         .moesi_we           (moesi_we),
         .refill_we          (refill_we),
-        // .burst_cnt          (burst_cnt),
         .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),
@@ -459,7 +455,6 @@ module L2_cache #(
         .snoop_busy             (snoop_busy),
         .bus_rw                 (bus_rw),
         .bus_snoop_valid        (bus_snoop_valid),
-        // .burst_cnt_snoop        (burst_cnt_snoop),
         .use_l1_data_mux        (use_l1_data_mux),
 
         // AXI Snoop Channels
