@@ -4,7 +4,7 @@ module single_core #(
     parameter ID_W          = 2,
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
-    parameter STRB_W        = DATA_W/8,
+    parameter STRB_W        = CACHE_DATA_W/8,
     parameter CACHE_DATA_W  = 512
 )(
     input   ACLK,
