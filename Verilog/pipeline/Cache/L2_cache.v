@@ -509,7 +509,7 @@ module L2_cache #(
             4'b0010: oWDATA = data_read[1];
             4'b0100: oWDATA = data_read[2];
             4'b1000: oWDATA = data_read[3];
-            default: oWDATA = 32'd0;
+            default: oWDATA = {CACHE_DATA_W{1'b0}};
         endcase
     end
     
@@ -525,7 +525,7 @@ module L2_cache #(
                 4'b0010: oCDDATA = data_read[1];
                 4'b0100: oCDDATA = data_read[2];
                 4'b1000: oCDDATA = data_read[3];
-                default: oCDDATA = 32'd0;
+                default: oCDDATA = {CACHE_DATA_W{1'b0}};
             endcase
         end 
     end
