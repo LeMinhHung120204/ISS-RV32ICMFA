@@ -4,7 +4,7 @@ module L2_cache #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
-    parameter NUM_SETS      = 256,
+    parameter NUM_SETS      = 32,
     parameter INDEX_W       = $clog2(NUM_SETS),
     parameter WORD_OFF_W    = 4,  
     parameter BYTE_OFF_W    = 2,
