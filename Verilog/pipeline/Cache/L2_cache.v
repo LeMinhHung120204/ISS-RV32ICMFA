@@ -14,7 +14,7 @@ module L2_cache #(
 
     parameter ID_W          = 2,
     parameter USER_W        = 4,
-    parameter STRB_W        = (DATA_W/8)
+    parameter STRB_W        = (CACHE_DATA_W/8)
 )(
     input ACLK, ARESETn,
 
@@ -56,11 +56,11 @@ module L2_cache #(
     output  [1:0]               oAWDOMAIN,
     
     // W channel
-    input                       iWREADY,
-    output reg  [DATA_W-1:0]    oWDATA,
-    output  [STRB_W-1:0]        oWSTRB,
-    output                      oWLAST,
-    output                      oWVALID,
+    input                           iWREADY,
+    output reg  [CACHE_DATA_W-1:0]  oWDATA,
+    output  [STRB_W-1:0]            oWSTRB,
+    output                          oWLAST,
+    output                          oWVALID,
     
     // B channel
     input   [ID_W-1:0]          iBID,
@@ -82,7 +82,7 @@ module L2_cache #(
 
     // R channel
     input   [ID_W-1:0]          iRID,
-    input   [DATA_W-1:0]        iRDATA,
+    input   [CACHE_DATA_W-1:0]  iRDATA,
     //  RRESP[3:2] (interconnect)
     //  RRESP[1:0] (memory)
     input   [3:0]               iRRESP,
@@ -103,10 +103,10 @@ module L2_cache #(
     output  [4:0]               oCRRESP,
     
     // CD channel
-    input                       iCDREADY,
-    output                      oCDVALID,
-    output reg  [DATA_W-1:0]    oCDDATA,
-    output                      oCDLAST
+    input                           iCDREADY,
+    output                          oCDVALID,
+    output reg  [CACHE_DATA_W-1:0]  oCDDATA,
+    output                          oCDLAST
 );
    // ---------------------------------------- INTERNAL WIRES ----------------------------------------
     wire [TAG_W-1:0]        s1_tag;
@@ -116,8 +116,7 @@ module L2_cache #(
 
     wire                    s2_req;
     wire                    s2_we;
-    wire [1:0]              s2_size; // L2 always processes full lines, but keeping for compatibility
-    wire [DATA_W-1:0]       s2_wdata; // Placeholder (Data handled via Refill Buffer now)
+    // wire [DATA_W-1:0]       s2_wdata;
     wire [TAG_W-1:0]        s2_tag;
     wire [INDEX_W-1:0]      s2_index;
     wire [WORD_OFF_W-1:0]   s2_word_off;
@@ -147,8 +146,8 @@ module L2_cache #(
     wire                    refill_we;
     // wire                    data_we;
     reg  [CACHE_DATA_W-1:0] refill_buffer;
-    wire [3:0]              burst_cnt;
-    wire [3:0]              burst_cnt_snoop;
+    // wire [3:0]              burst_cnt;
+    // wire [3:0]              burst_cnt_snoop;
     wire [NUM_WAYS-1:0]     way_select;
 
     // Controller specific for L2
@@ -249,7 +248,7 @@ module L2_cache #(
         // Stage 1 Inputs (Mapped from L1 interface)
         .s1_req         (internal_req | iACVALID),    
         .s1_we          (internal_we),      
-        .s1_size        (2'b10),
+        // .s1_size        (2'b10),
         .s1_wdata       ({DATA_W{1'b0}}),
         .s1_tag         (s1_tag),    
         .s1_index       (s1_index),   
@@ -260,8 +259,8 @@ module L2_cache #(
         // Stage 2 Outputs
         .s2_req         (s2_req),
         .s2_we          (s2_we),
-        .s2_size        (s2_size),
-        .s2_wdata       (s2_wdata),
+        // .s2_size        (s2_size),
+        // .s2_wdata       (s2_wdata),
         .s2_tag         (s2_tag),
         .s2_index       (s2_index),
         .s2_word_off    (s2_word_off),
@@ -323,7 +322,7 @@ module L2_cache #(
         else begin 
             // Case 1: Refill from Memory (AXI R Channel)
             if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
-                refill_buffer[burst_cnt * DATA_W +: DATA_W] <= iRDATA;
+                refill_buffer <= iRDATA;
             end 
             // Case 2: Writeback from L1 (L1 Interface)
             // Khi Controller bat o_wdata_ready_ctrl (State L1_WB_RX)
@@ -382,7 +381,7 @@ module L2_cache #(
         .tag_we             (main_tag_we),
         .moesi_we           (moesi_we),
         .refill_we          (refill_we),
-        .burst_cnt          (burst_cnt),
+        // .burst_cnt          (burst_cnt),
         .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),
@@ -460,7 +459,7 @@ module L2_cache #(
         .snoop_busy             (snoop_busy),
         .bus_rw                 (bus_rw),
         .bus_snoop_valid        (bus_snoop_valid),
-        .burst_cnt_snoop        (burst_cnt_snoop),
+        // .burst_cnt_snoop        (burst_cnt_snoop),
         .use_l1_data_mux        (use_l1_data_mux),
 
         // AXI Snoop Channels
@@ -506,10 +505,10 @@ module L2_cache #(
     // Mux Write Data cho Bus (Evict/Snoop Response)
     always @(*) begin
         case(way_select_final)
-            4'b0001: oWDATA = data_read[0][burst_cnt * DATA_W +: DATA_W];
-            4'b0010: oWDATA = data_read[1][burst_cnt * DATA_W +: DATA_W];
-            4'b0100: oWDATA = data_read[2][burst_cnt * DATA_W +: DATA_W];
-            4'b1000: oWDATA = data_read[3][burst_cnt * DATA_W +: DATA_W];
+            4'b0001: oWDATA = data_read[0];
+            4'b0010: oWDATA = data_read[1];
+            4'b0100: oWDATA = data_read[2];
+            4'b1000: oWDATA = data_read[3];
             default: oWDATA = 32'd0;
         endcase
     end
@@ -518,14 +517,14 @@ module L2_cache #(
     always @(*) begin
         if (use_l1_data_mux) begin
             // Neu Snoop Controller bao lay tu L1 (vi L1 co ban Dirty moi hon)
-            oCDDATA = i_int_snoop_data[burst_cnt_snoop * DATA_W +: DATA_W];
+            oCDDATA = i_int_snoop_data;
         end
         else begin
             case(way_hit)
-                4'b0001: oCDDATA = data_read[0][burst_cnt_snoop * DATA_W +: DATA_W];
-                4'b0010: oCDDATA = data_read[1][burst_cnt_snoop * DATA_W +: DATA_W];
-                4'b0100: oCDDATA = data_read[2][burst_cnt_snoop * DATA_W +: DATA_W];
-                4'b1000: oCDDATA = data_read[3][burst_cnt_snoop * DATA_W +: DATA_W];
+                4'b0001: oCDDATA = data_read[0];
+                4'b0010: oCDDATA = data_read[1];
+                4'b0100: oCDDATA = data_read[2];
+                4'b1000: oCDDATA = data_read[3];
                 default: oCDDATA = 32'd0;
             endcase
         end 

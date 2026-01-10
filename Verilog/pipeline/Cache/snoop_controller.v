@@ -25,7 +25,7 @@ module snoop_controller #(
     output                  bus_rw,             // 1: Write (Invalidate), 0: Read
     output reg              bus_snoop_valid,    // Trigger update MOESI state
     
-    output  [3:0]           burst_cnt_snoop,
+    // output  [3:0]           burst_cnt_snoop,
     output reg              use_l1_data_mux,    // Chon data tu L1 hay L2 RAM
 
     // AC channel (Address / Control Input)
@@ -53,7 +53,7 @@ module snoop_controller #(
     reg [2:0]   state, next_state;
     reg [3:0]   reg_ACSNOOP;
     reg [4:0]   reg_CRRESP;
-    reg [3:0]   burst_cnt;
+    // reg [3:0]   burst_cnt;
 
     reg snoop_requires_data;
     reg snoop_requires_invalidate;
@@ -97,7 +97,7 @@ module snoop_controller #(
     end
 
     assign bus_rw           = snoop_requires_invalidate;
-    assign burst_cnt_snoop  = burst_cnt;
+    // assign burst_cnt_snoop  = burst_cnt;
     assign CRRESP           = reg_CRRESP;
 
     // --------------------- LOGIC TINH CRRESP (Gop L1 + L2) ---------------------
@@ -130,7 +130,7 @@ module snoop_controller #(
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             state           <= IDLE;
-            burst_cnt       <= 4'd0;
+            // burst_cnt       <= 4'd0;
             reg_CRRESP      <= 5'd0;
             reg_ACSNOOP     <= 4'd0;
             use_l1_data_mux <= 1'b0;
@@ -155,12 +155,12 @@ module snoop_controller #(
                     use_l1_data_mux <= 1'b0; // lay tu L2 RAM
             end
 
-            if ((state == DATA) & CDVALID & CDREADY) begin
-                burst_cnt <= burst_cnt + 1'b1;
-            end 
-            else if (state != DATA) begin
-                burst_cnt <= 4'd0;
-            end
+            // if ((state == DATA) & CDVALID & CDREADY) begin
+            //     burst_cnt <= burst_cnt + 1'b1;
+            // end 
+            // else if (state != DATA) begin
+            //     burst_cnt <= 4'd0;
+            // end
         end
     end
 
@@ -223,7 +223,7 @@ module snoop_controller #(
 
             DATA: begin
                 CDVALID = 1'b1;
-                CDLAST  = (burst_cnt == 4'd15);
+                CDLAST  = 1'b1;
                 
                 if (CDREADY && CDLAST) begin
                     next_state = IDLE;

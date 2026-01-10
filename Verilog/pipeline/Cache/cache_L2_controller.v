@@ -1,11 +1,13 @@
 `timescale 1ns/1ps
 module cache_L2_controller #(
-    parameter DATA_W    = 32,
-    parameter ADDR_W    = 32,
-    parameter ID_W      = 2,    
-    parameter USER_W    = 4,
-    parameter BURST_LEN = 15, // 16 words
-    parameter CORE_ID   = 1'b0
+    parameter DATA_W        = 32,
+    parameter ADDR_W        = 32,
+    parameter ID_W          = 2,    
+    parameter USER_W        = 4,
+    parameter BURST_LEN     = 15, // 16 words
+    parameter CORE_ID       = 1'b0,
+    parameter CACHE_DATA_W  = 512, // 64 Bytes Line
+    parameter STRB_W        = (CACHE_DATA_W/8) // = 64 bit strobe
 )(
     input           clk, rst_n,
 
@@ -20,7 +22,6 @@ module cache_L2_controller #(
     
     // nhan data tu L1
     input           i_wdata_valid,
-    // input           i_wdata_last,
     output  reg     o_wdata_ready,       
 
     // tra data cho L1
@@ -42,7 +43,7 @@ module cache_L2_controller #(
     output  reg         is_shared_response, 
     output  reg         is_dirty_response,  
     output  reg         o_req_ready,        // Bao cho L1 biet L2 san sang nhan lenh CMD/ADDR
-    output  reg [3:0]   burst_cnt,
+    // output  reg [3:0]   burst_cnt,
 
     // --- AXI Interface  ---
     output      [7:0]           oAWLEN,
@@ -53,7 +54,7 @@ module cache_L2_controller #(
     output  reg [2:0]           oAWSNOOP,
     output      [1:0]           oAWDOMAIN,
 
-    output  reg [DATA_W/8-1:0]  oWSTRB,
+    output  reg [STRB_W-1:0]    oWSTRB,
     output  reg                 oWLAST,
     output  reg                 oWVALID,
     input                       iWREADY,
@@ -90,7 +91,6 @@ module cache_L2_controller #(
     localparam FAULT        = 4'd8;
     localparam WAIT_SNOOP   = 4'd9;
     localparam WAIT_RAM     = 4'd10;
-    // localparam WAIT_READ    = 4'd11;
 
     localparam CMD_READ     = 2'b00;
     localparam CMD_WRITE    = 2'b01; 
@@ -98,11 +98,11 @@ module cache_L2_controller #(
     reg [3:0] state, next_state;
 
     // AXI Constants
-    assign oAWLEN       = 8'd15; 
-    assign oAWSIZE      = 3'b010; 
+    assign oAWLEN       = 8'd0;     // 1 burst
+    assign oAWSIZE      = 3'b110;   // 64 byte
     assign oAWBURST     = 2'b01; 
-    assign oARLEN       = 8'd15; 
-    assign oARSIZE      = 3'd2;   
+    assign oARLEN       = 8'd0; 
+    assign oARSIZE      = 3'b110;   // 64 byte
     assign oARBURST     = 2'b01; 
     assign oARDOMAIN    = 2'b01; 
     assign oAWDOMAIN    = 2'b01; 
@@ -112,18 +112,18 @@ module cache_L2_controller #(
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
-            burst_cnt           <= 4'd0;
+            // burst_cnt           <= 4'd0;
             is_shared_response  <= 1'b0;
             is_dirty_response   <= 1'b0;
         end 
         else begin
             // Tang counter khi nhan Data L1 hoac Mem
-            if ( ((state == WB_W) && iWREADY) || ((state == ALLOC_R) && iRVALID) || ((state == L1_WB_RX) && i_wdata_valid) ) begin
-                burst_cnt <= burst_cnt + 1'b1;
-            end 
-            else if (state != WB_W && state != ALLOC_R && state != L1_WB_RX) begin
-                burst_cnt <= 4'd0; 
-            end 
+            // if ( ((state == WB_W) && iWREADY) || ((state == ALLOC_R) && iRVALID) || ((state == L1_WB_RX) && i_wdata_valid) ) begin
+            //     burst_cnt <= burst_cnt + 1'b1;
+            // end 
+            // else if (state != WB_W && state != ALLOC_R && state != L1_WB_RX) begin
+            //     burst_cnt <= 4'd0; 
+            // end 
 
             // Capture Response bits from AXI Read
             if ((state == ALLOC_R) & (iRVALID && iRLAST)) begin
@@ -190,7 +190,8 @@ module cache_L2_controller #(
             end 
 
             WB_W: begin     
-                next_state = (iWREADY & (burst_cnt == BURST_LEN)) ? WB_B : WB_W;
+                // next_state = (iWREADY & (burst_cnt == BURST_LEN)) ? WB_B : WB_W;
+                next_state = (iWREADY) ? WB_B : WB_W;
             end 
 
             WB_B: begin
@@ -228,9 +229,6 @@ module cache_L2_controller #(
                 next_state = TAG_CHECK;
             end 
 
-            // WAIT_READ: begin
-            //     next_state = TAG_CHECK;
-            // end 
             default:    next_state = TAG_CHECK;
         endcase
     end 
@@ -255,19 +253,6 @@ module cache_L2_controller #(
         oWSTRB                  = 8'b0;
 
         case(state)
-            // TAG_CHECK: begin
-            //     snoop_can_access_ram = 1'b0;
-            //     if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
-            //         o_rdata_ready = 1'b1;
-            //     end
-            //     if (~snoop_busy) begin
-            //         // L2 chi nhan lenh moi khi:
-            //         // dang o trang thai cho (TAG_CHECK)
-            //         // khong bi Snoop Controller chiem quyen (snoop_busy = 0)
-            //         o_req_ready = 1'b1; 
-            //     end
-            // end 
-
             TAG_CHECK: begin
                 snoop_can_access_ram = 1'b0;
                 
@@ -293,8 +278,9 @@ module cache_L2_controller #(
             end 
             WB_W:  begin 
                 oWVALID = 1'b1; 
-                oWSTRB  = {DATA_W/8{1'b1}}; 
-                oWLAST  = (burst_cnt == BURST_LEN); 
+                oWSTRB  = {STRB_W{1'b1}}; 
+                // oWLAST  = (burst_cnt == BURST_LEN); 
+                oWLAST  = 1'b1; 
             end 
             WB_B: begin  
                 oBREADY = 1'b1;

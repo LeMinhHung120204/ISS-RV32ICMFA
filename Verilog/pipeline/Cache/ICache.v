@@ -34,7 +34,6 @@ module icache #(
 
     // Read Data (Refill L2 -> icache)
     input                       i_l2_rdata_valid,
-    // input                       i_l2_rdata_last,
     input   [CACHE_DATA_W-1:0]  i_l2_rdata,
     output                      o_l2_rdata_ready
 );
@@ -139,9 +138,6 @@ module icache #(
 
         // Inputs
         .s1_req         (cpu_req),
-        .s1_we          (1'b0), 
-        .s1_size        (2'b00),    
-        .s1_wdata       ({DATA_W{1'b0}}), 
         .s1_tag         (s1_tag),
         .s1_index       (s1_index),
         .s1_word_off    (s1_word_off),
@@ -156,9 +152,6 @@ module icache #(
     );
 
     // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
-    // reg [NUM_WAYS-1:0]  valid_array [0:NUM_SETS-1];
-    // wire [NUM_WAYS-1:0] current_valid = valid_array[s2_index];
-    
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
     assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
     assign way_hit[2] = (tag_read[2] == s2_tag) & current_valid[2];
@@ -170,20 +163,6 @@ module icache #(
     assign o_l2_req_addr = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // ---------------------------------------- LOGIC VALID ARRAY ----------------------------------------
-    // integer k;
-    // always @(posedge clk or negedge rst_n) begin
-    //     if(~rst_n) begin
-    //         for(k = 0; k < NUM_SETS; k = k + 1) begin 
-    //             valid_array[k] <= {NUM_WAYS{1'b0}};
-    //         end 
-    //     end 
-    //     else begin
-    //         if (refill_we) begin 
-    //             valid_array[s2_index] <= valid_array[s2_index] | way_select;
-    //         end 
-    //     end
-    // end
-    
     // Refill Buffer
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin 
@@ -227,7 +206,6 @@ module icache #(
         .i_mem_req_ready    (i_l2_req_ready),
 
         .i_mem_rdata_valid  (i_l2_rdata_valid),
-        // .i_mem_rdata_last   (i_l2_rdata_last),
         .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 
