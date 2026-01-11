@@ -155,10 +155,6 @@ module RV32IMF #(
     //     .res    (WB_Result)
     // );
 
-    assign A1   = D_Instr[19:15];
-    assign A2   = D_Instr[24:20];
-    assign A3   = D_Instr[31:27];
-    assign WD3  = D_Instr[11:7];
     HazardUnit HazardUnit_inst(
         .D_Rs1          (A1),
         .D_Rs2          (A2),
@@ -262,6 +258,11 @@ module RV32IMF #(
     );
 
     // ---------------------------------------- ID state ----------------------------------------
+    assign A1   = D_Instr[19:15];
+    assign A2   = D_Instr[24:20];
+    assign A3   = D_Instr[31:27];
+    assign WD3  = D_Instr[11:7];
+
     wire D_data_req, E_data_req;
     
     ControlUnit ControlUnit_ins(

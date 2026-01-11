@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module soc_top (
     input ACLK, ARESETn
 );
@@ -106,6 +107,75 @@ module soc_top (
         .s_ace_cdvalid  (c0_cdvalid), 
         .s_ace_cddata   (c0_cddata),
         .s_ace_cdlast   (c0_cdlast)
+    );
+
+    // ================= INSTANTIATE CORE B =================
+    single_core #( 
+        .CORE_ID(1),
+        .CACHE_DATA_W(512)
+    ) u_core_A (
+        .ACLK           (ACLK), 
+        .ARESETn        (ARESETn),
+        
+        // AW Channel
+        .m_axi_awid     (), 
+        .m_axi_awaddr   (), 
+        .m_axi_awlen    (),
+        .m_axi_awsize   (), 
+        .m_axi_awburst  (), 
+        .m_axi_awvalid  (),
+        .m_axi_awready  (1'b1),                     // tam thoi de vay
+        .m_axi_awsnoop  (), 
+        .m_axi_awdomain (),
+
+        // W Channel
+        .m_axi_wdata    (), 
+        .m_axi_wstrb    (), 
+        .m_axi_wlast    (),
+        .m_axi_wvalid   (), 
+        .m_axi_wready   (1'b1),
+
+        // B Channel
+        .m_axi_bid      (2'b0), 
+        .m_axi_bresp    (2'b0), 
+        .m_axi_bvalid   (1'b0), 
+        .m_axi_bready   (),        
+
+        // AR Channel
+        .m_axi_arid     (),
+        .m_axi_araddr   (), 
+        .m_axi_arlen    (),
+        .m_axi_arsize   (), 
+        .m_axi_arburst  (),
+        .m_axi_arvalid  (), 
+        .m_axi_arready  (),
+        .m_axi_arsnoop  (),
+        .m_axi_ardomain (),
+
+        // R Channel
+        .m_axi_rid      (2'b0), 
+        .m_axi_rdata    (),
+        .m_axi_rresp    (4'b0), // Default OKAY
+        .m_axi_rlast    (),
+        .m_axi_rvalid   (),
+        .m_axi_rready   (),
+
+        // AC Channel
+        .s_ace_acvalid  (),
+        .s_ace_acaddr   (),
+        .s_ace_acsnoop  (),
+        .s_ace_acready  (),
+
+        // CR Channel
+        .s_ace_crready  (), // default = 1
+        .s_ace_crvalid  (), 
+        .s_ace_crresp   (),
+
+        // CD Channel
+        .s_ace_cdready  (), // default = 1
+        .s_ace_cdvalid  (), 
+        .s_ace_cddata   (),
+        .s_ace_cdlast   ()
     );
 
     // ================= INSTANTIATE INTERCONNECT =================

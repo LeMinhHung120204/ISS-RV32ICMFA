@@ -1,8 +1,9 @@
 `timescale 1ns/1ps
 module DataMem_wrapper #(
-    parameter WIDTH_ADDR    = 8,
+    parameter RAM_ADDR_W    = 8,
     parameter ID_W          = 2,
     parameter DATA_W        = 32,
+    parameter ADDR_W        = 32,
     parameter STRB_W        = DATA_W / 8
 )(
     input   ACLK,
@@ -10,7 +11,7 @@ module DataMem_wrapper #(
 
     // AW Channel
     input [ID_W-1:0]    i_axi_awid,
-    input [DATA_W-1:0]  i_axi_awaddr,
+    input [ADDR_W-1:0]  i_axi_awaddr,
     input [7:0]         i_axi_awlen,
     input [2:0]         i_axi_awsize,
     input [1:0]         i_axi_awburst,
@@ -33,7 +34,7 @@ module DataMem_wrapper #(
     // AR Channel
     output              o_axi_arready,
     input [ID_W-1:0]    i_axi_arid,
-    input [DATA_W-1:0]  i_axi_araddr,
+    input [ADDR_W-1:0]  i_axi_araddr,
     input [7:0]         i_axi_arlen,
     input [2:0]         i_axi_arsize,
     input [1:0]         i_axi_arburst,
@@ -194,7 +195,7 @@ module DataMem_wrapper #(
     );
 
     ram #(
-        .ADDR_W (WIDTH_ADDR),
+        .ADDR_W (RAM_ADDR_W),
         .DATA_W (DATA_W)
     ) u_DataMem (
         .clk        (ACLK),
@@ -202,12 +203,12 @@ module DataMem_wrapper #(
         
         // Port A: Write
         .we         (core_write_en),
-        .w_addr     (cnt_addr_write[WIDTH_ADDR-1:0]), 
+        .w_addr     (cnt_addr_write[RAM_ADDR_W-1:0]), 
         .w_data     (fifo_wdata),
 
         // Port B: Read
         .re         (core_read_en),   
-        .r_addr     (cnt_addr_read[WIDTH_ADDR-1:0]),
+        .r_addr     (cnt_addr_read[RAM_ADDR_W-1:0]),
         .r_data     (ram_r_data),
         .valid      (rvalid_from_mem)
     );
@@ -215,7 +216,7 @@ module DataMem_wrapper #(
     // ----------------------------------------- INSTANTIATE FIFOs -----------------------------------------
     FIFO #(
         .DATA_W (FF_AW_W), 
-        .DEPTH  (WIDTH_ADDR)
+        .DEPTH  (RAM_ADDR_W)
     ) u_AW_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -229,7 +230,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_W_W), 
-        .DEPTH  (1 << WIDTH_ADDR)
+        .DEPTH  (1 << RAM_ADDR_W)
     ) u_W_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -243,7 +244,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_B_W), 
-        .DEPTH  (WIDTH_ADDR)
+        .DEPTH  (RAM_ADDR_W)
     ) u_B_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -258,7 +259,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_AR_W), 
-        .DEPTH  (WIDTH_ADDR)
+        .DEPTH  (RAM_ADDR_W)
     ) u_AR_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -272,7 +273,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_R_W), 
-        .DEPTH  (1 << WIDTH_ADDR)
+        .DEPTH  (1 << RAM_ADDR_W)
     ) u_R_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
