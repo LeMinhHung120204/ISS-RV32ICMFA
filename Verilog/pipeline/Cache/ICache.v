@@ -4,7 +4,6 @@ module icache #(
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
-    parameter BURST_LEN     = 15,
     
     // Derived parameters
     parameter INDEX_W       = $clog2(NUM_SETS),
@@ -47,7 +46,6 @@ module icache #(
     wire                    s2_req;
 
     // Arrays & Counters
-    wire [3:0]              burst_cnt;
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
     wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
     reg  [CACHE_DATA_W-1:0] refill_buffer;
@@ -188,8 +186,7 @@ module icache #(
 
     icache_controller #(
         .DATA_W     (DATA_W),
-        .ADDR_W     (ADDR_W),
-        .BURST_LEN  (BURST_LEN)
+        .ADDR_W     (ADDR_W)
     ) icache_controller (
         .clk                (clk), 
         .rst_n              (rst_n),
@@ -199,7 +196,6 @@ module icache #(
 
         .tag_we             (tag_we), 
         .refill_we          (refill_we),
-        .burst_cnt          (burst_cnt),
         .stall              (stall_contoller),
 
         .o_mem_req_valid    (o_l2_req_valid),

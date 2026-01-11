@@ -4,10 +4,8 @@ module cache_L2_controller #(
     parameter ADDR_W        = 32,
     parameter ID_W          = 2,    
     parameter USER_W        = 4,
-    parameter BURST_LEN     = 15, // 16 words
-    parameter CORE_ID       = 1'b0,
-    parameter CACHE_DATA_W  = 512, // 64 Bytes Line
-    parameter STRB_W        = (CACHE_DATA_W/8) // = 64 bit strobe
+    parameter CACHE_DATA_W  = 512,              // 64 Bytes Line
+    parameter STRB_W        = (CACHE_DATA_W/8)  // = 64 bit strobe
 )(
     input           clk, rst_n,
 

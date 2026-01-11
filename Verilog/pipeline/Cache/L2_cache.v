@@ -13,7 +13,6 @@ module L2_cache #(
     parameter CORE_ID       = 1'b0,    
 
     parameter ID_W          = 2,
-    parameter USER_W        = 4,
     parameter STRB_W        = (CACHE_DATA_W/8)
 )(
     input ACLK, ARESETn,
@@ -349,9 +348,9 @@ module L2_cache #(
     wire is_shared_response;
     wire is_dirty_response;
     cache_L2_controller #(
-        .DATA_W     (DATA_W), 
-        .ADDR_W     (ADDR_W), 
-        .CORE_ID    (CORE_ID)
+        .DATA_W         (DATA_W), 
+        .ADDR_W         (ADDR_W),
+        .CACHE_DATA_W   (CACHE_DATA_W)
     ) u_controller (
         .clk        (ACLK), 
         .rst_n      (ARESETn),
@@ -418,8 +417,8 @@ module L2_cache #(
     );
 
     // ID Assignments
-    assign oAWID    = {1'b1, CORE_ID};
-    assign oARID    = {1'b1, CORE_ID};
+    assign oAWID    = {1'b0, CORE_ID};
+    assign oARID    = {1'b0, CORE_ID};
     assign oAWADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign oARADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 

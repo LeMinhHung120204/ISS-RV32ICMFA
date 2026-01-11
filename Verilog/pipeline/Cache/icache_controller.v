@@ -1,8 +1,7 @@
 `timescale 1ns/1ps
 module icache_controller #(
     parameter DATA_W    = 32,
-    parameter ADDR_W    = 32,
-    parameter BURST_LEN = 15 // 16 words = 64 bytes cache line
+    parameter ADDR_W    = 32
 )(
     input               clk, rst_n,
 
@@ -13,7 +12,6 @@ module icache_controller #(
     output  reg         tag_we, 
     output  reg         refill_we,
     output  reg         stall,
-    output  reg [3:0]   burst_cnt,
 
    
     // request L1 -> L2 
@@ -34,20 +32,6 @@ module icache_controller #(
     localparam WAIT_RAM     = 4'd4;
 
     reg [3:0] state, next_state;
-
-    always @(posedge clk or negedge rst_n) begin
-        if(~rst_n) begin
-            burst_cnt <= 4'd0;
-        end 
-        else begin
-            if (state == ALLOC_WAIT && i_mem_rdata_valid) begin
-                burst_cnt <= burst_cnt + 1'b1;
-            end 
-            else if (state != ALLOC_WAIT) begin
-                burst_cnt <= 4'd0;
-            end
-        end
-    end
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
@@ -96,9 +80,6 @@ module icache_controller #(
                 next_state = TAG_CHECK;
             end 
 
-            // WAIT_READ: begin
-            //     next_state = TAG_CHECK;
-            // end 
             default: next_state = TAG_CHECK;
         endcase
     end

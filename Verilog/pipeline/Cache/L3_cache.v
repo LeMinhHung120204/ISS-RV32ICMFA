@@ -13,8 +13,7 @@ module L3_cache #(
     
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32, // 512 bits
     parameter STRB_W        = (CACHE_DATA_W/8),
-    parameter ID_W          = 2,
-    parameter CORE_ID       = 1'b0
+    parameter ID_W          = 2
 )(
     input ACLK, ARESETn,
     // INPUT INTERFACE (Request from Interconnect/Arbiter)
@@ -289,7 +288,6 @@ module L3_cache #(
     cache_L2_controller #(
         .DATA_W         (DATA_W), 
         .ADDR_W         (ADDR_W), 
-        .CORE_ID        (CORE_ID),
         .CACHE_DATA_W   (CACHE_DATA_W)
     ) u_controller (
         .clk            (ACLK), 

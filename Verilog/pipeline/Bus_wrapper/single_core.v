@@ -4,8 +4,15 @@ module single_core #(
     parameter ID_W          = 2,
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
-    parameter STRB_W        = CACHE_DATA_W/8,
-    parameter CACHE_DATA_W  = 512
+
+    // Cau hinh cache
+    parameter NUM_WAYS      = 4,
+    parameter NUM_SETS      = 16,
+    parameter NUM_SETS_L2   = 32,
+    parameter WORD_OFF_W    = 4, // 16 words
+    parameter BYTE_OFF_W    = 2,
+    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
+    parameter STRB_W        = CACHE_DATA_W/8
 )(
     input   ACLK,
     input   ARESETn,
@@ -139,8 +146,14 @@ module single_core #(
 
     // ---------------------------------------- I-CACHE (L1) ----------------------------------------
     icache #( 
-        .ADDR_W (ADDR_W), 
-        .DATA_W (DATA_W) 
+        .ADDR_W     (ADDR_W), 
+        .DATA_W     (DATA_W),
+
+        // cau hinh cache
+        .NUM_WAYS   (NUM_WAYS),
+        .NUM_SETS   (NUM_SETS),
+        .WORD_OFF_W (WORD_OFF_W),
+        .BYTE_OFF_W (BYTE_OFF_W)
     ) u_icache_L1 (
         .clk        (ACLK), 
         .rst_n      (ARESETn),
@@ -164,8 +177,14 @@ module single_core #(
 
     // ---------------------------------------- D-CACHE (L1) ----------------------------------------
     dcache #( 
-        .ADDR_W (ADDR_W), 
-        .DATA_W (DATA_W) 
+        .ADDR_W     (ADDR_W), 
+        .DATA_W     (DATA_W),
+
+        // cau hinh cache
+        .NUM_WAYS   (NUM_WAYS),
+        .NUM_SETS   (NUM_SETS),
+        .WORD_OFF_W (WORD_OFF_W),
+        .BYTE_OFF_W (BYTE_OFF_W)
     ) u_dcache_L1 (
         .clk            (ACLK), 
         .rst_n          (ARESETn),
@@ -232,7 +251,14 @@ module single_core #(
     L2_cache #( 
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W),
-        .CORE_ID    (CORE_ID)
+        .CORE_ID    (CORE_ID),
+
+        // cau hinh cache
+        // cau hinh cache
+        .NUM_WAYS   (NUM_WAYS),
+        .NUM_SETS   (NUM_SETS_L2),
+        .WORD_OFF_W (WORD_OFF_W),
+        .BYTE_OFF_W (BYTE_OFF_W)
     ) u_l2_cache (
         .ACLK       (ACLK), 
         .ARESETn    (ARESETn),

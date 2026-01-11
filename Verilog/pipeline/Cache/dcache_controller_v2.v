@@ -1,9 +1,5 @@
 `timescale 1ns/1ps
-module dcache_controller_v2 #(
-    parameter DATA_W    = 32,
-    parameter ADDR_W    = 32,
-    parameter BURST_LEN = 15 // 16 words = 64 bytes cache line
-)(
+module dcache_controller_v2 (
     input               clk, rst_n,
 
     // Cache <-> CPU
