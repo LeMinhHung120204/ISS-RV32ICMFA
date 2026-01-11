@@ -65,8 +65,9 @@ module ace_interconnect #(
     localparam IDLE         = 3'd0;
     localparam SNOOP_REQ    = 3'd1; // Gui lenh snoop sang core kia
     localparam WAIT_CR      = 3'd2; // doi core kia check tag xong
-    localparam DATA_L3      = 3'd3; // Miss snoop -> Lay data tu L3
-    localparam DATA_SNOOP   = 3'd4; // Hit snoop -> Lay data tu Core kia
+    localparam L3_REQ       = 3'd3;
+    localparam DATA_L3      = 3'd4; // Miss snoop -> Lay data tu L3
+    localparam DATA_SNOOP   = 3'd5; // Hit snoop -> Lay data tu Core kia
 
     reg [2:0] state, next_state;
     reg grant_s0;
@@ -79,7 +80,8 @@ module ace_interconnect #(
             state           <= IDLE;
             grant_s0        <= 1'b0;
             snoop_hit_data  <= 1'b0;
-        end else begin
+        end 
+        else begin
             state <= next_state;
             
             case(state)
@@ -108,82 +110,84 @@ module ace_interconnect #(
         next_state = state;
         case(state)
             IDLE: begin
-                if (s0_axi_arvalid | s1_axi_arvalid) begin
+                if (s0_axi_arvalid || s1_axi_arvalid) begin
                     next_state = SNOOP_REQ;
-                end
+                end 
             end
 
             SNOOP_REQ: begin
-                // doi gui thanh cong lenh Snoop (AC) va lenh L3 (AR)
-                // (Gia su L3 luon nhan duoc, chi check AC ready)
+                // Buoc 1: Chi gui Snoop sang Core kia (KHONG GUI L3 O DAY)
                 if (grant_s0) begin
-                    if (s1_ace_acready && m_l3_arready) begin 
+                    if (s1_ace_acready) begin
                         next_state = WAIT_CR;
                     end 
-                end else begin
-                    if (s0_ace_acready && m_l3_arready) begin 
+                end 
+                else begin
+                    if (s0_ace_acready) begin 
                         next_state = WAIT_CR;
                     end 
                 end
             end
 
             WAIT_CR: begin
-                // doi phan hoi tu Core kia (Snoop Response)
+                // Buoc 2: Doi phan hoi
                 if (grant_s0 && s1_ace_crvalid) begin
-                    // Neu Core B bao co Data -> Qua DATA_SNOOP, ngc lai DATA_L3
-                    if (s1_ace_crresp[3]) begin 
+                    // Neu HIT DIRTY (bit 3) -> Lay data từ Core B
+                    if (s1_ace_crresp[3]) begin
                         next_state = DATA_SNOOP;
                     end 
-                    else begin                  
-                        next_state = DATA_L3;
+                    // Neu MISS/CLEAN -> doc tu L3
+                    else begin    
+                        next_state = L3_REQ; 
                     end 
                 end 
                 else if (!grant_s0 && s0_ace_crvalid) begin
-                    if (s0_ace_crresp[3]) begin 
+                    if (s0_ace_crresp[3]) begin
                         next_state = DATA_SNOOP;
                     end 
                     else begin                  
-                        next_state = DATA_L3;
+                        next_state = L3_REQ;
                     end 
                 end
             end
 
+            L3_REQ: begin
+                // Buoc 3: Gui request xuong L3
+                if (m_l3_arready) begin
+                    next_state = DATA_L3;
+                end
+            end
+
             DATA_L3: begin
-                // Truyen data tu L3 ve Master
-                // Xong khi nhan duoc rlast
                 if (grant_s0) begin
                     if (m_l3_rvalid && m_l3_rlast && s0_axi_rready)begin 
                         next_state = IDLE;
-                    end
+                    end 
                 end 
                 else begin
-                    if (m_l3_rvalid && m_l3_rlast && s1_axi_rready) begin 
+                    if (m_l3_rvalid && m_l3_rlast && s1_axi_rready) begin
                         next_state = IDLE;
                     end 
                 end
             end
 
             DATA_SNOOP: begin
-                // Truyen data tu CD Channel (Snoop) ve Master
                 if (grant_s0) begin
-                    if (s1_ace_cdvalid && s0_axi_rready) begin 
+                    if (s1_ace_cdvalid && s0_axi_rready) begin
                         next_state = IDLE;
                     end 
                 end 
                 else begin
-                    if (s0_ace_cdvalid && s1_axi_rready) begin 
+                    if (s0_ace_cdvalid && s1_axi_rready) begin
                         next_state = IDLE;
                     end 
                 end
             end
-            default: begin
-                next_state = IDLE;
-            end 
+            default: next_state = IDLE;
         endcase
     end
     
     always @(*) begin
-        // Default values
         s0_axi_arready  = 1'b0; 
         s0_axi_rvalid   = 1'b0; 
         s0_axi_rlast    = 1'b0; 
@@ -193,7 +197,7 @@ module ace_interconnect #(
         s1_axi_rvalid   = 1'b0; 
         s1_axi_rlast    = 1'b0; 
         s1_axi_rdata    = {DATA_W{1'b0}};
-        
+
         s0_ace_acvalid  = 1'b0; 
         s0_ace_acaddr   = {ADDR_W{1'b0}}; 
         s0_ace_acsnoop  = 4'b0;
@@ -201,70 +205,71 @@ module ace_interconnect #(
         s1_ace_acvalid  = 1'b0; 
         s1_ace_acaddr   = {ADDR_W{1'b0}}; 
         s1_ace_acsnoop  = 4'b0;
-        
+
         m_l3_arvalid    = 1'b0; 
         m_l3_araddr     = {ADDR_W{1'b0}}; 
         m_l3_rready     = 1'b0;
 
         case(state)
             SNOOP_REQ: begin
-                // Forward AR Request -> L3
-                m_l3_arvalid = 1'b1;
-                
-                if (grant_s0) begin // S0 Request -> Snoop S1
-                    m_l3_araddr     = s0_axi_araddr;
+                if (grant_s0) begin 
                     s1_ace_acvalid  = 1'b1;
                     s1_ace_acaddr   = s0_axi_araddr;
                     s1_ace_acsnoop  = s0_axi_arsnoop; 
-                    
-                    // Chi ack ARReady khi ca L3 va S1 da nhan lenh
-                    if (m_l3_arready && s1_ace_acready) begin 
-                        s0_axi_arready = 1'b1;
-                    end
                 end 
-                else begin // S1 Request -> Snoop S0
-                    m_l3_araddr     = s1_axi_araddr;
+                else begin 
                     s0_ace_acvalid  = 1'b1;
                     s0_ace_acaddr   = s1_axi_araddr;
                     s0_ace_acsnoop  = s1_axi_arsnoop; 
+                end
+            end
 
-                    if (m_l3_arready && s0_ace_acready) begin 
+            L3_REQ: begin 
+                m_l3_arvalid = 1'b1;
+                if (grant_s0) begin 
+                    m_l3_araddr = s0_axi_araddr;
+                end 
+                else begin          
+                    m_l3_araddr = s1_axi_araddr;
+                end 
+
+                // Khi L3 nhan lenh, coi như xong pha Request -> Ready cho Core A/B
+                if (m_l3_arready) begin
+                    if (grant_s0) begin 
+                        s0_axi_arready = 1'b1;
+                    end 
+                    else begin          
                         s1_axi_arready = 1'b1;
                     end 
                 end
             end
 
             DATA_L3: begin
-                // Mux: L3 R-Channel -> Master R-Channel
-                m_l3_rready = 1'b1; // Luon san sang nhan tu L3
-                
-                if (grant_s0) begin
+                 m_l3_rready = 1'b1;
+                 if (grant_s0) begin
                     s0_axi_rvalid   = m_l3_rvalid;
                     s0_axi_rdata    = m_l3_rdata;
                     s0_axi_rlast    = m_l3_rlast;
-                end 
-                else begin
+                 end else begin
                     s1_axi_rvalid   = m_l3_rvalid;
                     s1_axi_rdata    = m_l3_rdata;
                     s1_axi_rlast    = m_l3_rlast;
-                end
+                 end
             end
 
             DATA_SNOOP: begin
-                // Mux: CD Channel (Snoop Data) -> Master R-Channel
-                m_l3_rready = 1'b1; // Consume cho het data L3 de ko bi ket
-
-                if (grant_s0) begin
-                    // Lay data tu S1 tra cho S0
-                    s0_axi_rvalid = s1_ace_cdvalid;
-                    s0_axi_rdata  = s1_ace_cddata;
-                    s0_axi_rlast  = 1'b1; 
-                end else begin
-                    // Lay data tu S0 tra cho S1
-                    s1_axi_rvalid = s0_ace_cdvalid;
-                    s1_axi_rdata  = s0_ace_cddata;
-                    s1_axi_rlast  = 1'b1;
-                end
+                 if (grant_s0) begin
+                    s0_axi_arready  = 1'b1; // Ack request xong
+                    s0_axi_rvalid   = s1_ace_cdvalid;
+                    s0_axi_rdata    = s1_ace_cddata;
+                    s0_axi_rlast    = 1'b1;
+                 end 
+                 else begin
+                    s1_axi_arready  = 1'b1;
+                    s1_axi_rvalid   = s0_ace_cdvalid;
+                    s1_axi_rdata    = s0_ace_cddata;
+                    s1_axi_rlast    = 1'b1;
+                 end
             end
         endcase
     end
