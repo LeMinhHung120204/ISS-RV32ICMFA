@@ -11,40 +11,40 @@ module soc_top #(
 )(
     input ACLK, ARESETn,
 
-    // EXTERNAL MEMORY INTERFACE (Output from L3 Cache to Main Memory)
-    output [1:0]    mem_awid,
-    output [31:0]   mem_awaddr,
-    output [7:0]    mem_awlen,
-    output [2:0]    mem_awsize,
-    output [1:0]    mem_awburst,
-    output          mem_awvalid,
-    input           mem_awready,
+    // EXTERNAL MEMORY AXI4 MASTER INTERFACE (to external memory)
+    output [1:0]    m_axi_awid,
+    output [31:0]   m_axi_awaddr,
+    output [7:0]    m_axi_awlen,
+    output [2:0]    m_axi_awsize,
+    output [1:0]    m_axi_awburst,
+    output          m_axi_awvalid,
+    input           m_axi_awready,
 
-    output [511:0]  mem_wdata,
-    output [63:0]   mem_wstrb,
-    output          mem_wlast,
-    output          mem_wvalid,
-    input           mem_wready,
+    output [511:0]  m_axi_wdata,
+    output [63:0]   m_axi_wstrb,
+    output          m_axi_wlast,
+    output          m_axi_wvalid,
+    input           m_axi_wready,
 
-    input  [1:0]    mem_bid,
-    input  [1:0]    mem_bresp,
-    input           mem_bvalid,
-    output          mem_bready,
+    input  [1:0]    m_axi_bid,
+    input  [1:0]    m_axi_bresp,
+    input           m_axi_bvalid,
+    output          m_axi_bready,
 
-    output [1:0]    mem_arid,
-    output [31:0]   mem_araddr,
-    output [7:0]    mem_arlen,
-    output [2:0]    mem_arsize,
-    output [1:0]    mem_arburst,
-    output          mem_arvalid,
-    input           mem_arready,
+    output [1:0]    m_axi_arid,
+    output [31:0]   m_axi_araddr,
+    output [7:0]    m_axi_arlen,
+    output [2:0]    m_axi_arsize,
+    output [1:0]    m_axi_arburst,
+    output          m_axi_arvalid,
+    input           m_axi_arready,
 
-    input  [1:0]    mem_rid,
-    input  [511:0]  mem_rdata,
-    input  [1:0]    mem_rresp,
-    input           mem_rlast,
-    input           mem_rvalid,
-    output          mem_rready
+    input  [1:0]    m_axi_rid,
+    input  [511:0]  m_axi_rdata,
+    input  [1:0]    m_axi_rresp,
+    input           m_axi_rlast,
+    input           m_axi_rvalid,
+    output          m_axi_rready
 );
     // INTERNAL WIRES
     // ------------------- CORE A INTERFACE -------------------
@@ -97,31 +97,7 @@ module soc_top #(
     wire [1:0]   c1_bresp;
     wire         c1_bready;
 
-    // ------------------- L3 INTERFACE (Interconnect -> L3) -------------------
-    wire [31:0]  l3_araddr;
-    wire         l3_arvalid;
-    wire         l3_arready; 
-    wire [511:0] l3_rdata;
-    wire         l3_rvalid;
-    wire         l3_rlast;
-    wire         l3_rready;
-
-    // L3 write/native request wires (from interconnect)
-    wire [31:0]  l3_awaddr;
-    wire         l3_awvalid;
-    wire         l3_awready;
-    wire [511:0] l3_wdata;
-    wire         l3_wvalid;
-    wire         l3_wready;
-    wire         l3_bvalid;
-    wire [1:0]   l3_bresp;
-    wire         l3_bready;
-
-    // Combined request to L3 (read or write)
-    wire         l3_req_valid;
-    wire [1:0]   l3_req_cmd;
-    wire [31:0]  l3_req_addr;
-    wire         l3_req_ready;
+    // (L3 native wires removed — interconnect will connect directly to external AXI)
 
 
     // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
@@ -299,100 +275,64 @@ module soc_top #(
         .s1_axi_bresp   (c1_bresp),
         .s1_axi_bready  (c1_bready),
 
-        // ---------------- MASTER PORT (TO L3 CACHE) ----------------
-        // Interconnect output is AXI, but L3 input is Native. We bridge them in L3 instantiation.
-        .m_l3_araddr    (l3_araddr), 
-        .m_l3_arvalid   (l3_arvalid), 
-        .m_l3_arready   (l3_arready),
+        // ---------------- MASTER PORT (connected directly to external AXI) ----------------
+        .m_l3_araddr    (m_axi_araddr), 
+        .m_l3_arvalid   (m_axi_arvalid), 
+        .m_l3_arready   (m_axi_arready),
 
-        .m_l3_rdata     (l3_rdata),   
-        .m_l3_rvalid    (l3_rvalid),   
-        .m_l3_rlast     (l3_rlast),     
-        .m_l3_rready    (l3_rready),
+        .m_l3_rdata     (m_axi_rdata),   
+        .m_l3_rvalid    (m_axi_rvalid),   
+        .m_l3_rlast     (m_axi_rlast),     
+        .m_l3_rready    (m_axi_rready),
 
         // Write/master outputs
-        .m_l3_awaddr    (l3_awaddr),
-        .m_l3_awvalid   (l3_awvalid),
-        .m_l3_awready   (l3_awready),
+        .m_l3_awaddr    (m_axi_awaddr),
+        .m_l3_awvalid   (m_axi_awvalid),
+        .m_l3_awready   (m_axi_awready),
 
-        .m_l3_wdata     (l3_wdata),
-        .m_l3_wvalid    (l3_wvalid),
-        .m_l3_wready    (l3_wready),
+        .m_l3_wdata     (m_axi_wdata),
+        .m_l3_wvalid    (m_axi_wvalid),
+        .m_l3_wready    (m_axi_wready),
 
-        .m_l3_bvalid    (l3_bvalid),
-        .m_l3_bresp     (l3_bresp),
-        .m_l3_bready    (l3_bready)
+        .m_l3_bvalid    (m_axi_bvalid),
+        .m_l3_bresp     (m_axi_bresp),
+        .m_l3_bready    (m_axi_bready)
     );
 
-    // Combine AR/AW into a single native request for L3
-    assign l3_req_valid = l3_arvalid | l3_awvalid;
-    assign l3_req_cmd   = (l3_awvalid) ? 2'b01 : 2'b00; // 01 = WRITE, 00 = READ
-    assign l3_req_addr  = (l3_awvalid) ? l3_awaddr : l3_araddr;
-    assign l3_arready   = l3_req_ready;
-    assign l3_awready   = l3_req_ready;
-    // No B-channel from L3 to interconnect in this design; tie off
-    assign l3_bvalid = 1'b0;
-    assign l3_bresp  = 2'b00;
+    // Write address channel
+    assign m_axi_awid    = 2'b00;
+    assign m_axi_awaddr  = l3_awaddr;
+    assign m_axi_awlen   = 8'b0;         // single-beat
+    assign m_axi_awsize  = 3'b110;       // 64 bytes (DATA_W = 512 bits)
+    assign m_axi_awburst = 2'b01;        // INCR
+    assign m_axi_awvalid = l3_awvalid;
+    assign l3_awready    = m_axi_awready;
 
-    //  ---------------- INSTANTIATE L3 CACHE (LLC) ----------------
-    L3_cache #(
-        .CACHE_DATA_W   (512),
-        .NUM_WAYS       (NUM_WAYS  ),
-        .NUM_SETS       (NUM_SETS_L3),
-        .WORD_OFF_W     (WORD_OFF_W),
-        .BYTE_OFF_W     (BYTE_OFF_W)
-    ) u_l3_cache (
-        .ACLK       (ACLK), 
-        .ARESETn    (ARESETn),
+    // Write data channel
+    assign m_axi_wdata   = l3_wdata;
+    assign m_axi_wstrb   = {64{1'b1}};   // all bytes valid for full beat
+    assign m_axi_wlast   = 1'b1;         // single-beat transfer
+    assign m_axi_wvalid  = l3_wvalid;
+    assign l3_wready     = m_axi_wready;
 
-        // --- INPUT: From Interconnect (Bridge AXI -> Native) ---
-        .i_req_valid    (l3_req_valid),
-        .i_req_cmd      (l3_req_cmd),
-        .i_req_addr     (l3_req_addr),
-        .o_req_ready    (l3_req_ready),
+    // Write response channel
+    assign l3_bvalid     = m_axi_bvalid;
+    assign l3_bresp      = m_axi_bresp;
+    assign m_axi_bready  = l3_bready;
 
-        .i_wdata        (l3_wdata),
-        .i_wdata_valid  (l3_wvalid),
-        .o_wdata_ready  (l3_wready),
+    // Read address channel
+    assign m_axi_arid    = 2'b00;
+    assign m_axi_araddr  = l3_araddr;
+    assign m_axi_arlen   = 8'b0;         // single-beat
+    assign m_axi_arsize  = 3'b110;       // 64 bytes
+    assign m_axi_arburst = 2'b01;        // INCR
+    assign m_axi_arvalid = l3_arvalid;
+    assign l3_arready    = m_axi_arready;
 
-        .o_rdata        (l3_rdata),         // Data tra ve
-        .o_rdata_valid  (l3_rvalid),        // Valid tra ve
-        .i_rdata_ready  (l3_rready),        // Interconnect san sang nhan
-
-        // --- OUTPUT: To Main Memory (Mapped to soc_top ports) ---
-        .iAWREADY   (mem_awready),
-        .oAWID      (mem_awid), 
-        .oAWADDR    (mem_awaddr), 
-        .oAWLEN     (mem_awlen), 
-        .oAWSIZE    (mem_awsize), 
-        .oAWBURST   (mem_awburst), 
-        .oAWVALID   (mem_awvalid),
-
-        .iWREADY    (mem_wready),
-        .oWDATA     (mem_wdata), 
-        .oWSTRB     (mem_wstrb), 
-        .oWLAST     (mem_wlast), 
-        .oWVALID    (mem_wvalid),
-
-        .iBID       (mem_bid), 
-        .iBRESP     (mem_bresp), 
-        .iBVALID    (mem_bvalid), 
-        .oBREADY    (mem_bready),
-
-        .iARREADY   (mem_arready),
-        .oARID      (mem_arid), 
-        .oARADDR    (mem_araddr), 
-        .oARLEN     (mem_arlen), 
-        .oARSIZE    (mem_arsize), 
-        .oARBURST   (mem_arburst), 
-        .oARVALID   (mem_arvalid),
-
-        .iRID       (mem_rid), 
-        .iRDATA     (mem_rdata), 
-        .iRRESP     (mem_rresp), 
-        .iRLAST     (mem_rlast), 
-        .iRVALID    (mem_rvalid), 
-        .oRREADY    (mem_rready)
-    );
+    // Read data channel
+    assign l3_rdata      = m_axi_rdata;
+    assign l3_rvalid     = m_axi_rvalid;
+    assign l3_rlast      = m_axi_rlast;
+    assign m_axi_rready  = l3_rready;
 
 endmodule
