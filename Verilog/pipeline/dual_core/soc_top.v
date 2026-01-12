@@ -63,6 +63,15 @@ module soc_top #(
     wire         c0_cdvalid, c0_cdlast;
     wire         c0_cdready = 1'b1; 
 
+    // Write channel wires for core0
+    wire [31:0]  c0_awaddr;
+    wire         c0_awvalid, c0_awready;
+    wire [511:0] c0_wdata;
+    wire         c0_wvalid, c0_wready;
+    wire         c0_bvalid;
+    wire [1:0]   c0_bresp;
+    wire         c0_bready;
+
     // ------------------- CORE B INTERFACE -------------------
     wire [31:0]  c1_araddr;
     wire [3:0]   c1_arsnoop;
@@ -79,6 +88,15 @@ module soc_top #(
     wire         c1_cdvalid, c1_cdlast;
     wire         c1_cdready = 1'b1; 
 
+    // Write channel wires for core1
+    wire [31:0]  c1_awaddr;
+    wire         c1_awvalid, c1_awready;
+    wire [511:0] c1_wdata;
+    wire         c1_wvalid, c1_wready;
+    wire         c1_bvalid;
+    wire [1:0]   c1_bresp;
+    wire         c1_bready;
+
     // ------------------- L3 INTERFACE (Interconnect -> L3) -------------------
     wire [31:0]  l3_araddr;
     wire         l3_arvalid;
@@ -87,6 +105,23 @@ module soc_top #(
     wire         l3_rvalid;
     wire         l3_rlast;
     wire         l3_rready;
+
+    // L3 write/native request wires (from interconnect)
+    wire [31:0]  l3_awaddr;
+    wire         l3_awvalid;
+    wire         l3_awready;
+    wire [511:0] l3_wdata;
+    wire         l3_wvalid;
+    wire         l3_wready;
+    wire         l3_bvalid;
+    wire [1:0]   l3_bresp;
+    wire         l3_bready;
+
+    // Combined request to L3 (read or write)
+    wire         l3_req_valid;
+    wire [1:0]   l3_req_cmd;
+    wire [31:0]  l3_req_addr;
+    wire         l3_req_ready;
 
 
     // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
@@ -101,9 +136,18 @@ module soc_top #(
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
         
-        // Write Channels (Dummy/Unused for now)
-        .m_axi_awready  (1'b1), 
-        .m_axi_wready   (1'b1),
+        // Write Channels
+        .m_axi_awaddr   (c0_awaddr),
+        .m_axi_awvalid  (c0_awvalid),
+        .m_axi_awready  (c0_awready),
+
+        .m_axi_wdata    (c0_wdata),
+        .m_axi_wvalid   (c0_wvalid),
+        .m_axi_wready   (c0_wready),
+
+        .m_axi_bvalid   (c0_bvalid),
+        .m_axi_bresp    (c0_bresp),
+        .m_axi_bready   (c0_bready),
         
         // Read Channels
         .m_axi_araddr   (c0_araddr), 
@@ -143,9 +187,18 @@ module soc_top #(
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
         
-        // Write Channels (Dummy)
-        .m_axi_awready  (1'b1), 
-        .m_axi_wready   (1'b1),
+        // Write Channels
+        .m_axi_awaddr   (c1_awaddr),
+        .m_axi_awvalid  (c1_awvalid),
+        .m_axi_awready  (c1_awready),
+
+        .m_axi_wdata    (c1_wdata),
+        .m_axi_wvalid   (c1_wvalid),
+        .m_axi_wready   (c1_wready),
+
+        .m_axi_bvalid   (c1_bvalid),
+        .m_axi_bresp    (c1_bresp),
+        .m_axi_bready   (c1_bready),
 
         // Read Channels (Connect to c1_ wires)
         .m_axi_araddr   (c1_araddr), 
@@ -199,6 +252,19 @@ module soc_top #(
         .s0_ace_cddata  (c0_cddata), 
         .s0_ace_cdvalid (c0_cdvalid),
 
+        // Write channel (core0)
+        .s0_axi_awaddr  (c0_awaddr),
+        .s0_axi_awvalid (c0_awvalid),
+        .s0_axi_awready (c0_awready),
+
+        .s0_axi_wdata   (c0_wdata),
+        .s0_axi_wvalid  (c0_wvalid),
+        .s0_axi_wready  (c0_wready),
+
+        .s0_axi_bvalid  (c0_bvalid),
+        .s0_axi_bresp   (c0_bresp),
+        .s0_axi_bready  (c0_bready),
+
         // ---------------- CLIENT 1 (CORE B) ----------------
         .s1_axi_araddr  (c1_araddr), 
         .s1_axi_arsnoop (c1_arsnoop), 
@@ -220,17 +286,53 @@ module soc_top #(
         .s1_ace_cddata  (c1_cddata), 
         .s1_ace_cdvalid (c1_cdvalid),
 
+        // Write channel (core1)
+        .s1_axi_awaddr  (c1_awaddr),
+        .s1_axi_awvalid (c1_awvalid),
+        .s1_axi_awready (c1_awready),
+
+        .s1_axi_wdata   (c1_wdata),
+        .s1_axi_wvalid  (c1_wvalid),
+        .s1_axi_wready  (c1_wready),
+
+        .s1_axi_bvalid  (c1_bvalid),
+        .s1_axi_bresp   (c1_bresp),
+        .s1_axi_bready  (c1_bready),
+
         // ---------------- MASTER PORT (TO L3 CACHE) ----------------
         // Interconnect output is AXI, but L3 input is Native. We bridge them in L3 instantiation.
         .m_l3_araddr    (l3_araddr), 
         .m_l3_arvalid   (l3_arvalid), 
         .m_l3_arready   (l3_arready),
-        
+
         .m_l3_rdata     (l3_rdata),   
         .m_l3_rvalid    (l3_rvalid),   
         .m_l3_rlast     (l3_rlast),     
-        .m_l3_rready    (l3_rready)
+        .m_l3_rready    (l3_rready),
+
+        // Write/master outputs
+        .m_l3_awaddr    (l3_awaddr),
+        .m_l3_awvalid   (l3_awvalid),
+        .m_l3_awready   (l3_awready),
+
+        .m_l3_wdata     (l3_wdata),
+        .m_l3_wvalid    (l3_wvalid),
+        .m_l3_wready    (l3_wready),
+
+        .m_l3_bvalid    (l3_bvalid),
+        .m_l3_bresp     (l3_bresp),
+        .m_l3_bready    (l3_bready)
     );
+
+    // Combine AR/AW into a single native request for L3
+    assign l3_req_valid = l3_arvalid | l3_awvalid;
+    assign l3_req_cmd   = (l3_awvalid) ? 2'b01 : 2'b00; // 01 = WRITE, 00 = READ
+    assign l3_req_addr  = (l3_awvalid) ? l3_awaddr : l3_araddr;
+    assign l3_arready   = l3_req_ready;
+    assign l3_awready   = l3_req_ready;
+    // No B-channel from L3 to interconnect in this design; tie off
+    assign l3_bvalid = 1'b0;
+    assign l3_bresp  = 2'b00;
 
     //  ---------------- INSTANTIATE L3 CACHE (LLC) ----------------
     L3_cache #(
@@ -244,15 +346,14 @@ module soc_top #(
         .ARESETn    (ARESETn),
 
         // --- INPUT: From Interconnect (Bridge AXI -> Native) ---
-        // Interconnect chi moi ho tro Read (AR channel), ta map vao Read Request của L3
-        .i_req_valid    (l3_arvalid),       // Valid request
-        .i_req_cmd      (2'b00),            // 00 = READ (Interconnect currently handles AR only)
-        .i_req_addr     (l3_araddr),        // Address
-        .o_req_ready    (l3_arready),       // Ready
+        .i_req_valid    (l3_req_valid),
+        .i_req_cmd      (l3_req_cmd),
+        .i_req_addr     (l3_req_addr),
+        .o_req_ready    (l3_req_ready),
 
-        .i_wdata        (512'd0),           // Write data (Chưa nối Write channel)
-        .i_wdata_valid  (1'b0),
-        .o_wdata_ready  (),
+        .i_wdata        (l3_wdata),
+        .i_wdata_valid  (l3_wvalid),
+        .o_wdata_ready  (l3_wready),
 
         .o_rdata        (l3_rdata),         // Data tra ve
         .o_rdata_valid  (l3_rvalid),        // Valid tra ve
