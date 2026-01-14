@@ -14,7 +14,6 @@ module HazardUnit #(
     input       C_RegWrite,
     input       C_FRegWrite,
     input       W_FRegWrite, 
-    input       W_MDU_FPUEn,
     input       W_RegWrite, 
     
     input       icache_stall,
