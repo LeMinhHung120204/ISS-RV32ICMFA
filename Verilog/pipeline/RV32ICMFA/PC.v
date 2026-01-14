@@ -1,18 +1,24 @@
 `timescale 1ns/1ps
 module PC #(
-    parameter WIDTH = 32
+    parameter WIDTH     = 32,
+    parameter START_PC  = 32'd0,
+    parameter END_PC    = 32'd1024
 )(
     input       clk, rst_n, EN,
     input       [WIDTH - 1:0] PCNext,
     output reg  [WIDTH - 1:0] PC
 );
     always @(posedge clk or negedge rst_n) begin
-        if(~rst_n) begin
-            PC <= 32'd0;
-        end 
-        else begin
-            if (~EN)
-                PC <= PCNext;
-        end 
+        if (~rst_n) begin
+            PC <= START_PC;
+        end else begin
+            if (~EN) begin
+                // wrap back to START_PC when reaching END_PC
+                if (PCNext == END_PC)
+                    PC <= START_PC;
+                else
+                    PC <= PCNext;
+            end
+        end
     end
 endmodule

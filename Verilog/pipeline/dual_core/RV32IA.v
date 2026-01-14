@@ -1,7 +1,9 @@
 `timescale 1ns/1ps
 module RV32IA #(
-    parameter WIDTH_DATA = 32,
-    parameter WIDTH_ADDR = 32
+    parameter WIDTH_DATA    = 32,
+    parameter WIDTH_ADDR    = 32,
+    parameter START_PC      = 32'd0,
+    parameter END_PC        = 32'd1024
 )(
     input   clk, rst_n,
 
@@ -181,7 +183,11 @@ module RV32IA #(
         .ForwardBE          (ForwardBE)
     );
     // ---------------------------------------- IF state ----------------------------------------
-    PC PC_inst(
+    PC #(
+        .WIDTH      (WIDTH_ADDR), 
+        .START_PC   (START_PC),
+        .END_PC     (END_PC)
+    ) PC_inst(    
         .clk    (clk),
         .rst_n  (rst_n),
         .EN     (F_Stall),
