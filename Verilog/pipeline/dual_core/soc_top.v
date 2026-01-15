@@ -12,7 +12,6 @@ module soc_top #(
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
     parameter NUM_SETS_L2   = 32,
-    parameter NUM_SETS_L3   = 64,
     parameter WORD_OFF_W    = 4, // 16 words
     parameter BYTE_OFF_W    = 2
 )(
@@ -104,21 +103,21 @@ module soc_top #(
     wire [1:0]   c1_bresp;
     wire         c1_bready;
 
-    // --- L3 bridge wires (connect interconnect <-> top-level external AXI fields)
-    // These provide the small native L3 interface that `ace_interconnect` drives;
+    // --- Memory bridge wires (connect interconnect <-> top-level external AXI fields)
+    // These provide the small native memory interface that `ace_interconnect` drives;
     // `soc_top` then expands them into full AXI4 fields (ID/LEN/SIZE/BURST, etc.).
-    wire [31:0]  l3_araddr;
-    wire         l3_arvalid, l3_arready;
-    wire [511:0] l3_rdata;
-    wire         l3_rvalid, l3_rlast, l3_rready;
+    wire [31:0]  mem_araddr;
+    wire         mem_arvalid, mem_arready;
+    wire [511:0] mem_rdata;
+    wire         mem_rvalid, mem_rlast, mem_rready;
 
-    wire [31:0]  l3_awaddr;
-    wire         l3_awvalid, l3_awready;
-    wire [511:0] l3_wdata;
-    wire         l3_wvalid, l3_wready;
-    wire         l3_bvalid;
-    wire [1:0]   l3_bresp;
-    wire         l3_bready;
+    wire [31:0]  mem_awaddr;
+    wire         mem_awvalid, mem_awready;
+    wire [511:0] mem_wdata;
+    wire         mem_wvalid, mem_wready;
+    wire         mem_bvalid;
+    wire [1:0]   mem_bresp;
+    wire         mem_bready;
 
 
     // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
@@ -301,63 +300,63 @@ module soc_top #(
         .s1_axi_bready  (c1_bready),
 
         // ---------------- MASTER PORT (connected directly to external AXI) ----------------
-        .m_l3_araddr    (l3_araddr), 
-        .m_l3_arvalid   (l3_arvalid), 
-        .m_l3_arready   (l3_arready),
+        .mem_araddr     (mem_araddr), 
+        .mem_arvalid    (mem_arvalid), 
+        .mem_arready    (mem_arready),
 
-        .m_l3_rdata     (l3_rdata),   
-        .m_l3_rvalid    (l3_rvalid),   
-        .m_l3_rlast     (l3_rlast),     
-        .m_l3_rready    (l3_rready),
+        .mem_rdata      (mem_rdata),   
+        .mem_rvalid     (mem_rvalid),   
+        .mem_rlast      (mem_rlast),     
+        .mem_rready     (mem_rready),
 
         // Write/master outputs
-        .m_l3_awaddr    (l3_awaddr),
-        .m_l3_awvalid   (l3_awvalid),
-        .m_l3_awready   (l3_awready),
+        .mem_awaddr     (mem_awaddr),
+        .mem_awvalid    (mem_awvalid),
+        .mem_awready    (mem_awready),
 
-        .m_l3_wdata     (l3_wdata),
-        .m_l3_wvalid    (l3_wvalid),
-        .m_l3_wready    (l3_wready),
+        .mem_wdata      (mem_wdata),
+        .mem_wvalid     (mem_wvalid),
+        .mem_wready     (mem_wready),
 
-        .m_l3_bvalid    (l3_bvalid),
-        .m_l3_bresp     (l3_bresp),
-        .m_l3_bready    (l3_bready)
+        .mem_bvalid     (mem_bvalid),
+        .mem_bresp      (mem_bresp),
+        .mem_bready     (mem_bready)
     );
 
     // Write address channel
     assign m_axi_awid    = 2'b00;
-    assign m_axi_awaddr  = l3_awaddr;
+    assign m_axi_awaddr  = mem_awaddr;
     assign m_axi_awlen   = 8'b0;         // single-beat
     assign m_axi_awsize  = 3'b110;       // 64 bytes (DATA_W = 512 bits)
     assign m_axi_awburst = 2'b01;        // INCR
-    assign m_axi_awvalid = l3_awvalid;
-    assign l3_awready    = m_axi_awready;
+    assign m_axi_awvalid = mem_awvalid;
+    assign mem_awready   = m_axi_awready;
 
     // Write data channel
-    assign m_axi_wdata   = l3_wdata;
+    assign m_axi_wdata   = mem_wdata;
     assign m_axi_wstrb   = {64{1'b1}};   // all bytes valid for full beat
     assign m_axi_wlast   = 1'b1;         // single-beat transfer
-    assign m_axi_wvalid  = l3_wvalid;
-    assign l3_wready     = m_axi_wready;
+    assign m_axi_wvalid  = mem_wvalid;
+    assign mem_wready    = m_axi_wready;
 
     // Write response channel
-    assign l3_bvalid     = m_axi_bvalid;
-    assign l3_bresp      = m_axi_bresp;
-    assign m_axi_bready  = l3_bready;
+    assign mem_bvalid    = m_axi_bvalid;
+    assign mem_bresp     = m_axi_bresp;
+    assign m_axi_bready  = mem_bready;
 
     // Read address channel
     assign m_axi_arid    = 2'b00;
-    assign m_axi_araddr  = l3_araddr;
+    assign m_axi_araddr  = mem_araddr;
     assign m_axi_arlen   = 8'b0;         // single-beat
     assign m_axi_arsize  = 3'b110;       // 64 bytes
     assign m_axi_arburst = 2'b01;        // INCR
-    assign m_axi_arvalid = l3_arvalid;
-    assign l3_arready    = m_axi_arready;
+    assign m_axi_arvalid = mem_arvalid;
+    assign mem_arready   = m_axi_arready;
 
     // Read data channel
-    assign l3_rdata      = m_axi_rdata;
-    assign l3_rvalid     = m_axi_rvalid;
-    assign l3_rlast      = m_axi_rlast;
-    assign m_axi_rready  = l3_rready;
+    assign mem_rdata     = m_axi_rdata;
+    assign mem_rvalid    = m_axi_rvalid;
+    assign mem_rlast     = m_axi_rlast;
+    assign m_axi_rready  = mem_rready;
 
 endmodule

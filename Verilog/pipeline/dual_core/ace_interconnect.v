@@ -76,36 +76,36 @@ module ace_interconnect #(
     input  [DATA_W-1:0] s1_ace_cddata,
     input               s1_ace_cdvalid,
 
-    // ================= MASTER PORT (TO L3 CACHE) =================
-    output [ADDR_W-1:0] m_l3_araddr,
-    output              m_l3_arvalid,
-    input               m_l3_arready,
+    // ================= MASTER PORT (TO EXTERNAL MEMORY) =================
+    output [ADDR_W-1:0] mem_araddr,
+    output              mem_arvalid,
+    input               mem_arready,
 
-    input  [DATA_W-1:0] m_l3_rdata,
-    input               m_l3_rvalid,
-    input               m_l3_rlast,
-    output              m_l3_rready,
+    input  [DATA_W-1:0] mem_rdata,
+    input               mem_rvalid,
+    input               mem_rlast,
+    output              mem_rready,
 
-    // Write channels to L3 (basic support)
-    output [ADDR_W-1:0] m_l3_awaddr,
-    output              m_l3_awvalid,
-    input               m_l3_awready,
+    // Write channels to memory
+    output [ADDR_W-1:0] mem_awaddr,
+    output              mem_awvalid,
+    input               mem_awready,
 
-    output [DATA_W-1:0] m_l3_wdata,
-    output              m_l3_wvalid,
-    input               m_l3_wready,
+    output [DATA_W-1:0] mem_wdata,
+    output              mem_wvalid,
+    input               mem_wready,
 
-    input               m_l3_bvalid,
-    input  [1:0]        m_l3_bresp,
-    output              m_l3_bready
+    input               mem_bvalid,
+    input  [1:0]        mem_bresp,
+    output              mem_bready
 );
     localparam IDLE             = 3'd0;
     localparam SNOOP_REQ        = 3'd1; // Gui lenh snoop sang core kia
     localparam WAIT_CR          = 3'd2; // doi core kia check tag xong
-    localparam L3_REQ           = 3'd3;
-    localparam DATA_L3          = 3'd4; // Miss snoop -> Lay data tu L3
+    localparam MEM_REQ          = 3'd3;
+    localparam DATA_MEM         = 3'd4; // Miss snoop -> Lay data tu mem
     localparam DATA_SNOOP       = 3'd5; // Hit snoop -> Lay data tu Core kia
-    localparam L3_WR_REQ        = 3'd6; // Write request to L3
+    localparam MEM_WR_REQ       = 3'd6; // Write request to mem
     localparam DATA_WR_SNOOP    = 3'd7; // Write - obtain data from snoop
 
     reg [2:0] state, next_state;
@@ -151,6 +151,20 @@ module ace_interconnect #(
     reg [DATA_W-1:0]    m0_wdata_int, m1_wdata_int;
     reg                 m0_wvalid_int, m1_wvalid_int;
 
+    // Intermediate wires to avoid expressions inside module instantiations
+    wire grant_s1;
+    wire arb_m0_arvalid, arb_m1_arvalid;
+    wire arb_m0_awvalid, arb_m1_awvalid;
+    wire arb_m0_wvalid,  arb_m1_wvalid;
+
+    assign grant_s1         = ~grant_s0;
+    assign arb_m0_arvalid   = s0_axi_arvalid & grant_s0;
+    assign arb_m1_arvalid   = s1_axi_arvalid & grant_s1;
+    assign arb_m0_awvalid   = s0_axi_awvalid & grant_s0;
+    assign arb_m1_awvalid   = s1_axi_awvalid & grant_s1;
+    assign arb_m0_wvalid    = s0_axi_wvalid  & grant_s0;
+    assign arb_m1_wvalid    = s1_axi_wvalid  & grant_s1;
+
     // -------------------------------------------------------- ARBITER & STATE MACHINE --------------------------------------------------------
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -185,12 +199,12 @@ module ace_interconnect #(
     AXI_Arbiter_R u_arb_r (
         .ACLK       (clk),
         .ARESETn    (rst_n),
-        .m0_ARVALID (s0_axi_arvalid & grant_s0),
+        .m0_ARVALID (arb_m0_arvalid),
         .m0_RREADY  (s0_axi_rready),
-        .m1_ARVALID (s1_axi_arvalid & ~grant_s0),
+        .m1_ARVALID (arb_m1_arvalid),
         .m1_RREADY  (s1_axi_rready),
-        .s_RVALID   (m_l3_rvalid),
-        .s_RLAST    (m_l3_rlast),
+        .s_RVALID   (mem_rvalid),
+        .s_RLAST    (mem_rlast),
         .m0_rgrnt   (r_grant0),
         .m1_rgrnt   (r_grant1)
     );
@@ -199,50 +213,53 @@ module ace_interconnect #(
     AXI_Arbiter_W u_arb_w (
         .ACLK       (clk),
         .ARESETn    (rst_n),
-        .m0_AWVALID (s0_axi_awvalid & grant_s0),
-        .m0_WVALID  (s0_axi_wvalid & grant_s0),
+        .m0_AWVALID (arb_m0_awvalid),
+        .m0_WVALID  (arb_m0_wvalid),
         .m0_BREADY  (s0_axi_bready),
-        .m1_AWVALID (s1_axi_awvalid & ~grant_s0),
-        .m1_WVALID  (s1_axi_wvalid & ~grant_s0),
+        .m1_AWVALID (arb_m1_awvalid),
+        .m1_WVALID  (arb_m1_wvalid),
         .m1_BREADY  (s1_axi_bready),
-        .s_BVALID   (m_l3_bvalid),
+        .s_BVALID   (mem_bvalid),
         .m0_wgrnt   (w_grant0),
         .m1_wgrnt   (w_grant1)
     );
 
     // Prepare write-data sources: by default take client W, but in DATA_WR_SNOOP override to snoop CD
     always @(*) begin
-        m0_wdata_int = s0_axi_wdata;
-        m1_wdata_int = s1_axi_wdata;
-        m0_wvalid_int = s0_axi_wvalid & grant_s0;
-        m1_wvalid_int = s1_axi_wvalid & ~grant_s0;
+        m0_wdata_int    = s0_axi_wdata;
+        m1_wdata_int    = s1_axi_wdata;
+        m0_wvalid_int   = s0_axi_wvalid & grant_s0;
+        m1_wvalid_int   = s1_axi_wvalid & ~grant_s0;
         if (state == DATA_WR_SNOOP) begin
             if (grant_s0) begin
                 // granted master is 0, data comes from snoop source core1
-                m0_wdata_int = s1_ace_cddata;
-                m0_wvalid_int = s1_ace_cdvalid;
-                m1_wdata_int = s1_axi_wdata; // keep others unchanged
+                m0_wdata_int    = s1_ace_cddata;
+                m0_wvalid_int   = s1_ace_cdvalid;
+                m1_wdata_int    = s1_axi_wdata; // keep others unchanged
             end else begin
                 // granted master is 1, data comes from snoop source core0
-                m1_wdata_int = s0_ace_cddata;
-                m1_wvalid_int = s0_ace_cdvalid;
-                m0_wdata_int = s0_axi_wdata;
+                m1_wdata_int    = s0_ace_cddata;
+                m1_wvalid_int   = s0_ace_cdvalid;
+                m0_wdata_int    = s0_axi_wdata;
             end
         end
     end
 
     // Instantiate master muxes
-    AXI_Master_Mux_R #(.ADDR_W(ADDR_W), .DATA_W(DATA_W)) u_mux_r (
+    AXI_Master_Mux_R #(
+        .ADDR_W(ADDR_W), 
+        .DATA_W(DATA_W)
+    ) u_mux_r (
         .clk        (clk), 
         .m0_araddr  (s0_axi_araddr),
-        .m0_arvalid (s0_axi_arvalid & grant_s0),
+        .m0_arvalid (arb_m0_arvalid),
         .m0_arready (mux_m0_arready),
         .m0_rdata   (mux_m0_rdata),
         .m0_rvalid  (mux_m0_rvalid),
         .m0_rlast   (mux_m0_rlast),
         .m0_rready  (s0_axi_rready),
         .m1_araddr  (s1_axi_araddr),
-        .m1_arvalid (s1_axi_arvalid & ~grant_s0),
+        .m1_arvalid (arb_m1_arvalid),
         .m1_arready (mux_m1_arready),
         .m1_rdata   (mux_m1_rdata),
         .m1_rvalid  (mux_m1_rvalid),
@@ -250,19 +267,22 @@ module ace_interconnect #(
         .m1_rready  (s1_axi_rready),
         .s_araddr   (mux_s_araddr),
         .s_arvalid  (mux_s_arvalid),
-        .s_arready  (m_l3_arready),
-        .s_rdata    (m_l3_rdata),
-        .s_rvalid   (m_l3_rvalid),
-        .s_rlast    (m_l3_rlast),
+        .s_arready  (mem_arready),
+        .s_rdata    (mem_rdata),
+        .s_rvalid   (mem_rvalid),
+        .s_rlast    (mem_rlast),
         .s_rready   (mux_s_rready),
         .m0_rgrnt   (r_grant0),
         .m1_rgrnt   (r_grant1)
     );
 
-    AXI_Master_Mux_W #(.ADDR_W(ADDR_W), .DATA_W(DATA_W)) u_mux_w (
+    AXI_Master_Mux_W #(
+        .ADDR_W(ADDR_W), 
+        .DATA_W(DATA_W)
+    ) u_mux_w (
         .clk        (clk),
         .m0_awaddr  (s0_axi_awaddr),
-        .m0_awvalid (s0_axi_awvalid & grant_s0),
+        .m0_awvalid (arb_m0_awvalid),
         .m0_awready (mux_m0_awready),
         .m0_wdata   (m0_wdata_int),
         .m0_wvalid  (m0_wvalid_int),
@@ -271,7 +291,7 @@ module ace_interconnect #(
         .m0_bresp   (mux_m0_bresp),
         .m0_bready  (s0_axi_bready),
         .m1_awaddr  (s1_axi_awaddr),
-        .m1_awvalid (s1_axi_awvalid & ~grant_s0),
+        .m1_awvalid (arb_m1_awvalid),
         .m1_awready (mux_m1_awready),
         .m1_wdata   (m1_wdata_int),
         .m1_wvalid  (m1_wvalid_int),
@@ -281,26 +301,26 @@ module ace_interconnect #(
         .m1_bready  (s1_axi_bready),
         .s_awaddr   (mux_s_awaddr),
         .s_awvalid  (mux_s_awvalid),
-        .s_awready  (m_l3_awready),
+        .s_awready  (mem_awready),
         .s_wdata    (mux_s_wdata),
         .s_wvalid   (mux_s_wvalid),
-        .s_wready   (m_l3_wready),
-        .s_bvalid   (m_l3_bvalid),
-        .s_bresp    (m_l3_bresp),
+        .s_wready   (mem_wready),
+        .s_bvalid   (mem_bvalid),
+        .s_bresp    (mem_bresp),
         .s_bready   (mux_s_bready),
         .m0_wgrnt   (w_grant0),
         .m1_wgrnt   (w_grant1)
     );
 
-    // Connect mux slave-side nets to top-level m_l3_* outputs/inputs
-    assign m_l3_araddr  = mux_s_araddr;
-    assign m_l3_arvalid = mux_s_arvalid;
-    assign m_l3_rready  = mux_s_rready;
-    assign m_l3_awaddr  = mux_s_awaddr;
-    assign m_l3_awvalid = mux_s_awvalid;
-    assign m_l3_wdata   = mux_s_wdata;
-    assign m_l3_wvalid  = mux_s_wvalid;
-    assign m_l3_bready  = mux_s_bready;
+    // Connect mux slave-side nets to top-level memory signals
+    assign mem_araddr  = mux_s_araddr;
+    assign mem_arvalid = mux_s_arvalid;
+    assign mem_rready  = mux_s_rready;
+    assign mem_awaddr  = mux_s_awaddr;
+    assign mem_awvalid = mux_s_awvalid;
+    assign mem_wdata   = mux_s_wdata;
+    assign mem_wvalid  = mux_s_wvalid;
+    assign mem_bready  = mux_s_bready;
 
     always @(*) begin
         next_state = state;
@@ -312,7 +332,7 @@ module ace_interconnect #(
             end
 
             SNOOP_REQ: begin
-                // Buoc 1: Chi gui Snoop sang Core kia (KHONG GUI L3 O DAY)
+                // Buoc 1: Chi gui Snoop sang Core kia (KHONG GUI mem O DAY)
                 if (grant_s0) begin
                     if (s1_ace_acready) begin
                         next_state = WAIT_CR;
@@ -338,13 +358,13 @@ module ace_interconnect #(
                             next_state = DATA_SNOOP;
                         end 
                     end 
-                    // Neu MISS/CLEAN -> doc tu L3
+                    // Neu MISS/CLEAN -> doc tu mem
                     else begin    
                         if (is_write_request) begin
-                            next_state = L3_WR_REQ; 
+                            next_state = MEM_WR_REQ; 
                         end 
                         else begin
-                            next_state = L3_REQ; 
+                            next_state = MEM_REQ; 
                         end
                     end 
                 end 
@@ -359,51 +379,50 @@ module ace_interconnect #(
                     end 
                     else begin                  
                         if (is_write_request) begin
-                            next_state = L3_WR_REQ;
+                            next_state = MEM_WR_REQ;
                         end 
                         else begin
-                            next_state = L3_REQ;
+                            next_state = MEM_REQ;
                         end
                     end 
                 end
             end
-
-            L3_REQ: begin
-                // Buoc 3: Gui request xuong L3
-                if (m_l3_arready) begin
-                    next_state = DATA_L3;
+            MEM_REQ: begin
+                // Buoc 3: Gui request xuong memory
+                if (mem_arready) begin
+                    next_state = DATA_MEM;
                 end
             end
 
-            L3_WR_REQ: begin
-                // Send write request to L3: wait for AW handshake and W handshake
-                if (m_l3_awready && m_l3_wready) begin
+            MEM_WR_REQ: begin
+                // Send write request to memory: wait for AW handshake and W handshake
+                if (mem_awready && mem_wready) begin
                     next_state = IDLE;
                 end
             end
 
-            DATA_L3: begin
+            DATA_MEM: begin
                 if (grant_s0) begin
-                    if (m_l3_rvalid && m_l3_rlast && s0_axi_rready)begin 
+                    if (mem_rvalid && mem_rlast && s0_axi_rready) begin 
                         next_state = IDLE;
                     end 
                 end 
                 else begin
-                    if (m_l3_rvalid && m_l3_rlast && s1_axi_rready) begin
+                    if (mem_rvalid && mem_rlast && s1_axi_rready) begin
                         next_state = IDLE;
                     end 
                 end
             end
 
             DATA_WR_SNOOP: begin
-                // For write snoop: wait for CD from snooping core then forward to L3
+                // For write snoop: wait for CD from snooping core then forward to memory
                 if (grant_s0) begin
-                    if (s1_ace_cdvalid && m_l3_wready) begin
-                        next_state = L3_WR_REQ;
+                        if (s1_ace_cdvalid && mem_wready) begin
+                        next_state = MEM_WR_REQ;
                     end
                 end else begin
-                    if (s0_ace_cdvalid && m_l3_wready) begin
-                        next_state = L3_WR_REQ;
+                        if (s0_ace_cdvalid && mem_wready) begin
+                        next_state = MEM_WR_REQ;
                     end
                 end
             end
@@ -453,7 +472,7 @@ module ace_interconnect #(
         s1_ace_acaddr   = {ADDR_W{1'b0}}; 
         s1_ace_acsnoop  = 4'b0;
 
-        // (m_l3_* signals are driven by the master mux)
+        // (mem_* signals are driven by the master mux)
         case(state)
             SNOOP_REQ: begin
                 if (grant_s0) begin 
@@ -468,17 +487,17 @@ module ace_interconnect #(
                 end
             end
 
-            L3_REQ: begin 
-                // L3 request: address/valid forwarded by master mux
-                // state transition waits on m_l3_arready (handled above)
+            MEM_REQ: begin 
+                // mem request: address/valid forwarded by master mux
+                // state transition waits on mem_arready (handled above)
             end
 
-            L3_WR_REQ: begin
-                // L3 write request: AW/W/B handled by master mux; state transition waits on m_l3_awready && m_l3_wready
+            MEM_WR_REQ: begin
+                // mem write request: AW/W/B handled by master mux; state transition waits on mem_awready && mem_wready
             end
 
-            DATA_L3: begin
-                // DATA_L3: read data forwarded by master mux
+            DATA_MEM: begin
+                // DATA_MEM: read data forwarded by master mux
             end
 
             DATA_WR_SNOOP: begin
