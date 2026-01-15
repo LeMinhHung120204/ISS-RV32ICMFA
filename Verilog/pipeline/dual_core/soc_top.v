@@ -3,10 +3,11 @@
 module soc_top #(
     // Cau hinh core
     parameter C0_START_PC   = 32'd0,
-    parameter C0_END_PC     = 32'd1024,
+    // Make the two cores' PC ranges adjacent and close for easier testing
+    parameter C0_END_PC     = 32'h00000100,
 
-    parameter C1_START_PC   = 32'd1024,
-    parameter C1_END_PC     = 32'd2048,
+    parameter C1_START_PC   = 32'h00000100,
+    parameter C1_END_PC     = 32'h00000200,
 
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
