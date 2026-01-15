@@ -3,7 +3,6 @@
 module soc_top #(
     // Cau hinh core
     parameter C0_START_PC   = 32'd0,
-    // Make the two cores' PC ranges adjacent and close for easier testing
     parameter C0_END_PC     = 32'h00000100,
 
     parameter C1_START_PC   = 32'h00000100,
@@ -17,6 +16,7 @@ module soc_top #(
     parameter BYTE_OFF_W    = 2
 )(
     input ACLK, ARESETn,
+    input c0_stall, c1_stall, // for debug purpose only
 
     // EXTERNAL MEMORY AXI4 MASTER INTERFACE (to external memory)
     output [1:0]    m_axi_awid,
@@ -134,6 +134,7 @@ module soc_top #(
     ) u_core_A (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
+        .test_stall     (c0_stall), // for debug purpose only
         
         // Write Channels
         .m_axi_awaddr   (c0_awaddr),
@@ -187,6 +188,7 @@ module soc_top #(
     ) u_core_B (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
+        .test_stall     (c1_stall), // for debug purpose only
         
         // Write Channels
         .m_axi_awaddr   (c1_awaddr),

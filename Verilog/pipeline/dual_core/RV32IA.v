@@ -6,6 +6,7 @@ module RV32IA #(
     parameter END_PC        = 32'd1024
 )(
     input   clk, rst_n,
+    input   test_stall,
 
     // cpu <-> dcache
     input   [WIDTH_DATA-1:0]    data_rdata,
@@ -190,7 +191,7 @@ module RV32IA #(
     ) PC_inst(    
         .clk    (clk),
         .rst_n  (rst_n),
-        .EN     (F_Stall),
+        .EN     (F_Stall | test_stall),    // Khi stall hoac test_stall thi khong cap nhat PC
         .PCNext (PCNext),
         .PC     (F_PC)
     );

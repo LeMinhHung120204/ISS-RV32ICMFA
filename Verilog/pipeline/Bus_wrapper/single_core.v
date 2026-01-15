@@ -20,6 +20,7 @@ module single_core #(
 )(
     input   ACLK,
     input   ARESETn,
+    input   test_stall,
 
     // AXI ACE <-> Cache L3    
     // --- Write Address Channel (AW) ---
@@ -133,6 +134,7 @@ module single_core #(
     ) u_RV32IA (
         .clk            (ACLK), 
         .rst_n          (ARESETn),
+        .test_stall     (test_stall),
 
         .data_rdata     (data_rdata), 
         .data_req       (data_req), 

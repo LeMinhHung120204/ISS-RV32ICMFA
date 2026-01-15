@@ -19,6 +19,8 @@ module tb_soc_top;
 
     reg ACLK;
     reg ARESETn;
+    reg c0_stall;
+    reg c1_stall;
 
     reg [31:0] temp_mem [0:16383];
     integer i;
@@ -167,13 +169,17 @@ module tb_soc_top;
     end
 
     initial begin
-        ARESETn = 0;
+        ARESETn     = 0;
+        c0_stall    = 0;
+        c1_stall    = 0;
         for (i = 0; i < 16384; i = i + 1) begin
             temp_mem[i] = 32'h0;
         end
 
         #100;
-        ARESETn = 1;
+        ARESETn     = 1;
+        c0_stall    = 0;
+        c1_stall    = 1'b1;
         #20;
 
         $display("--------------------------------------------------");
