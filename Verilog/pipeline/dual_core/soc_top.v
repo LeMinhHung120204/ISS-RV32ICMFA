@@ -1,6 +1,13 @@
 `timescale 1ns/1ps
 
 module soc_top #(
+    // Cau hinh core
+    parameter C0_START_PC   = 32'd0,
+    parameter C0_END_PC     = 32'd1024,
+
+    parameter C1_START_PC   = 32'd1024,
+    parameter C1_END_PC     = 32'd2048,
+
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
@@ -97,7 +104,21 @@ module soc_top #(
     wire [1:0]   c1_bresp;
     wire         c1_bready;
 
-    // (L3 native wires removed — interconnect will connect directly to external AXI)
+    // --- L3 bridge wires (connect interconnect <-> top-level external AXI fields)
+    // These provide the small native L3 interface that `ace_interconnect` drives;
+    // `soc_top` then expands them into full AXI4 fields (ID/LEN/SIZE/BURST, etc.).
+    wire [31:0]  l3_araddr;
+    wire         l3_arvalid, l3_arready;
+    wire [511:0] l3_rdata;
+    wire         l3_rvalid, l3_rlast, l3_rready;
+
+    wire [31:0]  l3_awaddr;
+    wire         l3_awvalid, l3_awready;
+    wire [511:0] l3_wdata;
+    wire         l3_wvalid, l3_wready;
+    wire         l3_bvalid;
+    wire [1:0]   l3_bresp;
+    wire         l3_bready;
 
 
     // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
@@ -107,7 +128,9 @@ module soc_top #(
         .NUM_SETS       (NUM_SETS  ),
         .NUM_SETS_L2    (NUM_SETS_L2),
         .WORD_OFF_W     (WORD_OFF_W),
-        .BYTE_OFF_W     (BYTE_OFF_W)
+        .BYTE_OFF_W     (BYTE_OFF_W),
+        .START_PC       (C0_START_PC),
+        .END_PC         (C0_END_PC)
     ) u_core_A (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
@@ -158,7 +181,9 @@ module soc_top #(
         .NUM_SETS       (NUM_SETS  ),
         .NUM_SETS_L2    (NUM_SETS_L2),
         .WORD_OFF_W     (WORD_OFF_W),
-        .BYTE_OFF_W     (BYTE_OFF_W)
+        .BYTE_OFF_W     (BYTE_OFF_W),
+        .START_PC       (C1_START_PC),
+        .END_PC         (C1_END_PC)
     ) u_core_B (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
@@ -276,27 +301,27 @@ module soc_top #(
         .s1_axi_bready  (c1_bready),
 
         // ---------------- MASTER PORT (connected directly to external AXI) ----------------
-        .m_l3_araddr    (m_axi_araddr), 
-        .m_l3_arvalid   (m_axi_arvalid), 
-        .m_l3_arready   (m_axi_arready),
+        .m_l3_araddr    (l3_araddr), 
+        .m_l3_arvalid   (l3_arvalid), 
+        .m_l3_arready   (l3_arready),
 
-        .m_l3_rdata     (m_axi_rdata),   
-        .m_l3_rvalid    (m_axi_rvalid),   
-        .m_l3_rlast     (m_axi_rlast),     
-        .m_l3_rready    (m_axi_rready),
+        .m_l3_rdata     (l3_rdata),   
+        .m_l3_rvalid    (l3_rvalid),   
+        .m_l3_rlast     (l3_rlast),     
+        .m_l3_rready    (l3_rready),
 
         // Write/master outputs
-        .m_l3_awaddr    (m_axi_awaddr),
-        .m_l3_awvalid   (m_axi_awvalid),
-        .m_l3_awready   (m_axi_awready),
+        .m_l3_awaddr    (l3_awaddr),
+        .m_l3_awvalid   (l3_awvalid),
+        .m_l3_awready   (l3_awready),
 
-        .m_l3_wdata     (m_axi_wdata),
-        .m_l3_wvalid    (m_axi_wvalid),
-        .m_l3_wready    (m_axi_wready),
+        .m_l3_wdata     (l3_wdata),
+        .m_l3_wvalid    (l3_wvalid),
+        .m_l3_wready    (l3_wready),
 
-        .m_l3_bvalid    (m_axi_bvalid),
-        .m_l3_bresp     (m_axi_bresp),
-        .m_l3_bready    (m_axi_bready)
+        .m_l3_bvalid    (l3_bvalid),
+        .m_l3_bresp     (l3_bresp),
+        .m_l3_bready    (l3_bready)
     );
 
     // Write address channel

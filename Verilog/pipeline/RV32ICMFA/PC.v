@@ -14,7 +14,7 @@ module PC #(
         end else begin
             if (~EN) begin
                 // wrap back to START_PC when reaching END_PC
-                if (PCNext == END_PC)
+                if (PCNext >= END_PC)
                     PC <= START_PC;
                 else
                     PC <= PCNext;

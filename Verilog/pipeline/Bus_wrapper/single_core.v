@@ -5,6 +5,10 @@ module single_core #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
 
+    // Cau hinh PC
+    parameter START_PC      = 32'd0,
+    parameter END_PC        = 32'd1024,
+
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
@@ -121,10 +125,12 @@ module single_core #(
     wire [CACHE_DATA_W-1:0]   int_snoop_data;
 
     // ---------------------------------------- MODULE INSTANTIATIONS ----------------------------------------
-    RV32IMF #( 
+    RV32IA #( 
         .WIDTH_ADDR (ADDR_W), 
-        .WIDTH_DATA (DATA_W) 
-    ) u_RV32IMF (
+        .WIDTH_DATA (DATA_W),
+        .START_PC   (START_PC),
+        .END_PC     (END_PC)
+    ) u_RV32IA (
         .clk            (ACLK), 
         .rst_n          (ARESETn),
 
