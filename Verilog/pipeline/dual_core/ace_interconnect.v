@@ -119,37 +119,37 @@ module ace_interconnect #(
     wire w_grant0, w_grant1;
 
     // Master-mux wires (slave side = memory)
-    wire [ADDR_W-1:0] mux_s_araddr;
-    wire              mux_s_arvalid;
-    wire              mux_s_arready;
-    wire [DATA_W-1:0] mux_s_rdata;
-    wire              mux_s_rvalid;
-    wire              mux_s_rlast;
-    wire              mux_s_rready;
+    wire [ADDR_W-1:0]   mux_s_araddr;
+    wire                mux_s_arvalid;
+    wire                mux_s_arready;
+    wire [DATA_W-1:0]   mux_s_rdata;
+    wire                mux_s_rvalid;
+    wire                mux_s_rlast;
+    wire                mux_s_rready;
 
-    wire [ADDR_W-1:0] mux_s_awaddr;
-    wire              mux_s_awvalid;
-    wire              mux_s_awready;
-    wire [DATA_W-1:0] mux_s_wdata;
-    wire              mux_s_wvalid;
-    wire              mux_s_wready;
-    wire              mux_s_bvalid;
-    wire [1:0]        mux_s_bresp;
-    wire              mux_s_bready;
+    wire [ADDR_W-1:0]   mux_s_awaddr;
+    wire                mux_s_awvalid;
+    wire                mux_s_awready;
+    wire [DATA_W-1:0]   mux_s_wdata;
+    wire                mux_s_wvalid;
+    wire                mux_s_wready;
+    wire                mux_s_bvalid;
+    wire [1:0]          mux_s_bresp;
+    wire                mux_s_bready;
 
     // Master-side wires from mux to clients
-    wire mux_m0_arready, mux_m1_arready;
-    wire [DATA_W-1:0] mux_m0_rdata, mux_m1_rdata;
-    wire mux_m0_rvalid, mux_m1_rvalid;
-    wire mux_m0_rlast, mux_m1_rlast;
-    wire mux_m0_awready, mux_m1_awready;
-    wire mux_m0_wready, mux_m1_wready;
-    wire mux_m0_bvalid, mux_m1_bvalid;
-    wire [1:0] mux_m0_bresp, mux_m1_bresp;
+    wire                mux_m0_arready, mux_m1_arready;
+    wire [DATA_W-1:0]   mux_m0_rdata, mux_m1_rdata;
+    wire                mux_m0_rvalid, mux_m1_rvalid;
+    wire                mux_m0_rlast, mux_m1_rlast;
+    wire                mux_m0_awready, mux_m1_awready;
+    wire                mux_m0_wready, mux_m1_wready;
+    wire                mux_m0_bvalid, mux_m1_bvalid;
+    wire [1:0]          mux_m0_bresp, mux_m1_bresp;
 
     // Internal write-data sources (allow snoop -> write path)
-    reg [DATA_W-1:0]    m0_wdata_int, m1_wdata_int;
-    reg                 m0_wvalid_int, m1_wvalid_int;
+    wire [DATA_W-1:0]   m0_wdata_int, m1_wdata_int;
+    wire                m0_wvalid_int, m1_wvalid_int;
 
     // Intermediate wires to avoid expressions inside module instantiations
     wire grant_s1;
@@ -225,25 +225,11 @@ module ace_interconnect #(
     );
 
     // Prepare write-data sources: by default take client W, but in DATA_WR_SNOOP override to snoop CD
-    always @(*) begin
-        m0_wdata_int    = s0_axi_wdata;
-        m1_wdata_int    = s1_axi_wdata;
-        m0_wvalid_int   = s0_axi_wvalid & grant_s0;
-        m1_wvalid_int   = s1_axi_wvalid & ~grant_s0;
-        if (state == DATA_WR_SNOOP) begin
-            if (grant_s0) begin
-                // granted master is 0, data comes from snoop source core1
-                m0_wdata_int    = s1_ace_cddata;
-                m0_wvalid_int   = s1_ace_cdvalid;
-                m1_wdata_int    = s1_axi_wdata; // keep others unchanged
-            end else begin
-                // granted master is 1, data comes from snoop source core0
-                m1_wdata_int    = s0_ace_cddata;
-                m1_wvalid_int   = s0_ace_cdvalid;
-                m0_wdata_int    = s0_axi_wdata;
-            end
-        end
-    end
+    assign m0_wdata_int     = s0_axi_wdata;
+    assign m0_wvalid_int    = s0_axi_wvalid & grant_s0;
+
+    assign m1_wdata_int     = s1_axi_wdata;
+    assign m1_wvalid_int    = s1_axi_wvalid & ~grant_s0;
 
     // Instantiate master muxes
     AXI_Master_Mux_R #(
@@ -258,6 +244,7 @@ module ace_interconnect #(
         .m0_rvalid  (mux_m0_rvalid),
         .m0_rlast   (mux_m0_rlast),
         .m0_rready  (s0_axi_rready),
+
         .m1_araddr  (s1_axi_araddr),
         .m1_arvalid (arb_m1_arvalid),
         .m1_arready (mux_m1_arready),
@@ -265,6 +252,7 @@ module ace_interconnect #(
         .m1_rvalid  (mux_m1_rvalid),
         .m1_rlast   (mux_m1_rlast),
         .m1_rready  (s1_axi_rready),
+
         .s_araddr   (mux_s_araddr),
         .s_arvalid  (mux_s_arvalid),
         .s_arready  (mem_arready),
@@ -272,6 +260,7 @@ module ace_interconnect #(
         .s_rvalid   (mem_rvalid),
         .s_rlast    (mem_rlast),
         .s_rready   (mux_s_rready),
+
         .m0_rgrnt   (r_grant0),
         .m1_rgrnt   (r_grant1)
     );
@@ -290,6 +279,7 @@ module ace_interconnect #(
         .m0_bvalid  (mux_m0_bvalid),
         .m0_bresp   (mux_m0_bresp),
         .m0_bready  (s0_axi_bready),
+
         .m1_awaddr  (s1_axi_awaddr),
         .m1_awvalid (arb_m1_awvalid),
         .m1_awready (mux_m1_awready),
@@ -299,6 +289,7 @@ module ace_interconnect #(
         .m1_bvalid  (mux_m1_bvalid),
         .m1_bresp   (mux_m1_bresp),
         .m1_bready  (s1_axi_bready),
+
         .s_awaddr   (mux_s_awaddr),
         .s_awvalid  (mux_s_awvalid),
         .s_awready  (mem_awready),
@@ -308,6 +299,7 @@ module ace_interconnect #(
         .s_bvalid   (mem_bvalid),
         .s_bresp    (mem_bresp),
         .s_bready   (mux_s_bready),
+
         .m0_wgrnt   (w_grant0),
         .m1_wgrnt   (w_grant1)
     );
@@ -348,8 +340,8 @@ module ace_interconnect #(
             WAIT_CR: begin
                 // Buoc 2: Doi phan hoi
                 if (grant_s0 && s1_ace_crvalid) begin
-                    // Neu HIT DIRTY (bit 3) -> Lay data từ Core B
-                    if (s1_ace_crresp[3]) begin
+                    // Neu peer has data (CRRESP.dt or CRRESP.pd) -> Lay data từ Core B
+                    if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
                         // If original request was write, go to write-snoop data state
                         if (is_write_request) begin 
                             next_state = DATA_WR_SNOOP;
@@ -369,7 +361,7 @@ module ace_interconnect #(
                     end 
                 end 
                 else if (!grant_s0 && s0_ace_crvalid) begin
-                    if (s0_ace_crresp[3]) begin
+                    if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin
                         if (is_write_request) begin
                             next_state = DATA_WR_SNOOP;
                         end 
@@ -387,6 +379,7 @@ module ace_interconnect #(
                     end 
                 end
             end
+            
             MEM_REQ: begin
                 // Buoc 3: Gui request xuong memory
                 if (mem_arready) begin
@@ -395,34 +388,60 @@ module ace_interconnect #(
             end
 
             MEM_WR_REQ: begin
-                // Send write request to memory: wait for AW handshake and W handshake
-                if (mem_awready && mem_wready) begin
-                    next_state = IDLE;
-                end
-            end
-
-            DATA_MEM: begin
                 if (grant_s0) begin
-                    if (mem_rvalid && mem_rlast && s0_axi_rready) begin 
-                        next_state = IDLE;
-                    end 
-                end 
+                    // requester is master 0, CD comes from core1
+                    s0_axi_rvalid   = s1_ace_cdvalid;
+                    s0_axi_rdata    = s1_ace_cddata;
+                    s0_axi_rlast    = 1'b1;
+                    s0_axi_bvalid   = s1_ace_cdvalid;
+                    s0_axi_bresp    = 2'b00;
+                    if (s1_ace_cdvalid) begin
+                        next_state = IDLE; // done, no mem write
+                    end
+                    else begin
+                        next_state = DATA_WR_SNOOP;
+                    end
+                end
                 else begin
-                    if (mem_rvalid && mem_rlast && s1_axi_rready) begin
-                        next_state = IDLE;
-                    end 
+                    // requester is master 1, CD comes from core0
+                    s1_axi_rvalid   = s0_ace_cdvalid;
+                    s1_axi_rdata    = s0_ace_cddata;
+                    s1_axi_rlast    = 1'b1;
+                    s1_axi_bvalid   = s0_ace_cdvalid;
+                    s1_axi_bresp    = 2'b00;
+                    if (s0_ace_cdvalid) begin
+                        next_state = IDLE; // done, no mem write
+                    end
+                    else begin
+                        next_state = DATA_WR_SNOOP;
+                    end
                 end
             end
 
             DATA_WR_SNOOP: begin
-                // For write snoop: wait for CD from snooping core then forward to memory
+                // waiting for CD from peer to forward to requester (ownership-transfer)
                 if (grant_s0) begin
-                        if (s1_ace_cdvalid && mem_wready) begin
-                        next_state = MEM_WR_REQ;
+                    if (s1_ace_cdvalid && s0_axi_rready) begin
+                        next_state = IDLE;
                     end
-                end else begin
-                        if (s0_ace_cdvalid && mem_wready) begin
-                        next_state = MEM_WR_REQ;
+                end
+                else begin
+                    if (s0_ace_cdvalid && s1_axi_rready) begin
+                        next_state = IDLE;
+                    end
+                end
+            end
+
+            DATA_MEM: begin
+                // waiting for mem read data; forward to requester until rlast
+                if (grant_s0) begin
+                    if (mux_m0_rvalid && s0_axi_rready && mux_m0_rlast) begin
+                        next_state = IDLE;
+                    end
+                end
+                else begin
+                    if (mux_m1_rvalid && s1_axi_rready && mux_m1_rlast) begin
+                        next_state = IDLE;
                     end
                 end
             end

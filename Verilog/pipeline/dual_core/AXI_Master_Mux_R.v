@@ -7,32 +7,32 @@ module AXI_Master_Mux_R #(
 ) (
     input clk,
     // Master 0 AR/R
-    input  [ADDR_W-1:0] m0_araddr,
-    input               m0_arvalid,
-    output              m0_arready,
-    output [DATA_W-1:0] m0_rdata,
-    output              m0_rvalid,
-    output              m0_rlast,
-    input               m0_rready,
+    input   [ADDR_W-1:0]    m0_araddr,
+    input                   m0_arvalid,
+    output                  m0_arready,
+    output  [DATA_W-1:0]    m0_rdata,
+    output                  m0_rvalid,
+    output                  m0_rlast,
+    input                   m0_rready,
     // Master 1 AR/R
-    input  [ADDR_W-1:0] m1_araddr,
-    input               m1_arvalid,
-    output              m1_arready,
-    output [DATA_W-1:0] m1_rdata,
-    output              m1_rvalid,
-    output              m1_rlast,
-    input               m1_rready,
+    input   [ADDR_W-1:0]    m1_araddr,
+    input                   m1_arvalid,
+    output                  m1_arready,
+    output  [DATA_W-1:0]    m1_rdata,
+    output                  m1_rvalid,
+    output                  m1_rlast,
+    input                   m1_rready,
     // Slave AR/R
-    output [ADDR_W-1:0] s_araddr,
-    output              s_arvalid,
-    input               s_arready,
-    input  [DATA_W-1:0] s_rdata,
-    input               s_rvalid,
-    input               s_rlast,
-    output              s_rready,
+    output  [ADDR_W-1:0]    s_araddr,
+    output                  s_arvalid,
+    input                   s_arready,
+    input   [DATA_W-1:0]    s_rdata,
+    input                   s_rvalid,
+    input                   s_rlast,
+    output                  s_rready,
     // Grants
-    input               m0_rgrnt,
-    input               m1_rgrnt
+    input                   m0_rgrnt,
+    input                   m1_rgrnt
 );
 
     // AR channel: forward address/valid and ready
