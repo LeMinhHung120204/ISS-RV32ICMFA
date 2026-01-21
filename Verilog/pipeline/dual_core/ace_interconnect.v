@@ -169,7 +169,7 @@ module ace_interconnect #(
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             state           <= IDLE;
-            grant_s0        <= 1'b0;
+            grant_s0        <= 1'b1;
         end 
         else begin
             state <= next_state;
@@ -199,12 +199,16 @@ module ace_interconnect #(
     AXI_Arbiter_R u_arb_r (
         .ACLK       (clk),
         .ARESETn    (rst_n),
+
         .m0_ARVALID (arb_m0_arvalid),
         .m0_RREADY  (s0_axi_rready),
+
         .m1_ARVALID (arb_m1_arvalid),
         .m1_RREADY  (s1_axi_rready),
+
         .s_RVALID   (mem_rvalid),
         .s_RLAST    (mem_rlast),
+        
         .m0_rgrnt   (r_grant0),
         .m1_rgrnt   (r_grant1)
     );
@@ -213,13 +217,17 @@ module ace_interconnect #(
     AXI_Arbiter_W u_arb_w (
         .ACLK       (clk),
         .ARESETn    (rst_n),
+        
         .m0_AWVALID (arb_m0_awvalid),
         .m0_WVALID  (arb_m0_wvalid),
         .m0_BREADY  (s0_axi_bready),
+
         .m1_AWVALID (arb_m1_awvalid),
         .m1_WVALID  (arb_m1_wvalid),
         .m1_BREADY  (s1_axi_bready),
+
         .s_BVALID   (mem_bvalid),
+
         .m0_wgrnt   (w_grant0),
         .m1_wgrnt   (w_grant1)
     );
@@ -324,7 +332,7 @@ module ace_interconnect #(
             end
 
             SNOOP_REQ: begin
-                // Buoc 1: Chi gui Snoop sang Core kia (KHONG GUI mem O DAY)
+                // Buoc 1: Chi gui Snoop sang Core kia
                 if (grant_s0) begin
                     if (s1_ace_acready) begin
                         next_state = WAIT_CR;
@@ -337,46 +345,69 @@ module ace_interconnect #(
                 end
             end
 
+            // WAIT_CR: begin
+            //     // Buoc 2: Doi phan hoi
+            //     if (grant_s0 && s1_ace_crvalid) begin
+            //         // Neu peer has data (CRRESP.dt or CRRESP.pd) -> Lay data từ Core B
+            //         if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
+            //             // If original request was write, go to write-snoop data state
+            //             if (is_write_request) begin 
+            //                 next_state = DATA_WR_SNOOP;
+            //             end 
+            //             else begin 
+            //                 next_state = DATA_SNOOP;
+            //             end 
+            //         end 
+            //         // Neu MISS/CLEAN -> doc tu mem
+            //         else begin    
+            //             if (is_write_request) begin
+            //                 next_state = MEM_WR_REQ; 
+            //             end 
+            //             else begin
+            //                 next_state = MEM_REQ; 
+            //             end
+            //         end 
+            //     end 
+            //     else if (!grant_s0 && s0_ace_crvalid) begin
+            //         if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin
+            //             if (is_write_request) begin
+            //                 next_state = DATA_WR_SNOOP;
+            //             end 
+            //             else begin
+            //                 next_state = DATA_SNOOP;
+            //             end
+            //         end 
+            //         else begin                  
+            //             if (is_write_request) begin
+            //                 next_state = MEM_WR_REQ;
+            //             end 
+            //             else begin
+            //                 next_state = MEM_REQ;
+            //             end
+            //         end 
+            //     end
+            // end
+
+            // testing without snoop hit
             WAIT_CR: begin
                 // Buoc 2: Doi phan hoi
-                if (grant_s0 && s1_ace_crvalid) begin
-                    // Neu peer has data (CRRESP.dt or CRRESP.pd) -> Lay data từ Core B
-                    if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
-                        // If original request was write, go to write-snoop data state
-                        if (is_write_request) begin 
-                            next_state = DATA_WR_SNOOP;
-                        end 
-                        else begin 
-                            next_state = DATA_SNOOP;
-                        end 
+                if (grant_s0 && s1_ace_crvalid) begin       
+                    if (is_write_request) begin
+                        next_state = MEM_WR_REQ; 
                     end 
-                    // Neu MISS/CLEAN -> doc tu mem
-                    else begin    
-                        if (is_write_request) begin
-                            next_state = MEM_WR_REQ; 
-                        end 
-                        else begin
-                            next_state = MEM_REQ; 
-                        end
-                    end 
+                    else begin
+                        next_state = MEM_REQ; 
+                    end
+                
                 end 
-                else if (!grant_s0 && s0_ace_crvalid) begin
-                    if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin
-                        if (is_write_request) begin
-                            next_state = DATA_WR_SNOOP;
-                        end 
-                        else begin
-                            next_state = DATA_SNOOP;
-                        end
+                else if (!grant_s0 && s0_ace_crvalid) begin      
+                    if (is_write_request) begin
+                        next_state = MEM_WR_REQ;
                     end 
-                    else begin                  
-                        if (is_write_request) begin
-                            next_state = MEM_WR_REQ;
-                        end 
-                        else begin
-                            next_state = MEM_REQ;
-                        end
-                    end 
+                    else begin
+                        next_state = MEM_REQ;
+                    end
+                 
                 end
             end
             

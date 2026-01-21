@@ -65,7 +65,9 @@ module arbiter #(
         else if (grant_c1) begin
             o_l2_valid      = 1'b1;
             o_l2_cmd        = i_c1_req_cmd;
-            o_l2_addr       = i_c1_req_addr;
+            // o_l2_addr       = i_c1_req_addr;
+            // o_l2_addr       = {4'h2, i_c1_req_addr[27:0]}; // phan vung icache va dcache
+            o_l2_addr = {20'd0, 1'b1, i_c1_req_addr[10:0]};
     
             o_c1_req_ready  = i_l2_ready;
         end

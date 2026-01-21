@@ -285,6 +285,7 @@ module cache_L2_controller #(
             end 
             ALLOC_AR: begin 
                 oARVALID = 1'b1; 
+                snoop_can_access_ram = 1'b1; 
                 if (need_upgrade) begin
                     // CleanUnique: Bao moi nguoi Invalidate, tao giu data (vi tao sap ghi de)
                     oARSNOOP = 4'b1011; 
@@ -296,6 +297,7 @@ module cache_L2_controller #(
             end
             ALLOC_R: begin  
                 oRREADY = 1'b1; 
+                snoop_can_access_ram = 1'b1;
             end 
             UPDATE: begin
                 snoop_can_access_ram    = 1'b0;
@@ -303,6 +305,10 @@ module cache_L2_controller #(
                 moesi_we                = 1'b1;
                 refill_we               = 1'b1; 
             end 
+
+            WAIT_SNOOP: begin
+                snoop_can_access_ram = 1'b1;
+            end
 
             WAIT_RAM: begin   
                 stall = 1'b1;

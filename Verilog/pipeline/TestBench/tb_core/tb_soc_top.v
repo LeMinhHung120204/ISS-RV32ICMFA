@@ -73,6 +73,8 @@ module tb_soc_top;
     ) u_soc_top (
         .ACLK         (ACLK),
         .ARESETn      (ARESETn),
+        .c0_stall     (c0_stall),
+        .c1_stall     (c1_stall),
 
         .m_axi_awid   (m_axi_awid),
         .m_axi_awaddr (m_axi_awaddr),

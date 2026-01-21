@@ -42,7 +42,7 @@ module RV32IA #(
     wire [WIDTH_DATA-1:0] E_RD1, E_RD2;
     wire [WIDTH_DATA-1:0] E_ImmExt, E_ALUResult;
 
-    wire [WIDTH_DATA-1:0] M_ALUResult, M_WriteData, M_ImmExt, M_Result, M_ReadData;
+    wire [WIDTH_DATA-1:0] M_ALUResult, M_WriteData, M_ImmExt, M_ReadData;
     wire [WIDTH_DATA-1:0] C_Result, C_ImmExt, C_mux_result, C_ReadData;
     wire [WIDTH_DATA-1:0] W_ImmExt, W_ReadData, W_Result, WB_Result, W_mux_result;
 
@@ -176,6 +176,7 @@ module RV32IA #(
         .F_Stall            (F_Stall),
         .D_Stall            (D_Stall),
         .E_Stall            (E_Stall),
+        .M_Stall            (M_Stall),
             // .D_valid_MDU        (D_valid_MDU),
             // .D_Valid_FPU        (D_Valid_FPU),
         .fetch_pipe_Flush   (fetch_pipe_Flush),
@@ -389,7 +390,7 @@ module RV32IA #(
 
     mux4_1 mux_ForwardAE (
         .in0    (E_RD1),
-        .in1    (M_Result),
+        .in1    (M_ALUResult),
         .in2    (C_mux_result),
         .in3    (W_mux_result),
         .sel    (ForwardAE),
@@ -398,7 +399,7 @@ module RV32IA #(
 
     mux4_1 mux_ForwardBE (
         .in0    (E_RD2),
-        .in1    (M_Result),
+        .in1    (M_ALUResult),
         .in2    (C_mux_result),
         .in3    (W_mux_result),
         .sel    (ForwardBE),

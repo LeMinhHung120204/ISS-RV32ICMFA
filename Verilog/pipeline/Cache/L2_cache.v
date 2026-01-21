@@ -319,9 +319,15 @@ module L2_cache #(
         end 
         else begin 
             // Case 1: Refill from Memory (AXI R Channel)
-            if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
+            // if (iRVALID & oRREADY & (iRID == {1'b1, CORE_ID})) begin
+            //     refill_buffer <= iRDATA;
+            // end 
+
+            // Testing
+            if (iRVALID & oRREADY ) begin
                 refill_buffer <= iRDATA;
             end 
+
             // Case 2: Writeback from L1 (L1 Interface)
             // Khi Controller bat o_wdata_ready_ctrl (State L1_WB_RX)
             else if (i_wdata_valid && o_wdata_ready) begin
