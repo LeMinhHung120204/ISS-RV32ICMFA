@@ -7,13 +7,13 @@ module tb_soc_top;
     // 1. Parameters & Signals
     // -------------------------------------------------------------------------
     parameter ADDR_W        = 32;
-    parameter DATA_W        = 512;
+    parameter DATA_W        = 32; // use 32-bit beats for TB
     parameter STRB_W        = DATA_W/8;
-    parameter RAM_ADDR_W    = 3;
+    parameter RAM_ADDR_W    = 14; // 16K entries (matches temp_mem size)
 
     // Core start PC parameters (two nearby addresses for easy testing)
     parameter C0_START_PC   = 32'h00000000;
-    parameter C1_START_PC   = 32'h00000100;
+    parameter C1_START_PC   = 32'h00000040;
     parameter C0_END_PC     = C0_START_PC + 32'h00000100;
     parameter C1_END_PC     = C1_START_PC + 32'h00000100;
 
@@ -185,36 +185,19 @@ module tb_soc_top;
         #20;
 
         $display("--------------------------------------------------");
-        $display("Loading 32-bit Hex File into 512-bit Memory (soc_top TB)...");
+        $display("Loading 32-bit Hex File into 32-bit Memory (soc_top TB)...");
 
         $readmemh(HEX_FILE, temp_mem);
 
         for (i = 0; i < (1 << RAM_ADDR_W); i = i + 1) begin
-            u_unified_mem.u_DataMem.mem[i] = {
-                temp_mem[i*16 + 15],
-                temp_mem[i*16 + 14],
-                temp_mem[i*16 + 13],
-                temp_mem[i*16 + 12],
-                temp_mem[i*16 + 11],
-                temp_mem[i*16 + 10],
-                temp_mem[i*16 + 9],
-                temp_mem[i*16 + 8],
-                temp_mem[i*16 + 7],
-                temp_mem[i*16 + 6],
-                temp_mem[i*16 + 5],
-                temp_mem[i*16 + 4],
-                temp_mem[i*16 + 3],
-                temp_mem[i*16 + 2],
-                temp_mem[i*16 + 1],
-                temp_mem[i*16 + 0]
-            };
+            u_unified_mem.u_DataMem.mem[i] = temp_mem[i];
         end
 
         $display("Memory Loaded Successfully.");
         $display("--------------------------------------------------");
 
         $display("[SCENARIO] Running simulation...");
-        #5000;
+        #1000;
 
         $display("Simulation Finished.");
         $finish;

@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 module ace_interconnect #(
     parameter ADDR_W = 32,
-    parameter DATA_W = 512, // Cache Line Width (Wide Bus)
+    parameter DATA_W = 32, // Cache Line Width (Wide Bus)
     parameter ID_W   = 2
 )(
     input clk, rst_n,

@@ -13,7 +13,7 @@ module L2_cache #(
     parameter CORE_ID       = 1'b0,    
 
     parameter ID_W          = 2,
-    parameter STRB_W        = (CACHE_DATA_W/8)
+    parameter STRB_W        = (DATA_W/8)
 )(
     input ACLK, ARESETn,
 
@@ -56,7 +56,7 @@ module L2_cache #(
     
     // W channel
     input                           iWREADY,
-    output reg  [CACHE_DATA_W-1:0]  oWDATA,
+    output reg  [DATA_W-1:0]        oWDATA,
     output  [STRB_W-1:0]            oWSTRB,
     output                          oWLAST,
     output                          oWVALID,
@@ -81,7 +81,7 @@ module L2_cache #(
 
     // R channel
     input   [ID_W-1:0]          iRID,
-    input   [CACHE_DATA_W-1:0]  iRDATA,
+    input   [DATA_W-1:0]        iRDATA,
     //  RRESP[3:2] (interconnect)
     //  RRESP[1:0] (memory)
     input   [3:0]               iRRESP,
@@ -102,10 +102,10 @@ module L2_cache #(
     output  [4:0]               oCRRESP,
     
     // CD channel
-    input                           iCDREADY,
-    output                          oCDVALID,
-    output reg  [CACHE_DATA_W-1:0]  oCDDATA,
-    output                          oCDLAST
+    input                       iCDREADY,
+    output                      oCDVALID,
+    output reg  [DATA_W-1:0]    oCDDATA,
+    output                      oCDLAST
 );
    // ---------------------------------------- INTERNAL WIRES ----------------------------------------
     wire [TAG_W-1:0]        s1_tag;
@@ -154,6 +154,8 @@ module L2_cache #(
     wire o_rdata_ready_ctrl;
 
     wire use_l1_data_mux;
+    // Burst counter from controller (0..15)
+    wire [3:0] burst_cnt;
 
     // ---------------------------------------- MAPPING INPUTS ----------------------------------------
     wire controller_ready;
@@ -325,7 +327,7 @@ module L2_cache #(
 
             // Testing
             if (iRVALID & oRREADY ) begin
-                refill_buffer <= iRDATA;
+                refill_buffer[burst_cnt*DATA_W +: DATA_W] <= iRDATA;
             end 
 
             // Case 2: Writeback from L1 (L1 Interface)
@@ -387,6 +389,7 @@ module L2_cache #(
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),
         .o_req_ready        (controller_ready),
+        .burst_cnt          (burst_cnt),
 
         // AXI Interface
         .oAWLEN     (oAWLEN), 
@@ -504,12 +507,13 @@ module L2_cache #(
     // ---------------------------------------- Mux Write Data ---------------------------------------- 
     // Mux Write Data cho Bus (Evict/Snoop Response)
     always @(*) begin
+        // select 32-bit word out of 512-bit line based on burst_cnt
         case(way_select_final)
-            4'b0001: oWDATA = data_read[0];
-            4'b0010: oWDATA = data_read[1];
-            4'b0100: oWDATA = data_read[2];
-            4'b1000: oWDATA = data_read[3];
-            default: oWDATA = {CACHE_DATA_W{1'b0}};
+            4'b0001: oWDATA = data_read[0][burst_cnt*DATA_W +: DATA_W];
+            4'b0010: oWDATA = data_read[1][burst_cnt*DATA_W +: DATA_W];
+            4'b0100: oWDATA = data_read[2][burst_cnt*DATA_W +: DATA_W];
+            4'b1000: oWDATA = data_read[3][burst_cnt*DATA_W +: DATA_W];
+            default: oWDATA = {DATA_W{1'b0}};
         endcase
     end
     
@@ -517,14 +521,14 @@ module L2_cache #(
     always @(*) begin
         if (use_l1_data_mux) begin
             // Neu Snoop Controller bao lay tu L1 (vi L1 co ban Dirty moi hon)
-            oCDDATA = i_int_snoop_data;
+            oCDDATA = i_int_snoop_data[burst_cnt*DATA_W +: DATA_W];
         end
         else begin
             case(way_hit)
-                4'b0001: oCDDATA = data_read[0];
-                4'b0010: oCDDATA = data_read[1];
-                4'b0100: oCDDATA = data_read[2];
-                4'b1000: oCDDATA = data_read[3];
+                4'b0001: oCDDATA = data_read[0][burst_cnt*DATA_W +: DATA_W];
+                4'b0010: oCDDATA = data_read[1][burst_cnt*DATA_W +: DATA_W];
+                4'b0100: oCDDATA = data_read[2][burst_cnt*DATA_W +: DATA_W];
+                4'b1000: oCDDATA = data_read[3][burst_cnt*DATA_W +: DATA_W];
                 default: oCDDATA = {CACHE_DATA_W{1'b0}};
             endcase
         end 

@@ -13,7 +13,9 @@ module soc_top #(
     parameter NUM_SETS      = 16,
     parameter NUM_SETS_L2   = 32,
     parameter WORD_OFF_W    = 4, // 16 words
-    parameter BYTE_OFF_W    = 2
+    parameter BYTE_OFF_W    = 2,
+    parameter DATA_W        = 32,
+    parameter STRB_W        = DATA_W/8
 )(
     input ACLK, ARESETn,
     input c0_stall, c1_stall, // for debug purpose only
@@ -27,8 +29,8 @@ module soc_top #(
     output          m_axi_awvalid,
     input           m_axi_awready,
 
-    output [511:0]  m_axi_wdata,
-    output [63:0]   m_axi_wstrb,
+    output [DATA_W-1:0]  m_axi_wdata,
+    output [STRB_W-1:0]  m_axi_wstrb,
     output          m_axi_wlast,
     output          m_axi_wvalid,
     input           m_axi_wready,
@@ -47,18 +49,19 @@ module soc_top #(
     input           m_axi_arready,
 
     input  [1:0]    m_axi_rid,
-    input  [511:0]  m_axi_rdata,
+    input  [DATA_W-1:0] m_axi_rdata,
     input  [1:0]    m_axi_rresp,
     input           m_axi_rlast,
     input           m_axi_rvalid,
     output          m_axi_rready
 );
+
     // INTERNAL WIRES
     // ------------------- CORE A INTERFACE -------------------
     wire [31:0]  c0_araddr;
     wire [3:0]   c0_arsnoop;
     wire         c0_arvalid, c0_arready;
-    wire [511:0] c0_rdata;
+    wire [DATA_W-1:0] c0_rdata;
     wire         c0_rvalid, c0_rlast, c0_rready;
     wire [31:0]  c0_acaddr;
     wire [3:0]   c0_acsnoop;
@@ -66,14 +69,14 @@ module soc_top #(
     wire         c0_crvalid;
     wire [4:0]   c0_crresp;
     wire         c0_crready = 1'b1; 
-    wire [511:0] c0_cddata;
+    wire [DATA_W-1:0] c0_cddata;
     wire         c0_cdvalid, c0_cdlast;
     wire         c0_cdready = 1'b1; 
 
     // Write channel wires for core0
     wire [31:0]  c0_awaddr;
     wire         c0_awvalid, c0_awready;
-    wire [511:0] c0_wdata;
+    wire [DATA_W-1:0] c0_wdata;
     wire         c0_wvalid, c0_wready;
     wire         c0_bvalid;
     wire [1:0]   c0_bresp;
@@ -83,7 +86,7 @@ module soc_top #(
     wire [31:0]  c1_araddr;
     wire [3:0]   c1_arsnoop;
     wire         c1_arvalid, c1_arready;
-    wire [511:0] c1_rdata;
+    wire [DATA_W-1:0] c1_rdata;
     wire         c1_rvalid, c1_rlast, c1_rready;
     wire [31:0]  c1_acaddr;
     wire [3:0]   c1_acsnoop;
@@ -91,14 +94,14 @@ module soc_top #(
     wire         c1_crvalid;
     wire [4:0]   c1_crresp;
     wire         c1_crready = 1'b1;
-    wire [511:0] c1_cddata;
+    wire [DATA_W-1:0] c1_cddata;
     wire         c1_cdvalid, c1_cdlast;
     wire         c1_cdready = 1'b1; 
 
     // Write channel wires for core1
     wire [31:0]  c1_awaddr;
     wire         c1_awvalid, c1_awready;
-    wire [511:0] c1_wdata;
+    wire [DATA_W-1:0] c1_wdata;
     wire         c1_wvalid, c1_wready;
     wire         c1_bvalid;
     wire [1:0]   c1_bresp;
@@ -109,16 +112,19 @@ module soc_top #(
     // `soc_top` then expands them into full AXI4 fields (ID/LEN/SIZE/BURST, etc.).
     wire [31:0]  mem_araddr;
     wire         mem_arvalid, mem_arready;
-    wire [511:0] mem_rdata;
+    wire [DATA_W-1:0] mem_rdata;
     wire         mem_rvalid, mem_rlast, mem_rready;
 
     wire [31:0]  mem_awaddr;
     wire         mem_awvalid, mem_awready;
-    wire [511:0] mem_wdata;
+    wire [DATA_W-1:0] mem_wdata;
     wire         mem_wvalid, mem_wready;
     wire         mem_bvalid;
     wire [1:0]   mem_bresp;
     wire         mem_bready;
+
+    // compute AXI size field from DATA_W/STRB_W
+    localparam [2:0] AW_SIZE = $clog2(STRB_W);
 
 
     // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
@@ -329,15 +335,15 @@ module soc_top #(
     // Write address channel
     assign m_axi_awid    = 2'b00;
     assign m_axi_awaddr  = mem_awaddr;
-    assign m_axi_awlen   = 8'b0;         // single-beat
-    assign m_axi_awsize  = 3'b110;       // 64 bytes (DATA_W = 512 bits)
+    assign m_axi_awlen   = 8'b0;         // single-beat (top-level bridge)
+    assign m_axi_awsize  = AW_SIZE;      // size derived from DATA_W
     assign m_axi_awburst = 2'b01;        // INCR
     assign m_axi_awvalid = mem_awvalid;
     assign mem_awready   = m_axi_awready;
 
     // Write data channel
     assign m_axi_wdata   = mem_wdata;
-    assign m_axi_wstrb   = {64{1'b1}};   // all bytes valid for full beat
+    assign m_axi_wstrb   = {STRB_W{1'b1}};   // all bytes valid for full beat
     assign m_axi_wlast   = 1'b1;         // single-beat transfer
     assign m_axi_wvalid  = mem_wvalid;
     assign mem_wready    = m_axi_wready;
@@ -351,7 +357,7 @@ module soc_top #(
     assign m_axi_arid    = 2'b00;
     assign m_axi_araddr  = mem_araddr;
     assign m_axi_arlen   = 8'b0;         // single-beat
-    assign m_axi_arsize  = 3'b110;       // 64 bytes
+    assign m_axi_arsize  = AW_SIZE;      // size derived from DATA_W
     assign m_axi_arburst = 2'b01;        // INCR
     assign m_axi_arvalid = mem_arvalid;
     assign mem_arready   = m_axi_arready;

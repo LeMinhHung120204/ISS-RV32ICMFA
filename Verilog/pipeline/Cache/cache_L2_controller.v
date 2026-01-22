@@ -5,7 +5,7 @@ module cache_L2_controller #(
     parameter ID_W          = 2,    
     parameter USER_W        = 4,
     parameter CACHE_DATA_W  = 512,              // 64 Bytes Line
-    parameter STRB_W        = (CACHE_DATA_W/8)  // = 64 bit strobe
+    parameter STRB_W        = (DATA_W/8)        // strobe width matches beat data width (32-bit -> 4)
 )(
     input           clk, rst_n,
 
@@ -41,7 +41,7 @@ module cache_L2_controller #(
     output  reg         is_shared_response, 
     output  reg         is_dirty_response,  
     output  reg         o_req_ready,        // Bao cho L1 biet L2 san sang nhan lenh CMD/ADDR
-    // output  reg [3:0]   burst_cnt,
+    output  reg [3:0]   burst_cnt,
 
     // --- AXI Interface  ---
     output      [7:0]           oAWLEN,
@@ -96,11 +96,12 @@ module cache_L2_controller #(
     reg [3:0] state, next_state;
 
     // AXI Constants
-    assign oAWLEN       = 8'd0;     // 1 burst
-    assign oAWSIZE      = 3'b110;   // 64 byte
+    // Use 16 beats (0..15) of 32-bit transfers for a full 512-bit line
+    assign oAWLEN       = 8'd15;    // 16 beats
+    assign oAWSIZE      = 3'b010;   // 4 byte (32-bit)
     assign oAWBURST     = 2'b01; 
-    assign oARLEN       = 8'd0; 
-    assign oARSIZE      = 3'b110;   // 64 byte
+    assign oARLEN       = 8'd15; 
+    assign oARSIZE      = 3'b010;   // 4 byte (32-bit)
     assign oARBURST     = 2'b01; 
     assign oARDOMAIN    = 2'b01; 
     assign oAWDOMAIN    = 2'b01; 
@@ -110,18 +111,18 @@ module cache_L2_controller #(
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
-            // burst_cnt           <= 4'd0;
+            burst_cnt           <= 4'd0;
             is_shared_response  <= 1'b0;
             is_dirty_response   <= 1'b0;
         end 
         else begin
             // Tang counter khi nhan Data L1 hoac Mem
-            // if ( ((state == WB_W) && iWREADY) || ((state == ALLOC_R) && iRVALID) || ((state == L1_WB_RX) && i_wdata_valid) ) begin
-            //     burst_cnt <= burst_cnt + 1'b1;
-            // end 
-            // else if (state != WB_W && state != ALLOC_R && state != L1_WB_RX) begin
-            //     burst_cnt <= 4'd0; 
-            // end 
+            if ( ((state == WB_W) && iWREADY) || ((state == ALLOC_R) && iRVALID)) begin
+                burst_cnt <= burst_cnt + 1'b1;
+            end 
+            else if (state != WB_W && state != ALLOC_R) begin
+                burst_cnt <= 4'd0; 
+            end 
 
             // Capture Response bits from AXI Read
             if ((state == ALLOC_R) & (iRVALID && iRLAST)) begin
@@ -273,8 +274,8 @@ module cache_L2_controller #(
             WB_AW: begin 
                 oAWVALID = 1'b1; 
                 oAWSNOOP = 3'b011; 
-            end 
-            WB_W:  begin 
+                // Assert WLAST only on final beat (burst_cnt == 15)
+                oWLAST  = (burst_cnt == 4'd15);
                 oWVALID = 1'b1; 
                 oWSTRB  = {STRB_W{1'b1}}; 
                 // oWLAST  = (burst_cnt == BURST_LEN); 

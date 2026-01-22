@@ -36,7 +36,7 @@ module single_core #(
     output  [1:0]           m_axi_awdomain,
     
     // --- Write Data Channel (W) ---
-    output  [CACHE_DATA_W-1:0]  m_axi_wdata,
+    output  [DATA_W-1:0]        m_axi_wdata,
     output  [STRB_W-1:0]        m_axi_wstrb,
     output                      m_axi_wlast,
     output                      m_axi_wvalid,
@@ -62,7 +62,7 @@ module single_core #(
 
     // --- Read Data Channel (R) ---
     input   [ID_W-1:0]          m_axi_rid,
-    input   [CACHE_DATA_W-1:0]  m_axi_rdata,
+    input   [DATA_W-1:0]        m_axi_rdata,
     input   [3:0]               m_axi_rresp,
     input                       m_axi_rlast,
     input                       m_axi_rvalid,
@@ -82,7 +82,7 @@ module single_core #(
     // --- Snoop Data Channel (CD - Output to L3) ---
     input                       s_ace_cdready,
     output                      s_ace_cdvalid,
-    output  [CACHE_DATA_W-1:0]  s_ace_cddata,
+    output  [DATA_W-1:0]        s_ace_cddata,
     output                      s_ace_cdlast
 );
 
