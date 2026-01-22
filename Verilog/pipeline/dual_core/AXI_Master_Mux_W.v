@@ -3,10 +3,12 @@
 // AXI Write master multiplexer for 2 masters -> 1 slave (AW, W, B channels)
 module AXI_Master_Mux_W #(
     parameter ADDR_W = 32,
-    parameter DATA_W = 64
+    parameter DATA_W = 64,
+    parameter ID_W   = 2
 ) (
     input clk,
     // Master 0 AW/W/B
+    input  [ID_W-1:0]   m0_awid,
     input  [ADDR_W-1:0] m0_awaddr,
     input               m0_awvalid,
     output              m0_awready,
@@ -14,9 +16,11 @@ module AXI_Master_Mux_W #(
     input               m0_wvalid,
     output              m0_wready,
     output              m0_bvalid,
+    output [ID_W-1:0]   m0_bid,
     output [1:0]        m0_bresp,
     input               m0_bready,
     // Master 1 AW/W/B
+    input  [ID_W-1:0]   m1_awid,
     input  [ADDR_W-1:0] m1_awaddr,
     input               m1_awvalid,
     output              m1_awready,
@@ -24,9 +28,11 @@ module AXI_Master_Mux_W #(
     input               m1_wvalid,
     output              m1_wready,
     output              m1_bvalid,
+    output [ID_W-1:0]   m1_bid,
     output [1:0]        m1_bresp,
     input               m1_bready,
     // Slave AW/W/B
+    output [ID_W-1:0]   s_awid,
     output [ADDR_W-1:0] s_awaddr,
     output              s_awvalid,
     input               s_awready,
@@ -34,6 +40,7 @@ module AXI_Master_Mux_W #(
     output              s_wvalid,
     input               s_wready,
     input               s_bvalid,
+    input  [ID_W-1:0]   s_bid,
     input  [1:0]        s_bresp,
     output              s_bready,
     // Grants
@@ -42,6 +49,7 @@ module AXI_Master_Mux_W #(
 );
 
     // AW channel
+    assign s_awid       = m0_wgrnt ? m0_awid : m1_awid;
     assign s_awaddr     = m0_wgrnt ? m0_awaddr : m1_awaddr;
     assign s_awvalid    = m0_wgrnt ? m0_awvalid : m1_awvalid;
     assign m0_awready   = m0_wgrnt ? s_awready : 1'b0;
@@ -58,6 +66,8 @@ module AXI_Master_Mux_W #(
     assign m1_bvalid    = s_bvalid & m1_wgrnt;
     assign m0_bresp     = s_bresp;
     assign m1_bresp     = s_bresp;
+    assign m0_bid       = s_bid;
+    assign m1_bid       = s_bid;
     assign s_bready     = m0_wgrnt ? m0_bready : m1_bready;
 
 endmodule

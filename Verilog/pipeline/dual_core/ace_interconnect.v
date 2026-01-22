@@ -9,6 +9,7 @@ module ace_interconnect #(
 
     // ================= CLIENT 0 (CORE A) =================
     // AR Channel
+    input  [ID_W-1:0]   s0_axi_arid,
     input  [ADDR_W-1:0] s0_axi_araddr,
     input  [7:0]        s0_axi_arlen,
     input  [2:0]        s0_axi_arsize,
@@ -17,6 +18,7 @@ module ace_interconnect #(
     input               s0_axi_arvalid,
     output reg          s0_axi_arready,
     // AW/W/B Channel (Write)
+    input  [ID_W-1:0]   s0_axi_awid,
     input  [ADDR_W-1:0] s0_axi_awaddr,
     input  [7:0]        s0_axi_awlen,
     input  [2:0]        s0_axi_awsize,
@@ -31,11 +33,14 @@ module ace_interconnect #(
     output reg          s0_axi_wready,
 
     output reg          s0_axi_bvalid,
+    output reg [ID_W-1:0] s0_axi_bid,
     output reg [1:0]    s0_axi_bresp,
     input               s0_axi_bready,
     
     // R Channel
     output reg [DATA_W-1:0] s0_axi_rdata,
+    output reg [ID_W-1:0]   s0_axi_rid,
+    output reg [1:0]        s0_axi_rresp,
     output reg              s0_axi_rvalid,
     output reg              s0_axi_rlast,
     input                   s0_axi_rready,
@@ -53,6 +58,7 @@ module ace_interconnect #(
     input               s0_ace_cdvalid,
 
     // ================= CLIENT 1 (CORE B) =================
+    input  [ID_W-1:0]   s1_axi_arid,
     input  [ADDR_W-1:0] s1_axi_araddr,
     input  [7:0]        s1_axi_arlen,
     input  [2:0]        s1_axi_arsize,
@@ -61,6 +67,7 @@ module ace_interconnect #(
     input               s1_axi_arvalid,
     output reg          s1_axi_arready,
     // AW/W/B Channel (Write)
+    input  [ID_W-1:0]   s1_axi_awid,
     input  [ADDR_W-1:0] s1_axi_awaddr,
     input  [7:0]        s1_axi_awlen,
     input  [2:0]        s1_axi_awsize,
@@ -75,10 +82,13 @@ module ace_interconnect #(
     output reg          s1_axi_wready,
 
     output reg          s1_axi_bvalid,
+    output reg [ID_W-1:0] s1_axi_bid,
     output reg [1:0]    s1_axi_bresp,
     input               s1_axi_bready,
     
     output reg [DATA_W-1:0] s1_axi_rdata,
+    output reg [ID_W-1:0]   s1_axi_rid,
+    output reg [1:0]        s1_axi_rresp,
     output reg              s1_axi_rvalid,
     output reg              s1_axi_rlast,
     input                   s1_axi_rready,
@@ -94,6 +104,7 @@ module ace_interconnect #(
     input               s1_ace_cdvalid,
 
     // ================= MASTER PORT (TO EXTERNAL MEMORY) =================
+    output [ID_W-1:0]   mem_arid,
     output [ADDR_W-1:0] mem_araddr,
     output [7:0]        mem_arlen,
     output [2:0]        mem_arsize,
@@ -102,11 +113,14 @@ module ace_interconnect #(
     input               mem_arready,
 
     input  [DATA_W-1:0] mem_rdata,
+    input  [ID_W-1:0]   mem_rid,
+    input  [1:0]        mem_rresp,
     input               mem_rvalid,
     input               mem_rlast,
     output              mem_rready,
 
     // Write channels to memory
+    output [ID_W-1:0]   mem_awid,
     output [ADDR_W-1:0] mem_awaddr,
     output [7:0]        mem_awlen,
     output [2:0]        mem_awsize,
@@ -121,6 +135,7 @@ module ace_interconnect #(
     input               mem_wready,
 
     input               mem_bvalid,
+    input  [ID_W-1:0]   mem_bid,
     input  [1:0]        mem_bresp,
     output              mem_bready
 );
@@ -144,6 +159,7 @@ module ace_interconnect #(
     wire w_grant0, w_grant1;
 
     // Master-mux wires (slave side = memory)
+    wire [ID_W-1:0]     mux_s_arid; // Added
     wire [ADDR_W-1:0]   mux_s_araddr;
     wire                mux_s_arvalid;
     wire                mux_s_arready;
@@ -151,7 +167,10 @@ module ace_interconnect #(
     wire                mux_s_rvalid;
     wire                mux_s_rlast;
     wire                mux_s_rready;
+    wire [ID_W-1:0]     mux_s_rid;
+    wire [1:0]          mux_s_rresp;
 
+    wire [ID_W-1:0]     mux_s_awid; // Added
     wire [ADDR_W-1:0]   mux_s_awaddr;
     wire                mux_s_awvalid;
     wire                mux_s_awready;
@@ -159,17 +178,21 @@ module ace_interconnect #(
     wire                mux_s_wvalid;
     wire                mux_s_wready;
     wire                mux_s_bvalid;
+    wire [ID_W-1:0]     mux_s_bid;
     wire [1:0]          mux_s_bresp;
     wire                mux_s_bready;
 
     // Master-side wires from mux to clients
     wire                mux_m0_arready, mux_m1_arready;
     wire [DATA_W-1:0]   mux_m0_rdata, mux_m1_rdata;
+    wire [ID_W-1:0]     mux_m0_rid, mux_m1_rid;
+    wire [1:0]          mux_m0_rresp, mux_m1_rresp;
     wire                mux_m0_rvalid, mux_m1_rvalid;
     wire                mux_m0_rlast, mux_m1_rlast;
     wire                mux_m0_awready, mux_m1_awready;
     wire                mux_m0_wready, mux_m1_wready;
     wire                mux_m0_bvalid, mux_m1_bvalid;
+    wire [ID_W-1:0]     mux_m0_bid, mux_m1_bid;
     wire [1:0]          mux_m0_bresp, mux_m1_bresp;
 
     // Internal write-data sources (allow snoop -> write path)
@@ -267,29 +290,39 @@ module ace_interconnect #(
     // Instantiate master muxes
     AXI_Master_Mux_R #(
         .ADDR_W(ADDR_W), 
-        .DATA_W(DATA_W)
+        .DATA_W(DATA_W),
+        .ID_W  (ID_W)
     ) u_mux_r (
         .clk        (clk), 
+        .m0_arid    (s0_axi_arid), // Added
         .m0_araddr  (s0_axi_araddr),
         .m0_arvalid (arb_m0_arvalid),
         .m0_arready (mux_m0_arready),
         .m0_rdata   (mux_m0_rdata),
+        .m0_rid     (mux_m0_rid),
+        .m0_rresp   (mux_m0_rresp),
         .m0_rvalid  (mux_m0_rvalid),
         .m0_rlast   (mux_m0_rlast),
         .m0_rready  (s0_axi_rready),
 
+        .m1_arid    (s1_axi_arid), // Added
         .m1_araddr  (s1_axi_araddr),
         .m1_arvalid (arb_m1_arvalid),
         .m1_arready (mux_m1_arready),
         .m1_rdata   (mux_m1_rdata),
+        .m1_rid     (mux_m1_rid),
+        .m1_rresp   (mux_m1_rresp),
         .m1_rvalid  (mux_m1_rvalid),
         .m1_rlast   (mux_m1_rlast),
         .m1_rready  (s1_axi_rready),
 
+        .s_arid     (mux_s_arid), // Added
         .s_araddr   (mux_s_araddr),
         .s_arvalid  (mux_s_arvalid),
         .s_arready  (mem_arready),
         .s_rdata    (mem_rdata),
+        .s_rid      (mem_rid),
+        .s_rresp    (mem_rresp),
         .s_rvalid   (mem_rvalid),
         .s_rlast    (mem_rlast),
         .s_rready   (mux_s_rready),
@@ -300,9 +333,11 @@ module ace_interconnect #(
 
     AXI_Master_Mux_W #(
         .ADDR_W(ADDR_W), 
-        .DATA_W(DATA_W)
+        .DATA_W(DATA_W),
+        .ID_W  (ID_W)
     ) u_mux_w (
         .clk        (clk),
+        .m0_awid    (s0_axi_awid), // Added
         .m0_awaddr  (s0_axi_awaddr),
         .m0_awvalid (arb_m0_awvalid),
         .m0_awready (mux_m0_awready),
@@ -310,9 +345,11 @@ module ace_interconnect #(
         .m0_wvalid  (m0_wvalid_int),
         .m0_wready  (mux_m0_wready),
         .m0_bvalid  (mux_m0_bvalid),
+        .m0_bid     (mux_m0_bid),
         .m0_bresp   (mux_m0_bresp),
         .m0_bready  (s0_axi_bready),
 
+        .m1_awid    (s1_axi_awid), // Added
         .m1_awaddr  (s1_axi_awaddr),
         .m1_awvalid (arb_m1_awvalid),
         .m1_awready (mux_m1_awready),
@@ -320,9 +357,11 @@ module ace_interconnect #(
         .m1_wvalid  (m1_wvalid_int),
         .m1_wready  (mux_m1_wready),
         .m1_bvalid  (mux_m1_bvalid),
+        .m1_bid     (mux_m1_bid),
         .m1_bresp   (mux_m1_bresp),
         .m1_bready  (s1_axi_bready),
 
+        .s_awid     (mux_s_awid), // Added
         .s_awaddr   (mux_s_awaddr),
         .s_awvalid  (mux_s_awvalid),
         .s_awready  (mem_awready),
@@ -330,6 +369,7 @@ module ace_interconnect #(
         .s_wvalid   (mux_s_wvalid),
         .s_wready   (mem_wready),
         .s_bvalid   (mem_bvalid),
+        .s_bid      (mem_bid),
         .s_bresp    (mem_bresp),
         .s_bready   (mux_s_bready),
 
@@ -339,9 +379,11 @@ module ace_interconnect #(
 
     // Connect mux slave-side nets to top-level memory signals
     assign mem_araddr  = mux_s_araddr;
+    assign mem_arid    = mux_s_arid; // Added
     assign mem_arvalid = mux_s_arvalid;
     assign mem_rready  = mux_s_rready;
     assign mem_awaddr  = mux_s_awaddr;
+    assign mem_awid    = mux_s_awid; // Added
     assign mem_awvalid = mux_s_awvalid;
     assign mem_wdata   = mux_s_wdata;
     assign mem_wvalid  = mux_s_wvalid;
@@ -458,11 +500,6 @@ module ace_interconnect #(
             MEM_WR_REQ: begin
                 if (grant_s0) begin
                     // requester is master 0, CD comes from core1
-                    s0_axi_rvalid   = s1_ace_cdvalid;
-                    s0_axi_rdata    = s1_ace_cddata;
-                    s0_axi_rlast    = 1'b1;
-                    s0_axi_bvalid   = s1_ace_cdvalid;
-                    s0_axi_bresp    = 2'b00;
                     if (s1_ace_cdvalid) begin
                         next_state = IDLE; // done, no mem write
                     end
@@ -472,11 +509,6 @@ module ace_interconnect #(
                 end
                 else begin
                     // requester is master 1, CD comes from core0
-                    s1_axi_rvalid   = s0_ace_cdvalid;
-                    s1_axi_rdata    = s0_ace_cddata;
-                    s1_axi_rlast    = 1'b1;
-                    s1_axi_bvalid   = s0_ace_cdvalid;
-                    s1_axi_bresp    = 2'b00;
                     if (s0_ace_cdvalid) begin
                         next_state = IDLE; // done, no mem write
                     end
@@ -535,23 +567,31 @@ module ace_interconnect #(
         s0_axi_rvalid   = mux_m0_rvalid; 
         s0_axi_rlast    = mux_m0_rlast; 
         s0_axi_rdata    = mux_m0_rdata;
+        s0_axi_rid      = mux_m0_rid;
+        s0_axi_rresp    = mux_m0_rresp;
 
         // Write defaults - client 0
         s0_axi_awready  = mux_m0_awready;
         s0_axi_wready   = mux_m0_wready;
         s0_axi_bvalid   = mux_m0_bvalid;
         s0_axi_bresp    = mux_m0_bresp;
+        s0_axi_bid      = mux_m0_bid;
+
         s1_axi_arready  = mux_m1_arready; 
         s1_axi_rvalid   = mux_m1_rvalid; 
         s1_axi_rlast    = mux_m1_rlast; 
         s1_axi_rdata    = mux_m1_rdata;
+        s1_axi_rid      = mux_m1_rid;
+        s1_axi_rresp    = mux_m1_rresp;
 
         // Write defaults - client 1
         s1_axi_awready  = mux_m1_awready;
         s1_axi_wready   = mux_m1_wready;
         s1_axi_bvalid   = mux_m1_bvalid;
         s1_axi_bresp    = mux_m1_bresp;
-        s0_ace_acvalid  = 1'b0; 
+        s1_axi_bid      = mux_m1_bid;
+
+        s0_ace_acvalid  = 1'b0;  
         s0_ace_acaddr   = {ADDR_W{1'b0}}; 
         s0_ace_acsnoop  = 4'b0;
 
@@ -580,7 +620,30 @@ module ace_interconnect #(
             end
 
             MEM_WR_REQ: begin
-                // mem write request: AW/W/B handled by master mux; state transition waits on mem_awready && mem_wready
+                if (grant_s0) begin
+                    // requester is master 0, CD comes from core1
+                    s0_axi_rvalid   = s1_ace_cdvalid;
+                    s0_axi_rdata    = s1_ace_cddata;
+                    s0_axi_rlast    = 1'b1;
+                    s0_axi_rid      = s0_axi_arid;
+                    s0_axi_rresp    = 2'b00; // OKAY
+
+                    s0_axi_bvalid   = s1_ace_cdvalid;
+                    s0_axi_bresp    = 2'b00;
+                    s0_axi_bid      = s0_axi_awid;
+                end
+                else begin
+                    // requester is master 1, CD comes from core0
+                    s1_axi_rvalid   = s0_ace_cdvalid;
+                    s1_axi_rdata    = s0_ace_cddata;
+                    s1_axi_rlast    = 1'b1;
+                    s1_axi_rid      = s1_axi_arid;
+                    s1_axi_rresp    = 2'b00; // OKAY
+
+                    s1_axi_bvalid   = s0_ace_cdvalid;
+                    s1_axi_bresp    = 2'b00;
+                    s1_axi_bid      = s1_axi_awid;
+                end
             end
 
             DATA_MEM: begin
@@ -597,12 +660,16 @@ module ace_interconnect #(
                     s0_axi_rvalid   = s1_ace_cdvalid;
                     s0_axi_rdata    = s1_ace_cddata;
                     s0_axi_rlast    = 1'b1;
+                    s0_axi_rid      = s0_axi_arid;
+                    s0_axi_rresp    = 2'b00;
                  end 
                  else begin
                     s1_axi_arready  = 1'b1;
                     s1_axi_rvalid   = s0_ace_cdvalid;
                     s1_axi_rdata    = s0_ace_cddata;
                     s1_axi_rlast    = 1'b1;
+                    s1_axi_rid      = s1_axi_arid;
+                    s1_axi_rresp    = 2'b00;
                  end
             end
         endcase

@@ -13,7 +13,7 @@ module tb_soc_top;
 
     // Core start PC parameters (two nearby addresses for easy testing)
     parameter C0_START_PC   = 32'h00000000;
-    parameter C1_START_PC   = 32'h00000040;
+    parameter C1_START_PC   = 32'h00000100;
     parameter C0_END_PC     = C0_START_PC + 32'h00000100;
     parameter C1_END_PC     = C1_START_PC + 32'h00000100;
 
