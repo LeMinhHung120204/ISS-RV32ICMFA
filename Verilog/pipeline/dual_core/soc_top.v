@@ -128,8 +128,6 @@ module soc_top #(
     wire         c1_bready;
 
     // --- Memory bridge wires (connect interconnect <-> top-level external AXI fields)
-    // These provide the small native memory interface that `ace_interconnect` drives;
-    // `soc_top` then expands them into full AXI4 fields (ID/LEN/SIZE/BURST, etc.).
     wire [1:0]   mem_arid;  // Added
     wire [31:0]  mem_araddr;
     wire [7:0]   mem_arlen, mem_awlen;
