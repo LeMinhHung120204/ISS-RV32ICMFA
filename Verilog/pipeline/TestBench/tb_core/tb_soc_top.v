@@ -57,7 +57,7 @@ module tb_soc_top;
 
     wire [1:0]    m_axi_rid;
     wire [DATA_W-1:0] m_axi_rdata;
-    wire [1:0]    m_axi_rresp;
+    wire [3:0]    m_axi_rresp;
     wire          m_axi_rlast;
     wire          m_axi_rvalid;
     wire          m_axi_rready;
@@ -160,7 +160,7 @@ module tb_soc_top;
     );
 
     // soc_top expects 2-bit rresp
-    assign m_axi_rresp = mem_rresp_lower;
+    assign m_axi_rresp = {2'b00, mem_rresp_lower};
 
     // -------------------------------------------------------------------------
     // 4. Simulation Process

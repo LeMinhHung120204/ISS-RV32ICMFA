@@ -50,7 +50,7 @@ module soc_top #(
 
     input  [1:0]    m_axi_rid,
     input  [DATA_W-1:0] m_axi_rdata,
-    input  [1:0]    m_axi_rresp,
+    input  [3:0]    m_axi_rresp,
     input           m_axi_rlast,
     input           m_axi_rvalid,
     output          m_axi_rready
@@ -58,13 +58,13 @@ module soc_top #(
 
     // INTERNAL WIRES
     // ------------------- CORE A INTERFACE -------------------
-    wire [1:0]   c0_arid;   // Added
+    wire [1:0]   c0_arid;   
     wire [31:0]  c0_araddr;
     wire [3:0]   c0_arsnoop;
     wire         c0_arvalid, c0_arready;
-    wire [1:0]   c0_rid;    // Added
+    wire [1:0]   c0_rid;    
     wire [DATA_W-1:0] c0_rdata;
-    wire [1:0]   c0_rresp;  // Added
+    wire [3:0]   c0_rresp;  
     wire         c0_rvalid, c0_rlast, c0_rready;
     wire [31:0]  c0_acaddr;
     wire [3:0]   c0_acsnoop;
@@ -77,7 +77,7 @@ module soc_top #(
     wire         c0_cdready = 1'b1; 
 
     // Write channel wires for core0
-    wire [1:0]   c0_awid;   // Added
+    wire [1:0]   c0_awid;   
     wire [31:0]  c0_awaddr;
     wire [7:0]   c0_awlen, c0_arlen;
     wire [2:0]   c0_awsize, c0_arsize;
@@ -87,19 +87,19 @@ module soc_top #(
     wire [STRB_W-1:0] c0_wstrb;
     wire         c0_wlast;
     wire         c0_wvalid, c0_wready;
-    wire [1:0]   c0_bid;    // Added
+    wire [1:0]   c0_bid;    
     wire         c0_bvalid;
     wire [1:0]   c0_bresp;
     wire         c0_bready;
 
     // ------------------- CORE B INTERFACE -------------------
-    wire [1:0]   c1_arid;   // Added
+    wire [1:0]   c1_arid;   
     wire [31:0]  c1_araddr;
     wire [3:0]   c1_arsnoop;
     wire         c1_arvalid, c1_arready;
-    wire [1:0]   c1_rid;    // Added
+    wire [1:0]   c1_rid;    
     wire [DATA_W-1:0] c1_rdata;
-    wire [1:0]   c1_rresp;  // Added
+    wire [3:0]   c1_rresp;  
     wire         c1_rvalid, c1_rlast, c1_rready;
     wire [31:0]  c1_acaddr;
     wire [3:0]   c1_acsnoop;
@@ -112,7 +112,7 @@ module soc_top #(
     wire         c1_cdready = 1'b1; 
 
     // Write channel wires for core1
-    wire [1:0]   c1_awid;   // Added
+    wire [1:0]   c1_awid;   
     wire [31:0]  c1_awaddr;
     wire [7:0]   c1_awlen, c1_arlen;
     wire [2:0]   c1_awsize, c1_arsize;
@@ -122,31 +122,31 @@ module soc_top #(
     wire [STRB_W-1:0] c1_wstrb;
     wire         c1_wlast;
     wire         c1_wvalid, c1_wready;
-    wire [1:0]   c1_bid;    // Added
+    wire [1:0]   c1_bid;    
     wire         c1_bvalid;
     wire [1:0]   c1_bresp;
     wire         c1_bready;
 
     // --- Memory bridge wires (connect interconnect <-> top-level external AXI fields)
-    wire [1:0]   mem_arid;  // Added
+    wire [1:0]   mem_arid;  
     wire [31:0]  mem_araddr;
     wire [7:0]   mem_arlen, mem_awlen;
     wire [2:0]   mem_arsize, mem_awsize;
     wire [1:0]   mem_arburst, mem_awburst;
     wire         mem_arvalid, mem_arready;
-    wire [1:0]   mem_rid;   // Added
+    wire [1:0]   mem_rid;   
     wire [DATA_W-1:0] mem_rdata;
-    wire [1:0]   mem_rresp; // Added
+    wire [3:0]   mem_rresp; 
     wire         mem_rvalid, mem_rlast, mem_rready;
 
-    wire [1:0]   mem_awid;  // Added
+    wire [1:0]   mem_awid;  
     wire [31:0]  mem_awaddr;
     wire         mem_awvalid, mem_awready;
     wire [DATA_W-1:0] mem_wdata;
     wire [STRB_W-1:0] mem_wstrb;
     wire         mem_wlast;
     wire         mem_wvalid, mem_wready;
-    wire [1:0]   mem_bid;   // Added
+    wire [1:0]   mem_bid;   
     wire         mem_bvalid;
     wire [1:0]   mem_bresp;
     wire         mem_bready;

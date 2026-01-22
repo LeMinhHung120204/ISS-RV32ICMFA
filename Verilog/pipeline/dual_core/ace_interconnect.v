@@ -40,7 +40,7 @@ module ace_interconnect #(
     // R Channel
     output reg [DATA_W-1:0] s0_axi_rdata,
     output reg [ID_W-1:0]   s0_axi_rid,
-    output reg [1:0]        s0_axi_rresp,
+    output reg [3:0]        s0_axi_rresp,
     output reg              s0_axi_rvalid,
     output reg              s0_axi_rlast,
     input                   s0_axi_rready,
@@ -88,7 +88,7 @@ module ace_interconnect #(
     
     output reg [DATA_W-1:0] s1_axi_rdata,
     output reg [ID_W-1:0]   s1_axi_rid,
-    output reg [1:0]        s1_axi_rresp,
+    output reg [3:0]        s1_axi_rresp,
     output reg              s1_axi_rvalid,
     output reg              s1_axi_rlast,
     input                   s1_axi_rready,
@@ -114,7 +114,7 @@ module ace_interconnect #(
 
     input  [DATA_W-1:0] mem_rdata,
     input  [ID_W-1:0]   mem_rid,
-    input  [1:0]        mem_rresp,
+    input  [3:0]        mem_rresp,
     input               mem_rvalid,
     input               mem_rlast,
     output              mem_rready,
@@ -152,6 +152,7 @@ module ace_interconnect #(
     reg grant_s0;
 
     reg is_write_request;
+    reg [4:0] snoop_resp_capt; // Capture snoop response (CRRESP)
 
     // --------------------------------------------------------
     // Internal wires for arbiter + mux
@@ -168,7 +169,7 @@ module ace_interconnect #(
     wire                mux_s_rlast;
     wire                mux_s_rready;
     wire [ID_W-1:0]     mux_s_rid;
-    wire [1:0]          mux_s_rresp;
+    wire [3:0]          mux_s_rresp;
 
     wire [ID_W-1:0]     mux_s_awid; // Added
     wire [ADDR_W-1:0]   mux_s_awaddr;
@@ -186,7 +187,7 @@ module ace_interconnect #(
     wire                mux_m0_arready, mux_m1_arready;
     wire [DATA_W-1:0]   mux_m0_rdata, mux_m1_rdata;
     wire [ID_W-1:0]     mux_m0_rid, mux_m1_rid;
-    wire [1:0]          mux_m0_rresp, mux_m1_rresp;
+    wire [3:0]          mux_m0_rresp, mux_m1_rresp;
     wire                mux_m0_rvalid, mux_m1_rvalid;
     wire                mux_m0_rlast, mux_m1_rlast;
     wire                mux_m0_awready, mux_m1_awready;
@@ -470,23 +471,46 @@ module ace_interconnect #(
             // testing without snoop hit
             WAIT_CR: begin
                 // Buoc 2: Doi phan hoi
-                if (grant_s0 && s1_ace_crvalid) begin       
-                    if (is_write_request) begin
-                        next_state = MEM_WR_REQ; 
+                if (grant_s0 && s1_ace_crvalid) begin
+                    snoop_resp_capt <= s1_ace_crresp; // Capture response
+                    // Neu peer has data (CRRESP.dt or CRRESP.pd) -> Lay data từ Core B
+                    if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
+                        // If original request was write, go to write-snoop data state
+                        if (is_write_request) begin 
+                            next_state = DATA_WR_SNOOP;
+                        end 
+                        else begin 
+                            next_state = DATA_SNOOP;
+                        end 
                     end 
-                    else begin
-                        next_state = MEM_REQ; 
-                    end
-                
+                    // Neu MISS/CLEAN -> doc tu mem
+                    else begin    
+                        if (is_write_request) begin
+                            next_state = MEM_WR_REQ; 
+                        end 
+                        else begin
+                            next_state = MEM_REQ; 
+                        end
+                    end 
                 end 
-                else if (!grant_s0 && s0_ace_crvalid) begin      
-                    if (is_write_request) begin
-                        next_state = MEM_WR_REQ;
+                else if (!grant_s0 && s0_ace_crvalid) begin
+                    snoop_resp_capt <= s0_ace_crresp; // Capture response
+                    if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin
+                        if (is_write_request) begin
+                            next_state = DATA_WR_SNOOP;
+                        end 
+                        else begin
+                            next_state = DATA_SNOOP;
+                        end
                     end 
-                    else begin
-                        next_state = MEM_REQ;
-                    end
-                 
+                    else begin                  
+                        if (is_write_request) begin
+                            next_state = MEM_WR_REQ;
+                        end 
+                        else begin
+                            next_state = MEM_REQ;
+                        end
+                    end 
                 end
             end
             
@@ -626,7 +650,7 @@ module ace_interconnect #(
                     s0_axi_rdata    = s1_ace_cddata;
                     s0_axi_rlast    = 1'b1;
                     s0_axi_rid      = s0_axi_arid;
-                    s0_axi_rresp    = 2'b00; // OKAY
+                    s0_axi_rresp    = 4'b00; // OKAY
 
                     s0_axi_bvalid   = s1_ace_cdvalid;
                     s0_axi_bresp    = 2'b00;
@@ -638,7 +662,7 @@ module ace_interconnect #(
                     s1_axi_rdata    = s0_ace_cddata;
                     s1_axi_rlast    = 1'b1;
                     s1_axi_rid      = s1_axi_arid;
-                    s1_axi_rresp    = 2'b00; // OKAY
+                    s1_axi_rresp    = 4'b00; // OKAY
 
                     s1_axi_bvalid   = s0_ace_cdvalid;
                     s1_axi_bresp    = 2'b00;
@@ -651,7 +675,30 @@ module ace_interconnect #(
             end
 
             DATA_WR_SNOOP: begin
-                // DATA_WR_SNOOP: snoop CD is used as write data source via m*_wdata_int
+                if (grant_s0) begin
+                    // Forward Snoop Data to Master 0
+                    s0_axi_rvalid   = s1_ace_cdvalid;
+                    s0_axi_rdata    = s1_ace_cddata;
+                    s0_axi_rlast    = 1'b1;
+                    s0_axi_rid      = s0_axi_arid;
+                    s0_axi_rresp    = {snoop_resp_capt[3:2], 2'b00};
+
+                    s0_axi_bvalid   = s1_ace_cdvalid;
+                    s0_axi_bresp    = 2'b00;
+                    s0_axi_bid      = s0_axi_awid;
+                end
+                else begin
+                    // Forward Snoop Data to Master 1
+                    s1_axi_rvalid   = s0_ace_cdvalid;
+                    s1_axi_rdata    = s0_ace_cddata;
+                    s1_axi_rlast    = 1'b1;
+                    s1_axi_rid      = s1_axi_arid;
+                    s1_axi_rresp    = {snoop_resp_capt[3:2], 2'b00};
+
+                    s1_axi_bvalid   = s0_ace_cdvalid;
+                    s1_axi_bresp    = 2'b00;
+                    s1_axi_bid      = s1_axi_awid;
+                end
             end
 
             DATA_SNOOP: begin
@@ -661,7 +708,7 @@ module ace_interconnect #(
                     s0_axi_rdata    = s1_ace_cddata;
                     s0_axi_rlast    = 1'b1;
                     s0_axi_rid      = s0_axi_arid;
-                    s0_axi_rresp    = 2'b00;
+                    s0_axi_rresp    = {snoop_resp_capt[3:2], 2'b00};
                  end 
                  else begin
                     s1_axi_arready  = 1'b1;
@@ -669,7 +716,7 @@ module ace_interconnect #(
                     s1_axi_rdata    = s0_ace_cddata;
                     s1_axi_rlast    = 1'b1;
                     s1_axi_rid      = s1_axi_arid;
-                    s1_axi_rresp    = 2'b00;
+                    s1_axi_rresp    = {snoop_resp_capt[3:2], 2'b00};
                  end
             end
         endcase
