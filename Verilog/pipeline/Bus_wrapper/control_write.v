@@ -83,12 +83,10 @@ module control_write #(
                     if (wvalid && wready) begin
                         case (reg_awburst) 
                             2'b00: reg_addr <= reg_addr; // FIXED
-                            // 2'b01: reg_addr <= reg_addr + (1 << reg_awsize); // INCR
-                            // 2'b10: reg_addr <= reg_addr + (1 << reg_awsize); // WRAP (dang tam thoi de giong INCR)
-
+                            // For INCR/WRAP increment by one word (reg_addr stores word-index)
                             2'b01: reg_addr <= reg_addr + 1'b1; // INCR
-                            2'b10: reg_addr <= reg_addr + 1'b1; // WRAP (dang tam thoi de giong INCR)
-                            default: reg_addr <= reg_addr + (1 << reg_awsize);
+                            2'b10: reg_addr <= reg_addr + 1'b1; // WRAP
+                            default: reg_addr <= reg_addr + 1'b1;
                         endcase
                     end
                 end

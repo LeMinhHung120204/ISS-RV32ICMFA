@@ -79,14 +79,12 @@ module control_read #(
                     if (fifo_r_push_able) begin
                         if (count_addr < reg_arlen) begin
                              count_addr <= count_addr + 1'b1;
-                             case (reg_arburst) 
+                            case (reg_arburst) 
                                 2'b00: reg_addr <= reg_addr; // FIXED
-                                // 2'b01: reg_addr <= reg_addr + (1 << reg_arsize); // INCR
-                                // 2'b10: reg_addr <= reg_addr + (1 << reg_arsize); // WRAP
-                                
+                                // For INCR/WRAP increment by one word (reg_addr stores word-index)
                                 2'b01: reg_addr <= reg_addr + 1'b1; // INCR
                                 2'b10: reg_addr <= reg_addr + 1'b1; // WRAP
-                                default: reg_addr <= reg_addr + (1 << reg_arsize);
+                                default: reg_addr <= reg_addr + 1'b1;
                             endcase
                         end
                         else begin

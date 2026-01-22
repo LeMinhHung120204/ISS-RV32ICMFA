@@ -1,23 +1,32 @@
 `timescale 1ns/1ps
 module ace_interconnect #(
-    parameter ADDR_W = 32,
-    parameter DATA_W = 32, // Cache Line Width (Wide Bus)
-    parameter ID_W   = 2
+    parameter ADDR_W    = 32,
+    parameter DATA_W    = 32, // Cache Line Width (Wide Bus)
+    parameter STRB_W    = DATA_W / 8,
+    parameter ID_W      = 2
 )(
     input clk, rst_n,
 
     // ================= CLIENT 0 (CORE A) =================
     // AR Channel
     input  [ADDR_W-1:0] s0_axi_araddr,
+    input  [7:0]        s0_axi_arlen,
+    input  [2:0]        s0_axi_arsize,
+    input  [1:0]        s0_axi_arburst,
     input  [3:0]        s0_axi_arsnoop,
     input               s0_axi_arvalid,
     output reg          s0_axi_arready,
     // AW/W/B Channel (Write)
     input  [ADDR_W-1:0] s0_axi_awaddr,
+    input  [7:0]        s0_axi_awlen,
+    input  [2:0]        s0_axi_awsize,
+    input  [1:0]        s0_axi_awburst,
     input               s0_axi_awvalid,
     output reg          s0_axi_awready,
 
     input  [DATA_W-1:0] s0_axi_wdata,
+    input  [STRB_W-1:0] s0_axi_wstrb,
+    input               s0_axi_wlast,
     input               s0_axi_wvalid,
     output reg          s0_axi_wready,
 
@@ -45,15 +54,23 @@ module ace_interconnect #(
 
     // ================= CLIENT 1 (CORE B) =================
     input  [ADDR_W-1:0] s1_axi_araddr,
+    input  [7:0]        s1_axi_arlen,
+    input  [2:0]        s1_axi_arsize,
+    input  [1:0]        s1_axi_arburst,
     input  [3:0]        s1_axi_arsnoop,
     input               s1_axi_arvalid,
     output reg          s1_axi_arready,
     // AW/W/B Channel (Write)
     input  [ADDR_W-1:0] s1_axi_awaddr,
+    input  [7:0]        s1_axi_awlen,
+    input  [2:0]        s1_axi_awsize,
+    input  [1:0]        s1_axi_awburst,
     input               s1_axi_awvalid,
     output reg          s1_axi_awready,
 
     input  [DATA_W-1:0] s1_axi_wdata,
+    input  [STRB_W-1:0] s1_axi_wstrb,
+    input               s1_axi_wlast,
     input               s1_axi_wvalid,
     output reg          s1_axi_wready,
 
@@ -78,6 +95,9 @@ module ace_interconnect #(
 
     // ================= MASTER PORT (TO EXTERNAL MEMORY) =================
     output [ADDR_W-1:0] mem_araddr,
+    output [7:0]        mem_arlen,
+    output [2:0]        mem_arsize,
+    output [1:0]        mem_arburst,
     output              mem_arvalid,
     input               mem_arready,
 
@@ -88,10 +108,15 @@ module ace_interconnect #(
 
     // Write channels to memory
     output [ADDR_W-1:0] mem_awaddr,
+    output [7:0]        mem_awlen,
+    output [2:0]        mem_awsize,
+    output [1:0]        mem_awburst,
     output              mem_awvalid,
     input               mem_awready,
 
     output [DATA_W-1:0] mem_wdata,
+    output [STRB_W-1:0] mem_wstrb,
+    output              mem_wlast,
     output              mem_wvalid,
     input               mem_wready,
 
@@ -321,6 +346,18 @@ module ace_interconnect #(
     assign mem_wdata   = mux_s_wdata;
     assign mem_wvalid  = mux_s_wvalid;
     assign mem_bready  = mux_s_bready;
+
+    // AXI 32-bit burst support: Mux length/size/burst from clients
+    assign mem_arlen   = (r_grant0) ? s0_axi_arlen   : s1_axi_arlen;
+    assign mem_arsize  = (r_grant0) ? s0_axi_arsize  : s1_axi_arsize;
+    assign mem_arburst = (r_grant0) ? s0_axi_arburst : s1_axi_arburst;
+
+    assign mem_awlen   = (w_grant0) ? s0_axi_awlen   : s1_axi_awlen;
+    assign mem_awsize  = (w_grant0) ? s0_axi_awsize  : s1_axi_awsize;
+    assign mem_awburst = (w_grant0) ? s0_axi_awburst : s1_axi_awburst;
+
+    assign mem_wlast   = (w_grant0) ? s0_axi_wlast   : s1_axi_wlast;
+    assign mem_wstrb   = (w_grant0) ? s0_axi_wstrb   : s1_axi_wstrb;
 
     always @(*) begin
         next_state = state;

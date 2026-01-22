@@ -189,8 +189,7 @@ module cache_L2_controller #(
             end 
 
             WB_W: begin     
-                // next_state = (iWREADY & (burst_cnt == BURST_LEN)) ? WB_B : WB_W;
-                next_state = (iWREADY) ? WB_B : WB_W;
+                next_state = (iWREADY & (burst_cnt == 4'd15)) ? WB_B : WB_W;
             end 
 
             WB_B: begin
@@ -249,7 +248,7 @@ module cache_L2_controller #(
         stall                   = 1'b0;   
         oAWSNOOP                = 3'b0; 
         oARSNOOP                = 4'b0;
-        oWSTRB                  = 8'b0;
+        oWSTRB                  = {STRB_W{1'b0}};
 
         case(state)
             TAG_CHECK: begin
@@ -274,13 +273,12 @@ module cache_L2_controller #(
             WB_AW: begin 
                 oAWVALID = 1'b1; 
                 oAWSNOOP = 3'b011; 
-                // Assert WLAST only on final beat (burst_cnt == 15)
-                oWLAST  = (burst_cnt == 4'd15);
-                oWVALID = 1'b1; 
-                oWSTRB  = {STRB_W{1'b1}}; 
-                // oWLAST  = (burst_cnt == BURST_LEN); 
-                oWLAST  = 1'b1; 
             end 
+            WB_W: begin
+                oWVALID = 1'b1;
+                oWSTRB  = {STRB_W{1'b1}};
+                oWLAST  = (burst_cnt == 4'd15);
+            end
             WB_B: begin  
                 oBREADY = 1'b1;
             end 

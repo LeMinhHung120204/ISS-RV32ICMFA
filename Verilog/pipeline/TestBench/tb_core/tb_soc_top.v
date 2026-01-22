@@ -9,7 +9,7 @@ module tb_soc_top;
     parameter ADDR_W        = 32;
     parameter DATA_W        = 32; // use 32-bit beats for TB
     parameter STRB_W        = DATA_W/8;
-    parameter RAM_ADDR_W    = 14; // 16K entries (matches temp_mem size)
+    parameter RAM_ADDR_W    = 5; // 16K entries (matches temp_mem size)
 
     // Core start PC parameters (two nearby addresses for easy testing)
     parameter C0_START_PC   = 32'h00000000;
