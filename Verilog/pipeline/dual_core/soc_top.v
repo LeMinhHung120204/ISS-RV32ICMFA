@@ -2,11 +2,29 @@
 
 module soc_top #(
     // Cau hinh core
-    parameter C0_START_PC   = 32'd0,
-    parameter C0_END_PC     = 32'h00000100,
+    parameter MEM_BASE      = 32'h0000_0000,
 
-    parameter C1_START_PC   = 32'h00000100,
-    parameter C1_END_PC     = 32'h00000200,
+    // --- VUNG CHO CORE A ---
+    parameter CODE_A_START  = 32'h0000_0000,
+    parameter CODE_A_END    = 32'h0000_3FFF, 
+    parameter DATA_A_START  = 32'h0000_4000,
+    parameter DATA_A_END    = 32'h0000_7FFF, 
+
+    // --- VUNG CHO CORE B ---
+    parameter CODE_B_START  = 32'h0000_8000,
+    parameter CODE_B_END    = 32'h0000_BFFF, 
+    parameter DATA_B_START  = 32'h0000_C000,
+    parameter DATA_B_END    = 32'h0000_FFFF, 
+
+    // --- VUNG DUNG CHUNG (SHARED) ---
+    parameter SHARED_START  = 32'h0001_0000,
+    parameter SHARED_END    = 32'h0001_7FFF, 
+
+    // parameter C0_START_PC   = 32'd0,
+    // parameter C0_END_PC     = 32'h00000100,
+
+    // parameter C1_START_PC   = 32'h00000100,
+    // parameter C1_END_PC     = 32'h00000200,
 
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
@@ -163,8 +181,12 @@ module soc_top #(
         .NUM_SETS_L2    (NUM_SETS_L2),
         .WORD_OFF_W     (WORD_OFF_W),
         .BYTE_OFF_W     (BYTE_OFF_W),
-        .START_PC       (C0_START_PC),
-        .END_PC         (C0_END_PC)
+        .CODE_START     (CODE_A_START),
+        .CODE_END       (CODE_A_END),
+        .DATA_START     (DATA_A_START),
+        .DATA_END       (DATA_A_END)
+        // .START_PC       (C0_START_PC),
+        // .END_PC         (C0_END_PC)
     ) u_core_A (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),
@@ -230,8 +252,12 @@ module soc_top #(
         .NUM_SETS_L2    (NUM_SETS_L2),
         .WORD_OFF_W     (WORD_OFF_W),
         .BYTE_OFF_W     (BYTE_OFF_W),
-        .START_PC       (C1_START_PC),
-        .END_PC         (C1_END_PC)
+        // .START_PC       (C1_START_PC)
+        // .END_PC         (C1_END_PC)
+        .CODE_START     (CODE_B_START),
+        .CODE_END       (CODE_B_END),
+        .DATA_START     (DATA_B_START),
+        .DATA_END       (DATA_B_END)
     ) u_core_B (
         .ACLK           (ACLK), 
         .ARESETn        (ARESETn),

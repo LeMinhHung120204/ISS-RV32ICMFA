@@ -11,11 +11,24 @@ module tb_soc_top;
     parameter STRB_W        = DATA_W/8;
     parameter RAM_ADDR_W    = 5; // 16K entries (matches temp_mem size)
 
-    // Core start PC parameters (two nearby addresses for easy testing)
-    parameter C0_START_PC   = 32'h00000000;
-    parameter C1_START_PC   = 32'h00000100;
-    parameter C0_END_PC     = C0_START_PC + 32'h00000100;
-    parameter C1_END_PC     = C1_START_PC + 32'h00000100;
+    // Cau hinh core
+    parameter MEM_BASE      = 32'h0000_0000;
+
+    // --- VUNG CHO CORE A ---
+    parameter CODE_A_START  = 32'h0000_0000;
+    parameter CODE_A_END    = 32'h0000_3FFF; 
+    parameter DATA_A_START  = 32'h0000_4000;
+    parameter DATA_A_END    = 32'h0000_7FFF; 
+
+    // --- VUNG CHO CORE B ---
+    parameter CODE_B_START  = 32'h0000_8000;
+    parameter CODE_B_END    = 32'h0000_BFFF; 
+    parameter DATA_B_START  = 32'h0000_C000;
+    parameter DATA_B_END    = 32'h0000_FFFF; 
+
+    // --- VUNG DUNG CHUNG (SHARED) ---
+    parameter SHARED_START  = 32'h0001_0000;
+    parameter SHARED_END    = 32'h0001_7FFF; 
 
     reg ACLK;
     reg ARESETn;
@@ -66,10 +79,16 @@ module tb_soc_top;
     // 2. Instantiate DUT (soc_top)
     // -------------------------------------------------------------------------
     soc_top #(
-        .C0_START_PC    (C0_START_PC),
-        .C0_END_PC      (C0_END_PC),
-        .C1_START_PC    (C1_START_PC),
-        .C1_END_PC      (C1_END_PC)
+        .CODE_A_START     (CODE_A_START),
+        .CODE_A_END       (CODE_A_END),
+        .DATA_A_START     (DATA_A_START),
+        .DATA_A_END       (DATA_A_END),
+        .CODE_B_START     (CODE_B_START),
+        .CODE_B_END       (CODE_B_END),
+        .DATA_B_START     (DATA_B_START),
+        .DATA_B_END       (DATA_B_END),
+        .SHARED_START     (SHARED_START),
+        .SHARED_END       (SHARED_END)
     ) u_soc_top (
         .ACLK         (ACLK),
         .ARESETn      (ARESETn),

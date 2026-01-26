@@ -1,6 +1,8 @@
 `timescale 1ns/1ps
 module arbiter #(
-    parameter ADDR_W = 32
+    parameter ADDR_W        = 32,
+    parameter CODE_START    = 32'h0000_0000, 
+    parameter DATA_START    = 32'h0000_4000
 )(
     input           clk, rst_n,
 
@@ -57,7 +59,8 @@ module arbiter #(
         if (grant_c0) begin
             o_l2_valid      = 1'b1;
             o_l2_cmd        = 2'b00; // I-Cache Read
-            o_l2_addr       = i_c0_req_addr;
+            // o_l2_addr       = i_c0_req_addr;
+            o_l2_addr       = CODE_START | i_c0_req_addr;
 
             // L2 Ready thi C0 cung Ready
             o_c0_req_ready  = i_l2_ready; 
@@ -67,7 +70,7 @@ module arbiter #(
             o_l2_cmd        = i_c1_req_cmd;
             // o_l2_addr       = i_c1_req_addr;
             // o_l2_addr       = {4'h2, i_c1_req_addr[27:0]}; // phan vung icache va dcache
-            o_l2_addr = {20'd0, 1'b1, i_c1_req_addr[10:0]};
+            o_l2_addr       = DATA_START | i_c1_req_addr;
     
             o_c1_req_ready  = i_l2_ready;
         end

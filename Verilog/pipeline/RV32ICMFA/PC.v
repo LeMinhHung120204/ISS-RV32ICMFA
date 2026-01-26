@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 module PC #(
     parameter WIDTH     = 32,
-    parameter START_PC  = 32'd0,
-    parameter END_PC    = 32'd1024
+    parameter START_PC  = 32'd0
+    // parameter END_PC    = 32'd1024
 )(
     input       clk, rst_n, EN,
     input       [WIDTH - 1:0] PCNext,
@@ -13,11 +13,7 @@ module PC #(
             PC <= START_PC;
         end else begin
             if (~EN) begin
-                // wrap back to START_PC when reaching END_PC
-                if (PCNext >= END_PC)
-                    PC <= START_PC;
-                else
-                    PC <= PCNext;
+                PC <= PCNext;
             end
         end
     end

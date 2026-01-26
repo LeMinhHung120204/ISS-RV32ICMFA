@@ -2,8 +2,8 @@
 module RV32IA #(
     parameter WIDTH_DATA    = 32,
     parameter WIDTH_ADDR    = 32,
-    parameter START_PC      = 32'd0,
-    parameter END_PC        = 32'd1024
+    parameter START_PC      = 32'd0
+    // parameter END_PC        = 32'd1024
 )(
     input   clk, rst_n,
     input   test_stall,
@@ -187,8 +187,8 @@ module RV32IA #(
     // ---------------------------------------- IF state ----------------------------------------
     PC #(
         .WIDTH      (WIDTH_ADDR), 
-        .START_PC   (START_PC),
-        .END_PC     (END_PC)
+        .START_PC   (START_PC)
+        // .END_PC     (END_PC)
     ) PC_inst(    
         .clk    (clk),
         .rst_n  (rst_n),

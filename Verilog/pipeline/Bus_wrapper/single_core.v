@@ -5,9 +5,11 @@ module single_core #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
 
-    // Cau hinh PC
-    parameter START_PC      = 32'd0,
-    parameter END_PC        = 32'd1024,
+    // Cau hinh core
+    parameter CODE_START     = 32'h0000_0000,
+    parameter CODE_END       = 32'h0000_3FFF, 
+    parameter DATA_START     = 32'h0000_4000,
+    parameter DATA_END       = 32'h0000_7FFF,
 
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
@@ -129,8 +131,8 @@ module single_core #(
     RV32IA #( 
         .WIDTH_ADDR (ADDR_W), 
         .WIDTH_DATA (DATA_W),
-        .START_PC   (START_PC),
-        .END_PC     (END_PC)
+        .START_PC   (CODE_START)
+        // .END_PC     ()
     ) u_RV32IA (
         .clk            (ACLK), 
         .rst_n          (ARESETn),
@@ -229,7 +231,9 @@ module single_core #(
 
     // ---------------------------------------- ARBITER ----------------------------------------
     arbiter #( 
-        .ADDR_W(ADDR_W) 
+        .ADDR_W     (ADDR_W),
+        .CODE_START (CODE_START),
+        .DATA_START (DATA_START)
     ) u_l2_arbiter (
         .clk        (ACLK), 
         .rst_n      (ARESETn),
