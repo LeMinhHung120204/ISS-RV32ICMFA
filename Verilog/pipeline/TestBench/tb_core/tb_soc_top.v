@@ -2,14 +2,15 @@
 
 module tb_soc_top;
     parameter HEX_FILE = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt"; 
-
+    parameter HEX_A = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.txt";
+    parameter HEX_B = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.txt";
     // -------------------------------------------------------------------------
     // 1. Parameters & Signals
     // -------------------------------------------------------------------------
     parameter ADDR_W        = 32;
     parameter DATA_W        = 32; // use 32-bit beats for TB
     parameter STRB_W        = DATA_W/8;
-    parameter RAM_ADDR_W    = 5; // 16K entries (matches temp_mem size)
+    parameter RAM_ADDR_W    = 14;
 
     // Cau hinh core
     parameter MEM_BASE      = 32'h0000_0000;
@@ -193,31 +194,31 @@ module tb_soc_top;
         ARESETn     = 0;
         c0_stall    = 0;
         c1_stall    = 0;
-        for (i = 0; i < 16384; i = i + 1) begin
-            temp_mem[i] = 32'h0;
+        for (i = 0; i < (1 << RAM_ADDR_W); i = i + 1) begin
+            u_unified_mem.u_DataMem.mem[i] = 32'h0;
         end
 
         #100;
         ARESETn     = 1;
-        c0_stall    = 0;
-        c1_stall    = 1'b1;
-        #20;
 
         $display("--------------------------------------------------");
-        $display("Loading 32-bit Hex File into 32-bit Memory (soc_top TB)...");
+        $display("Loading Multi-Core Hex Files...");
 
-        $readmemh(HEX_FILE, temp_mem);
+        // 2. Nap file cho Core A vào địa chỉ 0x0000
+        $readmemh(HEX_A, u_unified_mem.u_DataMem.mem, 0, 2047); 
 
-        for (i = 0; i < (1 << RAM_ADDR_W); i = i + 1) begin
-            u_unified_mem.u_DataMem.mem[i] = temp_mem[i];
-        end
+        // 3. Nap file cho Core B vào địa chỉ 0x8000
+        $readmemh(HEX_B, u_unified_mem.u_DataMem.mem, 8192, 12287);
 
-        $display("Memory Loaded Successfully.");
+        $display("Core A loaded at 0x0000 (Index 0)");
+        $display("Core B loaded at 0x8000 (Index 8192)");
         $display("--------------------------------------------------");
 
-        $display("[SCENARIO] Running simulation...");
-        #1000;
+        $display("[SCENARIO] Both cores starting...");
+        c0_stall = 0;
+        c1_stall = 0;
 
+        #1000; 
         $display("Simulation Finished.");
         $finish;
     end
@@ -227,15 +228,10 @@ module tb_soc_top;
     // -------------------------------------------------------------------------
     always @(posedge ACLK) begin
         if (m_axi_arvalid && m_axi_arready) begin
-            $display("[AXI-AR] Time=%t | Addr=0x%h", $time, m_axi_araddr);
-        end
-
-        if (m_axi_awvalid && m_axi_awready) begin
-            $display("[AXI-AW] Time=%t | Addr=0x%h", $time, m_axi_awaddr);
-        end
-
-        if (m_axi_rvalid && m_axi_rready && m_axi_rlast) begin
-            $display("[AXI-R ] Time=%t | Data=0x%h... | RRESP=%b", $time, m_axi_rdata, m_axi_rresp);
+            if (m_axi_araddr < 32'h8000)
+                $display("[AXI-AR] Core A Access | Addr=0x%h", m_axi_araddr);
+            else
+                $display("[AXI-AR] Core B Access | Addr=0x%h", m_axi_araddr);
         end
     end
 
