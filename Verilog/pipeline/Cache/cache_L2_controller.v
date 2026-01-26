@@ -252,7 +252,7 @@ module cache_L2_controller #(
 
         case(state)
             TAG_CHECK: begin
-                snoop_can_access_ram = 1'b0;
+                snoop_can_access_ram = 1'b1;
                 
                 if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
                     o_rdata_ready = 1'b1;
