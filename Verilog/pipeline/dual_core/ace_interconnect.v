@@ -16,7 +16,7 @@ module ace_interconnect #(
     input  [1:0]        s0_axi_arburst,
     input  [3:0]        s0_axi_arsnoop,
     input               s0_axi_arvalid,
-    output reg          s0_axi_arready,
+    output              s0_axi_arready,
     // AW/W/B Channel (Write)
     input  [ID_W-1:0]   s0_axi_awid,
     input  [ADDR_W-1:0] s0_axi_awaddr,
@@ -24,7 +24,7 @@ module ace_interconnect #(
     input  [2:0]        s0_axi_awsize,
     input  [1:0]        s0_axi_awburst,
     input               s0_axi_awvalid,
-    output reg          s0_axi_awready,
+    output              s0_axi_awready,
 
     input  [DATA_W-1:0] s0_axi_wdata,
     input  [STRB_W-1:0] s0_axi_wstrb,
@@ -65,7 +65,7 @@ module ace_interconnect #(
     input  [1:0]        s1_axi_arburst,
     input  [3:0]        s1_axi_arsnoop,
     input               s1_axi_arvalid,
-    output reg          s1_axi_arready,
+    output              s1_axi_arready,
     // AW/W/B Channel (Write)
     input  [ID_W-1:0]   s1_axi_awid,
     input  [ADDR_W-1:0] s1_axi_awaddr,
@@ -73,7 +73,7 @@ module ace_interconnect #(
     input  [2:0]        s1_axi_awsize,
     input  [1:0]        s1_axi_awburst,
     input               s1_axi_awvalid,
-    output reg          s1_axi_awready,
+    output              s1_axi_awready,
 
     input  [DATA_W-1:0] s1_axi_wdata,
     input  [STRB_W-1:0] s1_axi_wstrb,
@@ -148,11 +148,18 @@ module ace_interconnect #(
     localparam MEM_WR_REQ       = 3'd6; // Write request to mem
     localparam DATA_WR_SNOOP    = 3'd7; // Write - obtain data from snoop
 
-    reg [2:0] state, next_state;
-    reg grant_s0;
+    reg [2:0]   state, next_state;
+    reg         grant_s0;
+    reg         last_grant; 
+    reg         is_write_request;
+    reg [4:0]   snoop_resp_capt;
 
-    reg is_write_request;
-    reg [4:0] snoop_resp_capt; // Capture snoop response (CRRESP)
+    // Request Buffers 
+    reg [ID_W-1:0]      s0_addr_buf_id,     s1_addr_buf_id;
+    reg [ADDR_W-1:0]    s0_addr_buf_addr,   s1_addr_buf_addr;
+    reg [3:0]           s0_addr_buf_snoop,  s1_addr_buf_snoop;
+    reg                 s0_pending,         s1_pending;
+    reg                 s0_pending_type,    s1_pending_type; // 0: Read, 1: Write
 
     // --------------------------------------------------------
     // Internal wires for arbiter + mux
@@ -215,32 +222,73 @@ module ace_interconnect #(
     assign arb_m1_wvalid    = s1_axi_wvalid  & grant_s1;
 
     // -------------------------------------------------------- ARBITER & STATE MACHINE --------------------------------------------------------
+    
+    // Arbiter Logic: Latch requests into buffers
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            state           <= IDLE;
-            grant_s0        <= 1'b1;
+            s0_pending <= 1'b0;
+            s1_pending <= 1'b0;
+        end 
+        else begin
+            // --- CORE 0 ---
+            // 1. Set Pending: Khi co request moi va Buffer dang trong
+            if ((s0_axi_arvalid || s0_axi_awvalid) && s0_axi_arready) begin
+                s0_pending          <= 1'b1;
+                s0_pending_type     <= s0_axi_awvalid;
+                s0_addr_buf_addr    <= s0_axi_awvalid ? s0_axi_awaddr   : s0_axi_araddr;
+                s0_addr_buf_id      <= s0_axi_awvalid ? s0_axi_awid     : s0_axi_arid;
+                s0_addr_buf_snoop   <= s0_axi_arsnoop;
+            end 
+            // 2. Clear Pending: CHI xoa khi transaction da HOAN TAT (quay ve IDLE)
+            // Dieu kien: Dang khong o IDLE, nhung next_state la IDLE, va Core 0 la nguoi nam quyen
+            else if (state != IDLE && next_state == IDLE && grant_s0) begin
+                s0_pending <= 1'b0;
+            end
+
+            // --- CORE 1 ---
+            // 1. Set Pending
+            if ((s1_axi_arvalid || s1_axi_awvalid) && s1_axi_arready) begin
+                s1_pending          <= 1'b1;
+                s1_pending_type     <= s1_axi_awvalid;
+                s1_addr_buf_addr    <= s1_axi_awvalid ? s1_axi_awaddr : s1_axi_araddr;
+                s1_addr_buf_id      <= s1_axi_awvalid ? s1_axi_awid   : s1_axi_arid;
+                s1_addr_buf_snoop   <= s1_axi_arsnoop;
+            end 
+            // 2. Clear Pending
+            else if (state != IDLE && next_state == IDLE && !grant_s0) begin
+                s1_pending <= 1'b0;
+            end
+        end
+    end
+
+    assign s0_axi_arready = !s0_pending;
+    assign s0_axi_awready = !s0_pending;
+    assign s1_axi_arready = !s1_pending;
+    assign s1_axi_awready = !s1_pending;
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            state       <= IDLE;
+            grant_s0    <= 1'b1;
+            last_grant  <= 1'b1;
         end 
         else begin
             state <= next_state;
-            
-            case(state)
-                IDLE: begin
-                    // Choose grant based on incoming AR or AW (reads or writes)
-                    if (s0_axi_arvalid || s0_axi_awvalid) begin
-                        grant_s0 <= 1'b1;
-                    end 
-                    else if (s1_axi_arvalid || s1_axi_awvalid) begin
-                        grant_s0 <= 1'b0;
-                    end
-                    // Capture whether incoming request is a write
-                    if (s0_axi_awvalid || s1_axi_awvalid) begin
-                        is_write_request <= s0_axi_awvalid; // if core0 AW valid then true else core1
-                    end 
-                    else begin
-                        is_write_request <= 1'b0;
-                    end
+            if (state == IDLE) begin
+                if (s0_pending && s1_pending) begin
+                    grant_s0 <= last_grant; // Round-robin
+                end 
+                else if (s0_pending) begin
+                    grant_s0 <= 1'b1;
+                end 
+                else if (s1_pending) begin
+                    grant_s0 <= 1'b0;
                 end
-            endcase
+                is_write_request <= grant_s0 ? s0_pending_type : s1_pending_type;
+            end 
+            else if (next_state == IDLE) begin
+                last_grant <= ~grant_s0; // Update history for fairness
+            end
         end
     end
 
@@ -249,10 +297,10 @@ module ace_interconnect #(
         .ACLK       (clk),
         .ARESETn    (rst_n),
 
-        .m0_ARVALID (arb_m0_arvalid),
+        .m0_ARVALID (s0_pending && (s0_pending_type == 1'b0)),
         .m0_RREADY  (s0_axi_rready),
 
-        .m1_ARVALID (arb_m1_arvalid),
+        .m1_ARVALID (s1_pending && (s1_pending_type == 1'b0)),
         .m1_RREADY  (s1_axi_rready),
 
         .s_RVALID   (mem_rvalid),
@@ -267,11 +315,11 @@ module ace_interconnect #(
         .ACLK       (clk),
         .ARESETn    (rst_n),
         
-        .m0_AWVALID (arb_m0_awvalid),
+        .m0_AWVALID (s0_pending && (s0_pending_type == 1'b1)),
         .m0_WVALID  (arb_m0_wvalid),
         .m0_BREADY  (s0_axi_bready),
 
-        .m1_AWVALID (arb_m1_awvalid),
+        .m1_AWVALID (s1_pending && (s1_pending_type == 1'b1)),
         .m1_WVALID  (arb_m1_wvalid),
         .m1_BREADY  (s1_axi_bready),
 
@@ -295,9 +343,9 @@ module ace_interconnect #(
         .ID_W  (ID_W)
     ) u_mux_r (
         .clk        (clk), 
-        .m0_arid    (s0_axi_arid), // Added
-        .m0_araddr  (s0_axi_araddr),
-        .m0_arvalid (arb_m0_arvalid),
+        .m0_arid    (s0_addr_buf_id),
+        .m0_araddr  (s0_addr_buf_addr),
+        .m0_arvalid (s0_pending && (s0_pending_type == 1'b0)),
         .m0_arready (mux_m0_arready),
         .m0_rdata   (mux_m0_rdata),
         .m0_rid     (mux_m0_rid),
@@ -306,9 +354,9 @@ module ace_interconnect #(
         .m0_rlast   (mux_m0_rlast),
         .m0_rready  (s0_axi_rready),
 
-        .m1_arid    (s1_axi_arid), // Added
-        .m1_araddr  (s1_axi_araddr),
-        .m1_arvalid (arb_m1_arvalid),
+        .m1_arid    (s1_addr_buf_id), 
+        .m1_araddr  (s1_addr_buf_addr),
+        .m1_arvalid (s1_pending && (s1_pending_type == 1'b0)),
         .m1_arready (mux_m1_arready),
         .m1_rdata   (mux_m1_rdata),
         .m1_rid     (mux_m1_rid),
@@ -317,7 +365,7 @@ module ace_interconnect #(
         .m1_rlast   (mux_m1_rlast),
         .m1_rready  (s1_axi_rready),
 
-        .s_arid     (mux_s_arid), // Added
+        .s_arid     (mux_s_arid), 
         .s_araddr   (mux_s_araddr),
         .s_arvalid  (mux_s_arvalid),
         .s_arready  (mem_arready),
@@ -338,9 +386,9 @@ module ace_interconnect #(
         .ID_W  (ID_W)
     ) u_mux_w (
         .clk        (clk),
-        .m0_awid    (s0_axi_awid), // Added
-        .m0_awaddr  (s0_axi_awaddr),
-        .m0_awvalid (arb_m0_awvalid),
+        .m0_awid    (s0_addr_buf_id), 
+        .m0_awaddr  (s0_addr_buf_addr),
+        .m0_awvalid (s0_pending && (s0_pending_type == 1'b1)),
         .m0_awready (mux_m0_awready),
         .m0_wdata   (m0_wdata_int),
         .m0_wvalid  (m0_wvalid_int),
@@ -350,9 +398,9 @@ module ace_interconnect #(
         .m0_bresp   (mux_m0_bresp),
         .m0_bready  (s0_axi_bready),
 
-        .m1_awid    (s1_axi_awid), // Added
-        .m1_awaddr  (s1_axi_awaddr),
-        .m1_awvalid (arb_m1_awvalid),
+        .m1_awid    (s1_addr_buf_id),
+        .m1_awaddr  (s1_addr_buf_addr),
+        .m1_awvalid (s1_pending && (s1_pending_type == 1'b1)),
         .m1_awready (mux_m1_awready),
         .m1_wdata   (m1_wdata_int),
         .m1_wvalid  (m1_wvalid_int),
@@ -362,7 +410,7 @@ module ace_interconnect #(
         .m1_bresp   (mux_m1_bresp),
         .m1_bready  (s1_axi_bready),
 
-        .s_awid     (mux_s_awid), // Added
+        .s_awid     (mux_s_awid), 
         .s_awaddr   (mux_s_awaddr),
         .s_awvalid  (mux_s_awvalid),
         .s_awready  (mem_awready),
@@ -406,9 +454,13 @@ module ace_interconnect #(
         next_state = state;
         case(state)
             IDLE: begin
-                if (s0_axi_arvalid || s1_axi_arvalid || s0_axi_awvalid || s1_axi_awvalid) begin
+                // if (s0_axi_arvalid || s1_axi_arvalid || s0_axi_awvalid || s1_axi_awvalid) begin
+                //     next_state = SNOOP_REQ;
+                // end 
+
+                if (s0_pending || s1_pending) begin
                     next_state = SNOOP_REQ;
-                end 
+                end
             end
 
             SNOOP_REQ: begin
@@ -424,49 +476,6 @@ module ace_interconnect #(
                     end 
                 end
             end
-
-            // WAIT_CR: begin
-            //     // Buoc 2: Doi phan hoi
-            //     if (grant_s0 && s1_ace_crvalid) begin
-            //         // Neu peer has data (CRRESP.dt or CRRESP.pd) -> Lay data từ Core B
-            //         if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
-            //             // If original request was write, go to write-snoop data state
-            //             if (is_write_request) begin 
-            //                 next_state = DATA_WR_SNOOP;
-            //             end 
-            //             else begin 
-            //                 next_state = DATA_SNOOP;
-            //             end 
-            //         end 
-            //         // Neu MISS/CLEAN -> doc tu mem
-            //         else begin    
-            //             if (is_write_request) begin
-            //                 next_state = MEM_WR_REQ; 
-            //             end 
-            //             else begin
-            //                 next_state = MEM_REQ; 
-            //             end
-            //         end 
-            //     end 
-            //     else if (!grant_s0 && s0_ace_crvalid) begin
-            //         if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin
-            //             if (is_write_request) begin
-            //                 next_state = DATA_WR_SNOOP;
-            //             end 
-            //             else begin
-            //                 next_state = DATA_SNOOP;
-            //             end
-            //         end 
-            //         else begin                  
-            //             if (is_write_request) begin
-            //                 next_state = MEM_WR_REQ;
-            //             end 
-            //             else begin
-            //                 next_state = MEM_REQ;
-            //             end
-            //         end 
-            //     end
-            // end
 
             // testing without snoop hit
             WAIT_CR: begin
@@ -587,7 +596,6 @@ module ace_interconnect #(
     end
     
     always @(*) begin
-        s0_axi_arready  = mux_m0_arready; 
         s0_axi_rvalid   = mux_m0_rvalid; 
         s0_axi_rlast    = mux_m0_rlast; 
         s0_axi_rdata    = mux_m0_rdata;
@@ -595,13 +603,11 @@ module ace_interconnect #(
         s0_axi_rresp    = mux_m0_rresp;
 
         // Write defaults - client 0
-        s0_axi_awready  = mux_m0_awready;
         s0_axi_wready   = mux_m0_wready;
         s0_axi_bvalid   = mux_m0_bvalid;
         s0_axi_bresp    = mux_m0_bresp;
         s0_axi_bid      = mux_m0_bid;
 
-        s1_axi_arready  = mux_m1_arready; 
         s1_axi_rvalid   = mux_m1_rvalid; 
         s1_axi_rlast    = mux_m1_rlast; 
         s1_axi_rdata    = mux_m1_rdata;
@@ -609,7 +615,6 @@ module ace_interconnect #(
         s1_axi_rresp    = mux_m1_rresp;
 
         // Write defaults - client 1
-        s1_axi_awready  = mux_m1_awready;
         s1_axi_wready   = mux_m1_wready;
         s1_axi_bvalid   = mux_m1_bvalid;
         s1_axi_bresp    = mux_m1_bresp;
@@ -627,14 +632,21 @@ module ace_interconnect #(
         case(state)
             SNOOP_REQ: begin
                 if (grant_s0) begin 
+                    // s1_ace_acvalid  = 1'b1;
+                    // s1_ace_acaddr   = (is_write_request) ? s0_axi_awaddr : s0_axi_araddr;
+                    // s1_ace_acsnoop  = s0_axi_arsnoop; 
+
                     s1_ace_acvalid  = 1'b1;
-                    s1_ace_acaddr   = (is_write_request) ? s0_axi_awaddr : s0_axi_araddr;
-                    s1_ace_acsnoop  = s0_axi_arsnoop; 
+                    s1_ace_acaddr   = s0_addr_buf_addr;
+                    s1_ace_acsnoop  = s0_addr_buf_snoop;
                 end 
                 else begin 
+                    // s0_ace_acvalid  = 1'b1;
+                    // s0_ace_acaddr   = (is_write_request) ? s1_axi_awaddr : s1_axi_araddr;
+                    // s0_ace_acsnoop  = s1_axi_arsnoop; 
                     s0_ace_acvalid  = 1'b1;
-                    s0_ace_acaddr   = (is_write_request) ? s1_axi_awaddr : s1_axi_araddr;
-                    s0_ace_acsnoop  = s1_axi_arsnoop; 
+                    s0_ace_acaddr   = s1_addr_buf_addr;
+                    s0_ace_acsnoop  = s1_addr_buf_snoop;
                 end
             end
 
@@ -703,7 +715,6 @@ module ace_interconnect #(
 
             DATA_SNOOP: begin
                  if (grant_s0) begin
-                    s0_axi_arready  = 1'b1; // Ack request xong
                     s0_axi_rvalid   = s1_ace_cdvalid;
                     s0_axi_rdata    = s1_ace_cddata;
                     s0_axi_rlast    = 1'b1;
@@ -711,7 +722,6 @@ module ace_interconnect #(
                     s0_axi_rresp    = {snoop_resp_capt[3:2], 2'b00};
                  end 
                  else begin
-                    s1_axi_arready  = 1'b1;
                     s1_axi_rvalid   = s0_ace_cdvalid;
                     s1_axi_rdata    = s0_ace_cddata;
                     s1_axi_rlast    = 1'b1;

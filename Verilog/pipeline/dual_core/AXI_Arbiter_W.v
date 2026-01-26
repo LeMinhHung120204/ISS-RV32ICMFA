@@ -30,25 +30,33 @@ module AXI_Arbiter_W (
         else begin
             case (cur)
                 M0: begin
-                    if (m0_AWVALID || m0_WVALID) begin
-                        cur <= M0;
-                    end
-                    else if (s_BVALID || m1_AWVALID || m1_WVALID) begin
+                    // if (m0_AWVALID || m0_WVALID) begin
+                    //     cur <= M0;
+                    // end
+                    // else if (s_BVALID || m1_AWVALID || m1_WVALID) begin
+                    //     cur <= M1;
+                    // end
+                    // else begin
+                    //     cur <= M0;
+                    // end
+
+                    if ((s_BVALID && m1_AWVALID) || (!(m0_AWVALID || m0_WVALID) && (m1_AWVALID || m1_WVALID))) begin
                         cur <= M1;
-                    end
-                    else begin
-                        cur <= M0;
                     end
                 end
                 M1: begin
-                    if (m1_AWVALID || m1_WVALID) begin
-                        cur <= M1;
-                    end
-                    else if (s_BVALID || m0_AWVALID || m0_WVALID) begin
+                    // if (m1_AWVALID || m1_WVALID) begin
+                    //     cur <= M1;
+                    // end
+                    // else if (s_BVALID || m0_AWVALID || m0_WVALID) begin
+                    //     cur <= M0;
+                    // end
+                    // else begin
+                    //     cur <= M1;
+                    // end
+
+                    if ((s_BVALID && m0_AWVALID) || (!(m1_AWVALID || m1_WVALID) && (m0_AWVALID || m0_WVALID))) begin
                         cur <= M0;
-                    end
-                    else begin
-                        cur <= M1;
                     end
                 end
             endcase

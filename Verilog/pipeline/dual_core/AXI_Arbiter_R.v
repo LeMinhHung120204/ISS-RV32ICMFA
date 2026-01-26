@@ -29,25 +29,33 @@ module AXI_Arbiter_R (
 		else begin
 			case (cur)
 				M0: begin
-					if (m0_ARVALID) begin 
-						cur <= M0;
-					end
-					else if ((s_RLAST && s_RVALID) || m1_ARVALID) begin
+					// if (m0_ARVALID) begin 
+					// 	cur <= M0;
+					// end
+					// else if ((s_RLAST && s_RVALID) || m1_ARVALID) begin
+					// 	cur <= M1;
+					// end
+					// else begin
+					// 	cur <= M0;
+					// end
+
+					if ((s_RLAST && s_RVALID && m1_ARVALID) || (!m0_ARVALID && m1_ARVALID)) begin
 						cur <= M1;
-					end
-					else begin
-						cur <= M0;
 					end
 				end
 				M1: begin
-					if (m1_ARVALID) begin
-						cur <= M1;
-					end
-					else if ((s_RLAST && s_RVALID) || m0_ARVALID) begin
+					// if (m1_ARVALID) begin
+					// 	cur <= M1;
+					// end
+					// else if ((s_RLAST && s_RVALID) || m0_ARVALID) begin
+					// 	cur <= M0;
+					// end
+					// else begin
+					// 	cur <= M1;
+					// end
+
+					if ((s_RLAST && s_RVALID && m0_ARVALID) || (!m1_ARVALID && m0_ARVALID)) begin
 						cur <= M0;
-					end
-					else begin
-						cur <= M1;
 					end
 				end
 			endcase
