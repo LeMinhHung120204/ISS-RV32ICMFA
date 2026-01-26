@@ -379,28 +379,28 @@ module ace_interconnect #(
     );
 
     // Connect mux slave-side nets to top-level memory signals
-    assign mem_araddr  = mux_s_araddr;
-    assign mem_arid    = mux_s_arid; // Added
-    assign mem_arvalid = mux_s_arvalid;
-    assign mem_rready  = mux_s_rready;
-    assign mem_awaddr  = mux_s_awaddr;
-    assign mem_awid    = mux_s_awid; // Added
-    assign mem_awvalid = mux_s_awvalid;
-    assign mem_wdata   = mux_s_wdata;
-    assign mem_wvalid  = mux_s_wvalid;
-    assign mem_bready  = mux_s_bready;
+    assign mem_araddr   = mux_s_araddr;
+    assign mem_arid     = mux_s_arid; 
+    assign mem_arvalid  = mux_s_arvalid;
+    assign mem_rready   = mux_s_rready;
+    assign mem_awaddr   = mux_s_awaddr;
+    assign mem_awid     = mux_s_awid; 
+    assign mem_awvalid  = mux_s_awvalid;
+    assign mem_wdata    = mux_s_wdata;
+    assign mem_wvalid   = mux_s_wvalid;
+    assign mem_bready   = mux_s_bready;
 
     // AXI 32-bit burst support: Mux length/size/burst from clients
-    assign mem_arlen   = (r_grant0) ? s0_axi_arlen   : s1_axi_arlen;
-    assign mem_arsize  = (r_grant0) ? s0_axi_arsize  : s1_axi_arsize;
-    assign mem_arburst = (r_grant0) ? s0_axi_arburst : s1_axi_arburst;
+    assign mem_arlen    = (r_grant0) ? s0_axi_arlen   : s1_axi_arlen;
+    assign mem_arsize   = (r_grant0) ? s0_axi_arsize  : s1_axi_arsize;
+    assign mem_arburst  = (r_grant0) ? s0_axi_arburst : s1_axi_arburst;
 
-    assign mem_awlen   = (w_grant0) ? s0_axi_awlen   : s1_axi_awlen;
-    assign mem_awsize  = (w_grant0) ? s0_axi_awsize  : s1_axi_awsize;
-    assign mem_awburst = (w_grant0) ? s0_axi_awburst : s1_axi_awburst;
+    assign mem_awlen    = (w_grant0) ? s0_axi_awlen   : s1_axi_awlen;
+    assign mem_awsize   = (w_grant0) ? s0_axi_awsize  : s1_axi_awsize;
+    assign mem_awburst  = (w_grant0) ? s0_axi_awburst : s1_axi_awburst;
 
-    assign mem_wlast   = (w_grant0) ? s0_axi_wlast   : s1_axi_wlast;
-    assign mem_wstrb   = (w_grant0) ? s0_axi_wstrb   : s1_axi_wstrb;
+    assign mem_wlast    = (w_grant0) ? s0_axi_wlast   : s1_axi_wlast;
+    assign mem_wstrb    = (w_grant0) ? s0_axi_wstrb   : s1_axi_wstrb;
 
     always @(*) begin
         next_state = state;
