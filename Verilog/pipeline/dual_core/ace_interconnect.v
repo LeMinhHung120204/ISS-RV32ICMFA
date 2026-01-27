@@ -142,7 +142,7 @@ module ace_interconnect #(
     localparam IDLE             = 3'd0;
     localparam SNOOP_REQ        = 3'd1; // Gui lenh snoop sang core kia
     localparam WAIT_CR          = 3'd2; // doi core kia check tag xong
-    localparam MEM_REQ          = 3'd3;
+    localparam MEM_REQ          = 3'd3; // gui request xuong mem
     localparam DATA_MEM         = 3'd4; // Miss snoop -> Lay data tu mem
     localparam DATA_SNOOP       = 3'd5; // Hit snoop -> Lay data tu Core kia
     localparam MEM_WR_REQ       = 3'd6; // Write request to mem
@@ -336,6 +336,9 @@ module ace_interconnect #(
     assign m1_wdata_int     = s1_axi_wdata;
     assign m1_wvalid_int    = s1_axi_wvalid & ~grant_s0;
 
+    wire m0_rready_gated = s0_axi_rready && (state == DATA_MEM);
+    wire m1_rready_gated = s1_axi_rready && (state == DATA_MEM);
+
     // Instantiate master muxes
     AXI_Master_Mux_R #(
         .ADDR_W(ADDR_W), 
@@ -352,7 +355,8 @@ module ace_interconnect #(
         .m0_rresp   (mux_m0_rresp),
         .m0_rvalid  (mux_m0_rvalid),
         .m0_rlast   (mux_m0_rlast),
-        .m0_rready  (s0_axi_rready),
+        // .m0_rready  (s0_axi_rready),
+        .m0_rready  (m0_rready_gated),
 
         .m1_arid    (s1_addr_buf_id), 
         .m1_araddr  (s1_addr_buf_addr),
@@ -363,7 +367,8 @@ module ace_interconnect #(
         .m1_rresp   (mux_m1_rresp),
         .m1_rvalid  (mux_m1_rvalid),
         .m1_rlast   (mux_m1_rlast),
-        .m1_rready  (s1_axi_rready),
+        // .m1_rready  (s1_axi_rready),
+        .m1_rready  (m1_rready_gated),
 
         .s_arid     (mux_s_arid), 
         .s_araddr   (mux_s_araddr),

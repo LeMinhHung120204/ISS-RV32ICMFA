@@ -188,6 +188,7 @@ module DataMem_wrapper #(
         .fifo_r_pop_able    (~fifo_r_empty),    // R_FIFO con' data thi moi doc tu fifo ra AXI
         
         // Memory Interface
+        .fifo_ar_full       (fifo_ar_full),
         .r_addr             (cnt_addr_read),
         .read_en            (core_read_en),
         .rvalid_from_mem    (rvalid_from_mem),

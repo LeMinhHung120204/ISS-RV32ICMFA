@@ -20,6 +20,7 @@ module control_read #(
     output reg                          last_data_from_mem,
 
     // Memory Interface
+    input                               fifo_ar_full,
     output      [DATA_W-1:0]            r_addr,
     output reg                          read_en
 );
@@ -37,18 +38,29 @@ module control_read #(
     reg [7:0]       reg_arlen;
 
     // ---------------------------------------- ARREADY LOGIC ----------------------------------------
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (!rst_n) arready <= 1'b0;
+    //     else begin
+    //         if (state == IDLE && !arvalid) begin
+    //             arready <= 1'b1;
+    //         end 
+    //         else if (arvalid && arready) begin   
+    //             arready <= 1'b0; 
+    //         end 
+    //         else if (state != IDLE) begin        
+    //             arready <= 1'b0;
+    //         end 
+    //     end
+    // end
+
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) arready <= 1'b0;
+        if (!rst_n) 
+            arready <= 1'b0;
         else begin
-            if (state == IDLE && !arvalid) begin
+            if (state == IDLE && ~fifo_ar_full) 
                 arready <= 1'b1;
-            end 
-            else if (arvalid && arready) begin   
-                arready <= 1'b0; 
-            end 
-            else if (state != IDLE) begin        
+            else 
                 arready <= 1'b0;
-            end 
         end
     end
 
