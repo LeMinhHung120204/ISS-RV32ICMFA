@@ -40,7 +40,7 @@ module AXI_Arbiter_W (
                     //     cur <= M0;
                     // end
 
-                    if ((s_BVALID && m1_AWVALID) || (!(m0_AWVALID || m0_WVALID) && (m1_AWVALID || m1_WVALID))) begin
+                    if ((s_BVALID && m1_AWVALID) || (~(m0_AWVALID || m0_WVALID) && (m1_AWVALID || m1_WVALID))) begin
                         cur <= M1;
                     end
                 end
@@ -55,7 +55,7 @@ module AXI_Arbiter_W (
                     //     cur <= M1;
                     // end
 
-                    if ((s_BVALID && m0_AWVALID) || (!(m1_AWVALID || m1_WVALID) && (m0_AWVALID || m0_WVALID))) begin
+                    if ((s_BVALID && m0_AWVALID) || (~(m1_AWVALID || m1_WVALID) && (m0_AWVALID || m0_WVALID))) begin
                         cur <= M0;
                     end
                 end

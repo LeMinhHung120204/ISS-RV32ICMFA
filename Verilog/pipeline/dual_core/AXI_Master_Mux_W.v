@@ -6,7 +6,6 @@ module AXI_Master_Mux_W #(
     parameter DATA_W = 64,
     parameter ID_W   = 2
 ) (
-    input clk,
     // Master 0 AW/W/B
     input  [ID_W-1:0]   m0_awid,
     input  [ADDR_W-1:0] m0_awaddr,

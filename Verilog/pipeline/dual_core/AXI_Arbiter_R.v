@@ -39,7 +39,7 @@ module AXI_Arbiter_R (
 					// 	cur <= M0;
 					// end
 
-					if ((s_RLAST && s_RVALID && m1_ARVALID) || (!m0_ARVALID && m1_ARVALID)) begin
+					if ((s_RLAST && s_RVALID && m1_ARVALID) || (~m0_ARVALID && m1_ARVALID)) begin
 						cur <= M1;
 					end
 				end
@@ -54,7 +54,7 @@ module AXI_Arbiter_R (
 					// 	cur <= M1;
 					// end
 
-					if ((s_RLAST && s_RVALID && m0_ARVALID) || (!m1_ARVALID && m0_ARVALID)) begin
+					if ((s_RLAST && s_RVALID && m0_ARVALID) || (~m1_ARVALID && m0_ARVALID)) begin
 						cur <= M0;
 					end
 				end

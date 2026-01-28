@@ -345,7 +345,6 @@ module ace_interconnect #(
         .DATA_W(DATA_W),
         .ID_W  (ID_W)
     ) u_mux_r (
-        .clk        (clk), 
         .m0_arid    (s0_addr_buf_id),
         .m0_araddr  (s0_addr_buf_addr),
         .m0_arvalid (s0_pending && (s0_pending_type == 1'b0) && (state == MEM_REQ)),
@@ -390,7 +389,6 @@ module ace_interconnect #(
         .DATA_W(DATA_W),
         .ID_W  (ID_W)
     ) u_mux_w (
-        .clk        (clk),
         .m0_awid    (s0_addr_buf_id), 
         .m0_awaddr  (s0_addr_buf_addr),
         .m0_awvalid (s0_pending && (s0_pending_type == 1'b1) && (state == MEM_WR_REQ)),
