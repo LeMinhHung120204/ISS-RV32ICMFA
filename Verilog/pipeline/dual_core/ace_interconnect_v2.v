@@ -65,7 +65,7 @@ module ace_interconnect_v2 #(
     input   [2:0]           s1_axi_arsize,
     input   [1:0]           s1_axi_arburst,
     input   [3:0]           s1_axi_arsnoop,
-    input   [2:0]   s1_axi_awsnoop,
+    input   [2:0]           s1_axi_awsnoop,
     input                   s1_axi_arvalid,
     output                  s1_axi_arready,
 
@@ -155,6 +155,7 @@ module ace_interconnect_v2 #(
     // Write States
     localparam W_MEM_REQ    = 3'd3;
     localparam W_DATA_SNOOP = 3'd4;
+    localparam W_WAIT_B     = 3'd5;
 
     reg [2:0] r_state, r_next_state;
     reg [2:0] w_state, w_next_state;
@@ -298,6 +299,7 @@ module ace_interconnect_v2 #(
             end
 
             WAIT_CR: begin
+                // Core 0
                 if (grant_r_s0 && s1_ace_crvalid) begin
                     if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
                         r_next_state = R_DATA_SNOOP; // HIT/DIRTY
@@ -306,6 +308,8 @@ module ace_interconnect_v2 #(
                         r_next_state = R_MEM_REQ;    // MISS/CLEAN
                     end 
                 end 
+
+                // Core 1
                 else if (!grant_r_s0 && s0_ace_crvalid) begin
                     if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin 
                         r_next_state = R_DATA_SNOOP;
@@ -347,6 +351,7 @@ module ace_interconnect_v2 #(
     end
 
     // Capture Read Snoop Response
+    // Hien tai chua dung
     always @(posedge clk) begin
         if (~rst_n) begin
             r_snoop_resp_capt <= 5'd0;
@@ -411,13 +416,7 @@ module ace_interconnect_v2 #(
                 end
             end
 
-            WAIT_CR: begin
-                // Write Snoop Logic: 
-                // Normally WriteUnique/WriteLineUnique. 
-                // If Hit -> Peer invalidates line. If Dirty -> Peer sends data (Ownership transfer).
-                // Here we assume: If Peer sends Data (CD), we forward it to requester (Write Data Snoop), then IDLE (assuming WriteAllocate handled internally or we write to Mem)
-                // If Miss -> Go to Mem Write.
-                
+            WAIT_CR: begin                
                 if (grant_w_s0 && s1_ace_crvalid) begin
                     if (s1_ace_crresp[2]) begin 
                         w_next_state = W_DATA_SNOOP; // Peer has Dirty data
@@ -438,16 +437,13 @@ module ace_interconnect_v2 #(
 
             W_MEM_REQ: begin
                 if (mem_awready) begin 
-                    // Assume W Channel (Write Data) is handled by Mux autonomously once AW is accepted?
-                    // Or we wait for BVALID? Let's wait for BVALID to ensure completion.
-                    // But in AXI, AW and W are decoupled. Mux handles W data.
-                    // We wait for BVALID here to close transaction.
+                    w_next_state = W_WAIT_B; 
                 end
-                // CHECK MUX: The Mux waits for BVALID. We can just transition to IDLE once AW is sent?
-                // No, we should wait until the transaction is "Done" to clear pending.
-                // In AXI_Master_Mux_W, bvalid comes back.
-                if (mem_bvalid && mem_bready) begin 
-                    w_next_state = IDLE; 
+            end
+
+            W_WAIT_B: begin
+                if (mem_bvalid && mem_bready) begin
+                    w_next_state = IDLE;
                 end
             end
 
@@ -478,28 +474,28 @@ module ace_interconnect_v2 #(
         s1_ace_acaddr   = 0; 
         s1_ace_acsnoop  = 0;
         
-        // --- Drive AC to CORE 0 (Requester is Core 1) ---
+        // --- Snoop toi CORE 0 ---
         if (!grant_r_s0 && r_state == SNOOP_REQ) begin
             s0_ace_acvalid  = 1'b1;
             s0_ace_acaddr   = s1_ar_addr;
             s0_ace_acsnoop  = s1_ar_snoop;
         end 
         else if (!grant_w_s0 && w_state == SNOOP_REQ) begin
-            s0_ace_acvalid  = 1'b1;
-            s0_ace_acaddr   = s1_aw_addr;
-            s0_ace_acsnoop  = 0;
+            // write back nen khong can gui snoop
+            s0_ace_acvalid  = 1'b0; 
+            s0_ace_acsnoop  = 4'b0000;
         end
 
-        // --- Drive AC to CORE 1 (Requester is Core 0) ---
+        // --- Snoop toi CORE 1 ---
         if (grant_r_s0 && r_state == SNOOP_REQ) begin
             s1_ace_acvalid  = 1'b1;
             s1_ace_acaddr   = s0_ar_addr;
             s1_ace_acsnoop  = s0_ar_snoop;
         end 
         else if (grant_w_s0 && w_state == SNOOP_REQ) begin
-            s1_ace_acvalid  = 1'b1;
-            s1_ace_acaddr   = s0_aw_addr;
-            s1_ace_acsnoop  = 0; 
+            // write back nen khong can gui snoop
+            s1_ace_acvalid  = 1'b0;
+            s1_ace_acsnoop  = 4'b0000;
         end
     end
 
@@ -559,7 +555,7 @@ module ace_interconnect_v2 #(
         .m0_awvalid (s0_pending_w && (w_state == W_MEM_REQ)),
         .m0_awready (),                                         // khong dung mux awready cho nay
         .m0_wdata   (s0_axi_wdata), 
-        .m0_wvalid  (s0_axi_wvalid),
+        .m0_wvalid  (s0_axi_wvalid && (w_state == W_MEM_REQ || w_state == W_WAIT_B)),
         .m0_wready  (s0_axi_wready),
         .m0_bvalid  (s0_axi_bvalid),
         .m0_bid     (s0_axi_bid),
@@ -571,7 +567,7 @@ module ace_interconnect_v2 #(
         .m1_awvalid (s1_pending_w && (w_state == W_MEM_REQ)),
         .m1_awready (),
         .m1_wdata   (s1_axi_wdata),
-        .m1_wvalid  (s1_axi_wvalid),
+        .m1_wvalid  (s1_axi_wvalid && (w_state == W_MEM_REQ || w_state == W_WAIT_B)),
         .m1_wready  (s1_axi_wready),
         .m1_bvalid  (s1_axi_bvalid),
         .m1_bid     (s1_axi_bid),

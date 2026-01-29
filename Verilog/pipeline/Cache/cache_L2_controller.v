@@ -144,38 +144,59 @@ module cache_L2_controller #(
     always @(*) begin
         next_state = state;
         case(state)
+            // TAG_CHECK: begin
+            //     if (~snoop_busy && i_req_valid) begin
+            //         // Case: L1 Writeback (Evict)
+            //         if (i_req_cmd == CMD_WRITE) begin
+            //             if (hit && need_upgrade) begin
+            //                 // Hit nhung quyen Share -> Phai ra Bus xin quyen Unique truoc
+            //                 next_state = ALLOC_AR; 
+            //             end
+            //             // Neu L2 Miss nhung Victim Dirty -> Phai WB Victim truoc
+            //             else if (~hit && is_valid && victim_dirty) begin 
+            //                 next_state = WB_AW; 
+            //             end
+            //             else begin                                 
+            //                 next_state = L1_WB_RX; // Nhan data lun
+            //             end 
+            //         end
+            //         // Case: L1 Read (Refill)
+            //         else begin
+            //             if (hit) begin 
+            //                 next_state = TAG_CHECK;
+            //             end 
+            //             else begin
+            //                 if ((~is_valid) || (~victim_dirty)) begin 
+            //                     next_state = ALLOC_AR;
+            //                 end 
+            //                 else begin                                
+            //                     next_state = WB_AW;    
+            //                 end 
+            //             end 
+            //         end
+            //     end 
+            // end 
+
             TAG_CHECK: begin
                 if (~snoop_busy && i_req_valid) begin
-                    // Case: L1 Writeback (Evict)
-                    if (i_req_cmd == CMD_WRITE) begin
-                        if (hit && need_upgrade) begin
-                            // Hit nhung quyen Share -> Phai ra Bus xin quyen Unique truoc
-                            next_state = ALLOC_AR; 
-                        end
-                        // Neu L2 Miss nhung Victim Dirty -> Phai WB Victim truoc
-                        else if (~hit && is_valid && victim_dirty) begin 
-                            next_state = WB_AW; 
-                        end
-                        else begin                                 
-                            next_state = L1_WB_RX; // Nhan data lun
+                    if (hit) begin
+                        if (i_req_cmd == CMD_WRITE && need_upgrade) begin
+                            next_state = ALLOC_AR; // Hit Shared -> Xin quyen Unique
                         end 
+                        else if (i_req_cmd == CMD_WRITE)
+                            next_state = L1_WB_RX; // Hit Exclusive/Modified -> Nhan data ghi lun
+                        else
+                            next_state = TAG_CHECK; // Read Hit -> Xong
+                    end 
+                    else begin // MISS
+                        if (is_valid && victim_dirty) begin
+                            next_state = WB_AW;    // write back
+                        end 
+                        else 
+                            next_state = ALLOC_AR; // allocate (ReadUnique/ReadShared)
                     end
-                    // Case: L1 Read (Refill)
-                    else begin
-                        if (hit) begin 
-                            next_state = TAG_CHECK;
-                        end 
-                        else begin
-                            if ((~is_valid) || (~victim_dirty)) begin 
-                                next_state = ALLOC_AR;
-                            end 
-                            else begin                                
-                                next_state = WB_AW;    
-                            end 
-                        end 
-                    end
-                end 
-            end 
+                end
+            end
 
             // --- L1 Writeback Receiver ---
             L1_WB_RX: begin
@@ -272,8 +293,8 @@ module cache_L2_controller #(
 
             WB_AW: begin 
                 oAWVALID = 1'b1; 
-                oAWSNOOP = 3'b011; 
-            end 
+                oAWSNOOP = 3'b011; // WriteBack
+            end
             WB_W: begin
                 oWVALID = 1'b1;
                 oWSTRB  = {STRB_W{1'b1}};
