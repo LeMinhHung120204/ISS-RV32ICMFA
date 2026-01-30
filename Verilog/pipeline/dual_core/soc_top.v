@@ -3,6 +3,7 @@
 module soc_top #(
     // Cau hinh core
     parameter MEM_BASE      = 32'h0000_0000,
+    parameter ID_W          = 1, // 2 cores
 
     // --- VUNG CHO CORE A ---
     parameter CODE_A_START  = 32'h0000_0000,
@@ -76,98 +77,100 @@ module soc_top #(
 
     // INTERNAL WIRES
     // ------------------- CORE A INTERFACE -------------------
-    wire [1:0]   c0_arid;   
-    wire [31:0]  c0_araddr;
-    wire [3:0]   c0_arsnoop;
-    wire         c0_arvalid, c0_arready;
-    wire [1:0]   c0_rid;    
-    wire [DATA_W-1:0] c0_rdata;
-    wire [3:0]   c0_rresp;  
-    wire         c0_rvalid, c0_rlast, c0_rready;
-    wire [31:0]  c0_acaddr;
-    wire [3:0]   c0_acsnoop;
-    wire         c0_acvalid, c0_acready;
-    wire         c0_crvalid;
-    wire [4:0]   c0_crresp;
-    wire         c0_crready = 1'b1; 
-    wire [DATA_W-1:0] c0_cddata;
-    wire         c0_cdvalid, c0_cdlast;
-    wire         c0_cdready = 1'b1; 
+    wire [ID_W-1:0]     c0_arid;   
+    wire [31:0]         c0_araddr;
+    wire [3:0]          c0_arsnoop;
+    wire                c0_arvalid, c0_arready;
+    wire [ID_W-1:0]     c0_rid;    
+    wire [DATA_W-1:0]   c0_rdata;
+    wire [3:0]          c0_rresp;  
+    wire                c0_rvalid, c0_rlast, c0_rready;
+    wire [31:0]         c0_acaddr;
+    wire [3:0]          c0_acsnoop;
+    wire                c0_acvalid, c0_acready;
+    wire                c0_crvalid;
+    wire [4:0]          c0_crresp;
+    wire                c0_crready = 1'b1; 
+    wire [DATA_W-1:0]   c0_cddata;
+    wire                c0_cdvalid, c0_cdlast;
+    wire                c0_cdready = 1'b1; 
 
     // Write channel wires for core0
-    wire [1:0]   c0_awid;   
-    wire [31:0]  c0_awaddr;
-    wire [7:0]   c0_awlen, c0_arlen;
-    wire [2:0]   c0_awsize, c0_arsize;
-    wire [1:0]   c0_awburst, c0_arburst;
-    wire         c0_awvalid, c0_awready;
-    wire [DATA_W-1:0] c0_wdata;
-    wire [STRB_W-1:0] c0_wstrb;
-    wire         c0_wlast;
-    wire         c0_wvalid, c0_wready;
-    wire [1:0]   c0_bid;    
-    wire         c0_bvalid;
-    wire [1:0]   c0_bresp;
-    wire         c0_bready;
+    wire [ID_W-1:0]     c0_awid;   
+    wire [31:0]         c0_awaddr;
+    wire [2:0]          c0_awsnoop;
+    wire [7:0]          c0_awlen, c0_arlen;
+    wire [2:0]          c0_awsize, c0_arsize;
+    wire [1:0]          c0_awburst, c0_arburst;
+    wire                c0_awvalid, c0_awready;
+    wire [DATA_W-1:0]   c0_wdata;
+    wire [STRB_W-1:0]   c0_wstrb;
+    wire                c0_wlast;
+    wire                c0_wvalid, c0_wready;
+    wire [ID_W-1:0]     c0_bid;    
+    wire                c0_bvalid;
+    wire [1:0]          c0_bresp;
+    wire                c0_bready;
 
     // ------------------- CORE B INTERFACE -------------------
-    wire [1:0]   c1_arid;   
-    wire [31:0]  c1_araddr;
-    wire [3:0]   c1_arsnoop;
-    wire         c1_arvalid, c1_arready;
-    wire [1:0]   c1_rid;    
-    wire [DATA_W-1:0] c1_rdata;
-    wire [3:0]   c1_rresp;  
-    wire         c1_rvalid, c1_rlast, c1_rready;
-    wire [31:0]  c1_acaddr;
-    wire [3:0]   c1_acsnoop;
-    wire         c1_acvalid, c1_acready;
-    wire         c1_crvalid;
-    wire [4:0]   c1_crresp;
-    wire         c1_crready = 1'b1;
-    wire [DATA_W-1:0] c1_cddata;
-    wire         c1_cdvalid, c1_cdlast;
-    wire         c1_cdready = 1'b1; 
+    wire [ID_W-1:0]     c1_arid;   
+    wire [31:0]         c1_araddr;
+    wire [3:0]          c1_arsnoop;
+    wire                c1_arvalid, c1_arready;
+    wire [ID_W-1:0]     c1_rid;    
+    wire [DATA_W-1:0]   c1_rdata;
+    wire [3:0]          c1_rresp;  
+    wire                c1_rvalid, c1_rlast, c1_rready;
+    wire [31:0]         c1_acaddr;
+    wire [3:0]          c1_acsnoop;
+    wire                c1_acvalid, c1_acready;
+    wire                c1_crvalid;
+    wire [4:0]          c1_crresp;
+    wire                c1_crready = 1'b1;
+    wire [DATA_W-1:0]   c1_cddata;
+    wire                c1_cdvalid, c1_cdlast;
+    wire                c1_cdready = 1'b1; 
 
     // Write channel wires for core1
-    wire [1:0]   c1_awid;   
-    wire [31:0]  c1_awaddr;
-    wire [7:0]   c1_awlen, c1_arlen;
-    wire [2:0]   c1_awsize, c1_arsize;
-    wire [1:0]   c1_awburst, c1_arburst;
-    wire         c1_awvalid, c1_awready;
-    wire [DATA_W-1:0] c1_wdata;
-    wire [STRB_W-1:0] c1_wstrb;
-    wire         c1_wlast;
-    wire         c1_wvalid, c1_wready;
-    wire [1:0]   c1_bid;    
-    wire         c1_bvalid;
-    wire [1:0]   c1_bresp;
-    wire         c1_bready;
+    wire [ID_W-1:0]     c1_awid;   
+    wire [31:0]         c1_awaddr;
+    wire [2:0]          c1_awsnoop;
+    wire [7:0]          c1_awlen, c1_arlen;
+    wire [2:0]          c1_awsize, c1_arsize;
+    wire [1:0]          c1_awburst, c1_arburst;
+    wire                c1_awvalid, c1_awready;
+    wire [DATA_W-1:0]   c1_wdata;
+    wire [STRB_W-1:0]   c1_wstrb;
+    wire                c1_wlast;
+    wire                c1_wvalid, c1_wready;
+    wire [ID_W-1:0]     c1_bid;    
+    wire                c1_bvalid;
+    wire [1:0]          c1_bresp;
+    wire                c1_bready;
 
     // --- Memory bridge wires (connect interconnect <-> top-level external AXI fields)
-    wire [1:0]   mem_arid;  
-    wire [31:0]  mem_araddr;
-    wire [7:0]   mem_arlen, mem_awlen;
-    wire [2:0]   mem_arsize, mem_awsize;
-    wire [1:0]   mem_arburst, mem_awburst;
-    wire         mem_arvalid, mem_arready;
-    wire [1:0]   mem_rid;   
-    wire [DATA_W-1:0] mem_rdata;
-    wire [3:0]   mem_rresp; 
-    wire         mem_rvalid, mem_rlast, mem_rready;
+    wire [ID_W-1:0]     mem_arid;  
+    wire [31:0]         mem_araddr;
+    wire [7:0]          mem_arlen, mem_awlen;
+    wire [2:0]          mem_arsize, mem_awsize;
+    wire [1:0]          mem_arburst, mem_awburst;
+    wire                mem_arvalid, mem_arready;
+    wire [ID_W-1:0]     mem_rid;   
+    wire [DATA_W-1:0]   mem_rdata;
+    wire [3:0]          mem_rresp; 
+    wire                mem_rvalid, mem_rlast, mem_rready;
 
-    wire [1:0]   mem_awid;  
-    wire [31:0]  mem_awaddr;
-    wire         mem_awvalid, mem_awready;
-    wire [DATA_W-1:0] mem_wdata;
-    wire [STRB_W-1:0] mem_wstrb;
-    wire         mem_wlast;
-    wire         mem_wvalid, mem_wready;
-    wire [1:0]   mem_bid;   
-    wire         mem_bvalid;
-    wire [1:0]   mem_bresp;
-    wire         mem_bready;
+    wire [ID_W-1:0]     mem_awid;  
+    wire [31:0]         mem_awaddr;
+    wire                mem_awvalid, mem_awready;
+    wire [DATA_W-1:0]   mem_wdata;
+    wire [STRB_W-1:0]   mem_wstrb;
+    wire                mem_wlast;
+    wire                mem_wvalid, mem_wready;
+    wire [ID_W-1:0]     mem_bid;   
+    wire                mem_bvalid;
+    wire [1:0]          mem_bresp;
+    wire                mem_bready;
 
     // compute AXI size field from DATA_W/STRB_W
     localparam [2:0] AW_SIZE = $clog2(STRB_W);
@@ -175,7 +178,8 @@ module soc_top #(
 
     // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
     single_core #( 
-        .CORE_ID        (0),
+        .ID_W           (ID_W),
+        .CORE_ID        (1'b0),
         .NUM_WAYS       (NUM_WAYS  ),
         .NUM_SETS       (NUM_SETS  ),
         .NUM_SETS_L2    (NUM_SETS_L2),
@@ -198,6 +202,7 @@ module soc_top #(
         .m_axi_awlen    (c0_awlen),
         .m_axi_awsize   (c0_awsize),
         .m_axi_awburst  (c0_awburst),
+        .m_axi_awsnoop  (c0_awsnoop),
         .m_axi_awvalid  (c0_awvalid),
         .m_axi_awready  (c0_awready),
 
@@ -246,7 +251,8 @@ module soc_top #(
 
     // ------------------- INSTANTIATE CORE B (ID = 1) -------------------
     single_core #( 
-        .CORE_ID        (1),
+        .ID_W           (ID_W),
+        .CORE_ID        (1'b1),
         .NUM_WAYS       (NUM_WAYS  ),
         .NUM_SETS       (NUM_SETS  ),
         .NUM_SETS_L2    (NUM_SETS_L2),
@@ -269,6 +275,7 @@ module soc_top #(
         .m_axi_awlen    (c1_awlen),
         .m_axi_awsize   (c1_awsize),
         .m_axi_awburst  (c1_awburst),
+        .m_axi_awsnoop  (c1_awsnoop),
         .m_axi_awvalid  (c1_awvalid),
         .m_axi_awready  (c1_awready),
 
@@ -316,7 +323,10 @@ module soc_top #(
     );
 
     // ------------------- INSTANTIATE INTERCONNECT -------------------    
-    ace_interconnect_v2 u_interconnect (
+    ace_interconnect_v2 #(
+        .ID_W       (ID_W),
+        .DATA_W     (DATA_W)
+    ) u_interconnect (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
 
@@ -353,6 +363,7 @@ module soc_top #(
         .s0_axi_awlen   (c0_awlen),
         .s0_axi_awsize  (c0_awsize),
         .s0_axi_awburst (c0_awburst),
+        .s0_axi_awsnoop (c0_awsnoop),
         .s0_axi_awvalid (c0_awvalid),
         .s0_axi_awready (c0_awready),
 
@@ -400,6 +411,7 @@ module soc_top #(
         .s1_axi_awlen   (c1_awlen),
         .s1_axi_awsize  (c1_awsize),
         .s1_axi_awburst (c1_awburst),
+        .s1_axi_awsnoop (c1_awsnoop),
         .s1_axi_awvalid (c1_awvalid),
         .s1_axi_awready (c1_awready),
 

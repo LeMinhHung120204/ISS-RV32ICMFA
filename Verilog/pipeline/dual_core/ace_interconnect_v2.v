@@ -65,7 +65,6 @@ module ace_interconnect_v2 #(
     input   [2:0]           s1_axi_arsize,
     input   [1:0]           s1_axi_arburst,
     input   [3:0]           s1_axi_arsnoop,
-    input   [2:0]           s1_axi_awsnoop,
     input                   s1_axi_arvalid,
     output                  s1_axi_arready,
 
@@ -75,6 +74,7 @@ module ace_interconnect_v2 #(
     input   [7:0]           s1_axi_awlen,
     input   [2:0]           s1_axi_awsize,
     input   [1:0]           s1_axi_awburst,
+    input   [2:0]           s1_axi_awsnoop,
     input                   s1_axi_awvalid,
     output                  s1_axi_awready,
 
@@ -173,7 +173,7 @@ module ace_interconnect_v2 #(
     // Write Buffers
     reg [ID_W-1:0]   s0_aw_id,      s1_aw_id;
     reg [ADDR_W-1:0] s0_aw_addr,    s1_aw_addr;
-    reg [3:0]        s0_aw_snoop,   s1_aw_snoop;
+    reg [2:0]        s0_aw_snoop,   s1_aw_snoop;
 
     // Grant Logic
     reg grant_r_s0, last_grant_r;
@@ -183,6 +183,15 @@ module ace_interconnect_v2 #(
         if (!rst_n) begin
             s0_pending_r    <= 1'b0;
             s1_pending_r    <= 1'b0;
+
+            s0_ar_id        <= {ID_W{1'b0}};
+            s1_ar_id        <= {ID_W{1'b0}};
+
+            s0_ar_addr      <= {ADDR_W{1'b0}};
+            s1_ar_addr      <= {ADDR_W{1'b0}};
+
+            s0_ar_snoop     <= 4'd0;
+            s1_ar_snoop     <= 4'd0;
         end 
         else begin
             // Core 0 Read Capture
@@ -213,6 +222,15 @@ module ace_interconnect_v2 #(
         if (!rst_n) begin
             s0_pending_w    <= 1'b0;
             s1_pending_w    <= 1'b0;
+
+            s0_aw_id        <= {ID_W{1'b0}};
+            s1_aw_id        <= {ID_W{1'b0}};
+
+            s0_aw_addr      <= {ADDR_W{1'b0}};
+            s1_aw_addr      <= {ADDR_W{1'b0}};
+
+            s0_aw_snoop     <= 3'd0;
+            s1_aw_snoop     <= 3'd0;
         end 
         else begin
             // Core 0 Write Capture

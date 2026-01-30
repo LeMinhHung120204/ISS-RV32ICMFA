@@ -263,6 +263,7 @@ module single_core #(
     L2_cache #( 
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W),
+        .ID_W       (ID_W),
         .CORE_ID    (CORE_ID),
 
         // cau hinh cache

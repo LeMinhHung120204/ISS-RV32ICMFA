@@ -321,7 +321,7 @@ module L2_cache #(
         end 
         else begin 
             // Case 1: Refill from Memory (AXI R Channel)
-            if (iRVALID & oRREADY & (iRID == {1'b0, CORE_ID})) begin
+            if (iRVALID & oRREADY & (iRID == CORE_ID)) begin
                 refill_buffer[burst_cnt * DATA_W +: DATA_W] <= iRDATA;
             end 
 
