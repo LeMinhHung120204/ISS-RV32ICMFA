@@ -4,6 +4,7 @@ module DataMem_wrapper #(
     parameter ID_W          = 2,
     parameter DATA_W        = 32,
     parameter ADDR_W        = 32,
+    parameter RESET_VALUE   = 0,
     parameter STRB_W        = DATA_W / 8
 )(
     input   ACLK,
@@ -196,8 +197,9 @@ module DataMem_wrapper #(
     );
 
     ram #(
-        .ADDR_W (RAM_ADDR_W),
-        .DATA_W (DATA_W)
+        .ADDR_W         (RAM_ADDR_W),
+        .DATA_W         (DATA_W),
+        .RESET_VALUE    (RESET_VALUE)
     ) u_DataMem (
         .clk        (ACLK),
         .rst_n      (ARESETn),

@@ -180,6 +180,7 @@ module RV32IA #(
             // .D_valid_MDU        (D_valid_MDU),
             // .D_Valid_FPU        (D_Valid_FPU),
         .fetch_pipe_Flush   (fetch_pipe_Flush),
+        .D_Flush            (D_Flush),
         .E_Flush            (E_Flush),
         .ForwardAE          (ForwardAE),
         .ForwardBE          (ForwardBE)

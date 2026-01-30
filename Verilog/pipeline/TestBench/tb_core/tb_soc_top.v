@@ -11,6 +11,7 @@ module tb_soc_top;
     parameter DATA_W        = 32; // use 32-bit beats for TB
     parameter STRB_W        = DATA_W/8;
     parameter RAM_ADDR_W    = 14;
+    parameter RESET_VALUE   = 32'h00000013; // nop
 
     // Cau hinh core
     parameter MEM_BASE      = 32'h0000_0000;
@@ -137,9 +138,10 @@ module tb_soc_top;
     wire [1:0] mem_rresp_lower;
 
     DataMem_wrapper #(
-        .RAM_ADDR_W (RAM_ADDR_W),
-        .ID_W       (2),
-        .DATA_W     (DATA_W)
+        .RAM_ADDR_W     (RAM_ADDR_W),
+        .ID_W           (2),
+        .DATA_W         (DATA_W),
+        .RESET_VALUE    (RESET_VALUE)
     ) u_unified_mem (
         .ACLK           (ACLK),
         .ARESETn        (ARESETn),
@@ -218,7 +220,7 @@ module tb_soc_top;
         c0_stall = 0;
         c1_stall = 0;
 
-        #1000; 
+        #2000; 
         $display("Simulation Finished.");
         $finish;
     end

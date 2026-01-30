@@ -316,7 +316,7 @@ module soc_top #(
     );
 
     // ------------------- INSTANTIATE INTERCONNECT -------------------    
-    ace_interconnect u_interconnect (
+    ace_interconnect_v2 u_interconnect (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
 

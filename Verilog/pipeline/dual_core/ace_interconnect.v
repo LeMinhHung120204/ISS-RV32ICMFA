@@ -341,9 +341,9 @@ module ace_interconnect #(
 
     // Instantiate master muxes
     AXI_Master_Mux_R #(
-        .ADDR_W(ADDR_W), 
-        .DATA_W(DATA_W),
-        .ID_W  (ID_W)
+        .ADDR_W (ADDR_W), 
+        .DATA_W (DATA_W),
+        .ID_W   (ID_W)
     ) u_mux_r (
         .m0_arid    (s0_addr_buf_id),
         .m0_araddr  (s0_addr_buf_addr),
@@ -385,9 +385,9 @@ module ace_interconnect #(
     );
 
     AXI_Master_Mux_W #(
-        .ADDR_W(ADDR_W), 
-        .DATA_W(DATA_W),
-        .ID_W  (ID_W)
+        .ADDR_W (ADDR_W), 
+        .DATA_W (DATA_W),
+        .ID_W   (ID_W)
     ) u_mux_w (
         .m0_awid    (s0_addr_buf_id), 
         .m0_awaddr  (s0_addr_buf_addr),
