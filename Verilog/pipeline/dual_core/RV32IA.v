@@ -27,40 +27,34 @@ module RV32IA #(
     output  [WIDTH_ADDR - 1:0]  icache_addr,
 
     output  [WIDTH_DATA - 1:0]  W_Result_output
-    // input   [WIDTH_DATA - 1:0]  imem_instr, dmem_rdata,
-    // output  [WIDTH_ADDR - 1:0]  imem_addr, 
-    // output  [WIDTH_DATA - 1:0]  dmem_wdata,
-    // output  [7:0]               dmem_addr,
-    // output                      dmem_we
 );
     // ----------------------- Data buses / pipeline signals -----------------------
     wire [WIDTH_DATA-1:0] F_RD;
-    wire [WIDTH_DATA-1:0] RDX1, RDX2, RDF1, RDF2, RDF3;
+    wire [WIDTH_DATA-1:0] RDX1, RDX2;
 
-    wire [WIDTH_DATA-1:0] D_Instr, D_ImmExt, D_RD1, D_RD2;
+    wire [WIDTH_DATA-1:0] D_Instr, D_ImmExt;
 
     wire [WIDTH_DATA-1:0] E_RD1, E_RD2;
     wire [WIDTH_DATA-1:0] E_ImmExt, E_ALUResult;
 
-    wire [WIDTH_DATA-1:0] M_ALUResult, M_WriteData, M_ImmExt, M_ReadData;
+    wire [WIDTH_DATA-1:0] M_ALUResult, M_WriteData, M_ImmExt;
     wire [WIDTH_DATA-1:0] C_Result, C_ImmExt, C_mux_result, C_ReadData;
-    wire [WIDTH_DATA-1:0] W_ImmExt, W_ReadData, W_Result, WB_Result, W_mux_result;
+    wire [WIDTH_DATA-1:0] W_mux_result;
 
     // ----------------------- Register / address fields -----------------------
-    wire [4:0] E_rs1, E_rs2, E_rd, E_RsF3;
+    wire [4:0] E_rs1, E_rs2, E_rd;
     wire [4:0] M_rd, C_rd, W_rd;
-    wire [4:0] A1, A2, A3, WD3;
+    wire [4:0] A1, A2, WD3;
 
     // ----------------------- Execution sources -----------------------
     wire [WIDTH_DATA-1:0] E_SrcA, E_SrcB, E_WriteData;
 
     // ----------------------- Control signals -----------------------
     wire D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_addr_addend_sel, D_ResPCSel;
-    wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel, E_RegSrc1;
+    wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel;
     wire M_RegWrite, M_MemWrite, M_ResPCSel;
     wire C_RegWrite;
     wire W_RegWrite;
-    wire D_is_high, E_is_high;
 
     // ----------------------- ALU / result control widths -----------------------
     wire [3:0] D_ALUControl, E_ALUControl;
@@ -68,8 +62,6 @@ module RV32IA #(
     wire [2:0] D_ImmSrc, E_funct3;
     wire [2:0] D_StoreSrc, E_StoreSrc, M_StoreSrc;
     wire [1:0] D_ResExSel, E_ResExSel, M_ResExSel;
-
-    wire is_high;
 
     // ----------------------- Hazard / forwarding -----------------------
     wire F_Stall, D_Stall, E_Stall;
@@ -79,15 +71,15 @@ module RV32IA #(
     // ----------------------- Tin hieu PC -----------------------
     reg [WIDTH_ADDR - 1:0] PCNext;
     wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC;
-    wire [WIDTH_ADDR - 1:0] F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4, W_PCPlus4;
+    wire [WIDTH_ADDR - 1:0] F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4;
     wire [WIDTH_ADDR - 1:0] E_PCtmp;
-    wire [WIDTH_ADDR - 1:0] M_ResPC, C_ResPC, W_ResPC;
+    wire [WIDTH_ADDR - 1:0] M_ResPC, C_ResPC;
     wire [WIDTH_ADDR - 1:0] E_PCTarget, M_PCTarget;
 
     // ----------------------- Tin hieu Branch prediction -----------------------
     wire        F_Predict_Taken, D_Predict_Taken, E_Predict_Taken;  
     wire [2:0]  F_GHSR, D_GHSR, E_GHSR;
-    wire [31:0] F_Predict_Target, D_Predict_Target, E_Predict_Target;
+    wire [31:0] F_Predict_Target;
 
     wire        E_Mispredict; 
     wire [31:0] E_Correct_PC;
@@ -151,7 +143,7 @@ module RV32IA #(
         .D_Rs2          (A2),
         .E_Rs1          (E_rs1),
         .E_Rs2          (E_rs2),
-        .E_RsF3         (E_RsF3),
+        // .E_RsF3         (E_RsF3),
         .E_rd           (E_rd),
         .icache_stall   (icache_stall),
         .dcache_stall   (dcache_stall),
@@ -177,8 +169,6 @@ module RV32IA #(
         .D_Stall            (D_Stall),
         .E_Stall            (E_Stall),
         .M_Stall            (M_Stall),
-            // .D_valid_MDU        (D_valid_MDU),
-            // .D_Valid_FPU        (D_Valid_FPU),
         .fetch_pipe_Flush   (fetch_pipe_Flush),
         .D_Flush            (D_Flush),
         .E_Flush            (E_Flush),
@@ -189,7 +179,6 @@ module RV32IA #(
     PC #(
         .WIDTH      (WIDTH_ADDR), 
         .START_PC   (START_PC)
-        // .END_PC     (END_PC)
     ) PC_inst(    
         .clk    (clk),
         .rst_n  (rst_n),
@@ -208,10 +197,6 @@ module RV32IA #(
     assign icache_req  = rst_n;         // luon yeu canh lenh khi khong reset
     assign F_RD        = imem_instr;    // S2 (Cache) -> 
 
-    // Ins_Mem instruction_memory(
-    //     .addr       (F_PC),
-    //     .instruction(F_RD)
-    // );
     // ---------------------------------------- fetch_pipe REGISTER (IF -> S2) ----------------------------------------
 
     fetch_pipe fetch_pipe_register (
@@ -254,7 +239,6 @@ module RV32IA #(
     // ---------------------------------------- ID state ----------------------------------------
     assign A1   = D_Instr[19:15];
     assign A2   = D_Instr[24:20];
-    // assign A3   = D_Instr[31:27];
     assign WD3  = D_Instr[11:7];
 
     wire D_data_req, E_data_req;
@@ -274,17 +258,8 @@ module RV32IA #(
         .Jump               (D_Jump),
         .StoreSrc           (D_StoreSrc),
         .ResExSel           (D_ResExSel),
-        .Mul_Div_unsigned   (D_Mul_Div_unsigned),
-        .MulDivControl      (D_MulDivControl),
         .addr_addend_sel    (D_addr_addend_sel),
         .ResPCSel           (D_ResPCSel),
-        // .valid_MDU          (D_valid_MDU),
-        .is_high            (D_is_high),
-        // .Valid_FPU          (D_Valid_FPU),
-        // .RegSrc1            (D_RegSrc1),
-        // .RegSrc2            (D_RegSrc2),
-        // .FPUControl         (D_FPUControl),
-        // .FRegWrite          (D_FRegWrite),
         .data_req           (D_data_req)
     );
 
@@ -330,12 +305,8 @@ module RV32IA #(
         .D_GHSR             (D_GHSR),
         .D_StoreSrc         (D_StoreSrc),
         .D_ALUControl       (D_ALUControl),
-        .D_is_high          (D_is_high),
         .D_addr_addend_sel  (D_addr_addend_sel),
         .D_ResPCSel         (D_ResPCSel),
-            // .E_valid_MDU        (E_valid_MDU),
-            // .E_Valid_FPU        (E_Valid_FPU),
-        // .D_Valid_FPU        (D_Valid_FPU),
         .D_ResExSel         (D_ResExSel),  
         .D_Predict_Taken    (D_Predict_Taken),    
         .D_data_req         (D_data_req),  
@@ -358,12 +329,8 @@ module RV32IA #(
         .E_GHSR             (E_GHSR),
         .E_StoreSrc         (E_StoreSrc),
         .E_ALUControl       (E_ALUControl),
-        .E_is_high          (E_is_high),
         .E_addr_addend_sel  (E_addr_addend_sel),
         .E_ResPCSel         (E_ResPCSel),
-        // .E_valid_MDU        (E_valid_MDU),
-        // .E_FRegWrite        (E_FRegWrite),
-        // .E_Valid_FPU        (E_Valid_FPU),
         .E_ResExSel         (E_ResExSel),
         .E_Predict_Taken    (E_Predict_Taken),
         .E_data_req         (E_data_req)
@@ -435,25 +402,20 @@ module RV32IA #(
         .E_StoreSrc     (E_StoreSrc),
         .E_ResExSel     (E_ResExSel),
         .E_ResPCSel     (E_ResPCSel),
-        // .E_MDU_FPUEn    (E_MDU_FPUEn),
         .E_data_req     (E_data_req),
 
         .M_ALUResult    (M_ALUResult),
-        // .M_MDUResult    (M_MDUResult),
-        // .M_FPUResult    (M_FPUResult),
         .M_WriteData    (M_WriteData),
         .M_ImmExt       (M_ImmExt),
         .M_PCPlus4      (M_PCPlus4),
         .M_PCTarget     (M_PCTarget),
         .M_rd           (M_rd),
         .M_RegWrite     (M_RegWrite),
-        // .M_FRegWrite    (M_FRegWrite),
         .M_MemWrite     (M_MemWrite),
         .M_ResultSrc    (M_ResultSrc),
         .M_StoreSrc     (M_StoreSrc),
         .M_ResExSel     (M_ResExSel),
         .M_ResPCSel     (M_ResPCSel),
-        // .M_MDU_FPUEn    (M_MDU_FPUEn),
         .M_data_req     (M_data_req)
     );
 
@@ -483,18 +445,14 @@ module RV32IA #(
         .M_ResPC        (M_ResPC),
         .M_rd           (M_rd),
         .M_RegWrite     (M_RegWrite),
-        // .M_FRegWrite    (M_FRegWrite),
         .M_ResultSrc    (M_ResultSrc),
-        // .M_MDU_FPUEn    (M_MDU_FPUEn),
 
         .C_Result       (C_Result),
         .C_ImmExt       (C_ImmExt),
         .C_ResPC        (C_ResPC),
         .C_rd           (C_rd),
         .C_RegWrite     (C_RegWrite),
-        // .C_FRegWrite    (C_FRegWrite),
         .C_ResultSrc    (C_ResultSrc)
-        // .C_MDU_FPUEn    (C_MDU_FPUEn)
     );
 
     // ---------------------------------------- CACHE RESPONSE & FINAL SELECTION ----------------------------------------
@@ -508,42 +466,19 @@ module RV32IA #(
         .res    (C_mux_result)
     );
 
-    // DataMem data_memory(
-    //     .clk        (clk),
-    //     .rst_n      (rst_n),
-    //     .StoreSrc   (M_StoreSrc),
-    //     .MemWrite   (M_MemWrite),
-    //     .addr       (M_ALUResult),
-    //     .data_in    (M_WriteData),
-    //     .rd         (M_ReadData)
-    // );
-
-
     // ---------------------------------------- [PIPELINE REGISTER] CACHE -> WRITEBACK ----------------------------------------
 
     MEM_WB MEM_WB_register(
         .clk            (clk),
         .rst_n          (rst_n),
-        // .M_Result       (C_Result),
-        // .M_ReadData     (C_ReadData),
-        // .M_ImmExt       (C_ImmExt),
-        // .M_ResPC        (C_ResPC),
         .M_rd           (C_rd),
         .M_RegWrite     (C_RegWrite),
-        // .M_FRegWrite    (C_FRegWrite),
         .M_ResultSrc    (C_ResultSrc),
-        // .M_MDU_FPUEn    (C_MDU_FPUEn),
         .C_mux_result   (C_mux_result),
 
-        // .W_Result       (W_Result),
-        // .W_ReadData     (W_ReadData),
-        // .W_ImmExt       (W_ImmExt),
-        // .W_ResPC        (W_ResPC),
         .W_rd           (W_rd),
         .W_RegWrite     (W_RegWrite),
-        // .W_FRegWrite    (W_FRegWrite),
         .W_ResultSrc    (W_ResultSrc),
-        // .W_MDU_FPUEn    (W_MDU_FPUEn),
         .W_mux_result   (W_mux_result)
     );
 endmodule

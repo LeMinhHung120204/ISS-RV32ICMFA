@@ -14,12 +14,13 @@ module acc_cmp #(
     input                       flush,
     input                       s1_req,    
     input                       s1_we,      
-    input  [1:0]                s1_size,    
-    input  [DATA_W-1:0]         s1_wdata,  
-    input  [TAG_W-1:0]          s1_tag,    
-    input  [INDEX_W-1:0]        s1_index,   
-    input  [WORD_OFF_W-1:0]     s1_word_off,
-    input  [BYTE_OFF_W-1:0]     s1_byte_off,
+    input   [1:0]               s1_cmd,
+    input   [1:0]               s1_size,    
+    input   [DATA_W-1:0]        s1_wdata,  
+    input   [TAG_W-1:0]         s1_tag,    
+    input   [INDEX_W-1:0]       s1_index,   
+    input   [WORD_OFF_W-1:0]    s1_word_off,
+    input   [BYTE_OFF_W-1:0]    s1_byte_off,
 
     input                       s1_is_snoop,
     input   [TAG_W-1:0]         s1_snoop_tag,
@@ -27,6 +28,7 @@ module acc_cmp #(
 
     output reg                  s2_req,
     output reg                  s2_we,
+    output reg [1:0]            s2_cmd,
     output reg [1:0]            s2_size,
     output reg [DATA_W-1:0]     s2_wdata,
     output reg [TAG_W-1:0]      s2_tag,
@@ -43,6 +45,7 @@ module acc_cmp #(
             s2_req          <= 1'b0;
             s2_we           <= 1'b0;
             s2_size         <= 2'b00;
+            s2_cmd          <= 2'b00;
             s2_wdata        <= {DATA_W{1'b0}};
             s2_tag          <= {TAG_W{1'b0}};
             s2_index        <= {INDEX_W{1'b0}};
@@ -58,6 +61,7 @@ module acc_cmp #(
                 s2_req          <= 1'b0;
                 s2_we           <= 1'b0;
                 s2_size         <= 2'b00;
+                s2_cmd          <= 2'b00;
                 s2_wdata        <= {DATA_W{1'b0}};
                 s2_tag          <= {TAG_W{1'b0}};
                 s2_index        <= {INDEX_W{1'b0}};
@@ -72,6 +76,7 @@ module acc_cmp #(
                 s2_req          <= s1_req;
                 s2_we           <= s1_we;
                 s2_size         <= s1_size;
+                s2_cmd          <= s1_cmd;
                 s2_wdata        <= s1_wdata;
                 s2_tag          <= s1_tag;
                 s2_index        <= s1_index;

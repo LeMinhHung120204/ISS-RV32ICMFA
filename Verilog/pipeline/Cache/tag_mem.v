@@ -14,9 +14,13 @@ module tag_mem #(
     input   [TAG_W-1:0]     din_tag,
     input   [2:0]           moesi_next_state,
 
+    // L1 request
+    input   [INDEX_W-1:0]   L1_read_index,
+
     output reg  [TAG_W-1:0] dout_tag,
     output reg              valid,
-    output reg  [2:0]       moesi_current_state
+    output reg  [2:0]       moesi_current_state,
+    output reg  [2:0]       L1_moesi_current_state
 );
     localparam STATE_I = 3'd4;
 
@@ -62,13 +66,15 @@ module tag_mem #(
             for (i = 0; i < NUM_SETS; i = i + 1) begin
                 state_moesi[i] <= STATE_I;
             end
-            moesi_current_state <= STATE_I;
+            moesi_current_state     <= STATE_I;
+            L1_moesi_current_state  <= STATE_I;
         end 
         else begin
             if (moesi_we) begin
                 state_moesi[write_index] <= moesi_next_state;
             end
-            moesi_current_state <= state_moesi[read_index];
+            moesi_current_state     <= state_moesi[read_index];
+            L1_moesi_current_state  <= state_moesi[L1_read_index];
         end
     end
 

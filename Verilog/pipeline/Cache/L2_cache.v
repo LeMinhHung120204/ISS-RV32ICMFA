@@ -19,9 +19,11 @@ module L2_cache #(
 
     // Request (Command/Address)
     input                       i_req_valid,  
-    input  [1:0]                i_req_cmd,    // 00: Read, 01: Write
-    input  [ADDR_W-1:0]         i_req_addr,   
+    input   [1:0]               i_req_cmd,    // 00: Read, 01: Write, 10: Upgrade/Invalidate
+    input   [ADDR_W-1:0]        i_L1_read_addr,
+    input   [ADDR_W-1:0]        i_req_addr,   
     output                      o_req_ready,  
+    output  [11:0]              o_L1_moesi_state,
 
     // Write Data (Data from L1 writeback)
     input  [CACHE_DATA_W-1:0]   i_wdata,     
@@ -114,7 +116,7 @@ module L2_cache #(
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
 
     wire                    s2_req;
-    wire                    s2_we;
+    // wire                    s2_we;
     // wire [DATA_W-1:0]       s2_wdata;
     wire [TAG_W-1:0]        s2_tag;
     wire [INDEX_W-1:0]      s2_index;
@@ -135,6 +137,7 @@ module L2_cache #(
     wire [3:0]  way_hit;
     wire        any_hit;
     wire [2:0]  moesi_current_state     [0:NUM_WAYS-1];
+    wire [2:0]  L1_moesi_current_state  [0:NUM_WAYS-1];
     reg  [2:0]  moesi_selected_state;
     wire [2:0]  moesi_next_state;
     wire        moesi_we;
@@ -158,25 +161,27 @@ module L2_cache #(
     wire [3:0] burst_cnt;
 
     // ---------------------------------------- MAPPING INPUTS ----------------------------------------
-    wire controller_ready;
-    wire internal_req   = i_req_valid;
-    wire internal_we    = i_req_cmd[0]; 
+    wire        controller_ready;
+    wire [1:0]  s2_cmd;
+
     assign o_req_ready  = controller_ready;
 
-
    // ---------------------------------------- STAGE 1: ACCESS ----------------------------------------
-    wire [ADDR_W-1:0] s1_mux_addr = (iACVALID) ? iACADDR : i_req_addr;
-
+    wire [ADDR_W-1:0]   s1_mux_addr = (iACVALID) ? iACADDR : i_req_addr;
+    wire [INDEX_W-1:0]  lq_req_moesi_index;
     access #(
         .ADDR_W     (ADDR_W),
         .DATA_W     (DATA_W),
         .NUM_SETS   (NUM_SETS)
     ) access_inst (
-        .cpu_addr       (s1_mux_addr),
-        .cpu_tag        (s1_tag),            
-        .cpu_index      (s1_index),   
-        .cpu_word_off   (s1_word_off),
-        .cpu_byte_off   (s1_byte_off)
+        .cpu_addr               (s1_mux_addr),
+        .dcache_req_moesi_addr  (i_L1_read_addr),
+
+        .cpu_tag                (s1_tag),            
+        .cpu_index              (s1_index),   
+        .cpu_word_off           (s1_word_off),
+        .cpu_byte_off           (s1_byte_off),
+        .dcache_req_moesi_index (lq_req_moesi_index)
     );
 
     // ---------------------------------------- SRAM ARRAYS ----------------------------------------
@@ -193,6 +198,10 @@ module L2_cache #(
             ) u_tag_mem (
                 .clk                    (ACLK), 
                 .rst_n                  (ARESETn),
+
+                .L1_read_index          (lq_req_moesi_index),
+                .L1_moesi_current_state (L1_moesi_current_state[i]),
+
                 .tag_we                 (tag_we & way_select[i]),
                 .moesi_we               (moesi_we & choosen_way[i]),
                 .read_index             (s1_index),   
@@ -204,6 +213,9 @@ module L2_cache #(
             );
         end
     endgenerate
+
+    assign o_L1_moesi_state = {L1_moesi_current_state[3], L1_moesi_current_state[2], 
+                                L1_moesi_current_state[1], L1_moesi_current_state[0]};
 
     // --- Data RAMs ---
     // - data_we: tung word (L2 Burst, dung refill_we)
@@ -247,8 +259,9 @@ module L2_cache #(
         .flush      (1'b0),
 
         // Stage 1 Inputs (Mapped from L1 interface)
-        .s1_req         (internal_req | iACVALID),    
-        .s1_we          (internal_we),      
+        .s1_req         (i_req_valid | iACVALID),    
+        // .s1_we          (internal_we),   
+        .s1_cmd         (i_req_cmd),   
         // .s1_size        (2'b10),
         .s1_wdata       ({DATA_W{1'b0}}),
         .s1_tag         (s1_tag),    
@@ -259,7 +272,8 @@ module L2_cache #(
 
         // Stage 2 Outputs
         .s2_req         (s2_req),
-        .s2_we          (s2_we),
+        // .s2_we          (s2_we),
+        .s2_cmd         (s2_cmd),
         // .s2_size        (s2_size),
         // .s2_wdata       (s2_wdata),
         .s2_tag         (s2_tag),
@@ -363,7 +377,7 @@ module L2_cache #(
         .snoop_can_access_ram   (snoop_can_access_ram),
         
         .i_req_valid            (s2_req), 
-        .i_req_cmd              (s2_we ? 2'b01 : 2'b00),
+        .i_req_cmd              (s2_cmd),
         
         .hit                    (any_hit),
         .victim_dirty           (is_dirty),      
@@ -485,7 +499,7 @@ module L2_cache #(
         // Request L1 gui xuong
         .cpu_req_valid      (s2_req),   
         .cpu_hit            (any_hit), 
-        .cpu_rw             (s2_we), 
+        .cpu_rw             (s2_cmd[0]), 
 
         .bus_snoop_valid    (bus_snoop_valid),
         .snoop_hit          (snoop_hit),

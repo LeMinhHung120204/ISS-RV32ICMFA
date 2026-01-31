@@ -9,6 +9,8 @@ module dcache_controller_v2 (
     input               victim_dirty,  
     input               victim_valid,      
 
+    input   [2:0]       i_l2_moesi_state,
+
     output  reg         data_we,
     output  reg         tag_we, 
     output  reg         refill_we,
@@ -29,6 +31,11 @@ module dcache_controller_v2 (
     input                       i_mem_rdata_valid,
     output  reg                 o_mem_rdata_ready
 );
+    localparam STATE_M = 3'd0;
+    localparam STATE_O = 3'd1;
+    localparam STATE_E = 3'd2;
+    localparam STATE_S = 3'd3;
+    localparam STATE_I = 3'd4;
 
     // State Encoding
     localparam TAG_CHECK    = 4'd0;
@@ -39,6 +46,7 @@ module dcache_controller_v2 (
     localparam UPDATE       = 4'd5;
     localparam WAIT_SNOOP   = 4'd6;
     localparam WAIT_RAM     = 4'd7;
+    localparam UPGRADE_REQ  = 4'd8;
 
     reg [3:0] state, next_state;
 
@@ -57,14 +65,35 @@ module dcache_controller_v2 (
             TAG_CHECK: begin
                 if (cpu_req) begin
                     if (hit) begin
-                        next_state = TAG_CHECK;
+                        // --- [MOI] LOGIC KIEM TRA MOESI ---
+                        if (cpu_we) begin
+                            // Neu la Shared hoac Owned, phai xin phep Invalidate Core khac
+                            if (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O) begin
+                                next_state = UPGRADE_REQ;
+                            end 
+                            else begin
+                                // Neu la E hoac M, duoc phep ghi ngay
+                                next_state = TAG_CHECK; 
+                            end
+                        end
+                        else begin
+                            // Read Hit -> Khong lam gi ca
+                            next_state = TAG_CHECK;
+                        end
                     end 
                     else begin
+                        // Cache Miss
                         if ((~victim_valid) || (~victim_dirty))
                             next_state = ALLOC_REQ; // Clean -> Read L2
                         else
                             next_state = WB_REQ;    // Dirty -> Write L2
                     end
+                end
+            end
+
+            UPGRADE_REQ: begin
+                if (i_mem_req_ready) begin
+                    next_state = TAG_CHECK; 
                 end
             end
 
@@ -131,6 +160,12 @@ module dcache_controller_v2 (
                 if (hit & cpu_we) begin 
                     data_we = 1'b1;
                 end
+            end
+
+            UPGRADE_REQ: begin
+                o_mem_req_valid = 1'b1;
+                o_mem_req_cmd   = 2'b10; // 10 = UPGRADE/INVALIDATE
+                stall           = 1'b1;  // Stall CPU den khi xong
             end
 
             WB_REQ: begin

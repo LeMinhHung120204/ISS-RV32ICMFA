@@ -14,6 +14,7 @@ module single_core #(
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
+    parameter INDEX_W       = $clog2(NUM_SETS),
     parameter NUM_SETS_L2   = 32,
     parameter WORD_OFF_W    = 4, // 16 words
     parameter BYTE_OFF_W    = 2,
@@ -120,11 +121,12 @@ module single_core #(
     wire                l2_rdata_valid, l2_rdata_ready;
 
     // Internal Snoop (L2 -> L1 D-Cache)
-    wire                int_snoop_valid;
-    wire [ADDR_W-1:0]   int_snoop_addr;
-    wire [1:0]          int_snoop_type;
-    wire                int_snoop_hit;
-    wire                int_snoop_dirty;
+    wire [11:0]             L1_moesi_current_state;
+    wire                    int_snoop_valid;
+    wire [ADDR_W-1:0]       int_snoop_addr;
+    wire [1:0]              int_snoop_type;
+    wire                    int_snoop_hit;
+    wire                    int_snoop_dirty;
     wire [CACHE_DATA_W-1:0]   int_snoop_data;
 
     // ---------------------------------------- MODULE INSTANTIATIONS ----------------------------------------
@@ -212,6 +214,8 @@ module single_core #(
         .o_l2_req_cmd       (l1d_req_cmd), 
         .o_l2_req_addr      (l1d_req_addr),
 
+        .i_l2_req_moesi_state   (L1_moesi_current_state),
+
         .i_l2_wdata_ready   (l1d_wdata_ready), 
         .o_l2_wdata         (l1d_wdata),
         .o_l2_wdata_valid   (l1d_wdata_valid), 
@@ -267,7 +271,6 @@ module single_core #(
         .CORE_ID    (CORE_ID),
 
         // cau hinh cache
-        // cau hinh cache
         .NUM_WAYS   (NUM_WAYS),
         .NUM_SETS   (NUM_SETS_L2),
         .WORD_OFF_W (WORD_OFF_W),
@@ -278,10 +281,12 @@ module single_core #(
 
         // --- INTERNAL INTERFACE (-> L1) ---
         // Request (Command/Address)
-        .i_req_valid    (l2_req_valid),
-        .i_req_cmd      (l2_req_cmd),
-        .i_req_addr     (l2_req_addr),
-        .o_req_ready    (l2_req_ready),
+        .i_req_valid        (l2_req_valid),
+        .i_req_cmd          (l2_req_cmd),
+        .i_L1_read_addr     (data_addr | DATA_START),    // For Moesi State Lookup
+        .i_req_addr         (l2_req_addr),
+        .o_req_ready        (l2_req_ready),
+        .o_L1_moesi_state   (L1_moesi_current_state),
         
         // Write Data (Data from L1 writeback)
         .i_wdata        (l2_wdata),

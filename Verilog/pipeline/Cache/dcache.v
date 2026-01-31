@@ -29,6 +29,10 @@ module dcache #(
     input                       i_l2_req_ready,
     output  [1:0]               o_l2_req_cmd,   // 0: Read, 1: WriteBack
     output  [ADDR_W-1:0]        o_l2_req_addr,
+
+    // Request Moesi
+    input   [11:0]              i_l2_req_moesi_state,
+    // output  [INDEX_W-1:0]       o_l2_req_index,
     
     // Write Data (WB)
     output  reg [CACHE_DATA_W-1:0]  o_l2_wdata,
@@ -66,7 +70,7 @@ module dcache #(
     wire                    snoop_is_invalidate;
 
     // Arrays & Counters
-    wire [3:0]              burst_cnt;
+    // wire [3:0]              burst_cnt;
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
     wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
     reg  [CACHE_DATA_W-1:0] refill_buffer;
@@ -188,6 +192,17 @@ module dcache #(
     assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
     assign way_hit[2] = (tag_read[2] == s2_tag) & current_valid[2];
     assign way_hit[3] = (tag_read[3] == s2_tag) & current_valid[3];
+
+    reg [2:0] moesi_selected_state;
+    always @(*) begin
+        case(way_hit)
+            4'b0001: moesi_selected_state = i_l2_req_moesi_state[2:0];
+            4'b0010: moesi_selected_state = i_l2_req_moesi_state[5:3];
+            4'b0100: moesi_selected_state = i_l2_req_moesi_state[8:6];
+            4'b1000: moesi_selected_state = i_l2_req_moesi_state[11:9];
+            default: moesi_selected_state = i_l2_req_moesi_state[2:0];
+        endcase
+    end 
 
     assign cpu_hit = (|way_hit) & s2_req & ~s2_is_snoop;
 

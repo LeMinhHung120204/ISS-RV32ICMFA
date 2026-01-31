@@ -10,27 +10,27 @@ module ControlUnit(
     output          RegWrite, 
     output          Jump, 
     output          Branch, 
-    output          is_high, 
+    // output          is_high, 
     output          addr_addend_sel, 
     output          ResPCSel, 
-    output          valid_MDU, 
+    // output          valid_MDU, 
     output          FRegWrite, 
-    output          Valid_FPU, 
-    output          RegSrc1, 
-    output          RegSrc2,
+    // output          Valid_FPU, 
+    // output          RegSrc1, 
+    // output          RegSrc2,
     output          data_req,
-    output  [4:0]   FPUControl,
+    // output  [4:0]   FPUControl,
     output  [3:0]   ALUControl,
     output  [2:0]   ImmSrc, 
     output  [2:0]   ResultSrc, 
     output  [2:0]   StoreSrc,
-    output  [1:0]   Mul_Div_unsigned, 
-    output  [1:0]   MulDivControl, 
+    // output  [1:0]   Mul_Div_unsigned, 
+    // output  [1:0]   MulDivControl, 
     output  [1:0]   ResExSel
 );
-    wire MDUOp;
+    // wire MDUOp;
     wire [1:0] ALUOp;
-    wire [2:0] FPUOp;
+    // wire [2:0] FPUOp;
     MainDecoder maindecoder_inst(
         .op(op),
         .funct3(funct3),
@@ -48,8 +48,8 @@ module ControlUnit(
         .addr_addend_sel(addr_addend_sel),
         .ResPCSel(ResPCSel),
         .ResExSel(ResExSel),
-        .MDUOp(MDUOp),
-        .FPUOp(FPUOp),
+        // .MDUOp(MDUOp),
+        // .FPUOp(FPUOp),
         .data_req(data_req)
     );
 
@@ -61,24 +61,24 @@ module ControlUnit(
         .ALUControl(ALUControl)
     );
 
-    MulDivDecode MulDivDecode_inst(
-        .MulDivOp(MDUOp),
-        .funct3(funct3),
-        .Mul_Div_unsigned(Mul_Div_unsigned),
-        .is_high(is_high),
-        .valid_MDU(valid_MDU),
-        .MulDivControl(MulDivControl)
-    );
+    // MulDivDecode MulDivDecode_inst(
+    //     .MulDivOp(MDUOp),
+    //     .funct3(funct3),
+    //     .Mul_Div_unsigned(Mul_Div_unsigned),
+    //     .is_high(is_high),
+    //     .valid_MDU(valid_MDU),
+    //     .MulDivControl(MulDivControl)
+    // );
 
-    FPUDecoder FPUDecoder_inst(
-        .FPUOp(FPUOp),
-        .funct7(funct7),
-        .funct5(funct5),
-        .funct3(funct3),
-        .RegSrc1(RegSrc1),
-        .RegSrc2(RegSrc2),
-        .Valid_FPU(Valid_FPU),
-        .FPUControl(FPUControl)
-    );
+    // FPUDecoder FPUDecoder_inst(
+    //     .FPUOp(FPUOp),
+    //     .funct7(funct7),
+    //     .funct5(funct5),
+    //     .funct3(funct3),
+    //     .RegSrc1(RegSrc1),
+    //     .RegSrc2(RegSrc2),
+    //     .Valid_FPU(Valid_FPU),
+    //     .FPUControl(FPUControl)
+    // );
     
 endmodule

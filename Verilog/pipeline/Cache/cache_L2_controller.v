@@ -16,7 +16,7 @@ module cache_L2_controller #(
 
     // --- L1 Interface (Thay cho CPU) ---
     input           i_req_valid,         
-    input  [1:0]    i_req_cmd,           // 00: Read, 01: Write
+    input  [1:0]    i_req_cmd,           // 00: Read, 01: Write, 10: UPGRADE/INVALIDATE
     
     // nhan data tu L1
     input           i_wdata_valid,

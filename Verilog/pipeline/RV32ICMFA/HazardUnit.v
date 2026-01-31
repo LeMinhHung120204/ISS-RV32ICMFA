@@ -3,7 +3,6 @@
 module HazardUnit #(
     parameter DATA_WIDTH = 32
 )(
-    // input       E_PCSrc, 
     input       E_MulDivStall, 
     input       E_FPUStall, 
     input       E_RegSrc1, 
@@ -25,7 +24,7 @@ module HazardUnit #(
     input [4:0] D_Rs2, 
     input [4:0] E_Rs1, 
     input [4:0] E_Rs2, 
-    input [4:0] E_RsF3, 
+    // input [4:0] E_RsF3, 
     input [4:0] E_rd, 
     input [4:0] M_Rd,
     input [4:0] C_Rd, 
@@ -84,8 +83,8 @@ module HazardUnit #(
     wire match_C_B  = (E_Rs2 == C_Rd) && (|E_Rs2) && (E_RegSrc2 ? C_FRegWrite : C_RegWrite);
     wire match_W_B  = (E_Rs2 == W_Rd) && (|E_Rs2) && (E_RegSrc2 ? W_FRegWrite : W_RegWrite);
 
-    wire match_M_F3 = (E_RsF3 == M_Rd) && (|E_RsF3) && M_FRegWrite;
-    wire match_W_F3 = (E_RsF3 == W_Rd) && (|E_RsF3) && W_FRegWrite;
+    // wire match_M_F3 = (E_RsF3 == M_Rd) && (|E_RsF3) && M_FRegWrite;
+    // wire match_W_F3 = (E_RsF3 == W_Rd) && (|E_RsF3) && W_FRegWrite;
 
     always @(*) begin
         // --- Forwarding cho A ---
@@ -105,14 +104,14 @@ module HazardUnit #(
         endcase
     end
 
-    always @(*) begin
-        // --- Forwarding cho C ---
-        casez ({match_M_F3, match_W_F3})
-            2'b1? : ForwardFCE = 2'b10;
-            2'b01 : ForwardFCE = 2'b01;
-            default: ForwardFCE = 2'b00;
-        endcase
-    end
+    // always @(*) begin
+    //     // --- Forwarding cho C ---
+    //     casez ({match_M_F3, match_W_F3})
+    //         2'b1? : ForwardFCE = 2'b10;
+    //         2'b01 : ForwardFCE = 2'b01;
+    //         default: ForwardFCE = 2'b00;
+    //     endcase
+    // end
 
     // Stall when a load hazard
     wire lw_Stall;
