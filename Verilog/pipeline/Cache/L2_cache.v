@@ -256,7 +256,8 @@ module L2_cache #(
         .flush      (1'b0),
 
         // Stage 1 Inputs (Mapped from L1 interface)
-        .s1_req         (i_req_valid | iACVALID),    
+        // .s1_req         (i_req_valid | iACVALID),
+        .s1_req         (i_req_valid),    
         // .s1_we          (internal_we),   
         .s1_cmd         (i_req_cmd),   
         // .s1_size        (2'b10),
