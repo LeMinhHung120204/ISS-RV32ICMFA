@@ -325,6 +325,7 @@ module dcache #(
         .stall      (stall_contoller),
 
         // Custom L2 Interface
+        .i_l2_moesi_state   (moesi_selected_state),
         .o_mem_req_valid    (o_l2_req_valid),
         .i_mem_req_ready    (i_l2_req_ready),
         .o_mem_req_cmd      (o_l2_req_cmd),

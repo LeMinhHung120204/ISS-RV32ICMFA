@@ -57,7 +57,7 @@ module cache_L2_controller #(
     output  reg                 oWVALID,
     input                       iWREADY,
     
-    input       [ID_W-1:0]      iBID,
+    input       [ID_W-1:0]      iBID,           // hien tai chua dung
     input       [1:0]           iBRESP,
     input                       iBVALID,
     output  reg                 oBREADY,
@@ -70,7 +70,7 @@ module cache_L2_controller #(
     output  reg [3:0]           oARSNOOP,
     output      [1:0]           oARDOMAIN,
 
-    input       [ID_W-1:0]      iRID,
+    // input       [ID_W-1:0]      iRID,
     input       [3:0]           iRRESP,
     input                       iRLAST,
     input                       iRVALID,

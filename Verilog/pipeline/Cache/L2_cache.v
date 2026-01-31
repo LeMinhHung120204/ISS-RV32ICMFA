@@ -141,6 +141,7 @@ module L2_cache #(
     wire [2:0]  L1_moesi_current_state  [0:NUM_WAYS-1];
     reg  [2:0]  moesi_selected_state;
     wire [2:0]  moesi_next_state;
+    wire        bus_snoop_valid;
     wire        moesi_we, snoop_moesi_we, main_moesi_we;
     wire        is_unique, is_dirty, is_owner, is_valid;
     
@@ -423,7 +424,7 @@ module L2_cache #(
         .oARSNOOP   (oARSNOOP), 
         .oARDOMAIN  (oARDOMAIN),
 
-        .iRID       (iRID), 
+        // .iRID       (iRID), 
         .iRRESP     (iRRESP), 
         .iRLAST     (iRLAST), 
         .iRVALID    (iRVALID), 
