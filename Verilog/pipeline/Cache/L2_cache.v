@@ -157,13 +157,8 @@ module L2_cache #(
 
     wire use_l1_data_mux;
     // Burst counter from controller (0..15)
-    wire [3:0] burst_cnt;
-
-    // ---------------------------------------- MAPPING INPUTS ----------------------------------------
-    wire        controller_ready;
+    wire [3:0]  burst_cnt;
     wire [1:0]  s2_cmd;
-
-    assign o_req_ready  = controller_ready;
 
    // ---------------------------------------- STAGE 1: ACCESS ----------------------------------------
     wire [ADDR_W-1:0]   s1_mux_addr = (iACVALID) ? iACADDR : i_req_addr;
@@ -396,7 +391,7 @@ module L2_cache #(
         .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),
-        .o_req_ready        (controller_ready),
+        .o_req_ready        (o_req_ready),
         .burst_cnt          (burst_cnt),
 
         // AXI Interface

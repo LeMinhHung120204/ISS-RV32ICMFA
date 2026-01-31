@@ -298,7 +298,10 @@ module cache_L2_controller #(
                     end
                 end
                 
-                if (~snoop_busy && (next_state == TAG_CHECK)) begin
+                // if (~snoop_busy && (next_state == TAG_CHECK)) begin
+                //     o_req_ready = 1'b1; 
+                // end
+                if (~snoop_busy) begin
                     o_req_ready = 1'b1; 
                 end
                 else begin
