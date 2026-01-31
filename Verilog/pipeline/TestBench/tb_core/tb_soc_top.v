@@ -18,19 +18,16 @@ module tb_soc_top;
 
     // --- VUNG CHO CORE A ---
     parameter CODE_A_START  = 32'h0000_0000;
-    parameter CODE_A_END    = 32'h0000_3FFF; 
-    parameter DATA_A_START  = 32'h0000_4000;
-    parameter DATA_A_END    = 32'h0000_7FFF; 
+    parameter IDX_A_START   = CODE_A_START >> 2; // 0
+    parameter IDX_A_END     = IDX_A_START + 4095;
 
     // --- VUNG CHO CORE B ---
-    parameter CODE_B_START  = 32'h0000_8000;
-    parameter CODE_B_END    = 32'h0000_BFFF; 
-    parameter DATA_B_START  = 32'h0000_C000;
-    parameter DATA_B_END    = 32'h0000_FFFF; 
+    parameter CODE_B_START  = 32'h0000_4000;
+    parameter IDX_B_START   = CODE_B_START >> 2; // 4096
+    parameter IDX_B_END     = IDX_B_START + 4095;
 
-    // --- VUNG DUNG CHUNG (SHARED) ---
-    parameter SHARED_START  = 32'h0001_0000;
-    parameter SHARED_END    = 32'h0001_7FFF; 
+    // --- DATA: CHUNG (Shared Memory) ---
+    parameter DATA_START    = 32'h0001_0000;
 
     reg ACLK;
     reg ARESETn;
@@ -81,55 +78,48 @@ module tb_soc_top;
     // 2. Instantiate DUT (soc_top)
     // -------------------------------------------------------------------------
     soc_top #(
-        .CODE_A_START     (CODE_A_START),
-        .CODE_A_END       (CODE_A_END),
-        .DATA_A_START     (DATA_A_START),
-        .DATA_A_END       (DATA_A_END),
-        .CODE_B_START     (CODE_B_START),
-        .CODE_B_END       (CODE_B_END),
-        .DATA_B_START     (DATA_B_START),
-        .DATA_B_END       (DATA_B_END),
-        .SHARED_START     (SHARED_START),
-        .SHARED_END       (SHARED_END)
+        .CODE_A_START   (CODE_A_START),
+        .CODE_B_START   (CODE_B_START),
+        .DATA_START     (DATA_START)
     ) u_soc_top (
-        .ACLK         (ACLK),
-        .ARESETn      (ARESETn),
-        .c0_stall     (c0_stall),
-        .c1_stall     (c1_stall),
+        .ACLK           (ACLK),
+        .ARESETn        (ARESETn),
+        .c0_stall       (c0_stall),
+        .c1_stall       (c1_stall),
 
-        .m_axi_awid   (m_axi_awid),
-        .m_axi_awaddr (m_axi_awaddr),
-        .m_axi_awlen  (m_axi_awlen),
-        .m_axi_awsize (m_axi_awsize),
-        .m_axi_awburst(m_axi_awburst),
-        .m_axi_awvalid(m_axi_awvalid),
-        .m_axi_awready(m_axi_awready),
+        .m_axi_awid     (m_axi_awid),
+        .m_axi_awaddr   (m_axi_awaddr),
+        .m_axi_awlen    (m_axi_awlen),
+        .m_axi_awsize   (m_axi_awsize),
+        .m_axi_awburst  (m_axi_awburst),
+        .m_axi_awvalid  (m_axi_awvalid),
+        .m_axi_awready  (m_axi_awready),
 
-        .m_axi_wdata  (m_axi_wdata),
-        .m_axi_wstrb  (m_axi_wstrb),
-        .m_axi_wlast  (m_axi_wlast),
-        .m_axi_wvalid (m_axi_wvalid),
-        .m_axi_wready (m_axi_wready),
+        .m_axi_wdata    (m_axi_wdata),
+        .m_axi_wstrb    (m_axi_wstrb),
+        .m_axi_wlast    (m_axi_wlast),
+        .m_axi_wvalid   (m_axi_wvalid),
+        .m_axi_wready   (m_axi_wready),
 
-        .m_axi_bid    (m_axi_bid),
-        .m_axi_bresp  (m_axi_bresp),
-        .m_axi_bvalid (m_axi_bvalid),
-        .m_axi_bready (m_axi_bready),
+        .m_axi_bid      (m_axi_bid),
+        .m_axi_bresp    (m_axi_bresp),
+        .m_axi_bvalid   (m_axi_bvalid),
+        .m_axi_bready   (m_axi_bready),
 
-        .m_axi_arid   (m_axi_arid),
-        .m_axi_araddr (m_axi_araddr),
-        .m_axi_arlen  (m_axi_arlen),
-        .m_axi_arsize (m_axi_arsize),
-        .m_axi_arburst(m_axi_arburst),
-        .m_axi_arvalid(m_axi_arvalid),
-        .m_axi_arready(m_axi_arready),
+        .m_axi_arid     (m_axi_arid),
+        .m_axi_araddr   (m_axi_araddr),
+        .m_axi_arlen    (m_axi_arlen),
+        .m_axi_arsize   (m_axi_arsize),
+        .m_axi_arburst  (m_axi_arburst),
+        .m_axi_arvalid  (m_axi_arvalid),
+        .m_axi_arready  (m_axi_arready),
 
-        .m_axi_rid    (m_axi_rid),
-        .m_axi_rdata  (m_axi_rdata),
-        .m_axi_rresp  (m_axi_rresp),
-        .m_axi_rlast  (m_axi_rlast),
-        .m_axi_rvalid (m_axi_rvalid),
-        .m_axi_rready (m_axi_rready)
+        .m_axi_rid      (m_axi_rid),
+        .m_axi_rdata    (m_axi_rdata),
+        .m_axi_rresp    (m_axi_rresp),
+        .m_axi_rlast    (m_axi_rlast),
+        .m_axi_rvalid   (m_axi_rvalid),
+        .m_axi_rready   (m_axi_rready)
     );
 
     // -------------------------------------------------------------------------
@@ -207,10 +197,10 @@ module tb_soc_top;
         $display("Loading Multi-Core Hex Files...");
 
         // 2. Nap file cho Core A vào địa chỉ 0x0000
-        $readmemh(HEX_A, u_unified_mem.u_DataMem.mem, 0, 2047); 
+        $readmemh(HEX_A, u_unified_mem.u_DataMem.mem, IDX_A_START, IDX_A_END);
 
         // 3. Nap file cho Core B vào địa chỉ 0x8000
-        $readmemh(HEX_B, u_unified_mem.u_DataMem.mem, 8192, 12287);
+        $readmemh(HEX_B, u_unified_mem.u_DataMem.mem, IDX_B_START, IDX_B_END);
 
         $display("Core A loaded at 0x0000 (Index 0)");
         $display("Core B loaded at 0x8000 (Index 8192)");

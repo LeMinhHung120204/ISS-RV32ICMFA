@@ -6,10 +6,8 @@ module single_core #(
     parameter DATA_W        = 32,
 
     // Cau hinh core
-    parameter CODE_START     = 32'h0000_0000,
-    parameter CODE_END       = 32'h0000_3FFF, 
+    parameter CODE_START     = 32'h0000_0000, 
     parameter DATA_START     = 32'h0000_4000,
-    parameter DATA_END       = 32'h0000_7FFF,
 
     // Cau hinh cache
     parameter NUM_WAYS      = 4,
