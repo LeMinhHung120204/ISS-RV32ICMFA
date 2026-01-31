@@ -31,6 +31,12 @@ module dcache_controller_v2 (
     input                       i_mem_rdata_valid,
     output  reg                 o_mem_rdata_ready
 );
+    localparam CMD_READ_SHARED  = 2'b00; // Doc thong thuong
+    localparam CMD_WRITE_BACK   = 2'b01; // Ghi tra Victim
+    localparam CMD_UPGRADE      = 2'b10; // Xin quyen ghi (Hit Shared)
+    localparam CMD_READ_UNIQUE  = 2'b11; // Doc de ghi (Write Miss)
+
+    // MOESI State Encoding
     localparam STATE_M = 3'd0;
     localparam STATE_O = 3'd1;
     localparam STATE_E = 3'd2;
@@ -164,22 +170,34 @@ module dcache_controller_v2 (
 
             UPGRADE_REQ: begin
                 o_mem_req_valid = 1'b1;
-                o_mem_req_cmd   = 2'b10; // 10 = UPGRADE/INVALIDATE
-                stall           = 1'b1;  // Stall CPU den khi xong
+                o_mem_req_cmd   = CMD_UPGRADE;  // 10 = UPGRADE/INVALIDATE
+                stall           = 1'b1;         // Stall CPU den khi xong
             end
 
             WB_REQ: begin
                 o_mem_req_valid = 1'b1;
-                o_mem_req_cmd   = 2'b01; // 1 = WriteBack
+                o_mem_req_cmd   = CMD_WRITE_BACK;   // 1 = WriteBack
             end
 
             WB_DATA: begin
                 o_mem_wdata_valid = 1'b1;
             end
 
+            // ALLOC_REQ: begin
+            //     o_mem_req_valid = 1'b1;
+            //     o_mem_req_cmd   = 2'b00; // 0 = Read Request
+            // end
+
             ALLOC_REQ: begin
                 o_mem_req_valid = 1'b1;
-                o_mem_req_cmd   = 2'b00; // 0 = Read Request
+                if (cpu_we) begin
+                    // Write Miss -> Can doc du lieu ve & xin luon quyen ghi
+                    o_mem_req_cmd = CMD_READ_UNIQUE; // 2'b11
+                end
+                else begin
+                    // Read Miss -> Chi can doc ve (Shared)
+                    o_mem_req_cmd = CMD_READ_SHARED; // 2'b00
+                end
             end
 
             ALLOC_WAIT: begin

@@ -148,7 +148,6 @@ module L2_cache #(
     wire                    refill_we;
     // wire                    data_we;
     reg  [CACHE_DATA_W-1:0] refill_buffer;
-    // wire [3:0]              burst_cnt;
     // wire [3:0]              burst_cnt_snoop;
     wire [NUM_WAYS-1:0]     way_select;
 

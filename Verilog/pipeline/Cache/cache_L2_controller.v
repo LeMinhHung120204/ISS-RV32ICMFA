@@ -90,8 +90,17 @@ module cache_L2_controller #(
     localparam WAIT_SNOOP   = 4'd9;
     localparam WAIT_RAM     = 4'd10;
 
-    localparam CMD_READ     = 2'b00;
-    localparam CMD_WRITE    = 2'b01; 
+    // MOESI State Encoding
+    localparam STATE_M = 3'd0;
+    localparam STATE_O = 3'd1;
+    localparam STATE_E = 3'd2;
+    localparam STATE_S = 3'd3;
+    localparam STATE_I = 3'd4;
+
+    localparam CMD_READ_SHARED  = 2'b00; 
+    localparam CMD_WRITE_BACK   = 2'b01; 
+    localparam CMD_UPGRADE      = 2'b10; 
+    localparam CMD_READ_UNIQUE  = 2'b11;
 
     reg [3:0] state, next_state;
 
@@ -107,7 +116,10 @@ module cache_L2_controller #(
     assign oAWDOMAIN    = 2'b01; 
 
     wire need_upgrade;
-    assign need_upgrade = (i_req_cmd == CMD_WRITE) && hit && ((current_moesi_state == 3'd3) || (current_moesi_state == 3'd1)); // 3=Shared, 1=Owned
+    // assign need_upgrade = (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == 3'd3) || (current_moesi_state == 3'd1)); // 3=Shared, 1=Owned
+    assign need_upgrade =   ( (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_READ_UNIQUE) ) 
+                            || (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O));
+                            
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
@@ -146,54 +158,44 @@ module cache_L2_controller #(
         case(state)
             // TAG_CHECK: begin
             //     if (~snoop_busy && i_req_valid) begin
-            //         // Case: L1 Writeback (Evict)
-            //         if (i_req_cmd == CMD_WRITE) begin
-            //             if (hit && need_upgrade) begin
-            //                 // Hit nhung quyen Share -> Phai ra Bus xin quyen Unique truoc
-            //                 next_state = ALLOC_AR; 
-            //             end
-            //             // Neu L2 Miss nhung Victim Dirty -> Phai WB Victim truoc
-            //             else if (~hit && is_valid && victim_dirty) begin 
-            //                 next_state = WB_AW; 
-            //             end
-            //             else begin                                 
-            //                 next_state = L1_WB_RX; // Nhan data lun
+            //         if (hit) begin
+            //             if (i_req_cmd == CMD_WRITE_BACK && need_upgrade) begin
+            //                 next_state = ALLOC_AR; // Hit Shared -> Xin quyen Unique
             //             end 
+            //             else if (i_req_cmd == CMD_WRITE_BACK)
+            //                 next_state = L1_WB_RX; // Hit Exclusive/Modified -> Nhan data ghi lun
+            //             else
+            //                 next_state = TAG_CHECK; // Read Hit -> Xong
+            //         end 
+            //         else begin // MISS
+            //             if (is_valid && victim_dirty) begin
+            //                 next_state = WB_AW;    // write back
+            //             end 
+            //             else 
+            //                 next_state = ALLOC_AR; // allocate (ReadUnique/ReadShared)
             //         end
-            //         // Case: L1 Read (Refill)
-            //         else begin
-            //             if (hit) begin 
-            //                 next_state = TAG_CHECK;
-            //             end 
-            //             else begin
-            //                 if ((~is_valid) || (~victim_dirty)) begin 
-            //                     next_state = ALLOC_AR;
-            //                 end 
-            //                 else begin                                
-            //                     next_state = WB_AW;    
-            //                 end 
-            //             end 
-            //         end
-            //     end 
-            // end 
+            //     end
+            // end
 
             TAG_CHECK: begin
                 if (~snoop_busy && i_req_valid) begin
                     if (hit) begin
-                        if (i_req_cmd == CMD_WRITE && need_upgrade) begin
-                            next_state = ALLOC_AR; // Hit Shared -> Xin quyen Unique
+                        if (need_upgrade) begin
+                            next_state = ALLOC_AR; // Gui CleanUnique
                         end 
-                        else if (i_req_cmd == CMD_WRITE)
-                            next_state = L1_WB_RX; // Hit Exclusive/Modified -> Nhan data ghi lun
-                        else
+                        else if (i_req_cmd == CMD_WRITE_BACK) begin
+                            next_state = L1_WB_RX; // Hit M/E -> Ghi ngay
+                        end
+                        else begin
                             next_state = TAG_CHECK; // Read Hit -> Xong
+                        end
                     end 
-                    else begin // MISS
+                    else begin 
                         if (is_valid && victim_dirty) begin
-                            next_state = WB_AW;    // write back
+                            next_state = WB_AW;    // Write back victim
                         end 
                         else 
-                            next_state = ALLOC_AR; // allocate (ReadUnique/ReadShared)
+                            next_state = ALLOC_AR; // Allocate (Read Miss)
                     end
                 end
             end
@@ -216,7 +218,7 @@ module cache_L2_controller #(
             WB_B: begin
                 if (iBVALID) begin
                     // Xong WB Victim -> Quay lai viec chinh (Nhan data L1 hooc doc Mem)
-                    next_state = (i_req_cmd == CMD_WRITE) ? L1_WB_RX : ALLOC_AR;
+                    next_state = (i_req_cmd == CMD_WRITE_BACK) ? L1_WB_RX : ALLOC_AR;
                 end 
                 else begin
                     next_state = WB_B;
@@ -242,7 +244,7 @@ module cache_L2_controller #(
 
             UPDATE: begin    
                 next_state = WAIT_RAM;
-            end 
+            end
 
             WAIT_RAM: begin   
                 next_state = TAG_CHECK;
@@ -272,11 +274,28 @@ module cache_L2_controller #(
         oWSTRB                  = {STRB_W{1'b0}};
 
         case(state)
+            // TAG_CHECK: begin
+            //     snoop_can_access_ram = 1'b1;
+                
+            //     if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
+            //         o_rdata_ready = 1'b1;
+            //     end
+                
+            //     if (~snoop_busy && (next_state == TAG_CHECK)) begin
+            //         o_req_ready = 1'b1; 
+            //     end
+            //     else begin
+            //         o_req_ready = 1'b0;
+            //     end
+            // end
+
             TAG_CHECK: begin
                 snoop_can_access_ram = 1'b1;
                 
-                if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
-                    o_rdata_ready = 1'b1;
+                if (i_req_valid && hit && !need_upgrade) begin
+                    if (i_req_cmd == CMD_READ_SHARED || i_req_cmd == CMD_READ_UNIQUE) begin
+                        o_rdata_ready = 1'b1;
+                    end
                 end
                 
                 if (~snoop_busy && (next_state == TAG_CHECK)) begin
@@ -295,36 +314,76 @@ module cache_L2_controller #(
                 oAWVALID = 1'b1; 
                 oAWSNOOP = 3'b011; // WriteBack
             end
+
             WB_W: begin
                 oWVALID = 1'b1;
                 oWSTRB  = {STRB_W{1'b1}};
                 oWLAST  = (burst_cnt == 4'd15);
             end
+            
             WB_B: begin  
                 oBREADY = 1'b1;
             end 
+
+            // ALLOC_AR: begin 
+            //     oARVALID = 1'b1; 
+            //     snoop_can_access_ram = 1'b1; 
+            //     if (need_upgrade) begin
+            //         // CleanUnique: Bao moi nguoi Invalidate, tao giu data (vi tao sap ghi de)
+            //         oARSNOOP = 4'b1011; 
+            //     end
+            //     else begin
+            //         // ReadShared: Doc thong thuong (Miss)
+            //         oARSNOOP = 4'b0001; 
+            //     end
+            // end
+
             ALLOC_AR: begin 
                 oARVALID = 1'b1; 
                 snoop_can_access_ram = 1'b1; 
                 if (need_upgrade) begin
-                    // CleanUnique: Bao moi nguoi Invalidate, tao giu data (vi tao sap ghi de)
+                    // 1. CleanUnique: Hit S/O hoac Writeback S/O -> Chi can Invalidate
                     oARSNOOP = 4'b1011; 
                 end
+                else if (i_req_cmd == CMD_READ_UNIQUE) begin
+                    // 2. ReadUnique: Write Miss -> Doc ve voi quyen ghi
+                    oARSNOOP = 4'b0111;
+                end
                 else begin
-                    // ReadShared: Doc thong thuong (Miss)
+                    // 3. ReadShared: Read Miss -> Doc ve binh thuong
                     oARSNOOP = 4'b0001; 
                 end
             end
+
             ALLOC_R: begin  
                 oRREADY = 1'b1; 
                 snoop_can_access_ram = 1'b1;
             end 
+
+            // UPDATE: begin
+            //     snoop_can_access_ram    = 1'b0;
+            //     tag_we                  = 1'b1;
+            //     moesi_we                = 1'b1;
+            //     refill_we               = 1'b1; 
+            // end 
+
             UPDATE: begin
                 snoop_can_access_ram    = 1'b0;
                 tag_we                  = 1'b1;
                 moesi_we                = 1'b1;
-                refill_we               = 1'b1; 
-            end 
+                
+                // Chi bat refill_we (Ghi Data RAM) khi thuc su co Data moi
+                // - Neu la Upgrade (CleanUnique): Khong co data -> refill_we = 0
+                // - Neu la Writeback Upgrade (CMD_WRITE_BACK): Data chua den (se den o L1_WB_RX) -> refill_we = 0
+                // - Neu la Read Miss / ReadUnique Miss: Co data tu Bus -> refill_we = 1
+                
+                if (need_upgrade || (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_WRITE_BACK)) begin
+                     refill_we = 1'b0; // Chi sua Tag/MOESI, giu nguyen Data
+                end
+                else begin
+                     refill_we = 1'b1; // Ghi Data tu Bus vao RAM
+                end
+            end
 
             WAIT_SNOOP: begin
                 snoop_can_access_ram = 1'b1;
