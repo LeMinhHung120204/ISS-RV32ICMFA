@@ -38,7 +38,8 @@ module L2_cache #(
     // Snoop Internal (Forwarding -> L1)
     output                      o_int_snoop_valid,
     output [ADDR_W-1:0]         o_int_snoop_addr,
-    output [1:0]                o_int_snoop_type,
+    output                      snoop_req_invalidate,
+
     input                       i_int_snoop_hit,
     input                       i_int_snoop_dirty,
     input  [CACHE_DATA_W-1:0]   i_int_snoop_data,
@@ -140,11 +141,11 @@ module L2_cache #(
     wire [2:0]  L1_moesi_current_state  [0:NUM_WAYS-1];
     reg  [2:0]  moesi_selected_state;
     wire [2:0]  moesi_next_state;
-    wire        moesi_we;
+    wire        moesi_we, snoop_moesi_we, main_moesi_we;
     wire        is_unique, is_dirty, is_owner, is_valid;
     
     // Controller Output Signals
-    wire                    main_tag_we, snoop_tag_we, tag_we;
+    wire                    tag_we;
     wire                    refill_we;
     // wire                    data_we;
     reg  [CACHE_DATA_W-1:0] refill_buffer;
@@ -179,9 +180,10 @@ module L2_cache #(
     );
 
     // ---------------------------------------- SRAM ARRAYS ----------------------------------------
-    assign tag_we = main_tag_we | snoop_tag_we;
-    wire [3:0] choosen_way = (any_hit) ? way_hit : way_select;
-
+    wire [3:0] choosen_way;
+    
+    assign choosen_way  = (any_hit) ? way_hit : way_select;
+    assign moesi_we     = main_moesi_we | snoop_moesi_we;
     // --- Tag RAMs ---
     genvar i;
     generate
@@ -385,8 +387,8 @@ module L2_cache #(
         .o_rdata_ready      (o_rdata_ready_ctrl),
 
         // Outputs to Datapath
-        .tag_we             (main_tag_we),
-        .moesi_we           (moesi_we),
+        .tag_we             (tag_we),
+        .moesi_we           (main_moesi_we),
         .refill_we          (refill_we),
         .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
@@ -437,7 +439,6 @@ module L2_cache #(
     // ---------------------------------------- SNOOP & FORWARDING ----------------------------------------    
     // Forwarding Address/Type
     assign o_int_snoop_addr     = iACADDR;
-    assign o_int_snoop_type     = iACSNOOP[1:0];
 
     // 2. Snoop Controller
     snoop_controller #( 
@@ -456,13 +457,14 @@ module L2_cache #(
         // Thong tin tu L1
         .i_l1_snoop_complete    (1'b1), // tam thoi de vay
         .i_l1_is_dirty          (i_int_snoop_dirty),
+        .snoop_req_invalidate   (snoop_req_invalidate),
         .i_l1_has_data          (i_int_snoop_hit), // Hit o L1 coi nhu L1 co data
 
         // Output dieu khien L1
         .l1_forward_valid       (o_int_snoop_valid),
         
         // Output dieu khien L2
-        .tag_we                 (snoop_tag_we),
+        .moesi_we               (snoop_moesi_we),
         .snoop_busy             (snoop_busy),
         .bus_rw                 (bus_rw),
         .bus_snoop_valid        (bus_snoop_valid),

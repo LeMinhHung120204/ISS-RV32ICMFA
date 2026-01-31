@@ -47,7 +47,7 @@ module dcache #(
     // Snoop Interface
     input                       i_snoop_valid,
     input   [ADDR_W-1:0]        i_snoop_addr,
-    input   [1:0]               i_snoop_type,
+    input                       i_snoop_req_invalid,
     
     output  reg                     o_snoop_hit,
     output  reg                     o_snoop_dirty,
@@ -67,7 +67,6 @@ module dcache #(
     wire [DATA_W-1:0]       s2_wdata;
     
     wire                    s2_is_snoop;
-    wire                    snoop_is_invalidate;
 
     // Arrays & Counters
     // wire [3:0]              burst_cnt;
@@ -99,7 +98,7 @@ module dcache #(
     wire [NUM_WAYS-1:0] current_valid;
     wire invalid;
 
-    assign invalid = s2_is_snoop && o_snoop_hit && snoop_is_invalidate;
+    assign invalid = s2_is_snoop && o_snoop_hit && i_snoop_req_invalid;
     genvar i;
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
@@ -270,9 +269,6 @@ module dcache #(
             end
         end
     end
-
-    // Invalidate (Core khac ghi), 0: Clean/Check (Core khac doc)
-    assign snoop_is_invalidate = (i_snoop_type == 2'b01); 
 
     integer k;
     always @(posedge clk or negedge rst_n) begin

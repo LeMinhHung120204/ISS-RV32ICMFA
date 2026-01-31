@@ -17,9 +17,10 @@ module snoop_controller #(
 
     input                   snoop_can_access_ram,
 
-    output reg              tag_we,
-    output reg              snoop_busy,
-    output reg              l1_forward_valid,
+    output  reg             moesi_we,
+    output  reg             snoop_req_invalidate,
+    output  reg             snoop_busy,
+    output  reg             l1_forward_valid,
 
     // Tin hieu dieu khien MOESI Controller
     output                  bus_rw,             // 1: Write (Invalidate), 0: Read
@@ -56,7 +57,7 @@ module snoop_controller #(
     // reg [3:0]   burst_cnt;
 
     reg snoop_requires_data;
-    reg snoop_requires_invalidate;
+    // reg snoop_req_invalidate;
     
     reg final_is_dirty;
     reg final_has_data;
@@ -66,37 +67,37 @@ module snoop_controller #(
     always @(*) begin
         case (reg_ACSNOOP)    
             4'b0000: begin // ReadOnce
-                snoop_requires_data       = 1'b1;
-                snoop_requires_invalidate = 1'b0;
+                snoop_requires_data     = 1'b1;
+                snoop_req_invalidate    = 1'b0;
             end
             4'b0001, 4'b0010, 4'b0011: begin // ReadShared, ReadClean, ReadNotSharedDirty
-                snoop_requires_data       = 1'b1;
-                snoop_requires_invalidate = 1'b0;
+                snoop_requires_data     = 1'b1;
+                snoop_req_invalidate    = 1'b0;
             end
             4'b0111: begin // ReadUnique (doc de ghi de -> Invalidate mình)
-                snoop_requires_data       = 1'b1;
-                snoop_requires_invalidate = 1'b1;
+                snoop_requires_data     = 1'b1;
+                snoop_req_invalidate    = 1'b1;
             end
             4'b1000: begin // CleanShared
-                snoop_requires_data       = 1'b0; 
-                snoop_requires_invalidate = 1'b0;
+                snoop_requires_data     = 1'b0; 
+                snoop_req_invalidate    = 1'b0;
             end
             4'b1001: begin // CleanInvalid
-                snoop_requires_invalidate = 1'b1;
-                snoop_requires_data       = 1'b1;
+                snoop_req_invalidate    = 1'b1;
+                snoop_requires_data     = 1'b1;
             end
             4'b1101: begin // MakeInvalid
-                snoop_requires_invalidate = 1'b1;
-                snoop_requires_data       = 1'b0;
+                snoop_req_invalidate    = 1'b1;
+                snoop_requires_data     = 1'b0;
             end
             default: begin
-                snoop_requires_data       = 1'b0;
-                snoop_requires_invalidate = 1'b0;
+                snoop_requires_data     = 1'b0;
+                snoop_req_invalidate    = 1'b0;
             end
         endcase
     end
 
-    assign bus_rw           = snoop_requires_invalidate;
+    assign bus_rw           = snoop_req_invalidate;
     // assign burst_cnt_snoop  = burst_cnt;
     assign CRRESP           = reg_CRRESP;
 
@@ -113,7 +114,7 @@ module snoop_controller #(
             resp_pd = final_is_dirty & resp_dt;
             
             // Is Shared (is): Bao shared neu minh khong bi invalidate (van giu copy)
-            resp_is = !snoop_requires_invalidate;
+            resp_is = !snoop_req_invalidate;
             
             // Was Unique (wu): Bao truoc do minh doc quyen
             resp_wu = is_unique;
@@ -171,7 +172,7 @@ module snoop_controller #(
         CRVALID             = 1'b0;
         CDVALID             = 1'b0;
         CDLAST              = 1'b0;
-        tag_we              = 1'b0;
+        moesi_we              = 1'b0;
         bus_snoop_valid     = 1'b0;
         l1_forward_valid    = 1'b0;
         next_state          = state;
@@ -201,8 +202,8 @@ module snoop_controller #(
             WAIT_L1: begin
                 l1_forward_valid = 1'b1;
                 if (i_l1_snoop_complete) begin
-                    if ((snoop_requires_invalidate) || is_unique) begin
-                        tag_we          = 1'b1; 
+                    if (snoop_hit && (snoop_req_invalidate || is_unique)) begin
+                        moesi_we        = 1'b1; 
                         bus_snoop_valid = 1'b1;
                     end
                     next_state = RESP;

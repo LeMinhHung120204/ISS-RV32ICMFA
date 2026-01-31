@@ -122,7 +122,7 @@ module single_core #(
     wire [11:0]             L1_moesi_current_state;
     wire                    int_snoop_valid;
     wire [ADDR_W-1:0]       int_snoop_addr;
-    wire [1:0]              int_snoop_type;
+    wire                    snoop_req_invalidate;
     wire                    int_snoop_hit;
     wire                    int_snoop_dirty;
     wire [CACHE_DATA_W-1:0]   int_snoop_data;
@@ -223,12 +223,12 @@ module single_core #(
         .o_l2_rdata_ready   (),
 
         // Internal Snoop Port
-        .i_snoop_valid      (int_snoop_valid), 
-        .i_snoop_addr       (int_snoop_addr),
-        .i_snoop_type       (int_snoop_type),
-        .o_snoop_hit        (int_snoop_hit), 
-        .o_snoop_dirty      (int_snoop_dirty),        
-        .o_snoop_data       (int_snoop_data)
+        .i_snoop_valid          (int_snoop_valid), 
+        .i_snoop_addr           (int_snoop_addr),
+        .i_snoop_req_invalid    (snoop_req_invalidate),
+        .o_snoop_hit            (int_snoop_hit), 
+        .o_snoop_dirty          (int_snoop_dirty),        
+        .o_snoop_data           (int_snoop_data)
     );
 
     // ---------------------------------------- ARBITER ----------------------------------------
@@ -297,12 +297,12 @@ module single_core #(
         .i_rdata_ready  (1'b1),             // tam de vay
 
         // Internal Snoop Forwarding
-        .o_int_snoop_valid  (int_snoop_valid),
-        .o_int_snoop_addr   (int_snoop_addr),
-        .o_int_snoop_type   (int_snoop_type),
-        .i_int_snoop_hit    (int_snoop_hit),
-        .i_int_snoop_dirty  (int_snoop_dirty),
-        .i_int_snoop_data   (int_snoop_data),
+        .o_int_snoop_valid      (int_snoop_valid),
+        .o_int_snoop_addr       (int_snoop_addr),
+        .snoop_req_invalidate   (snoop_req_invalidate),
+        .i_int_snoop_hit        (int_snoop_hit),
+        .i_int_snoop_dirty      (int_snoop_dirty),
+        .i_int_snoop_data       (int_snoop_data),
 
         // --- AXI ACE ---
         // AW Channel
