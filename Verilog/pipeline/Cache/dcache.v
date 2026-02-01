@@ -4,6 +4,8 @@ module dcache #(
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
     parameter NUM_SETS      = 16,
+
+    parameter DATA_START    = 32'h0000_4000,
     
     // Derived parameters
     parameter INDEX_W       = $clog2(NUM_SETS),
@@ -49,6 +51,7 @@ module dcache #(
     input   [ADDR_W-1:0]        i_snoop_addr,
     input                       i_snoop_req_invalid,
     
+    output  reg                     o_snoop_complete,
     output  reg                     o_snoop_hit,
     output  reg                     o_snoop_dirty,
     output  reg [CACHE_DATA_W-1:0]  o_snoop_data
@@ -80,9 +83,10 @@ module dcache #(
     wire [NUM_WAYS-1:0]     way_select;
     wire                    cpu_hit;
     wire                    read_index_src;
+    wire                    snoop_can_access_ram;
 
     // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
-    wire [ADDR_W-1:0] s1_mux_addr   = (i_snoop_valid) ? i_snoop_addr : cpu_addr;
+    wire [ADDR_W-1:0] s1_mux_addr   = (i_snoop_valid) ? i_snoop_addr : (cpu_addr | DATA_START);
     access #(
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W), 
@@ -95,6 +99,16 @@ module dcache #(
         .cpu_byte_off   (s1_byte_off)
     );
     
+    // ---------------------------------------- SNOOP ----------------------------------------
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            o_snoop_complete    <= 1'b0;
+        end 
+        else begin
+            o_snoop_complete    <= i_snoop_valid;
+        end
+    end
+
     // ---------------------------------------- SRAM ARRAYS (DATA & TAG) ----------------------------------------
     wire [NUM_WAYS-1:0] current_valid;
     wire invalid;
@@ -157,6 +171,7 @@ module dcache #(
         .clk            (clk), 
         .rst_n          (rst_n),
         .stall          (pipeline_stall),
+        .snoop_stall    (~snoop_can_access_ram),
         .flush          (1'b0),
 
         // Inputs
@@ -320,11 +335,12 @@ module dcache #(
         .snoop_busy         (i_snoop_valid),
 
         // Outputs to Datapath
-        .data_we        (data_we), 
-        .tag_we         (tag_we), 
-        .refill_we      (refill_we),
-        .stall          (stall_contoller),
-        .read_index_src (read_index_src),
+        .data_we                (data_we), 
+        .tag_we                 (tag_we), 
+        .refill_we              (refill_we),
+        .stall                  (stall_contoller),
+        .read_index_src         (read_index_src),
+        .snoop_can_access_ram   (snoop_can_access_ram),
 
         // Custom L2 Interface
         .i_l2_moesi_state   (moesi_selected_state),

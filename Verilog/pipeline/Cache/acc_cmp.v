@@ -22,6 +22,7 @@ module acc_cmp #(
     input   [WORD_OFF_W-1:0]    s1_word_off,
     input   [BYTE_OFF_W-1:0]    s1_byte_off,
 
+    input                       snoop_stall,
     input                       s1_is_snoop,
     input   [TAG_W-1:0]         s1_snoop_tag,
     input   [INDEX_W-1:0]       s1_snoop_index,
@@ -57,6 +58,12 @@ module acc_cmp #(
             s2_snoop_index  <= {INDEX_W{1'b0}};
         end
         else begin
+            if (~snoop_stall) begin
+                s2_is_snoop     <= s1_is_snoop;       
+                s2_snoop_tag    <= s1_snoop_tag;
+                s2_snoop_index  <= s1_snoop_index;
+            end 
+            
             if (flush) begin
                 s2_req          <= 1'b0;
                 s2_we           <= 1'b0;
@@ -67,10 +74,6 @@ module acc_cmp #(
                 s2_index        <= {INDEX_W{1'b0}};
                 s2_word_off     <= {WORD_OFF_W{1'b0}};
                 s2_byte_off     <= {BYTE_OFF_W{1'b0}};
-
-                s2_is_snoop     <= 1'b0;
-                s2_snoop_tag    <= {TAG_W{1'b0}};
-                s2_snoop_index  <= {INDEX_W{1'b0}};
             end 
             else if (~stall) begin
                 s2_req          <= s1_req;
@@ -82,11 +85,6 @@ module acc_cmp #(
                 s2_index        <= s1_index;
                 s2_word_off     <= s1_word_off;
                 s2_byte_off     <= s1_byte_off;     
-
-                s2_is_snoop     <= s1_is_snoop;       
-                s2_snoop_tag    <= s1_snoop_tag;
-                s2_snoop_index  <= s1_snoop_index;
-                
             end
         end
 

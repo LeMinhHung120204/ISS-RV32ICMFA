@@ -184,8 +184,7 @@ module tb_soc_top;
 
     initial begin
         ARESETn     = 0;
-        c0_stall    = 0;
-        c1_stall    = 0;
+        
         for (i = 0; i < (1 << RAM_ADDR_W); i = i + 1) begin
             u_unified_mem.u_DataMem.mem[i] = 32'h0;
         end
@@ -207,12 +206,18 @@ module tb_soc_top;
         $display("--------------------------------------------------");
 
         $display("[SCENARIO] Both cores starting...");
-        c0_stall = 0;
-        c1_stall = 0;
 
-        #2000; 
+        #5000; 
         $display("Simulation Finished.");
         $finish;
+    end
+
+    initial begin
+        c1_stall    = 1;
+        c0_stall    = 0;
+        
+        #4000;
+        c1_stall    = 0;
     end
 
     // -------------------------------------------------------------------------

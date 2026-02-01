@@ -84,7 +84,7 @@ module icache #(
                 .rst_n          (rst_n),
 
                 // Port read
-                .read_index     (read_index_src ? s1_index : s2_index),         
+                .read_index     (s1_index),         
                 .dout_tag       (tag_read[i]),
                 .valid          (current_valid[i]),
 
@@ -104,7 +104,7 @@ module icache #(
                 .rst_n          (rst_n),
 
                 // Port read
-                .read_index     (read_index_src ? s1_index : s2_index),
+                .read_index     (s1_index),
                 .dout           (data_read[i]),
 
                  // refill
@@ -198,6 +198,7 @@ module icache #(
         .tag_we             (tag_we), 
         .refill_we          (refill_we),
         .stall              (stall_contoller),
+        .read_index_src     (read_index_src),
 
         .o_mem_req_valid    (o_l2_req_valid),
         .i_mem_req_ready    (i_l2_req_ready),

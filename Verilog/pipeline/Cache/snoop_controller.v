@@ -21,6 +21,7 @@ module snoop_controller #(
     output  reg             snoop_req_invalidate,
     output  reg             snoop_busy,
     output  reg             l1_forward_valid,
+    output  reg             reg_snoop_stall,
 
     // Tin hieu dieu khien MOESI Controller
     output                  bus_rw,             // 1: Write (Invalidate), 0: Read
@@ -172,9 +173,10 @@ module snoop_controller #(
         CRVALID             = 1'b0;
         CDVALID             = 1'b0;
         CDLAST              = 1'b0;
-        moesi_we              = 1'b0;
+        moesi_we            = 1'b0;
         bus_snoop_valid     = 1'b0;
         l1_forward_valid    = 1'b0;
+        reg_snoop_stall     = 1'b0;
         next_state          = state;
 
         case (state)
@@ -187,6 +189,7 @@ module snoop_controller #(
             end
 
             LOOKUP: begin
+                reg_snoop_stall = 1'b1;
                 if (snoop_can_access_ram) begin
                     if (snoop_hit) begin
                         // HIT: Phai hoi L1 truoc khi tra loi
@@ -200,7 +203,8 @@ module snoop_controller #(
             end
 
             WAIT_L1: begin
-                l1_forward_valid = 1'b1;
+                l1_forward_valid    = 1'b1;
+                reg_snoop_stall     = 1'b1;
                 if (i_l1_snoop_complete) begin
                     if (snoop_hit && (snoop_req_invalidate || is_unique)) begin
                         moesi_we        = 1'b1; 
@@ -224,7 +228,7 @@ module snoop_controller #(
 
             DATA: begin
                 CDVALID = 1'b1;
-                CDLAST  = 1'b1;
+                CDLAST  = (burst_cnt == 4'd15);
                 
                 if (CDREADY && CDLAST) begin
                     next_state = IDLE;

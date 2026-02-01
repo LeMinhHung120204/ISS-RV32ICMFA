@@ -56,6 +56,7 @@ module ace_interconnect_v2 #(
     input   [4:0]           s0_ace_crresp,
     input   [DATA_W-1:0]    s0_ace_cddata,
     input                   s0_ace_cdvalid,
+    input                   s0_ace_cdlast,
 
     // ================= CLIENT 1 (CORE B) =================
     // AR Channel
@@ -107,6 +108,7 @@ module ace_interconnect_v2 #(
     input   [4:0]           s1_ace_crresp,
     input   [DATA_W-1:0]    s1_ace_cddata,
     input                   s1_ace_cdvalid,
+    input                   s1_ace_cdlast,
 
     // ================================================================ MASTER PORT (TO EXTERNAL MEMORY) ================================================================
     // READ
@@ -159,6 +161,29 @@ module ace_interconnect_v2 #(
 
     reg [2:0] r_state, r_next_state;
     reg [2:0] w_state, w_next_state;
+
+
+    wire [DATA_W-1:0]   mux_s0_rdata;
+    wire [DATA_W-1:0]   mux_s1_rdata;
+    wire [ID_W-1:0]     mux_s0_rid, mux_s1_rid;
+    wire [3:0]          mux_s0_rresp, mux_s1_rresp;
+    wire                mux_s0_rvalid, mux_s1_rvalid;
+    wire                mux_s0_rlast, mux_s1_rlast;
+
+    assign s0_axi_rdata     = (r_state == R_DATA_SNOOP) ? s1_ace_cddata : mux_s0_rdata;
+    assign s1_axi_rdata     = (r_state == R_DATA_SNOOP) ? s0_ace_cddata : mux_s1_rdata;
+
+    assign s0_axi_rvalid    = (r_state == R_DATA_SNOOP) ? s1_ace_cdvalid : mux_s0_rvalid;
+    assign s1_axi_rvalid    = (r_state == R_DATA_SNOOP) ? s0_ace_cdvalid : mux_s1_rvalid;
+
+    assign s0_axi_rlast     = (r_state == R_DATA_SNOOP) ? s1_ace_cdlast : mux_s0_rlast;
+    assign s1_axi_rlast     = (r_state == R_DATA_SNOOP) ? s0_ace_cdlast : mux_s1_rlast;
+
+    assign s0_axi_rresp     = (r_state == R_DATA_SNOOP) ? 4'b0000 : mux_s0_rresp; 
+    assign s1_axi_rresp     = (r_state == R_DATA_SNOOP) ? 4'b0000 : mux_s1_rresp;
+
+    assign s0_axi_rid       = (r_state == R_DATA_SNOOP) ? s0_ar_id : mux_s0_rid;
+    assign s1_axi_rid       = (r_state == R_DATA_SNOOP) ? s1_ar_id : mux_s1_rid;
 
     // ================================================================ REQUEST BUFFERS & PENDING LOGIC (READ/WRITE) ================================================================
     // Pending Flags
@@ -354,12 +379,12 @@ module ace_interconnect_v2 #(
             R_DATA_SNOOP: begin
                 // Wait for CD data from Peer
                 if (grant_r_s0) begin
-                    if (s1_ace_cdvalid && s0_axi_rready) begin 
+                    if (s1_ace_cdvalid && s0_axi_rready && s1_ace_cdlast) begin 
                         r_next_state = IDLE;
                     end 
                 end 
                 else begin
-                    if (s0_ace_cdvalid && s1_axi_rready) begin 
+                    if (s0_ace_cdvalid && s1_axi_rready && s0_ace_cdlast) begin 
                         r_next_state = IDLE;
                     end 
                 end
@@ -530,22 +555,22 @@ module ace_interconnect_v2 #(
         .m0_araddr  (s0_ar_addr),
         .m0_arvalid (s0_pending_r && (r_state == R_MEM_REQ)), 
         .m0_arready (),                                         // khong dung mux arready cho nay
-        .m0_rdata   (s0_axi_rdata),
-        .m0_rid     (s0_axi_rid),
-        .m0_rresp   (s0_axi_rresp),
-        .m0_rvalid  (s0_axi_rvalid),
-        .m0_rlast   (s0_axi_rlast),
+        .m0_rdata   (mux_s0_rdata),
+        .m0_rid     (mux_s0_rid),
+        .m0_rresp   (mux_s0_rresp),
+        .m0_rvalid  (mux_s0_rvalid),
+        .m0_rlast   (mux_s0_rlast),
         .m0_rready  (m0_rready_gated),
 
         .m1_arid    (s1_ar_id),
         .m1_araddr  (s1_ar_addr),
         .m1_arvalid (s1_pending_r && (r_state == R_MEM_REQ)),
         .m1_arready (),
-        .m1_rdata   (s1_axi_rdata),
-        .m1_rid     (s1_axi_rid),
-        .m1_rresp   (s1_axi_rresp),
-        .m1_rvalid  (s1_axi_rvalid),
-        .m1_rlast   (s1_axi_rlast),
+        .m1_rdata   (mux_s1_rdata),
+        .m1_rid     (mux_s1_rid),
+        .m1_rresp   (mux_s1_rresp),
+        .m1_rvalid  (mux_s1_rvalid),
+        .m1_rlast   (mux_s1_rlast),
         .m1_rready  (m1_rready_gated),
 
         .s_arid     (mem_arid),

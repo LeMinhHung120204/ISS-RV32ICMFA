@@ -16,6 +16,8 @@ module dcache_controller_v2 (
     output  reg         tag_we, 
     output  reg         refill_we,
     output  reg         stall,
+
+    output  reg         snoop_can_access_ram,
     input               snoop_busy, 
 
    
@@ -216,6 +218,19 @@ module dcache_controller_v2 (
                 stall           = 1'b1;
                 read_index_src  = 1'b1;
             end 
+        endcase
+    end
+
+    always @(*) begin
+        case(state)
+            UPDATE, WAIT_RAM: begin
+                snoop_can_access_ram = 1'b0;
+            end
+            WB_DATA: begin
+                snoop_can_access_ram = 1'b0;
+            end
+
+            default: snoop_can_access_ram = 1'b1;
         endcase
     end
 

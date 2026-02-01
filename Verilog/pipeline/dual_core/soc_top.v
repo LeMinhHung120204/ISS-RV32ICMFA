@@ -337,6 +337,7 @@ module soc_top #(
         .s0_ace_crresp  (c0_crresp), 
         .s0_ace_cddata  (c0_cddata), 
         .s0_ace_cdvalid (c0_cdvalid),
+        .s0_ace_cdlast  (c0_cdlast),
 
         // Write channel (core0)
         .s0_axi_awid    (c0_awid),
@@ -385,6 +386,7 @@ module soc_top #(
         .s1_ace_crresp  (c1_crresp), 
         .s1_ace_cddata  (c1_cddata), 
         .s1_ace_cdvalid (c1_cdvalid),
+        .s1_ace_cdlast  (c1_cdlast),
 
         // Write channel (core1)
         .s1_axi_awid    (c1_awid),

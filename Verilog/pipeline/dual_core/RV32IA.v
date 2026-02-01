@@ -202,7 +202,7 @@ module RV32IA #(
     fetch_pipe fetch_pipe_register (
         .clk    (clk),
         .rst_n  (rst_n),
-        .EN     (F_Stall),
+        .EN     (F_Stall | test_stall),
         .Flush  (fetch_pipe_Flush),
 
         .s1_Predict_Taken   (F_Predict_Taken),
@@ -221,7 +221,7 @@ module RV32IA #(
     IF_ID IF_ID_register(
         .clk                (clk),
         .rst_n              (rst_n),
-        .EN                 (D_Stall),
+        .EN                 (D_Stall | test_stall),
         .D_Flush            (D_Flush),
         .F_RD               (F_RD),
         .F_PC               (s2_PC),
@@ -285,7 +285,7 @@ module RV32IA #(
         .clk                (clk),
         .rst_n              (rst_n),
         .E_Flush            (E_Flush),
-        .EN                 (E_Stall),
+        .EN                 (E_Stall | test_stall),
 
         .D_RD1              (RDX1),
         .D_RD2              (RDX2),
@@ -388,7 +388,7 @@ module RV32IA #(
     EX_MEM EX_MEM_register(
         .clk    (clk),
         .rst_n  (rst_n),
-        .EN     (M_Stall),
+        .EN     (M_Stall | test_stall),
 
         .E_ALUResult    (E_ALUResult),
         .E_WriteData    (E_WriteData),
@@ -438,7 +438,7 @@ module RV32IA #(
     MEM_CACHE MEM_CACHE_register(
         .clk            (clk),
         .rst_n          (rst_n),
-        .EN             (dcache_stall),
+        .EN             (dcache_stall | test_stall),
 
         .M_Result       (M_ALUResult),
         .M_ImmExt       (M_ImmExt),

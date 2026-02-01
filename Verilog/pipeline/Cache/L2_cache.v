@@ -41,6 +41,7 @@ module L2_cache #(
     output                      snoop_req_invalidate,
 
     input                       i_int_snoop_hit,
+    input                       i_l1_snoop_complete,
     input                       i_int_snoop_dirty,
     input  [CACHE_DATA_W-1:0]   i_int_snoop_data,
 
@@ -111,23 +112,24 @@ module L2_cache #(
     output                      oCDLAST
 );
    // ---------------------------------------- INTERNAL WIRES ----------------------------------------
-    wire [TAG_W-1:0]        s1_tag;
-    wire [INDEX_W-1:0]      s1_index;
+    wire [TAG_W-1:0]        s1_tag, s1_ac_tag;
+    wire [INDEX_W-1:0]      s1_index, s1_ac_index;
     wire [WORD_OFF_W-1:0]   s1_word_off;
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
 
     wire                    s2_req;
     // wire                    s2_we;
     // wire [DATA_W-1:0]       s2_wdata;
-    wire [TAG_W-1:0]        s2_tag;
-    wire [INDEX_W-1:0]      s2_index;
+    wire [TAG_W-1:0]        s2_tag, s2_snoop_tag;
+    wire [INDEX_W-1:0]      s2_index, s2_snoop_index;
     wire [WORD_OFF_W-1:0]   s2_word_off;
     wire [BYTE_OFF_W-1:0]   s2_byte_off;
 
     // Control Signals
     wire                snoop_busy;
-    reg                 snoop_hit;
+    wire                snoop_hit;
     wire                snoop_can_access_ram;
+    wire                reg_snoop_stall;
     wire                s2_is_snoop;
     wire                read_index_src;
 
@@ -151,6 +153,7 @@ module L2_cache #(
     wire                    refill_we;
     // wire                    data_we;
     reg  [CACHE_DATA_W-1:0] refill_buffer;
+    reg  [CACHE_DATA_W-1:0] snoop_buffer;
     wire [3:0]              burst_cnt_snoop;
     wire [NUM_WAYS-1:0]     way_select;
 
@@ -173,9 +176,12 @@ module L2_cache #(
     ) access_inst (
         .cpu_addr               (s1_mux_addr),
         .dcache_req_moesi_addr  (i_L1_read_addr),
+        .ac_addr                (iACADDR),
 
         .cpu_tag                (s1_tag),            
-        .cpu_index              (s1_index),   
+        .ac_tag                 (s1_ac_tag),
+        .cpu_index              (s1_index), 
+        .ac_index               (s1_ac_index),  
         .cpu_word_off           (s1_word_off),
         .cpu_byte_off           (s1_byte_off),
         .dcache_req_moesi_index (lq_req_moesi_index)
@@ -269,7 +275,11 @@ module L2_cache #(
         .s1_index       (s1_index),   
         .s1_word_off    (s1_word_off),
         .s1_byte_off    (s1_byte_off),
+
+        .snoop_stall    (reg_snoop_stall),
         .s1_is_snoop    (iACVALID),
+        .s1_snoop_tag   (s1_ac_tag),
+        .s1_snoop_index (s1_ac_index),
 
         // Stage 2 Outputs
         .s2_req         (s2_req),
@@ -281,23 +291,30 @@ module L2_cache #(
         .s2_index       (s2_index),
         .s2_word_off    (s2_word_off),
         .s2_byte_off    (s2_byte_off),
-        .s2_is_snoop    (s2_is_snoop)
+
+        .s2_is_snoop    (s2_is_snoop),
+        .s2_snoop_tag   (s2_snoop_tag),
+        .s2_snoop_index (s2_snoop_index)
     );
 
    // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
-    assign way_hit[0] = (tag_read[0] == s2_tag) & (moesi_current_state[0] != 3'd4);
-    assign way_hit[1] = (tag_read[1] == s2_tag) & (moesi_current_state[1] != 3'd4);
-    assign way_hit[2] = (tag_read[2] == s2_tag) & (moesi_current_state[2] != 3'd4);
-    assign way_hit[3] = (tag_read[3] == s2_tag) & (moesi_current_state[3] != 3'd4);
+    wire [TAG_W-1:0] tag_select;
 
-    always @(*) begin
-        if (s2_is_snoop) begin 
-            snoop_hit = |way_hit;
-        end 
-        else begin            
-            snoop_hit = 1'b0;
-        end 
-    end
+    assign tag_select = (s2_is_snoop) ? s2_snoop_tag : s2_tag;
+    assign way_hit[0] = (tag_read[0] == tag_select) & (moesi_current_state[0] != 3'd4);
+    assign way_hit[1] = (tag_read[1] == tag_select) & (moesi_current_state[1] != 3'd4);
+    assign way_hit[2] = (tag_read[2] == tag_select) & (moesi_current_state[2] != 3'd4);
+    assign way_hit[3] = (tag_read[3] == tag_select) & (moesi_current_state[3] != 3'd4);
+
+    assign snoop_hit = |way_hit & s2_is_snoop;
+    // always @(*) begin
+    //     if (s2_is_snoop) begin 
+    //         snoop_hit = |way_hit;
+    //     end 
+    //     else begin            
+    //         snoop_hit = 1'b0;
+    //     end 
+    // end
     
     assign any_hit = |way_hit;
     wire [NUM_WAYS-1:0] way_select_final = (any_hit) ? way_hit : way_select;
@@ -347,6 +364,18 @@ module L2_cache #(
             end
         end 
     end 
+
+    always @(posedge ACLK or negedge ARESETn) begin
+        if (~ARESETn) begin
+            snoop_buffer <= {CACHE_DATA_W{1'b0}};
+        end 
+        else begin 
+            // Snoop Forwarding Data from L1
+            if (i_int_snoop_hit & i_l1_snoop_complete) begin
+                snoop_buffer <= i_int_snoop_data;
+            end
+        end 
+    end
     
     assign o_wdata_ready = o_wdata_ready_ctrl;
     // ---------------------------------------- REPLACEMENT POLICY ----------------------------------------
@@ -444,7 +473,7 @@ module L2_cache #(
 
     // ---------------------------------------- SNOOP & FORWARDING ----------------------------------------    
     // Forwarding Address/Type
-    assign o_int_snoop_addr     = iACADDR;
+    assign o_int_snoop_addr     = {s2_snoop_tag, s2_snoop_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // 2. Snoop Controller
     snoop_controller #( 
@@ -455,13 +484,15 @@ module L2_cache #(
         
         // thong tin tu L2
         .snoop_hit              (snoop_hit),
+        // .snoop_hit              (any_hit),
         .is_unique              (is_unique), 
         .is_dirty               (is_dirty), 
         .is_owner               (is_owner),
         .snoop_can_access_ram   (snoop_can_access_ram),
+        .reg_snoop_stall        (reg_snoop_stall),
 
         // Thong tin tu L1
-        .i_l1_snoop_complete    (1'b1), // tam thoi de vay
+        .i_l1_snoop_complete    (i_l1_snoop_complete),
         .i_l1_is_dirty          (i_int_snoop_dirty),
         .snoop_req_invalidate   (snoop_req_invalidate),
         .i_l1_has_data          (i_int_snoop_hit), // Hit o L1 coi nhu L1 co data

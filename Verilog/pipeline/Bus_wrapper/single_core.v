@@ -108,6 +108,7 @@ module single_core #(
     wire                l1d_wdata_valid, l1d_wdata_ready;
     wire [CACHE_DATA_W-1:0]   l1d_wdata;
     wire                l1d_rdata_valid;
+    wire                l1_snoop_complete;
 
     // Arbiter to L2
     wire                l2_req_valid, l2_req_ready;
@@ -189,6 +190,7 @@ module single_core #(
     dcache #( 
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W),
+        .DATA_START (DATA_START),
 
         // cau hinh cache
         .NUM_WAYS   (NUM_WAYS),
@@ -226,6 +228,8 @@ module single_core #(
         .i_snoop_valid          (int_snoop_valid), 
         .i_snoop_addr           (int_snoop_addr),
         .i_snoop_req_invalid    (snoop_req_invalidate),
+
+        .o_snoop_complete       (l1_snoop_complete),
         .o_snoop_hit            (int_snoop_hit), 
         .o_snoop_dirty          (int_snoop_dirty),        
         .o_snoop_data           (int_snoop_data)
@@ -300,6 +304,8 @@ module single_core #(
         .o_int_snoop_valid      (int_snoop_valid),
         .o_int_snoop_addr       (int_snoop_addr),
         .snoop_req_invalidate   (snoop_req_invalidate),
+
+        .i_l1_snoop_complete    (l1_snoop_complete),
         .i_int_snoop_hit        (int_snoop_hit),
         .i_int_snoop_dirty      (int_snoop_dirty),
         .i_int_snoop_data       (int_snoop_data),
