@@ -151,7 +151,7 @@ module L2_cache #(
     wire                    refill_we;
     // wire                    data_we;
     reg  [CACHE_DATA_W-1:0] refill_buffer;
-    // wire [3:0]              burst_cnt_snoop;
+    wire [3:0]              burst_cnt_snoop;
     wire [NUM_WAYS-1:0]     way_select;
 
     // Controller specific for L2
@@ -473,6 +473,7 @@ module L2_cache #(
         .bus_rw                 (bus_rw),
         .bus_snoop_valid        (bus_snoop_valid),
         .use_l1_data_mux        (use_l1_data_mux),
+        .burst_cnt_snoop        (burst_cnt_snoop),
 
         // AXI Snoop Channels
         .ACVALID    (iACVALID), 
@@ -530,14 +531,14 @@ module L2_cache #(
     always @(*) begin
         if (use_l1_data_mux) begin
             // Neu Snoop Controller bao lay tu L1 (vi L1 co ban Dirty moi hon)
-            oCDDATA = i_int_snoop_data[burst_cnt*DATA_W +: DATA_W];
+            oCDDATA = i_int_snoop_data[burst_cnt_snoop*DATA_W +: DATA_W];
         end
         else begin
             case(way_hit)
-                4'b0001: oCDDATA = data_read[0][burst_cnt*DATA_W +: DATA_W];
-                4'b0010: oCDDATA = data_read[1][burst_cnt*DATA_W +: DATA_W];
-                4'b0100: oCDDATA = data_read[2][burst_cnt*DATA_W +: DATA_W];
-                4'b1000: oCDDATA = data_read[3][burst_cnt*DATA_W +: DATA_W];
+                4'b0001: oCDDATA = data_read[0][burst_cnt_snoop*DATA_W +: DATA_W];
+                4'b0010: oCDDATA = data_read[1][burst_cnt_snoop*DATA_W +: DATA_W];
+                4'b0100: oCDDATA = data_read[2][burst_cnt_snoop*DATA_W +: DATA_W];
+                4'b1000: oCDDATA = data_read[3][burst_cnt_snoop*DATA_W +: DATA_W];
                 default: oCDDATA = {CACHE_DATA_W{1'b0}};
             endcase
         end 
