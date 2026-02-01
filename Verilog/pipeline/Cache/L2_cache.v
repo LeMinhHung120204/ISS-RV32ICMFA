@@ -534,6 +534,7 @@ module L2_cache #(
         .cpu_req_valid      (s2_req),   
         .cpu_hit            (any_hit), 
         .cpu_rw             (s2_cmd[0]), 
+        .l1_dirty           (i_int_snoop_dirty),
 
         .bus_snoop_valid    (bus_snoop_valid),
         .snoop_hit          (snoop_hit),

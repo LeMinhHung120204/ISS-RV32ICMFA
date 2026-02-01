@@ -207,7 +207,7 @@ module snoop_controller #(
                 reg_snoop_stall     = 1'b1;
                 if (i_l1_snoop_complete) begin
                     if (snoop_hit && (snoop_req_invalidate || is_unique)) begin
-                        moesi_we        = 1'b1; 
+                        // moesi_we        = 1'b1; 
                         bus_snoop_valid = 1'b1;
                     end
                     next_state = RESP;
@@ -217,12 +217,17 @@ module snoop_controller #(
             RESP: begin
                 CRVALID = 1'b1;
                 if (CRREADY) begin
-                    if (reg_CRRESP[0]) begin 
-                        next_state = DATA; // Can gui data -> Sang DATA state
-                    end 
-                    else begin
-                        next_state = IDLE;
+                    if (snoop_hit && (snoop_req_invalidate || is_unique)) begin
+                        moesi_we        = 1'b1;
+                        bus_snoop_valid = 1'b1;
                     end
+
+                    if (reg_CRRESP[0]) begin 
+                        next_state = DATA;
+                    end 
+                    else begin               
+                        next_state = IDLE;
+                    end 
                 end
             end
 

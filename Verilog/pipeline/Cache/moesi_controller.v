@@ -13,7 +13,8 @@ module moesi_controller(
     // Request from Bus (Snoop)
     input           bus_snoop_valid,
     input           snoop_hit,      
-    input           bus_rw,         
+    input           bus_rw,      
+    input           l1_dirty,   
 
     // Outputs
     output              is_dirty,       
@@ -43,7 +44,14 @@ module moesi_controller(
             else begin // Bus read (ReadShared)
                 case (current_state)
                     STATE_M, STATE_O:   next_state = STATE_O; // Chia se du lieu Dirty -> Owned
-                    STATE_E:            next_state = STATE_S; // E -> S
+                    STATE_E: begin            
+                        if (l1_dirty) begin 
+                            next_state = STATE_O; // L1 co data dirty -> Owned
+                        end 
+                        else begin
+                            next_state = STATE_S; // L1 khong co data dirty -> Shared
+                        end 
+                    end 
                     STATE_S:            next_state = STATE_S;
                     default:            next_state = STATE_I;
                 endcase
