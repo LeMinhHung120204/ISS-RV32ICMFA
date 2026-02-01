@@ -49,6 +49,7 @@ module tag_mem #(
             for(i = 0; i < NUM_SETS; i = i + 1) begin 
                 valid_array[i] <= 1'b0;
             end
+            // valid <= 1'b0;
         end 
         else begin
             if (valid_we) begin
@@ -57,6 +58,15 @@ module tag_mem #(
             else if (invalid) begin
                 valid_array[write_index] <= 1'b0;
             end 
+            // valid <= valid_array[read_index];
+        end 
+    end 
+
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            valid <= 1'b0;
+        end 
+        else begin 
             valid <= valid_array[read_index];
         end 
     end 
@@ -77,7 +87,4 @@ module tag_mem #(
             L1_moesi_current_state  <= state_moesi[L1_read_index];
         end
     end
-
-    // assign dout                 = tag_mem[index];
-    // assign moesi_current_state  = state_moesi[index];
 endmodule

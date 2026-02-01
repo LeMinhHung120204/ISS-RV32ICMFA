@@ -4,7 +4,7 @@ module cache_L2_controller #(
     parameter ADDR_W        = 32,
     parameter ID_W          = 2,    
     parameter USER_W        = 4,
-    parameter CACHE_DATA_W  = 512,              // 64 Bytes Line
+    // parameter CACHE_DATA_W  = 512,              // 64 Bytes Line
     parameter STRB_W        = (DATA_W/8)        // strobe width matches beat data width (32-bit -> 4)
 )(
     input           clk, rst_n,

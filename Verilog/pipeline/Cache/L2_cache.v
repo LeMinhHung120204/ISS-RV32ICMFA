@@ -396,8 +396,7 @@ module L2_cache #(
     wire is_dirty_response;
     cache_L2_controller #(
         .DATA_W         (DATA_W), 
-        .ADDR_W         (ADDR_W),
-        .CACHE_DATA_W   (CACHE_DATA_W)
+        .ADDR_W         (ADDR_W)
     ) u_controller (
         .clk        (ACLK), 
         .rst_n      (ARESETn),

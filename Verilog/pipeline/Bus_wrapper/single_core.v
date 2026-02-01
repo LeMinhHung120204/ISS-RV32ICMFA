@@ -17,7 +17,7 @@ module single_core #(
     parameter WORD_OFF_W    = 4, // 16 words
     parameter BYTE_OFF_W    = 2,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
-    parameter STRB_W        = CACHE_DATA_W/8
+    parameter STRB_W        = DATA_W/8
 )(
     input   ACLK,
     input   ARESETn,
