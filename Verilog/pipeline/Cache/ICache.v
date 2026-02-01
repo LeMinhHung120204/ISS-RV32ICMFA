@@ -55,6 +55,7 @@ module icache #(
     wire [NUM_WAYS-1:0]     way_hit;
     wire [NUM_WAYS-1:0]     way_select;
     wire                    cpu_hit;
+    wire                    read_index_src;
 
     // ---------------------------------------- STAGE 1: ACCESS ----------------------------------------
     access #(
@@ -83,7 +84,7 @@ module icache #(
                 .rst_n          (rst_n),
 
                 // Port read
-                .read_index     (s1_index),        
+                .read_index     (read_index_src ? s1_index : s2_index),         
                 .dout_tag       (tag_read[i]),
                 .valid          (current_valid[i]),
 
@@ -103,7 +104,7 @@ module icache #(
                 .rst_n          (rst_n),
 
                 // Port read
-                .read_index     (s1_index),
+                .read_index     (read_index_src ? s1_index : s2_index),
                 .dout           (data_read[i]),
 
                  // refill

@@ -12,7 +12,7 @@ module icache_controller #(
     output  reg         tag_we, 
     output  reg         refill_we,
     output  reg         stall,
-
+    output  reg         read_index_src,
    
     // request L1 -> L2 
     input           i_mem_req_ready, // L2 san sang nhan
@@ -90,6 +90,7 @@ module icache_controller #(
         tag_we              = 1'b0;
         stall               = 1'b0;
         refill_we           = 1'b0;
+        read_index_src      = 1'b0;
 
         case(state)
             ALLOC_REQ: begin
@@ -107,7 +108,8 @@ module icache_controller #(
             end
 
             WAIT_RAM: begin
-                stall       = 1'b1;
+                stall           = 1'b1;
+                read_index_src  = 1'b1;
             end 
         endcase
     end

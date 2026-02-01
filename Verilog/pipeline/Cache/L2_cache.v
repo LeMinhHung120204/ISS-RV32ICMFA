@@ -129,6 +129,7 @@ module L2_cache #(
     reg                 snoop_hit;
     wire                snoop_can_access_ram;
     wire                s2_is_snoop;
+    wire                read_index_src;
 
     // Memory Arrays
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
@@ -201,7 +202,7 @@ module L2_cache #(
 
                 .tag_we                 (tag_we & way_select[i]),
                 .moesi_we               (moesi_we & choosen_way[i]),
-                .read_index             (s1_index),   
+                .read_index             (read_index_src ? s1_index : s2_index),   
                 .write_index            (s2_index),           
                 .din_tag                (s2_tag),            
                 .dout_tag               (tag_read[i]),
@@ -224,7 +225,7 @@ module L2_cache #(
             ) u_data_mem (
                 .clk            (ACLK), 
                 .rst_n          (ARESETn),
-                .read_index     (s1_index),  
+                .read_index     (read_index_src ? s1_index : s2_index),  
                 .dout           (data_read[i]),
                 
                 // Ghi nguyen dong cache
@@ -392,6 +393,7 @@ module L2_cache #(
         .tag_we             (tag_we),
         .moesi_we           (main_moesi_we),
         .refill_we          (refill_we),
+        .read_index_src     (read_index_src),
         .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),

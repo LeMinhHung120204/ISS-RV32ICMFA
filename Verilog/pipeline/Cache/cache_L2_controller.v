@@ -12,6 +12,7 @@ module cache_L2_controller #(
     // --- Control Signals ---
     input           snoop_busy,          
     output  reg     snoop_can_access_ram,
+    output  reg     read_index_src,
     // output  reg     wb_error,
 
     // --- L1 Interface (Thay cho CPU) ---
@@ -269,7 +270,8 @@ module cache_L2_controller #(
         oRREADY                 = 1'b0;
         tag_we                  = 1'b0; 
         moesi_we                = 1'b0;
-        refill_we               = 1'b0; 
+        refill_we               = 1'b0;
+        read_index_src          = 1'b0; 
         o_wdata_ready           = 1'b0; 
         o_rdata_ready           = 1'b0;
         oWLAST                  = 1'b0;
@@ -400,7 +402,8 @@ module cache_L2_controller #(
             end
 
             WAIT_RAM: begin   
-                stall = 1'b1;
+                stall           = 1'b1;
+                read_index_src  = 1'b1;
             end 
         endcase
     end 
