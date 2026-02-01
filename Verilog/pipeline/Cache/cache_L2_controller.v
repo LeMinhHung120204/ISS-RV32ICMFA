@@ -117,8 +117,15 @@ module cache_L2_controller #(
 
     wire need_upgrade;
     // assign need_upgrade = (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == 3'd3) || (current_moesi_state == 3'd1)); // 3=Shared, 1=Owned
-    assign need_upgrade =   ( (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_READ_UNIQUE) ) 
-                            || (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O));
+
+    assign need_upgrade = hit && (
+                            (i_req_cmd == CMD_UPGRADE) || 
+                            (i_req_cmd == CMD_READ_UNIQUE) || 
+                            ((i_req_cmd == CMD_WRITE_BACK) && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O)))
+                        );
+
+    // assign need_upgrade =   ( (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_READ_UNIQUE) ) 
+    //                         || (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O));
                             
 
     always @(posedge clk or negedge rst_n) begin

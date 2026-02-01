@@ -12,6 +12,7 @@ module dcache_controller_v2 (
     input   [2:0]       i_l2_moesi_state,
 
     output  reg         data_we,
+    output  reg         read_index_src,
     output  reg         tag_we, 
     output  reg         refill_we,
     output  reg         stall,
@@ -160,6 +161,7 @@ module dcache_controller_v2 (
         tag_we              = 1'b0;
         refill_we           = 1'b0;
         stall               = 1'b0;
+        read_index_src      = 1'b0;
 
         case(state)
             TAG_CHECK: begin
@@ -211,7 +213,8 @@ module dcache_controller_v2 (
             end
 
             WAIT_RAM: begin
-                stall       = 1'b1;
+                stall           = 1'b1;
+                read_index_src  = 1'b1;
             end 
         endcase
     end

@@ -32,7 +32,7 @@ module HazardUnit #(
 
     output reg [1:0]    ForwardAE, 
     output reg [1:0]    ForwardBE, 
-    output reg [1:0]    ForwardFCE,
+    // output reg [1:0]    ForwardFCE,
     output              F_Stall, 
     output              D_Stall, 
     output              E_Stall, 

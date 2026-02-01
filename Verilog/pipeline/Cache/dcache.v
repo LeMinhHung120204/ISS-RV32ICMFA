@@ -79,6 +79,7 @@ module dcache #(
     wire [NUM_WAYS-1:0]     way_hit;
     wire [NUM_WAYS-1:0]     way_select;
     wire                    cpu_hit;
+    wire                    read_index_src;
 
     // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
     wire [ADDR_W-1:0] s1_mux_addr   = (i_snoop_valid) ? i_snoop_addr : cpu_addr;
@@ -112,7 +113,7 @@ module dcache #(
                 .tag_we         (tag_we & way_select[i]),
                 .valid_we       (refill_we & way_select[i]),
                 .invalid        (invalid & way_hit[i]),
-                .read_index     (s1_index),         
+                .read_index     (read_index_src ? s1_index : s2_index),         
                 .write_index    (s2_index),          
                 .din_tag        (s2_tag),
 
@@ -127,7 +128,7 @@ module dcache #(
             ) u_data_mem (
                 .clk            (clk), 
                 .rst_n          (rst_n),
-                .read_index     (s1_index),
+                .read_index     (read_index_src ? s1_index : s2_index),
                 .write_index    (s2_index),
 
                 .refill_we      (refill_we & way_select[i]),
@@ -319,10 +320,11 @@ module dcache #(
         .snoop_busy         (i_snoop_valid),
 
         // Outputs to Datapath
-        .data_we    (data_we), 
-        .tag_we     (tag_we), 
-        .refill_we  (refill_we),
-        .stall      (stall_contoller),
+        .data_we        (data_we), 
+        .tag_we         (tag_we), 
+        .refill_we      (refill_we),
+        .stall          (stall_contoller),
+        .read_index_src (read_index_src),
 
         // Custom L2 Interface
         .i_l2_moesi_state   (moesi_selected_state),
