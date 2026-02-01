@@ -202,7 +202,8 @@ module L2_cache #(
 
                 .tag_we                 (tag_we & way_select[i]),
                 .moesi_we               (moesi_we & choosen_way[i]),
-                .read_index             (read_index_src ? s1_index : s2_index),   
+                // .read_index             (read_index_src ? s1_index : s2_index),   
+                .read_index             (s1_index),   
                 .write_index            (s2_index),           
                 .din_tag                (s2_tag),            
                 .dout_tag               (tag_read[i]),
@@ -225,7 +226,8 @@ module L2_cache #(
             ) u_data_mem (
                 .clk            (ACLK), 
                 .rst_n          (ARESETn),
-                .read_index     (read_index_src ? s1_index : s2_index),  
+                // .read_index     (read_index_src ? s1_index : s2_index),  
+                .read_index     (s1_index),  
                 .dout           (data_read[i]),
                 
                 // Ghi nguyen dong cache
