@@ -275,7 +275,7 @@ module cache_L2_controller #(
         o_wdata_ready           = 1'b0; 
         o_rdata_ready           = 1'b0;
         oWLAST                  = 1'b0;
-        snoop_can_access_ram    = 1'b0;
+        snoop_can_access_ram    = 1'b1;
         o_req_ready             = 1'b0;
         stall                   = 1'b0;   
         oAWSNOOP                = 3'b0; 
@@ -299,7 +299,7 @@ module cache_L2_controller #(
             // end
 
             TAG_CHECK: begin
-                snoop_can_access_ram = 1'b1;
+                // snoop_can_access_ram = 1'b1;
                 
                 if (i_req_valid && hit && !need_upgrade) begin
                     if (i_req_cmd == CMD_READ_SHARED || i_req_cmd == CMD_READ_UNIQUE) begin
@@ -352,7 +352,7 @@ module cache_L2_controller #(
 
             ALLOC_AR: begin 
                 oARVALID = 1'b1; 
-                snoop_can_access_ram = 1'b1; 
+                // snoop_can_access_ram = 1'b1; 
                 if (need_upgrade) begin
                     // 1. CleanUnique: Hit S/O hoac Writeback S/O -> Chi can Invalidate
                     oARSNOOP = 4'b1011; 
@@ -369,7 +369,7 @@ module cache_L2_controller #(
 
             ALLOC_R: begin  
                 oRREADY = 1'b1; 
-                snoop_can_access_ram = 1'b1;
+                // snoop_can_access_ram = 1'b1;
             end 
 
             // UPDATE: begin
@@ -398,7 +398,7 @@ module cache_L2_controller #(
             end
 
             WAIT_SNOOP: begin
-                snoop_can_access_ram = 1'b1;
+                // snoop_can_access_ram = 1'b1;
             end
 
             WAIT_RAM: begin   
