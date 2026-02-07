@@ -91,6 +91,9 @@ module RV32IA #(
     wire [2:0]              M_ResultSrc, M_StoreSrc;
     wire                    M_data_req;
     wire                    M_Stall;
+    wire                    M_amo;
+    wire    [2:0]           M_amo_op;
+    wire                    M_lr, M_sc;
 
     // ----------------------- CACHE signals -----------------------
     wire [WIDTH_DATA-1:0]   C_Result, C_ImmExt, C_mux_result, C_ReadData;
@@ -419,6 +422,10 @@ module RV32IA #(
         .E_StoreSrc     (E_StoreSrc),
         .E_ResPCSel     (E_ResPCSel),
         .E_data_req     (E_data_req),
+        .E_amo          (E_amo),
+        .E_amo_op       (E_amo_op),
+        .E_lr           (E_lr),
+        .E_sc           (E_sc),
 
         .M_ALUResult    (M_ALUResult),
         .M_WriteData    (M_WriteData),
@@ -431,7 +438,11 @@ module RV32IA #(
         .M_ResultSrc    (M_ResultSrc),
         .M_StoreSrc     (M_StoreSrc),
         .M_ResPCSel     (M_ResPCSel),
-        .M_data_req     (M_data_req)
+        .M_data_req     (M_data_req),
+        .M_amo          (M_amo),
+        .M_amo_op       (M_amo_op),
+        .M_lr           (M_lr),
+        .M_sc           (M_sc)
     );
 
     // ---------------------------------------- DATA CACHE INTERFACE ----------------------------------------

@@ -29,7 +29,7 @@ module dcache #(
     // Request address
     output                      o_l2_req_valid,
     input                       i_l2_req_ready,
-    output  [1:0]               o_l2_req_cmd,   // 0: Read, 1: WriteBack
+    output  [1:0]               o_l2_req_cmd,   // 00: READ_REQ, 01: WRITE_BACK, 10 = UPGRADE/INVALIDATE
     output  [ADDR_W-1:0]        o_l2_req_addr,
 
     // Request Moesi
@@ -323,7 +323,7 @@ module dcache #(
     wire victim_dirty_bit = |(current_dirty & way_select);
     wire victim_valid_bit = |(current_valid & way_select);
 
-    dcache_controller_v2 u_controller (
+    dcache_controller u_controller (
         .clk                (clk), 
         .rst_n              (rst_n),
         

@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module dcache_controller_v2 (
+module dcache_controller (
     input               clk, rst_n,
 
     // Cache <-> CPU
@@ -24,7 +24,7 @@ module dcache_controller_v2 (
     // request L1 -> L2 
     input                       i_mem_req_ready, // L2 san sang nhan
     output  reg                 o_mem_req_valid, // Bao co request
-    output  reg [1:0]           o_mem_req_cmd,   // 0: READ_REQ, 1: WRITE_BACK
+    output  reg [1:0]           o_mem_req_cmd,   // 00: READ_REQ, 01: WRITE_BACK, 10 = UPGRADE/INVALIDATE
     
     // address writeback L1 -> L2
     input                       i_mem_wdata_ready,
