@@ -28,61 +28,82 @@ module RV32IA #(
 
     output  [WIDTH_DATA - 1:0]  W_Result_output
 );
-    // ----------------------- Data buses / pipeline signals -----------------------
-    wire [WIDTH_DATA-1:0] F_RD;
-    wire [WIDTH_DATA-1:0] RDX1, RDX2;
 
-    wire [WIDTH_DATA-1:0] D_Instr, D_ImmExt;
+    // ----------------------- fetch signals -----------------------
+    reg  [WIDTH_ADDR-1:0]   PCNext;
+    wire [WIDTH_DATA-1:0]   F_RD;
+    wire [WIDTH_ADDR-1:0]   F_PC, F_PCPlus4;
+    wire                    F_Stall;
+    wire                    F_Predict_Taken;
+    wire [2:0]              F_GHSR;
+    wire [31:0]             F_Predict_Target;
+    
+    // ----------------------- IF signals (S2 - after icache) -----------------------
+    wire                    s2_Predict_Taken;
+    wire [2:0]              s2_GHSR;
+    wire [WIDTH_ADDR-1:0]   s2_PC, s2_PCPlus4;
+    wire                    fetch_pipe_Flush;
 
-    wire [WIDTH_DATA-1:0] E_RD1, E_RD2;
-    wire [WIDTH_DATA-1:0] E_ImmExt, E_ALUResult;
+    // ----------------------- ID signals -----------------------
+    wire [WIDTH_DATA-1:0]   D_Instr, D_ImmExt;
+    wire [WIDTH_ADDR-1:0]   D_PC, D_PCPlus4;
+    wire [WIDTH_DATA-1:0]   RDX1, RDX2;
+    wire [4:0]              A1, A2, WD3;
+    wire                    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_addr_addend_sel, D_ResPCSel;
+    wire [3:0]              D_ALUControl;
+    wire [2:0]              D_ResultSrc, D_ImmSrc, D_StoreSrc;
+    wire                    D_Predict_Taken;
+    wire [2:0]              D_GHSR;
+    wire                    D_data_req;
+    wire                    D_Stall, D_Flush;
 
-    wire [WIDTH_DATA-1:0] M_ALUResult, M_WriteData, M_ImmExt;
-    wire [WIDTH_DATA-1:0] C_Result, C_ImmExt, C_mux_result, C_ReadData;
-    wire [WIDTH_DATA-1:0] W_mux_result;
+    // ----------------------- atomic signals -----------------------
+    wire            D_amo;
+    wire    [2:0]   D_amo_op;
+    wire            D_lr, D_sc;
 
-    // ----------------------- Register / address fields -----------------------
-    wire [4:0] E_rs1, E_rs2, E_rd;
-    wire [4:0] M_rd, C_rd, W_rd;
-    wire [4:0] A1, A2, WD3;
+    // ----------------------- EX signals -----------------------
+    wire [WIDTH_DATA-1:0]   E_RD1, E_RD2;
+    wire [WIDTH_DATA-1:0]   E_ImmExt, E_ALUResult;
+    wire [WIDTH_ADDR-1:0]   E_PC, E_PCPlus4, E_PCtmp, E_PCTarget;
+    wire [4:0]              E_rs1, E_rs2, E_rd;
+    wire [WIDTH_DATA-1:0]   E_SrcA, E_SrcB, E_WriteData;
+    wire                    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel;
+    wire [3:0]              E_ALUControl;
+    wire [2:0]              E_ResultSrc, E_funct3, E_StoreSrc;
+    wire                    E_Predict_Taken;
+    wire [2:0]              E_GHSR;
+    wire                    E_Mispredict;
+    wire [31:0]             E_Correct_PC;
+    wire                    E_data_req;
+    wire                    E_Stall, E_Flush;
+    wire [1:0]              ForwardAE, ForwardBE;
 
-    // ----------------------- Execution sources -----------------------
-    wire [WIDTH_DATA-1:0] E_SrcA, E_SrcB, E_WriteData;
+    wire                    E_amo;
+    wire    [2:0]           E_amo_op;
+    wire                    E_lr, E_sc;
 
-    // ----------------------- Control signals -----------------------
-    wire D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_addr_addend_sel, D_ResPCSel;
-    wire E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel;
-    wire M_RegWrite, M_MemWrite, M_ResPCSel;
-    wire C_RegWrite;
-    wire W_RegWrite;
+    // ----------------------- MEM signals -----------------------
+    wire [WIDTH_DATA-1:0]   M_ALUResult, M_WriteData, M_ImmExt;
+    wire [WIDTH_ADDR-1:0]   M_PCPlus4, M_PCTarget, M_ResPC;
+    wire [4:0]              M_rd;
+    wire                    M_RegWrite, M_MemWrite, M_ResPCSel;
+    wire [2:0]              M_ResultSrc, M_StoreSrc;
+    wire                    M_data_req;
+    wire                    M_Stall;
 
-    // ----------------------- ALU / result control widths -----------------------
-    wire [3:0] D_ALUControl, E_ALUControl;
-    wire [2:0] D_ResultSrc, E_ResultSrc, M_ResultSrc, C_ResultSrc, W_ResultSrc;
-    wire [2:0] D_ImmSrc, E_funct3;
-    wire [2:0] D_StoreSrc, E_StoreSrc, M_StoreSrc;
-    wire [1:0] D_ResExSel, E_ResExSel, M_ResExSel;
+    // ----------------------- CACHE signals -----------------------
+    wire [WIDTH_DATA-1:0]   C_Result, C_ImmExt, C_mux_result, C_ReadData;
+    wire [WIDTH_ADDR-1:0]   C_ResPC;
+    wire [4:0]              C_rd;
+    wire                    C_RegWrite;
+    wire [2:0]              C_ResultSrc;
 
-    // ----------------------- Hazard / forwarding -----------------------
-    wire F_Stall, D_Stall, E_Stall;
-    wire D_Flush, fetch_pipe_Flush, E_Flush;
-    wire [1:0] ForwardAE, ForwardBE;
-
-    // ----------------------- Tin hieu PC -----------------------
-    reg [WIDTH_ADDR - 1:0] PCNext;
-    wire [WIDTH_ADDR - 1:0] F_PC, D_PC, E_PC;
-    wire [WIDTH_ADDR - 1:0] F_PCPlus4, D_PCPlus4, E_PCPlus4, M_PCPlus4;
-    wire [WIDTH_ADDR - 1:0] E_PCtmp;
-    wire [WIDTH_ADDR - 1:0] M_ResPC, C_ResPC;
-    wire [WIDTH_ADDR - 1:0] E_PCTarget, M_PCTarget;
-
-    // ----------------------- Tin hieu Branch prediction -----------------------
-    wire        F_Predict_Taken, D_Predict_Taken, E_Predict_Taken;  
-    wire [2:0]  F_GHSR, D_GHSR, E_GHSR;
-    wire [31:0] F_Predict_Target;
-
-    wire        E_Mispredict; 
-    wire [31:0] E_Correct_PC;
+    // ----------------------- WB signals -----------------------
+    wire [WIDTH_DATA-1:0]   W_mux_result;
+    wire [4:0]              W_rd;
+    wire                    W_RegWrite;
+    wire [2:0]              W_ResultSrc;
     
 
     assign W_Result_output  = W_mux_result;
@@ -135,7 +156,6 @@ module RV32IA #(
         .E_PCSrc        (E_PCSrc)
     );
     // ---------------------------------------- WB state ----------------------------------------
-    wire M_Stall;
     assign icache_flush = fetch_pipe_Flush;
 
     HazardUnit HazardUnit_inst(
@@ -143,7 +163,6 @@ module RV32IA #(
         .D_Rs2          (A2),
         .E_Rs1          (E_rs1),
         .E_Rs2          (E_rs2),
-        // .E_RsF3         (E_RsF3),
         .E_rd           (E_rd),
         .icache_stall   (icache_stall),
         .dcache_stall   (dcache_stall),
@@ -188,11 +207,6 @@ module RV32IA #(
     );
 
     // ---------------------------------------- CACHE CONNECTION ----------------------------------------
-    wire                    s2_Predict_Taken;
-    wire [2:0]              s2_GHSR         ;
-    wire [WIDTH_ADDR-1:0]   s2_PC           ;
-    wire [WIDTH_ADDR-1:0]   s2_PCPlus4      ;
-
     assign icache_addr = F_PC;          // S1 -> Cache
     assign icache_req  = rst_n;         // luon yeu canh lenh khi khong reset
     assign F_RD        = imem_instr;    // S2 (Cache) -> 
@@ -240,8 +254,6 @@ module RV32IA #(
     assign A1   = D_Instr[19:15];
     assign A2   = D_Instr[24:20];
     assign WD3  = D_Instr[11:7];
-
-    wire D_data_req, E_data_req;
     
     ControlUnit ControlUnit_ins(
         .op                 (D_Instr[6:0]),
@@ -257,10 +269,13 @@ module RV32IA #(
         .Branch             (D_Branch),
         .Jump               (D_Jump),
         .StoreSrc           (D_StoreSrc),
-        .ResExSel           (D_ResExSel),
         .addr_addend_sel    (D_addr_addend_sel),
         .ResPCSel           (D_ResPCSel),
-        .data_req           (D_data_req)
+        .data_req           (D_data_req),
+        .amo                (D_amo),
+        .amo_op             (D_amo_op),
+        .lr                 (D_lr),
+        .sc                 (D_sc)
     );
 
     RegFile register_file(
@@ -307,9 +322,12 @@ module RV32IA #(
         .D_ALUControl       (D_ALUControl),
         .D_addr_addend_sel  (D_addr_addend_sel),
         .D_ResPCSel         (D_ResPCSel),
-        .D_ResExSel         (D_ResExSel),  
         .D_Predict_Taken    (D_Predict_Taken),    
         .D_data_req         (D_data_req),  
+        .D_amo              (D_amo),
+        .D_amo_op           (D_amo_op),
+        .D_lr               (D_lr),
+        .D_sc               (D_sc),
 
         .E_RD1              (E_RD1),
         .E_RD2              (E_RD2),
@@ -331,14 +349,15 @@ module RV32IA #(
         .E_ALUControl       (E_ALUControl),
         .E_addr_addend_sel  (E_addr_addend_sel),
         .E_ResPCSel         (E_ResPCSel),
-        .E_ResExSel         (E_ResExSel),
         .E_Predict_Taken    (E_Predict_Taken),
-        .E_data_req         (E_data_req)
+        .E_data_req         (E_data_req),
+        .E_amo              (E_amo),
+        .E_amo_op           (E_amo_op),
+        .E_lr               (E_lr),
+        .E_sc               (E_sc)
     );
 
     // ---------------------------------------- Ex state ----------------------------------------
-    wire M_data_req;
-
     ALU alu_inst(
         .ALUControl (E_ALUControl),
         .in1        (E_SrcA),
@@ -374,8 +393,6 @@ module RV32IA #(
         .res    (E_WriteData)
     );
 
-    // FPU-forward path removed (no FPU/MDU in this build)
-
     mux2_1 mux_E_ALUSrc (
         .in0    (E_WriteData),
         .in1    (E_ImmExt),
@@ -400,7 +417,6 @@ module RV32IA #(
         .E_MemWrite     (E_MemWrite),
         .E_ResultSrc    (E_ResultSrc),
         .E_StoreSrc     (E_StoreSrc),
-        .E_ResExSel     (E_ResExSel),
         .E_ResPCSel     (E_ResPCSel),
         .E_data_req     (E_data_req),
 
@@ -414,7 +430,6 @@ module RV32IA #(
         .M_MemWrite     (M_MemWrite),
         .M_ResultSrc    (M_ResultSrc),
         .M_StoreSrc     (M_StoreSrc),
-        .M_ResExSel     (M_ResExSel),
         .M_ResPCSel     (M_ResPCSel),
         .M_data_req     (M_data_req)
     );
