@@ -8,7 +8,8 @@ module dcache_controller_v2 (
 ,   input               cpu_req
 ,   input               cpu_we
 ,   input   [31:0]      cpu_addr        // Can dia chi de check Reservation
-,   input   [1:0]       cpu_size        
+
+    // Cache Status
 ,   input               hit         
 ,   input               victim_dirty
 ,   input               victim_valid
@@ -17,7 +18,7 @@ module dcache_controller_v2 (
 ,   input                   i_atomic_lr      // Load-Reserved
 ,   input                   i_atomic_sc      // Store-Conditional  
 ,   input                   i_atomic_amo     // AMO operation
-,   input   [4:0]           i_amo_op         // AMO operation type
+,   input   [2:0]           i_amo_op         // AMO operation type
 ,   output  reg             o_sc_success
 
     // Snoop invalidation (tu L2)
@@ -74,15 +75,13 @@ module dcache_controller_v2 (
     localparam UPGRADE_REQ  = 4'd8;
     localparam SC_CHECK     = 4'd9;  // Store-Conditional check
     localparam AMO_READ     = 4'd10; // AMO: Read phase
-    localparam AMO_COMPUTE  = 4'd11; // AMO: Compute phase  
-    localparam AMO_WRITE    = 4'd12; // AMO: Write phase
+    localparam AMO_WRITE    = 4'd11; // AMO: Write phase
 
     reg [3:0] state, next_state;
 
     // ============ RESERVATION REGISTERS ============
     reg                 res_valid;
     reg [31:0]          res_addr;
-    reg [1:0]           res_size;
     
     // Kiem tra xem dia chi CPU dang ghi co khop voi Reservation ko
     wire res_hit = res_valid && (res_addr == cpu_addr);
@@ -92,7 +91,6 @@ module dcache_controller_v2 (
         if (~rst_n) begin
             res_valid   <= 1'b0;
             res_addr    <= 32'b0;
-            res_size    <= 2'b0;
         end
         else begin
             // CLEAR reservation khi:
@@ -109,7 +107,6 @@ module dcache_controller_v2 (
             else if (i_atomic_lr && hit && state == TAG_CHECK) begin
                 res_valid   <= 1'b1;
                 res_addr    <= cpu_addr;
-                res_size    <= cpu_size;
             end
         end
     end
@@ -190,11 +187,6 @@ module dcache_controller_v2 (
             // ============ AMO Flow ============
             AMO_READ: begin
                 // Doc du lieu tu Cache ra ALU
-                next_state = AMO_COMPUTE;
-            end
-            
-            AMO_COMPUTE: begin
-                // Cho ALU tinh toan (1 cycle)
                 next_state = AMO_WRITE;
             end
             
@@ -298,7 +290,7 @@ module dcache_controller_v2 (
                 stall = 1'b1;
                 // Tin hieu doc RAM dua vao ALU o day (logic nam ngoai FSM nay)
             end
-            AMO_COMPUTE: stall = 1'b1;
+            
             AMO_WRITE: begin
                 stall = 1'b1;
                 data_we = 1'b1; // Ghi ket qua ALU vao Cache

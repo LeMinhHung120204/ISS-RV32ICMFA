@@ -8,38 +8,48 @@ module acc_cmp #(
     parameter BYTE_OFF_W    = 2,  // 4B/word
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
 )(
-    input                       clk,
-    input                       rst_n,
-    input                       stall,
-    input                       flush,
-    input                       s1_req,    
-    input                       s1_we,      
-    input   [1:0]               s1_cmd,
-    input   [1:0]               s1_size,    
-    input   [DATA_W-1:0]        s1_wdata,  
-    input   [TAG_W-1:0]         s1_tag,    
-    input   [INDEX_W-1:0]       s1_index,   
-    input   [WORD_OFF_W-1:0]    s1_word_off,
-    input   [BYTE_OFF_W-1:0]    s1_byte_off,
+    input                       clk
+,   input                       rst_n
+,   input                       stall
+,   input                       flush
+,   input                       s1_req
+,   input                       s1_we      
+,   input   [1:0]               s1_cmd
+,   input   [1:0]               s1_size
+,   input   [DATA_W-1:0]        s1_wdata
+,   input   [TAG_W-1:0]         s1_tag
+,   input   [INDEX_W-1:0]       s1_index
+,   input   [WORD_OFF_W-1:0]    s1_word_off
+,   input   [BYTE_OFF_W-1:0]    s1_byte_off
 
-    input                       snoop_stall,
-    input                       s1_is_snoop,
-    input   [TAG_W-1:0]         s1_snoop_tag,
-    input   [INDEX_W-1:0]       s1_snoop_index,
+,   input                       snoop_stall
+,   input                       s1_is_snoop
+,   input   [TAG_W-1:0]         s1_snoop_tag
+,   input   [INDEX_W-1:0]       s1_snoop_index
 
-    output reg                  s2_req,
-    output reg                  s2_we,
-    output reg [1:0]            s2_cmd,
-    output reg [1:0]            s2_size,
-    output reg [DATA_W-1:0]     s2_wdata,
-    output reg [TAG_W-1:0]      s2_tag,
-    output reg [INDEX_W-1:0]    s2_index,
-    output reg [WORD_OFF_W-1:0] s2_word_off,
-    output reg [BYTE_OFF_W-1:0] s2_byte_off,
+,   input                       s1_atomic_lr
+,   input                       s1_atomic_sc
+,   input                       s1_atomic_amo
+,   input   [2:0]               s1_atomic_amo_op
 
-    output reg                      s2_is_snoop,
-    output reg [TAG_W-1:0]          s2_snoop_tag,
-    output reg [INDEX_W-1:0]        s2_snoop_index
+,   output reg                  s2_req
+,   output reg                  s2_we
+,   output reg [1:0]            s2_cmd
+,   output reg [1:0]            s2_size
+,   output reg [DATA_W-1:0]     s2_wdata
+,   output reg [TAG_W-1:0]      s2_tag
+,   output reg [INDEX_W-1:0]    s2_index
+,   output reg [WORD_OFF_W-1:0] s2_word_off
+,   output reg [BYTE_OFF_W-1:0] s2_byte_off
+
+,   output reg                      s2_is_snoop
+,   output reg [TAG_W-1:0]          s2_snoop_tag
+,   output reg [INDEX_W-1:0]        s2_snoop_index
+
+,   output reg                      s2_atomic_lr
+,   output reg                      s2_atomic_sc
+,   output reg                      s2_atomic_amo
+,   output reg [2:0]                s2_atomic_amo_op
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -56,12 +66,22 @@ module acc_cmp #(
             s2_is_snoop     <= 1'b0;
             s2_snoop_tag    <= {TAG_W{1'b0}};
             s2_snoop_index  <= {INDEX_W{1'b0}};
+
+            s2_atomic_lr        <= 1'b0;
+            s2_atomic_sc        <= 1'b0;
+            s2_atomic_amo       <= 1'b0;
+            s2_atomic_amo_op    <= 3'b000;
         end
         else begin
             if (~snoop_stall) begin
                 s2_is_snoop     <= s1_is_snoop;       
                 s2_snoop_tag    <= s1_snoop_tag;
                 s2_snoop_index  <= s1_snoop_index;
+
+                s2_atomic_lr        <= s1_atomic_lr;
+                s2_atomic_sc        <= s1_atomic_sc;
+                s2_atomic_amo       <= s1_atomic_amo;
+                s2_atomic_amo_op    <= s1_atomic_amo_op;
             end 
             
             if (flush) begin
@@ -74,6 +94,11 @@ module acc_cmp #(
                 s2_index        <= {INDEX_W{1'b0}};
                 s2_word_off     <= {WORD_OFF_W{1'b0}};
                 s2_byte_off     <= {BYTE_OFF_W{1'b0}};
+
+                s2_atomic_lr        <= 1'b0;
+                s2_atomic_sc        <= 1'b0;
+                s2_atomic_amo       <= 1'b0;
+                s2_atomic_amo_op    <= 3'b000;
             end 
             else if (~stall) begin
                 s2_req          <= s1_req;
@@ -85,6 +110,11 @@ module acc_cmp #(
                 s2_index        <= s1_index;
                 s2_word_off     <= s1_word_off;
                 s2_byte_off     <= s1_byte_off;     
+
+                s2_atomic_lr        <= s1_atomic_lr;
+                s2_atomic_sc        <= s1_atomic_sc;
+                s2_atomic_amo       <= s1_atomic_amo;
+                s2_atomic_amo_op    <= s1_atomic_amo_op;
             end
         end
 
