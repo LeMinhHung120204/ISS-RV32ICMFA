@@ -15,11 +15,10 @@ module dcache_controller_v2 (
 ,   input               victim_valid
 
     // Atomic Interface
-,   input                   i_atomic_lr      // Load-Reserved
-,   input                   i_atomic_sc      // Store-Conditional  
-,   input                   i_atomic_amo     // AMO operation
-,   input   [2:0]           i_amo_op         // AMO operation type
-,   output  reg             o_sc_success
+,   input                   i_atomic_lr     // Load-Reserved
+,   input                   i_atomic_sc     // Store-Conditional  
+,   input                   i_atomic_amo    // AMO operation
+,   output  reg             o_sc_success    // SC result (0=success, 1=fail)
 
     // Snoop invalidation (tu L2)
 ,   input                   i_snoop_invalidate
@@ -249,7 +248,7 @@ module dcache_controller_v2 (
         refill_we           = 1'b0;
         stall               = 1'b0;
         read_index_src      = 1'b0;
-        o_sc_success        = 1'b1; // Default Fail
+        o_sc_success        = 1'b1;
 
         case(state)
             TAG_CHECK: begin
@@ -290,7 +289,7 @@ module dcache_controller_v2 (
                 stall = 1'b1;
                 // Tin hieu doc RAM dua vao ALU o day (logic nam ngoai FSM nay)
             end
-            
+
             AMO_WRITE: begin
                 stall = 1'b1;
                 data_we = 1'b1; // Ghi ket qua ALU vao Cache
@@ -346,7 +345,7 @@ module dcache_controller_v2 (
     // Logic cho Snoop
     always @(*) begin
         case(state)
-            UPDATE, WAIT_RAM, WB_DATA: snoop_can_access_ram = 1'b0;
+            UPDATE, WAIT_RAM, WB_DATA, AMO_READ, AMO_WRITE: snoop_can_access_ram = 1'b0;
             default: snoop_can_access_ram = 1'b1;
         endcase
     end

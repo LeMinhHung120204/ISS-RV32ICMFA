@@ -254,8 +254,6 @@ module dcache_v2 #(
     end
 
     // ---------------------------------------- CONTROLLER INSTANTIATION ----------------------------------------
-    
-    // [MOI] Tai tao lai dia chi day du o Stage 2 de dua vao Controller check Reservation
     wire [ADDR_W-1:0] s2_full_addr = {s2_tag, s2_index, s2_word_off, s2_byte_off};
     wire victim_dirty_bit = |(current_dirty & way_select);
     wire victim_valid_bit = |(current_valid & way_select);
@@ -278,11 +276,10 @@ module dcache_v2 #(
         .i_atomic_lr        (s2_atomic_lr),
         .i_atomic_sc        (s2_atomic_sc),
         .i_atomic_amo       (s2_atomic_amo),
-        .i_amo_op           (s2_amo_op),
         .o_sc_success       (o_sc_success),
 
         // Snoop Info
-        .i_snoop_invalidate (i_snoop_req_invalid && i_snoop_valid), // [MOI]
+        .i_snoop_invalidate (i_snoop_req_invalid && i_snoop_valid),
         .i_snoop_addr       (i_snoop_addr),
         .snoop_busy         (i_snoop_valid),
         .snoop_can_access_ram(snoop_can_access_ram),
