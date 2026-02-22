@@ -27,10 +27,10 @@ module acc_cmp #(
 ,   input   [TAG_W-1:0]         s1_snoop_tag
 ,   input   [INDEX_W-1:0]       s1_snoop_index
 
-,   input                       s1_atomic_lr
-,   input                       s1_atomic_sc
-,   input                       s1_atomic_amo
-,   input   [2:0]               s1_atomic_amo_op
+,   input                       s1_lr
+,   input                       s1_sc
+,   input                       s1_amo
+,   input   [2:0]               s1_amo_op
 
 ,   output reg                  s2_req
 ,   output reg                  s2_we
@@ -46,10 +46,10 @@ module acc_cmp #(
 ,   output reg [TAG_W-1:0]          s2_snoop_tag
 ,   output reg [INDEX_W-1:0]        s2_snoop_index
 
-,   output reg                      s2_atomic_lr
-,   output reg                      s2_atomic_sc
-,   output reg                      s2_atomic_amo
-,   output reg [2:0]                s2_atomic_amo_op
+,   output reg                      s2_lr
+,   output reg                      s2_sc
+,   output reg                      s2_amo
+,   output reg [2:0]                s2_amo_op
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -67,10 +67,10 @@ module acc_cmp #(
             s2_snoop_tag    <= {TAG_W{1'b0}};
             s2_snoop_index  <= {INDEX_W{1'b0}};
 
-            s2_atomic_lr        <= 1'b0;
-            s2_atomic_sc        <= 1'b0;
-            s2_atomic_amo       <= 1'b0;
-            s2_atomic_amo_op    <= 3'b000;
+            s2_lr        <= 1'b0;
+            s2_sc        <= 1'b0;
+            s2_amo       <= 1'b0;
+            s2_amo_op    <= 3'b000;
         end
         else begin
             if (~snoop_stall) begin
@@ -95,10 +95,10 @@ module acc_cmp #(
                 s2_word_off     <= {WORD_OFF_W{1'b0}};
                 s2_byte_off     <= {BYTE_OFF_W{1'b0}};
 
-                s2_atomic_lr        <= 1'b0;
-                s2_atomic_sc        <= 1'b0;
-                s2_atomic_amo       <= 1'b0;
-                s2_atomic_amo_op    <= 3'b000;
+                s2_lr        <= 1'b0;
+                s2_sc        <= 1'b0;
+                s2_amo       <= 1'b0;
+                s2_amo_op    <= 3'b000;
             end 
             else begin 
                 if (~stall) begin
@@ -112,10 +112,10 @@ module acc_cmp #(
                     s2_word_off     <= s1_word_off;
                     s2_byte_off     <= s1_byte_off;     
 
-                    s2_atomic_lr        <= s1_atomic_lr;
-                    s2_atomic_sc        <= s1_atomic_sc;
-                    s2_atomic_amo       <= s1_atomic_amo;
-                    s2_atomic_amo_op    <= s1_atomic_amo_op;
+                    s2_lr        <= s1_lr;
+                    s2_sc        <= s1_sc;
+                    s2_amo       <= s1_amo;
+                    s2_amo_op    <= s1_amo_op;
                 end
             end
         end

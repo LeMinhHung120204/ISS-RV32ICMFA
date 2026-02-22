@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module L2_cache #(
+module L2_cache_v2 #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
     parameter NUM_WAYS      = 4,
@@ -390,7 +390,7 @@ module L2_cache #(
     // ---------------------------------------- MAIN CONTROLLER ----------------------------------------
     wire is_shared_response;
     wire is_dirty_response;
-    cache_L2_controller #(
+    cache_L2_controller_v2 #(
         .DATA_W         (DATA_W), 
         .ADDR_W         (ADDR_W)
     ) u_controller (
@@ -471,7 +471,7 @@ module L2_cache #(
     assign o_int_snoop_addr     = {s2_snoop_tag, s2_snoop_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // 2. Snoop Controller
-    snoop_controller #( 
+    snoop_controller_v2 #( 
         .ADDR_W(ADDR_W) 
     ) u_snoop_ctrl (
         .clk                    (ACLK), 

@@ -187,7 +187,7 @@ module single_core #(
     );
 
     // ---------------------------------------- D-CACHE (L1) ----------------------------------------
-    dcache #( 
+    dcache_v2 #( 
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W),
         .DATA_START (DATA_START),
@@ -266,7 +266,7 @@ module single_core #(
     assign l1i_rdata_valid  = l2_rdata_valid;
 
     // ---------------------------------------- L2 CACHE (The Wrapper) ----------------------------------------
-    L2_cache #( 
+    L2_cache_v2 #( 
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W),
         .ID_W       (ID_W),

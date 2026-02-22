@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module cache_L2_controller #(
+module cache_L2_controller_v2 #(
     parameter DATA_W        = 32,
     parameter ADDR_W        = 32,
     parameter ID_W          = 2,    

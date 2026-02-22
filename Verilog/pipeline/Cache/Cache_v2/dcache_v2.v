@@ -19,6 +19,7 @@ module dcache_v2 #(
     input                       cpu_req, cpu_we,
     input   [ADDR_W-1:0]        cpu_addr,
     input   [DATA_W-1:0]        cpu_din,
+    input   [1:0]               cpu_size,
     
     // [MOI] Them tin hieu Atomic tu CPU
     input                       cpu_atomic_lr,
@@ -178,6 +179,7 @@ module dcache_v2 #(
         // Inputs (Stage 1)
         .s1_req         (cpu_req | i_snoop_valid),
         .s1_we          (cpu_we),
+        .s1_size        (cpu_size),
         .s1_wdata       (cpu_din),
         .s1_tag         (s1_tag),
         .s1_index       (s1_index),
@@ -186,9 +188,9 @@ module dcache_v2 #(
         .s1_is_snoop    (i_snoop_valid), 
         
         // [MOI] Inputs Atomic
-        .s1_atomic_lr   (cpu_atomic_lr),
-        .s1_atomic_sc   (cpu_atomic_sc),
-        .s1_atomic_amo  (cpu_atomic_amo),
+        .s1_lr          (cpu_atomic_lr),
+        .s1_sc          (cpu_atomic_sc),
+        .s1_amo         (cpu_atomic_amo),
         .s1_amo_op      (cpu_amo_op),
 
         // Outputs (Stage 2)
@@ -203,9 +205,9 @@ module dcache_v2 #(
         .s2_is_snoop    (s2_is_snoop),
 
         // Outputs Atomic
-        .s2_atomic_lr   (s2_atomic_lr),
-        .s2_atomic_sc   (s2_atomic_sc),
-        .s2_atomic_amo  (s2_atomic_amo),
+        .s2_lr          (s2_atomic_lr),
+        .s2_sc          (s2_atomic_sc),
+        .s2_amo         (s2_atomic_amo),
         .s2_amo_op      (s2_amo_op)
     );
 
