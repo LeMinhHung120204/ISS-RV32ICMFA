@@ -33,7 +33,7 @@ module L2_cache #(
     // Read Data (Data to L1 refill)
     output [CACHE_DATA_W-1:0]   o_rdata,      
     output                      o_rdata_valid,
-    input                       i_rdata_ready, // Signal from L1 indicating it's ready
+    input                       i_rdata_ready,
 
     // Snoop Internal (Forwarding -> L1)
     output                      o_int_snoop_valid,
@@ -131,7 +131,7 @@ module L2_cache #(
     wire                snoop_can_access_ram;
     wire                reg_snoop_stall;
     wire                s2_is_snoop;
-    wire                read_index_src;
+    // wire                read_index_src;
 
     // Memory Arrays
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
@@ -158,7 +158,6 @@ module L2_cache #(
     wire [NUM_WAYS-1:0]     way_select;
 
     // Controller specific for L2
-    wire o_wdata_ready_ctrl; 
     wire o_rdata_ready_ctrl;
 
     wire use_l1_data_mux;
@@ -223,7 +222,6 @@ module L2_cache #(
                                 L1_moesi_current_state[1], L1_moesi_current_state[0]};
 
     // --- Data RAMs ---
-    // - data_we: tung word (L2 Burst, dung refill_we)
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : data_rams
             data_mem #( 
@@ -358,7 +356,6 @@ module L2_cache #(
             end 
 
             // Case 2: Writeback from L1 (L1 Interface)
-            // Khi Controller bat o_wdata_ready_ctrl (State L1_WB_RX)
             else if (i_wdata_valid && o_wdata_ready) begin
                 refill_buffer <= i_wdata;
             end
@@ -376,8 +373,7 @@ module L2_cache #(
             end
         end 
     end
-    
-    assign o_wdata_ready = o_wdata_ready_ctrl;
+
     // ---------------------------------------- REPLACEMENT POLICY ----------------------------------------
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS), 
@@ -415,7 +411,7 @@ module L2_cache #(
         
         // Data Path Handshake
         .i_wdata_valid      (i_wdata_valid), // Input tu L1
-        .o_wdata_ready      (o_wdata_ready_ctrl),
+        .o_wdata_ready      (o_wdata_ready),
 
         .o_rdata_ready      (o_rdata_ready_ctrl),
 
@@ -423,7 +419,7 @@ module L2_cache #(
         .tag_we             (tag_we),
         .moesi_we           (main_moesi_we),
         .refill_we          (refill_we),
-        .read_index_src     (read_index_src),
+        // .read_index_src     (read_index_src),
         .stall              (stall_contoller),
         .is_shared_response (is_shared_response),
         .is_dirty_response  (is_dirty_response),

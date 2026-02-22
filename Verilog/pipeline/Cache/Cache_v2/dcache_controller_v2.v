@@ -7,7 +7,7 @@ module dcache_controller_v2 (
     // Cache <-> CPU
 ,   input               cpu_req
 ,   input               cpu_we
-,   input   [31:0]      cpu_addr        // Can dia chi de check Reservation
+,   input   [31:0]      cpu_addr 
 
     // Cache Status
 ,   input               hit         
@@ -31,7 +31,7 @@ module dcache_controller_v2 (
 ,   output  reg         refill_we
 ,   output  reg         stall
 
-,   output  reg         snoop_can_access_ram
+,   output  reg         snoop_stall
 ,   input               snoop_busy 
     
     // Request L1 -> L2 
@@ -166,11 +166,9 @@ module dcache_controller_v2 (
 
             // ============ SC Logic ============
             SC_CHECK: begin
-                // O day ta da chac chan la HIT (vi logic o TAG_CHECK da loc)
-                // Chi can kiem tra xem co quyen ghi (M/E) va Reservation con hieu luc khong
+                // kiem tra xem co quyen ghi (M/E) va Reservation con hieu luc khong
                 if (res_hit && (i_l2_moesi_state == STATE_E || i_l2_moesi_state == STATE_M)) begin
                     // Success -> Ghi vao Cache (set Dirty) -> Xong
-                    // Gia su Write-Back: chi can ghi vao cache la du
                     next_state = TAG_CHECK; 
                 end
                 else if (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O) begin
@@ -341,12 +339,13 @@ module dcache_controller_v2 (
             end 
         endcase
     end
+// ============ SNOOP STALL LOGIC (ADDRESS COLLISION) ============
+    wire snoop_addr_match = (cpu_addr[31:6] == i_snoop_addr[31:6]); 
 
-    // Logic cho Snoop
     always @(*) begin
         case(state)
-            UPDATE, WAIT_RAM, WB_DATA, AMO_READ, AMO_WRITE: snoop_can_access_ram = 1'b0;
-            default: snoop_can_access_ram = 1'b1;
+            AMO_READ, AMO_WRITE, SC_CHECK, UPDATE: snoop_stall = snoop_addr_match;
+            default: snoop_stall = 1'b0;
         endcase
     end
 

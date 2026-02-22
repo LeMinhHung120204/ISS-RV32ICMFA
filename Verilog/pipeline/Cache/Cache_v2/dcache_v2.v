@@ -94,7 +94,7 @@ module dcache_v2 #(
     wire [NUM_WAYS-1:0]     way_select;
     wire                    cpu_hit;
     wire                    read_index_src;
-    wire                    snoop_can_access_ram;
+    wire                    snoop_stall;
     wire                    stall_contoller;
 
     // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
@@ -172,7 +172,7 @@ module dcache_v2 #(
         .clk            (clk), 
         .rst_n          (rst_n),
         .stall          (pipeline_stall),
-        .snoop_stall    (~snoop_can_access_ram),
+        .snoop_stall    (snoop_stall),
         .flush          (1'b0),
 
         // Inputs (Stage 1)
@@ -202,7 +202,7 @@ module dcache_v2 #(
         .s2_byte_off    (s2_byte_off),
         .s2_is_snoop    (s2_is_snoop),
 
-        // [MOI] Outputs Atomic
+        // Outputs Atomic
         .s2_atomic_lr   (s2_atomic_lr),
         .s2_atomic_sc   (s2_atomic_sc),
         .s2_atomic_amo  (s2_atomic_amo),
@@ -272,7 +272,7 @@ module dcache_v2 #(
         .victim_dirty       (victim_dirty_bit),
         .victim_valid       (victim_valid_bit),
         
-        // [MOI] Atomic Interface
+        // Atomic Interface
         .i_atomic_lr        (s2_atomic_lr),
         .i_atomic_sc        (s2_atomic_sc),
         .i_atomic_amo       (s2_atomic_amo),
@@ -282,7 +282,7 @@ module dcache_v2 #(
         .i_snoop_invalidate (i_snoop_req_invalid && i_snoop_valid),
         .i_snoop_addr       (i_snoop_addr),
         .snoop_busy         (i_snoop_valid),
-        .snoop_can_access_ram(snoop_can_access_ram),
+        .snoop_stall        (snoop_stall),
 
         // Outputs Control Signals
         .data_we            (data_we), 

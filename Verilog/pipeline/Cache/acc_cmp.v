@@ -78,12 +78,12 @@ module acc_cmp #(
                 s2_snoop_tag    <= s1_snoop_tag;
                 s2_snoop_index  <= s1_snoop_index;
 
-                s2_atomic_lr        <= s1_atomic_lr;
-                s2_atomic_sc        <= s1_atomic_sc;
-                s2_atomic_amo       <= s1_atomic_amo;
-                s2_atomic_amo_op    <= s1_atomic_amo_op;
+                // s2_atomic_lr        <= s1_atomic_lr;
+                // s2_atomic_sc        <= s1_atomic_sc;
+                // s2_atomic_amo       <= s1_atomic_amo;
+                // s2_atomic_amo_op    <= s1_atomic_amo_op;
             end 
-            
+
             if (flush) begin
                 s2_req          <= 1'b0;
                 s2_we           <= 1'b0;
@@ -100,21 +100,23 @@ module acc_cmp #(
                 s2_atomic_amo       <= 1'b0;
                 s2_atomic_amo_op    <= 3'b000;
             end 
-            else if (~stall) begin
-                s2_req          <= s1_req;
-                s2_we           <= s1_we;
-                s2_size         <= s1_size;
-                s2_cmd          <= s1_cmd;
-                s2_wdata        <= s1_wdata;
-                s2_tag          <= s1_tag;
-                s2_index        <= s1_index;
-                s2_word_off     <= s1_word_off;
-                s2_byte_off     <= s1_byte_off;     
+            else begin 
+                if (~stall) begin
+                    s2_req          <= s1_req;
+                    s2_we           <= s1_we;
+                    s2_size         <= s1_size;
+                    s2_cmd          <= s1_cmd;
+                    s2_wdata        <= s1_wdata;
+                    s2_tag          <= s1_tag;
+                    s2_index        <= s1_index;
+                    s2_word_off     <= s1_word_off;
+                    s2_byte_off     <= s1_byte_off;     
 
-                s2_atomic_lr        <= s1_atomic_lr;
-                s2_atomic_sc        <= s1_atomic_sc;
-                s2_atomic_amo       <= s1_atomic_amo;
-                s2_atomic_amo_op    <= s1_atomic_amo_op;
+                    s2_atomic_lr        <= s1_atomic_lr;
+                    s2_atomic_sc        <= s1_atomic_sc;
+                    s2_atomic_amo       <= s1_atomic_amo;
+                    s2_atomic_amo_op    <= s1_atomic_amo_op;
+                end
             end
         end
 
