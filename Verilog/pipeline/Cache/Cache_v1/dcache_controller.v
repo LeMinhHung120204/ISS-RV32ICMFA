@@ -1,38 +1,38 @@
 `timescale 1ns/1ps
 module dcache_controller (
-    input               clk, rst_n,
+    input               clk, rst_n
 
     // Cache <-> CPU
-    input               cpu_req,
-    input               cpu_we,
-    input               hit,           
-    input               victim_dirty,  
-    input               victim_valid,      
+,   input               cpu_req
+,   input               cpu_we
+,   input               hit           
+,   input               victim_dirty  
+,   input               victim_valid      
 
-    input   [2:0]       i_l2_moesi_state,
+,   input   [2:0]       i_l2_moesi_state
 
-    output  reg         data_we,
-    output  reg         read_index_src,
-    output  reg         tag_we, 
-    output  reg         refill_we,
-    output  reg         stall,
+,   output  reg         data_we
+,   output  reg         read_index_src
+,   output  reg         tag_we 
+,   output  reg         refill_we
+,   output  reg         stall
 
-    output  reg         snoop_can_access_ram,
-    input               snoop_busy, 
+,   output  reg         snoop_can_access_ram
+,   input               snoop_busy 
 
    
     // request L1 -> L2 
-    input                       i_mem_req_ready, // L2 san sang nhan
-    output  reg                 o_mem_req_valid, // Bao co request
-    output  reg [1:0]           o_mem_req_cmd,   // 00: READ_REQ, 01: WRITE_BACK, 10 = UPGRADE/INVALIDATE
+,   input                       i_mem_req_ready // L2 san sang nhan
+,   output  reg                 o_mem_req_valid // Bao co request
+,   output  reg [1:0]           o_mem_req_cmd   // 00: READ_REQ, 01: WRITE_BACK, 10 = UPGRADE/INVALIDATE
     
     // address writeback L1 -> L2
-    input                       i_mem_wdata_ready,
-    output  reg                 o_mem_wdata_valid,
+,   input                       i_mem_wdata_ready
+,   output  reg                 o_mem_wdata_valid
 
     // read data L2 -> L1
-    input                       i_mem_rdata_valid,
-    output  reg                 o_mem_rdata_ready
+,   input                       i_mem_rdata_valid
+,   output  reg                 o_mem_rdata_ready
 );
     localparam CMD_READ_SHARED  = 2'b00; // Doc thong thuong
     localparam CMD_WRITE_BACK   = 2'b01; // Ghi tra Victim

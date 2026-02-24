@@ -3,25 +3,25 @@ module icache_controller #(
     parameter DATA_W    = 32,
     parameter ADDR_W    = 32
 )(
-    input               clk, rst_n,
+    input               clk, rst_n
 
     // Cache <-> CPU
-    input               cpu_req,
-    input               hit,               
+,   input               cpu_req
+,   input               hit               
 
-    output  reg         tag_we, 
-    output  reg         refill_we,
-    output  reg         stall,
-    output  reg         read_index_src,
+,   output  reg         tag_we 
+,   output  reg         refill_we
+,   output  reg         stall
+,   output  reg         read_index_src
    
     // request L1 -> L2 
-    input           i_mem_req_ready, // L2 san sang nhan
-    output  reg     o_mem_req_valid, // Bao co request
+,   input           i_mem_req_ready // L2 san sang nhan
+,   output  reg     o_mem_req_valid // Bao co request
 
     // read data L2 -> L1
-    input           i_mem_rdata_valid,
+,   input           i_mem_rdata_valid
     // input           i_mem_rdata_last,
-    output  reg     o_mem_rdata_ready
+,   output  reg     o_mem_rdata_ready
 );
 
     // State Encoding

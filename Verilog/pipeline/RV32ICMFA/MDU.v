@@ -2,13 +2,13 @@
 module MDU #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_high, valid_input,
-    input   [1:0]                   Mul_Div_unsigned, 
-    input   [1:0]                   MulDivControl,
-    input   [DATA_WIDTH - 1:0]      rs1, rs2,
-    output reg [DATA_WIDTH - 1:0]   OutData,
+    input   clk, rst_n, is_high, valid_input
+,   input   [1:0]                   Mul_Div_unsigned 
+,   input   [1:0]                   MulDivControl
+,   input   [DATA_WIDTH - 1:0]      rs1, rs2
+,   output reg [DATA_WIDTH - 1:0]   OutData
     // output done,
-    output stall
+,   output stall
 );
     wire    [DATA_WIDTH - 1:0]  E_MulHigh, E_MulLow;
     wire    [DATA_WIDTH - 1:0]  E_quotient, E_remainder;

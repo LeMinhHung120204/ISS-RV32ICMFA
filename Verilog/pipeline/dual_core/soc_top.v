@@ -23,43 +23,43 @@ module soc_top #(
     parameter DATA_W        = 32,
     parameter STRB_W        = DATA_W/8
 )(
-    input ACLK, ARESETn,
-    input c0_stall, c1_stall, // for debug purpose only
+    input ACLK, ARESETn
+,   input c0_stall, c1_stall // for debug purpose only
 
     // EXTERNAL MEMORY AXI4 MASTER INTERFACE (to external memory)
-    output [1:0]    m_axi_awid,
-    output [31:0]   m_axi_awaddr,
-    output [7:0]    m_axi_awlen,
-    output [2:0]    m_axi_awsize,
-    output [1:0]    m_axi_awburst,
-    output          m_axi_awvalid,
-    input           m_axi_awready,
+,   output [1:0]    m_axi_awid
+,   output [31:0]   m_axi_awaddr
+,   output [7:0]    m_axi_awlen
+,   output [2:0]    m_axi_awsize
+,   output [1:0]    m_axi_awburst
+,   output          m_axi_awvalid
+,   input           m_axi_awready
 
-    output [DATA_W-1:0]  m_axi_wdata,
-    output [STRB_W-1:0]  m_axi_wstrb,
-    output          m_axi_wlast,
-    output          m_axi_wvalid,
-    input           m_axi_wready,
+,   output [DATA_W-1:0]  m_axi_wdata
+,   output [STRB_W-1:0]  m_axi_wstrb
+,   output          m_axi_wlast
+,   output          m_axi_wvalid
+,   input           m_axi_wready
 
-    input  [1:0]    m_axi_bid,
-    input  [1:0]    m_axi_bresp,
-    input           m_axi_bvalid,
-    output          m_axi_bready,
+,   input  [1:0]    m_axi_bid
+,   input  [1:0]    m_axi_bresp
+,   input           m_axi_bvalid
+,   output          m_axi_bready
 
-    output [1:0]    m_axi_arid,
-    output [31:0]   m_axi_araddr,
-    output [7:0]    m_axi_arlen,
-    output [2:0]    m_axi_arsize,
-    output [1:0]    m_axi_arburst,
-    output          m_axi_arvalid,
-    input           m_axi_arready,
+,   output [1:0]    m_axi_arid
+,   output [31:0]   m_axi_araddr
+,   output [7:0]    m_axi_arlen
+,   output [2:0]    m_axi_arsize
+,   output [1:0]    m_axi_arburst
+,   output          m_axi_arvalid
+,   input           m_axi_arready
 
-    input  [1:0]    m_axi_rid,
-    input  [DATA_W-1:0] m_axi_rdata,
-    input  [3:0]    m_axi_rresp,
-    input           m_axi_rlast,
-    input           m_axi_rvalid,
-    output          m_axi_rready
+,   input  [1:0]    m_axi_rid
+,   input  [DATA_W-1:0] m_axi_rdata
+,   input  [3:0]    m_axi_rresp
+,   input           m_axi_rlast
+,   input           m_axi_rvalid
+,   output          m_axi_rready
 );
 
     // INTERNAL WIRES

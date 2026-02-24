@@ -1,27 +1,27 @@
 `timescale 1ns/1ps
 module moesi_controller(
-    input   [2:0]   current_state,
-    input           is_shared_response,
-    input           is_dirty_response,
-    input           refill_we,
+    input   [2:0]   current_state
+,   input           is_shared_response
+,   input           is_dirty_response
+,   input           refill_we
 
     // Request from CPU 
-    input           cpu_req_valid,
-    input           cpu_hit,
-    input           cpu_rw,         // 1: Write, 0: Read
+,   input           cpu_req_valid
+,   input           cpu_hit
+,   input           cpu_rw         // 1: Write, 0: Read
 
     // Request from Bus (Snoop)
-    input           bus_snoop_valid,
-    input           snoop_hit,      
-    input           bus_rw,      
-    input           l1_dirty,   
+,   input           bus_snoop_valid
+,   input           snoop_hit      
+,   input           bus_rw      
+,   input           l1_dirty   
 
     // Outputs
-    output              is_dirty,       
-    output              is_unique,      
-    output              is_owner,       
-    output              is_valid,       
-    output reg [2:0]    next_state
+,   output              is_dirty       
+,   output              is_unique      
+,   output              is_owner       
+,   output              is_valid       
+,   output reg [2:0]    next_state
 );
     localparam  STATE_M = 3'd0,
                 STATE_O = 3'd1,

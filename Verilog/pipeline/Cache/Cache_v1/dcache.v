@@ -14,47 +14,47 @@ module dcache #(
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
 )(
-    input clk, rst_n,
+    input clk, rst_n
 
     // cache <-> CPU
-    input                       cpu_req, cpu_we,
-    input   [ADDR_W-1:0]        cpu_addr,
-    input   [DATA_W-1:0]        cpu_din,
-    input   [1:0]               cpu_size,
-    output  reg [DATA_W-1:0]    data_rdata,
-    output                      pipeline_stall,
-    output                      raw_hazard,
+,   input                       cpu_req, cpu_we
+,   input   [ADDR_W-1:0]        cpu_addr
+,   input   [DATA_W-1:0]        cpu_din
+,   input   [1:0]               cpu_size
+,   output  reg [DATA_W-1:0]    data_rdata
+,   output                      pipeline_stall
+,   output                      raw_hazard
 
     // cache <-> L2
     // Request address
-    output                      o_l2_req_valid,
-    input                       i_l2_req_ready,
-    output  [1:0]               o_l2_req_cmd,   // 00: READ_REQ, 01: WRITE_BACK, 10 = UPGRADE/INVALIDATE
-    output  [ADDR_W-1:0]        o_l2_req_addr,
+,   output                      o_l2_req_valid
+,   input                       i_l2_req_ready
+,   output  [1:0]               o_l2_req_cmd   // 00: READ_REQ, 01: WRITE_BACK, 10 = UPGRADE/INVALIDATE
+,   output  [ADDR_W-1:0]        o_l2_req_addr
 
     // Request Moesi
-    input   [11:0]              i_l2_req_moesi_state,
+,   input   [11:0]              i_l2_req_moesi_state
     // output  [INDEX_W-1:0]       o_l2_req_index,
     
     // Write Data (WB)
-    output  reg [CACHE_DATA_W-1:0]  o_l2_wdata,
-    output                          o_l2_wdata_valid,
-    input                           i_l2_wdata_ready,
+,   output  reg [CACHE_DATA_W-1:0]  o_l2_wdata
+,   output                          o_l2_wdata_valid
+,   input                           i_l2_wdata_ready
 
     // Read Data (Refill)
-    input                       i_l2_rdata_valid,
-    input   [CACHE_DATA_W-1:0]  i_l2_rdata,
-    output                      o_l2_rdata_ready,
+,   input                       i_l2_rdata_valid
+,   input   [CACHE_DATA_W-1:0]  i_l2_rdata
+,   output                      o_l2_rdata_ready
 
     // Snoop Interface
-    input                       i_snoop_valid,
-    input   [ADDR_W-1:0]        i_snoop_addr,
-    input                       i_snoop_req_invalid,
+,   input                       i_snoop_valid
+,   input   [ADDR_W-1:0]        i_snoop_addr
+,   input                       i_snoop_req_invalid
     
-    output  reg                     o_snoop_complete,
-    output  reg                     o_snoop_hit,
-    output  reg                     o_snoop_dirty,
-    output  reg [CACHE_DATA_W-1:0]  o_snoop_data
+,   output  reg                     o_snoop_complete
+,   output  reg                     o_snoop_hit
+,   output  reg                     o_snoop_dirty
+,   output  reg [CACHE_DATA_W-1:0]  o_snoop_data
 );
 
     

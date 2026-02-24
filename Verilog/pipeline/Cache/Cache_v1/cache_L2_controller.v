@@ -7,75 +7,75 @@ module cache_L2_controller #(
     // parameter CACHE_DATA_W  = 512,              // 64 Bytes Line
     parameter STRB_W        = (DATA_W/8)        // strobe width matches beat data width (32-bit -> 4)
 )(
-    input           clk, rst_n,
+    input           clk, rst_n
 
     // --- Control Signals ---
-    input           snoop_busy,          
-    output  reg     snoop_can_access_ram,
-    output  reg     read_index_src,
+,   input           snoop_busy          
+,   output  reg     snoop_can_access_ram
+,   output  reg     read_index_src
     // output  reg     wb_error,
 
     // --- L1 Interface (Thay cho CPU) ---
-    input           i_req_valid,         
-    input  [1:0]    i_req_cmd,           // 00: Read, 01: Write, 10: UPGRADE/INVALIDATE
+,   input           i_req_valid         
+,   input  [1:0]    i_req_cmd           // 00: Read, 01: Write, 10: UPGRADE/INVALIDATE
     
     // nhan data tu L1
-    input           i_wdata_valid,
-    output  reg     o_wdata_ready,       
+,   input           i_wdata_valid
+,   output  reg     o_wdata_ready       
 
     // tra data cho L1
-    output  reg     o_rdata_ready,       
+,   output  reg     o_rdata_ready       
     
     // Cache Status Inputs
-    input           hit,           
-    input           victim_dirty,  
-    input           is_valid,      
-    input   [2:0]   current_moesi_state,
+,   input           hit           
+,   input           victim_dirty  
+,   input           is_valid      
+,   input   [2:0]   current_moesi_state
 
     // --- Control Datapath ---
     // output  reg     data_we,
-    output  reg     tag_we, 
-    output  reg     moesi_we,
-    output  reg     refill_we,
-    output  reg     stall,
+,   output  reg     tag_we 
+,   output  reg     moesi_we
+,   output  reg     refill_we
+,   output  reg     stall
     
-    output  reg         is_shared_response, 
-    output  reg         is_dirty_response,  
-    output  reg         o_req_ready,        // Bao cho L1 biet L2 san sang nhan lenh CMD/ADDR
-    output  reg [3:0]   burst_cnt,
+,   output  reg         is_shared_response 
+,   output  reg         is_dirty_response  
+,   output  reg         o_req_ready        // Bao cho L1 biet L2 san sang nhan lenh CMD/ADDR
+,   output  reg [3:0]   burst_cnt
 
     // --- AXI Interface  ---
-    output      [7:0]           oAWLEN,
-    output      [2:0]           oAWSIZE,
-    output      [1:0]           oAWBURST,
-    output  reg                 oAWVALID,
-    input                       iAWREADY,
-    output  reg [2:0]           oAWSNOOP,
-    output      [1:0]           oAWDOMAIN,
+,   output      [7:0]           oAWLEN
+,   output      [2:0]           oAWSIZE
+,   output      [1:0]           oAWBURST
+,   output  reg                 oAWVALID
+,   input                       iAWREADY
+,   output  reg [2:0]           oAWSNOOP
+,   output      [1:0]           oAWDOMAIN
 
-    output  reg [STRB_W-1:0]    oWSTRB,
-    output  reg                 oWLAST,
-    output  reg                 oWVALID,
-    input                       iWREADY,
+,   output  reg [STRB_W-1:0]    oWSTRB
+,   output  reg                 oWLAST
+,   output  reg                 oWVALID
+,   input                       iWREADY
     
-    input       [ID_W-1:0]      iBID,           // hien tai chua dung
-    input       [1:0]           iBRESP,
-    input                       iBVALID,
-    output  reg                 oBREADY,
+,   input       [ID_W-1:0]      iBID           // hien tai chua dung
+,   input       [1:0]           iBRESP
+,   input                       iBVALID
+,   output  reg                 oBREADY
 
-    output      [7:0]           oARLEN,
-    output      [2:0]           oARSIZE,
-    output      [1:0]           oARBURST,
-    output  reg                 oARVALID,
-    input                       iARREADY,
-    output  reg [3:0]           oARSNOOP,
-    output      [1:0]           oARDOMAIN,
+,   output      [7:0]           oARLEN
+,   output      [2:0]           oARSIZE
+,   output      [1:0]           oARBURST
+,   output  reg                 oARVALID
+,   input                       iARREADY
+,   output  reg [3:0]           oARSNOOP
+,   output      [1:0]           oARDOMAIN
 
     // input       [ID_W-1:0]      iRID,
-    input       [3:0]           iRRESP,
-    input                       iRLAST,
-    input                       iRVALID,
-    output  reg                 oRREADY
+,   input       [3:0]           iRRESP
+,   input                       iRLAST
+,   input                       iRVALID
+,   output  reg                 oRREADY
 );
 
     // State Encoding

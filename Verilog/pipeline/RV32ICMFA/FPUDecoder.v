@@ -2,11 +2,11 @@
 module FPUDecoder #(
     parameter WIDTH = 32
 )(
-    input [6:0] funct7,
-    input [4:0] funct5,
-    input [2:0] FPUOp, funct3,
-    output reg [4:0] FPUControl,
-    output reg Valid_FPU, RegSrc1, RegSrc2
+    input [6:0] funct7
+,   input [4:0] funct5
+,   input [2:0] FPUOp, funct3
+,   output reg [4:0] FPUControl
+,   output reg Valid_FPU, RegSrc1, RegSrc2
 );
     always @(*) begin
         case(FPUOp) // I-type / S-type

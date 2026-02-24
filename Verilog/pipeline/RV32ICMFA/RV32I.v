@@ -3,8 +3,8 @@ module RV32I #(
     parameter WIDTH_DATA = 32,
     parameter WIDTH_ADDR = 32
 )(
-    input   clk, rst_n,
-    output  [WIDTH_DATA - 1:0] W_Result_output
+    input   clk, rst_n
+,   output  [WIDTH_DATA - 1:0] W_Result_output
     // input   [WIDTH_DATA - 1:0]  imem_instr, dmem_rdata,
     // output  [WIDTH_ADDR - 1:0]  imem_addr, 
     // output  [WIDTH_DATA - 1:0]  dmem_wdata,

@@ -1,11 +1,11 @@
 `timescale 1ns/1ps
 module cla_16b(
-    input [15:0]    a, b,
-    input           cin,
+    input [15:0]    a, b
+,   input           cin
     // output          cout,
-    output [15:0]   sum,
-    output          G16,
-    output          P16
+,   output [15:0]   sum
+,   output          G16
+,   output          P16
 );
     wire P0, P1, P2, P3, G0, G1, G2, G3;
     wire C1, C2, C3;

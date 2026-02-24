@@ -4,18 +4,18 @@
 module BPU #(
     parameter W_ADDR = 32
 )(
-    input               clk, rst_n,
-    input [W_ADDR-1:0]  F_PC,                 
-    input [W_ADDR-1:0]  E_PC,           
-    input [W_ADDR-1:0]  E_PCTarget,  
-    input               E_Branch,        
-    input               E_Jump,          
-    input               taken,   
-    input [2:0]         E_GHSR,          
+    input               clk, rst_n
+,   input [W_ADDR-1:0]  F_PC                 
+,   input [W_ADDR-1:0]  E_PC           
+,   input [W_ADDR-1:0]  E_PCTarget  
+,   input               E_Branch        
+,   input               E_Jump          
+,   input               taken   
+,   input [2:0]         E_GHSR          
 
-    output              predict_taken,  
-    output [W_ADDR-1:0] target_pc,      
-    output [2:0]        F_GHSR 
+,   output              predict_taken  
+,   output [W_ADDR-1:0] target_pc      
+,   output [2:0]        F_GHSR 
 );
     wire                btb_hit;
     wire                pht_predict_taken;

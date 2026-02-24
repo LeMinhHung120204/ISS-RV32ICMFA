@@ -3,8 +3,8 @@ module Ins_Mem #(
     parameter integer WIDTH_ADDR = 32,
     parameter integer WIDTH_DATA = 32
 )(
-    input  [WIDTH_ADDR - 1:0] addr,
-    output [WIDTH_DATA - 1:0] instruction
+    input  [WIDTH_ADDR - 1:0] addr
+,   output [WIDTH_DATA - 1:0] instruction
 );
     reg [31:0] rom [0:4095];
 //    reg [31:0] out;

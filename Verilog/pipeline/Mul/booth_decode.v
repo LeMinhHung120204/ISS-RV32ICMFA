@@ -2,10 +2,10 @@
 module booth_decode #(
     parameter DATA_WIDH = 32
 )(
-    input   [DATA_WIDH - 1:0] A,
-    input   [3:0]             sel,
-    input   is_signed,
-    output  [DATA_WIDH + 1:0] res
+    input   [DATA_WIDH - 1:0] A
+,   input   [3:0]             sel
+,   input   is_signed
+,   output  [DATA_WIDH + 1:0] res
 );
     wire [DATA_WIDH + 1:0] pp;
 

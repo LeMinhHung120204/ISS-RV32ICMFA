@@ -19,72 +19,72 @@ module single_core #(
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
     parameter STRB_W        = DATA_W/8
 )(
-    input   ACLK,
-    input   ARESETn,
-    input   test_stall,
+    input   ACLK
+,   input   ARESETn
+,   input   test_stall
 
     // AXI ACE <-> Cache L3    
     // --- Write Address Channel (AW) ---
-    output  [ID_W-1:0]      m_axi_awid,
-    output  [ADDR_W-1:0]    m_axi_awaddr,
-    output  [7:0]           m_axi_awlen,
-    output  [2:0]           m_axi_awsize,
-    output  [1:0]           m_axi_awburst,
-    output                  m_axi_awvalid,
-    input                   m_axi_awready,
+,   output  [ID_W-1:0]      m_axi_awid
+,   output  [ADDR_W-1:0]    m_axi_awaddr
+,   output  [7:0]           m_axi_awlen
+,   output  [2:0]           m_axi_awsize
+,   output  [1:0]           m_axi_awburst
+,   output                  m_axi_awvalid
+,   input                   m_axi_awready
     // ACE Signals
-    output  [2:0]           m_axi_awsnoop,
-    output  [1:0]           m_axi_awdomain,
+,   output  [2:0]           m_axi_awsnoop
+,   output  [1:0]           m_axi_awdomain
     
     // --- Write Data Channel (W) ---
-    output  [DATA_W-1:0]        m_axi_wdata,
-    output  [STRB_W-1:0]        m_axi_wstrb,
-    output                      m_axi_wlast,
-    output                      m_axi_wvalid,
-    input                       m_axi_wready,
+,   output  [DATA_W-1:0]        m_axi_wdata
+,   output  [STRB_W-1:0]        m_axi_wstrb
+,   output                      m_axi_wlast
+,   output                      m_axi_wvalid
+,   input                       m_axi_wready
     
     // --- Write Response Channel (B) ---
-    input   [ID_W-1:0]      m_axi_bid,
-    input   [1:0]           m_axi_bresp,
-    input                   m_axi_bvalid,
-    output                  m_axi_bready,
+,   input   [ID_W-1:0]      m_axi_bid
+,   input   [1:0]           m_axi_bresp
+,   input                   m_axi_bvalid
+,   output                  m_axi_bready
 
     // --- Read Address Channel (AR) ---
-    output  [ID_W-1:0]      m_axi_arid,
-    output  [ADDR_W-1:0]    m_axi_araddr,
-    output  [7:0]           m_axi_arlen,
-    output  [2:0]           m_axi_arsize,
-    output  [1:0]           m_axi_arburst,
-    output                  m_axi_arvalid,
-    input                   m_axi_arready,
+,   output  [ID_W-1:0]      m_axi_arid
+,   output  [ADDR_W-1:0]    m_axi_araddr
+,   output  [7:0]           m_axi_arlen
+,   output  [2:0]           m_axi_arsize
+,   output  [1:0]           m_axi_arburst
+,   output                  m_axi_arvalid
+,   input                   m_axi_arready
     // ACE Signals
-    output  [3:0]           m_axi_arsnoop,
-    output  [1:0]           m_axi_ardomain,
+,   output  [3:0]           m_axi_arsnoop
+,   output  [1:0]           m_axi_ardomain
 
     // --- Read Data Channel (R) ---
-    input   [ID_W-1:0]          m_axi_rid,
-    input   [DATA_W-1:0]        m_axi_rdata,
-    input   [3:0]               m_axi_rresp,
-    input                       m_axi_rlast,
-    input                       m_axi_rvalid,
-    output                      m_axi_rready,
+,   input   [ID_W-1:0]          m_axi_rid
+,   input   [DATA_W-1:0]        m_axi_rdata
+,   input   [3:0]               m_axi_rresp
+,   input                       m_axi_rlast
+,   input                       m_axi_rvalid
+,   output                      m_axi_rready
 
     // --- Snoop Address Channel (AC - Input from L3) ---
-    input                   s_ace_acvalid,
-    input   [ADDR_W-1:0]    s_ace_acaddr,
-    input   [3:0]           s_ace_acsnoop,
-    output                  s_ace_acready,
+,   input                   s_ace_acvalid
+,   input   [ADDR_W-1:0]    s_ace_acaddr
+,   input   [3:0]           s_ace_acsnoop
+,   output                  s_ace_acready
 
     // --- Snoop Response Channel (CR - Output to L3) ---
-    input                   s_ace_crready,
-    output                  s_ace_crvalid,
-    output  [4:0]           s_ace_crresp,
+,   input                   s_ace_crready
+,   output                  s_ace_crvalid
+,   output  [4:0]           s_ace_crresp
     
     // --- Snoop Data Channel (CD - Output to L3) ---
-    input                       s_ace_cdready,
-    output                      s_ace_cdvalid,
-    output  [DATA_W-1:0]        s_ace_cddata,
-    output                      s_ace_cdlast
+,   input                       s_ace_cdready
+,   output                      s_ace_cdvalid
+,   output  [DATA_W-1:0]        s_ace_cddata
+,   output                      s_ace_cdlast
 );
 
     // ---------------------------------------- INTERNAL WIRES ----------------------------------------

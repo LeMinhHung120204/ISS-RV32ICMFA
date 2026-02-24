@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 module plru(
-    input   prev_bit, left_hit, right_hit,
-    output reg plru_bit
+    input   prev_bit, left_hit, right_hit
+,   output reg plru_bit
 );
     always @(*) begin
         case({left_hit, right_hit})

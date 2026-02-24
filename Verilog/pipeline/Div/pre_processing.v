@@ -3,15 +3,15 @@
 module pre_processing#(
 	parameter DW = 32
 )(
-	input				start,
+	input				start
 
-	input[DW-1:0]		dividend,
-	input[DW-1:0] 		divisor,
+,   input[DW-1:0]		dividend
+,   input[DW-1:0] 		divisor
 
-	output[DW/2-1:0] 	iterations,		// So vong lap can thuc hien
-	output[DW+2:0] 		divisor_star,
-	output[DW+5:0] 		dividend_star,
-	output[DW/2-1:0] 	recovery		// So bit da dich divisor
+,   output[DW/2-1:0] 	iterations		// So vong lap can thuc hien
+,   output[DW+2:0] 		divisor_star
+,   output[DW+5:0] 		dividend_star
+,   output[DW/2-1:0] 	recovery		// So bit da dich divisor
 
 );
 

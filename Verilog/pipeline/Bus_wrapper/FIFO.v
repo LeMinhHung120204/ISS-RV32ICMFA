@@ -4,14 +4,14 @@
         parameter DEPTH  = 8,
         parameter ADDR_W = $clog2(DEPTH)
     )(
-        input               clk, rst_n,
-        input               push,
-        input               pop,
-        input [DATA_W-1:0]  din,
+        input               clk, rst_n
+    ,   input               push
+    ,   input               pop
+    ,   input [DATA_W-1:0]  din
 
-        output              empty,
-        output              full,
-        output [DATA_W-1:0] dout
+    ,   output              empty
+    ,   output              full
+    ,   output [DATA_W-1:0] dout
     );
         reg [DATA_W-1:0]    mem [0:DEPTH-1];
         reg [ADDR_W:0]      wptr, rptr;

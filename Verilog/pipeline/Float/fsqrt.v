@@ -2,10 +2,10 @@
 module fsqrt #(
     parameter WIDTH = 32
 )(
-    input   clk, rst_n, valid_input,
-    input   [WIDTH-1:0] radicand,
-    output  valid_output,
-    output  [WIDTH-1:0] y
+    input   clk, rst_n, valid_input
+,   input   [WIDTH-1:0] radicand
+,   output  valid_output
+,   output  [WIDTH-1:0] y
 );
     reg [WIDTH-1:0] reg_a;
     wire [24:0]     f;

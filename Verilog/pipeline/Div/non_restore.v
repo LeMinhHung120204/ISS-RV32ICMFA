@@ -2,11 +2,11 @@
 module non_restore #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_unsigned, valid_input,
-    input   [DATA_WIDTH - 1:0] dividend, divisor,
-    output  [DATA_WIDTH - 1:0] quotient, remainder,
-    output  valid_output,
-    output  reg is_busy
+    input   clk, rst_n, is_unsigned, valid_input
+,   input   [DATA_WIDTH - 1:0] dividend, divisor
+,   output  [DATA_WIDTH - 1:0] quotient, remainder
+,   output  valid_output
+,   output  reg is_busy
 );
     localparam IDLE = 0, INIT = 1, CALC = 2, DONE = 3;
     localparam num_reg = 17;

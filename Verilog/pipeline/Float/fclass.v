@@ -2,8 +2,8 @@
 module fclass #(
     parameter WIDTH = 32
 )(
-    input   [WIDTH-1:0] a,
-    output  [WIDTH-1:0] out
+    input   [WIDTH-1:0] a
+,   output  [WIDTH-1:0] out
 );
     localparam  NEG_INF     =10'd1,
                 NEG_NORM    =10'd2,

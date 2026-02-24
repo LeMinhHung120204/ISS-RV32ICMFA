@@ -3,19 +3,19 @@
 module srt_4_div#(
 	parameter DW = 32
 )(
-	input 				clk,
-	input 				rst_n,
+	input 				clk
+,   input 				rst_n
 
-	input				start,
+,   input				start
 
-	input[DW-1:0]		dividend,
-	input[DW-1:0] 		divisor,
+,   input[DW-1:0]		dividend
+,   input[DW-1:0] 		divisor
 		
 
-	output[DW-1:0] 		quotient,
-	output[DW-1:0] 		reminder,
-	output				mulfinish,
-	output				diverror
+,   output[DW-1:0] 		quotient
+,   output[DW-1:0] 		reminder
+,   output				mulfinish
+,   output				diverror
 );
 	localparam	IDLE = 2'b00 , DIV = 2'b01 , FINISH = 2'b10 , ERROR = 2'b11 ;
 

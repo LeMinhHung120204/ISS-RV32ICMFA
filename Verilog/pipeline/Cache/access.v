@@ -8,18 +8,18 @@ module access #(
     parameter BYTE_OFF_W    = 2,  // 4B/word
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
 )(
-    input   [ADDR_W-1:0]        cpu_addr,
-    input   [ADDR_W-1:0]        ac_addr,
-    input   [ADDR_W-1:0]        dcache_req_moesi_addr,
+    input   [ADDR_W-1:0]        cpu_addr
+,   input   [ADDR_W-1:0]        ac_addr
+,   input   [ADDR_W-1:0]        dcache_req_moesi_addr
 
-    output  [TAG_W-1:0]         cpu_tag,
-    output  [INDEX_W-1:0]       cpu_index,
-    output  [WORD_OFF_W-1:0]    cpu_word_off,
-    output  [BYTE_OFF_W-1:0]    cpu_byte_off,
+,   output  [TAG_W-1:0]         cpu_tag
+,   output  [INDEX_W-1:0]       cpu_index
+,   output  [WORD_OFF_W-1:0]    cpu_word_off
+,   output  [BYTE_OFF_W-1:0]    cpu_byte_off
 
-    output  [TAG_W-1:0]         ac_tag,
-    output  [INDEX_W-1:0]       ac_index,
-    output  [INDEX_W-1:0]       dcache_req_moesi_index
+,   output  [TAG_W-1:0]         ac_tag
+,   output  [INDEX_W-1:0]       ac_index
+,   output  [INDEX_W-1:0]       dcache_req_moesi_index
 );
     localparam BO       = BYTE_OFF_W;
     localparam WO       = WORD_OFF_W;

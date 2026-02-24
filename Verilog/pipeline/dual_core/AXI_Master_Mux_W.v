@@ -7,44 +7,44 @@ module AXI_Master_Mux_W #(
     parameter ID_W   = 2
 ) (
     // Master 0 AW/W/B
-    input  [ID_W-1:0]   m0_awid,
-    input  [ADDR_W-1:0] m0_awaddr,
-    input               m0_awvalid,
-    output              m0_awready,
-    input  [DATA_W-1:0] m0_wdata,
-    input               m0_wvalid,
-    output              m0_wready,
-    output              m0_bvalid,
-    output [ID_W-1:0]   m0_bid,
-    output [1:0]        m0_bresp,
-    input               m0_bready,
+    input  [ID_W-1:0]   m0_awid
+,   input  [ADDR_W-1:0] m0_awaddr
+,   input               m0_awvalid
+,   output              m0_awready
+,   input  [DATA_W-1:0] m0_wdata
+,   input               m0_wvalid
+,   output              m0_wready
+,   output              m0_bvalid
+,   output [ID_W-1:0]   m0_bid
+,   output [1:0]        m0_bresp
+,   input               m0_bready
     // Master 1 AW/W/B
-    input  [ID_W-1:0]   m1_awid,
-    input  [ADDR_W-1:0] m1_awaddr,
-    input               m1_awvalid,
-    output              m1_awready,
-    input  [DATA_W-1:0] m1_wdata,
-    input               m1_wvalid,
-    output              m1_wready,
-    output              m1_bvalid,
-    output [ID_W-1:0]   m1_bid,
-    output [1:0]        m1_bresp,
-    input               m1_bready,
+,   input  [ID_W-1:0]   m1_awid
+,   input  [ADDR_W-1:0] m1_awaddr
+,   input               m1_awvalid
+,   output              m1_awready
+,   input  [DATA_W-1:0] m1_wdata
+,   input               m1_wvalid
+,   output              m1_wready
+,   output              m1_bvalid
+,   output [ID_W-1:0]   m1_bid
+,   output [1:0]        m1_bresp
+,   input               m1_bready
     // Slave AW/W/B
-    output [ID_W-1:0]   s_awid,
-    output [ADDR_W-1:0] s_awaddr,
-    output              s_awvalid,
-    input               s_awready,
-    output [DATA_W-1:0] s_wdata,
-    output              s_wvalid,
-    input               s_wready,
-    input               s_bvalid,
-    input  [ID_W-1:0]   s_bid,
-    input  [1:0]        s_bresp,
-    output              s_bready,
+,   output [ID_W-1:0]   s_awid
+,   output [ADDR_W-1:0] s_awaddr
+,   output              s_awvalid
+,   input               s_awready
+,   output [DATA_W-1:0] s_wdata
+,   output              s_wvalid
+,   input               s_wready
+,   input               s_bvalid
+,   input  [ID_W-1:0]   s_bid
+,   input  [1:0]        s_bresp
+,   output              s_bready
     // Grants
-    input               m0_wgrnt,
-    input               m1_wgrnt
+,   input               m0_wgrnt
+,   input               m1_wgrnt
 );
 
     // AW channel

@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 module fcvt_wu_s(
-    input  clk, rst_n, valid_input,
-    input  [31:0] a,
-    output reg valid_output,
-    output reg [31:0] y
+    input  clk, rst_n, valid_input
+,   input  [31:0] a
+,   output reg valid_output
+,   output reg [31:0] y
 );
     reg [31:0]  a0, y2;
     reg [23:0]  m1; 

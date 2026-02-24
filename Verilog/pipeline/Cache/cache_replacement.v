@@ -5,10 +5,10 @@ module cache_replacement #(
     parameter N_WAYS_W  = $clog2(N_WAYS),
     parameter N_LINES_W = $clog2(N_LINES)
 )(
-    input                   clk, rst_n, we,
-    input   [N_WAYS-1:0]    way_hit,
-    input   [N_LINES_W-1:0] addr,
-    output  [N_WAYS-1:0]    way_select
+    input                   clk, rst_n, we
+,   input   [N_WAYS-1:0]    way_hit
+,   input   [N_LINES_W-1:0] addr
+,   output  [N_WAYS-1:0]    way_select
     // output  [N_WAYS_W-1:0]  way_select_bin
 );
 

@@ -3,21 +3,21 @@ module fetch_pipe #(
     parameter DATA_W = 32,
     parameter ADDR_W = 32
 )(
-    input clk,
-    input rst_n,
-    input EN,
-    input Flush,
+    input clk
+,   input rst_n
+,   input EN
+,   input Flush
 
-    input                   s1_Predict_Taken,
-    input [2:0]             s1_GHSR, 
-    input [ADDR_W - 1:0]    s1_PC, 
-    input [ADDR_W - 1:0]    s1_PCPlus4,
+,   input                   s1_Predict_Taken
+,   input [2:0]             s1_GHSR 
+,   input [ADDR_W - 1:0]    s1_PC 
+,   input [ADDR_W - 1:0]    s1_PCPlus4
     
     
-    output reg              s2_Predict_Taken,
-    output reg [2:0]        s2_GHSR,
-    output reg [ADDR_W-1:0] s2_PC,
-    output reg [ADDR_W-1:0] s2_PCPlus4
+,   output reg              s2_Predict_Taken
+,   output reg [2:0]        s2_GHSR
+,   output reg [ADDR_W-1:0] s2_PC
+,   output reg [ADDR_W-1:0] s2_PCPlus4
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin

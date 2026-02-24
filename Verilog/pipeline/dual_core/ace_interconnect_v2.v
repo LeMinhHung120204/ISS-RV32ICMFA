@@ -5,147 +5,147 @@ module ace_interconnect_v2 #(
     parameter STRB_W    = DATA_W / 8,
     parameter ID_W      = 2
 )(
-    input clk, rst_n,
+    input clk, rst_n
 
     // ================= CLIENT 0 (CORE A) =================
     // AR Channel
-    input   [ID_W-1:0]      s0_axi_arid,
-    input   [ADDR_W-1:0]    s0_axi_araddr,
-    input   [7:0]           s0_axi_arlen,
-    input   [2:0]           s0_axi_arsize,
-    input   [1:0]           s0_axi_arburst,
-    input   [3:0]           s0_axi_arsnoop,
-    input                   s0_axi_arvalid,
-    output                  s0_axi_arready,
+,   input   [ID_W-1:0]      s0_axi_arid
+,   input   [ADDR_W-1:0]    s0_axi_araddr
+,   input   [7:0]           s0_axi_arlen
+,   input   [2:0]           s0_axi_arsize
+,   input   [1:0]           s0_axi_arburst
+,   input   [3:0]           s0_axi_arsnoop
+,   input                   s0_axi_arvalid
+,   output                  s0_axi_arready
     // AW/W/B Channel (Write)
-    input   [ID_W-1:0]      s0_axi_awid,
-    input   [ADDR_W-1:0]    s0_axi_awaddr,
-    input   [7:0]           s0_axi_awlen,
-    input   [2:0]           s0_axi_awsize,
-    input   [1:0]           s0_axi_awburst,
-    input   [2:0]           s0_axi_awsnoop,
-    input                   s0_axi_awvalid,
-    output                  s0_axi_awready,
+,   input   [ID_W-1:0]      s0_axi_awid
+,   input   [ADDR_W-1:0]    s0_axi_awaddr
+,   input   [7:0]           s0_axi_awlen
+,   input   [2:0]           s0_axi_awsize
+,   input   [1:0]           s0_axi_awburst
+,   input   [2:0]           s0_axi_awsnoop
+,   input                   s0_axi_awvalid
+,   output                  s0_axi_awready
 
-    input   [DATA_W-1:0]    s0_axi_wdata,
-    input   [STRB_W-1:0]    s0_axi_wstrb,
-    input                   s0_axi_wlast,
-    input                   s0_axi_wvalid,
-    output                  s0_axi_wready,
-    output                  s0_axi_bvalid,
-    output  [ID_W-1:0]      s0_axi_bid,
-    output  [1:0]           s0_axi_bresp,
-    input                   s0_axi_bready,
+,   input   [DATA_W-1:0]    s0_axi_wdata
+,   input   [STRB_W-1:0]    s0_axi_wstrb
+,   input                   s0_axi_wlast
+,   input                   s0_axi_wvalid
+,   output                  s0_axi_wready
+,   output                  s0_axi_bvalid
+,   output  [ID_W-1:0]      s0_axi_bid
+,   output  [1:0]           s0_axi_bresp
+,   input                   s0_axi_bready
     
     // R Channel
-    output  [DATA_W-1:0]    s0_axi_rdata,
-    output  [ID_W-1:0]      s0_axi_rid,
-    output  [3:0]           s0_axi_rresp,
-    output                  s0_axi_rvalid,
-    output                  s0_axi_rlast,
-    input                   s0_axi_rready,
+,   output  [DATA_W-1:0]    s0_axi_rdata
+,   output  [ID_W-1:0]      s0_axi_rid
+,   output  [3:0]           s0_axi_rresp
+,   output                  s0_axi_rvalid
+,   output                  s0_axi_rlast
+,   input                   s0_axi_rready
 
     // AC Channel (Snoop Input to Core A)
-    output reg [ADDR_W-1:0] s0_ace_acaddr,
-    output reg [3:0]        s0_ace_acsnoop,
-    output reg              s0_ace_acvalid,
-    input                   s0_ace_acready,
+,   output reg [ADDR_W-1:0] s0_ace_acaddr
+,   output reg [3:0]        s0_ace_acsnoop
+,   output reg              s0_ace_acvalid
+,   input                   s0_ace_acready
 
     // CR/CD Channel (Snoop Response from Core A)
-    input                   s0_ace_crvalid,
-    input   [4:0]           s0_ace_crresp,
-    input   [DATA_W-1:0]    s0_ace_cddata,
-    input                   s0_ace_cdvalid,
-    input                   s0_ace_cdlast,
+,   input                   s0_ace_crvalid
+,   input   [4:0]           s0_ace_crresp
+,   input   [DATA_W-1:0]    s0_ace_cddata
+,   input                   s0_ace_cdvalid
+,   input                   s0_ace_cdlast
 
     // ================= CLIENT 1 (CORE B) =================
     // AR Channel
-    input   [ID_W-1:0]      s1_axi_arid,
-    input   [ADDR_W-1:0]    s1_axi_araddr,
-    input   [7:0]           s1_axi_arlen,
-    input   [2:0]           s1_axi_arsize,
-    input   [1:0]           s1_axi_arburst,
-    input   [3:0]           s1_axi_arsnoop,
-    input                   s1_axi_arvalid,
-    output                  s1_axi_arready,
+,   input   [ID_W-1:0]      s1_axi_arid
+,   input   [ADDR_W-1:0]    s1_axi_araddr
+,   input   [7:0]           s1_axi_arlen
+,   input   [2:0]           s1_axi_arsize
+,   input   [1:0]           s1_axi_arburst
+,   input   [3:0]           s1_axi_arsnoop
+,   input                   s1_axi_arvalid
+,   output                  s1_axi_arready
 
     // AW/W/B Channel (Write)
-    input   [ID_W-1:0]      s1_axi_awid,
-    input   [ADDR_W-1:0]    s1_axi_awaddr,
-    input   [7:0]           s1_axi_awlen,
-    input   [2:0]           s1_axi_awsize,
-    input   [1:0]           s1_axi_awburst,
-    input   [2:0]           s1_axi_awsnoop,
-    input                   s1_axi_awvalid,
-    output                  s1_axi_awready,
+,   input   [ID_W-1:0]      s1_axi_awid
+,   input   [ADDR_W-1:0]    s1_axi_awaddr
+,   input   [7:0]           s1_axi_awlen
+,   input   [2:0]           s1_axi_awsize
+,   input   [1:0]           s1_axi_awburst
+,   input   [2:0]           s1_axi_awsnoop
+,   input                   s1_axi_awvalid
+,   output                  s1_axi_awready
 
-    input   [DATA_W-1:0]    s1_axi_wdata,
-    input   [STRB_W-1:0]    s1_axi_wstrb,
-    input                   s1_axi_wlast,
-    input                   s1_axi_wvalid,
-    output                  s1_axi_wready,
+,   input   [DATA_W-1:0]    s1_axi_wdata
+,   input   [STRB_W-1:0]    s1_axi_wstrb
+,   input                   s1_axi_wlast
+,   input                   s1_axi_wvalid
+,   output                  s1_axi_wready
     
-    output                  s1_axi_bvalid,
-    output  [ID_W-1:0]      s1_axi_bid,
-    output  [1:0]           s1_axi_bresp,
-    input                   s1_axi_bready,
+,   output                  s1_axi_bvalid
+,   output  [ID_W-1:0]      s1_axi_bid
+,   output  [1:0]           s1_axi_bresp
+,   input                   s1_axi_bready
     
-    output  [DATA_W-1:0]    s1_axi_rdata,
-    output  [ID_W-1:0]      s1_axi_rid,
-    output  [3:0]           s1_axi_rresp,
-    output                  s1_axi_rvalid,
-    output                  s1_axi_rlast,
-    input                   s1_axi_rready,
+,   output  [DATA_W-1:0]    s1_axi_rdata
+,   output  [ID_W-1:0]      s1_axi_rid
+,   output  [3:0]           s1_axi_rresp
+,   output                  s1_axi_rvalid
+,   output                  s1_axi_rlast
+,   input                   s1_axi_rready
 
     // AC Channel (Snoop Input to Core B)
-    output reg [ADDR_W-1:0] s1_ace_acaddr,
-    output reg [3:0]        s1_ace_acsnoop,
-    output reg              s1_ace_acvalid,
-    input                   s1_ace_acready,
+,   output reg [ADDR_W-1:0] s1_ace_acaddr
+,   output reg [3:0]        s1_ace_acsnoop
+,   output reg              s1_ace_acvalid
+,   input                   s1_ace_acready
 
     // CR/CD Channel (Snoop Response from Core B)
-    input                   s1_ace_crvalid,
-    input   [4:0]           s1_ace_crresp,
-    input   [DATA_W-1:0]    s1_ace_cddata,
-    input                   s1_ace_cdvalid,
-    input                   s1_ace_cdlast,
+,   input                   s1_ace_crvalid
+,   input   [4:0]           s1_ace_crresp
+,   input   [DATA_W-1:0]    s1_ace_cddata
+,   input                   s1_ace_cdvalid
+,   input                   s1_ace_cdlast
 
     // ================================================================ MASTER PORT (TO EXTERNAL MEMORY) ================================================================
     // READ
-    output  [ID_W-1:0]      mem_arid,
-    output  [ADDR_W-1:0]    mem_araddr,
-    output  [7:0]           mem_arlen,
-    output  [2:0]           mem_arsize,
-    output  [1:0]           mem_arburst,
-    output                  mem_arvalid,
-    input                   mem_arready,
+,   output  [ID_W-1:0]      mem_arid
+,   output  [ADDR_W-1:0]    mem_araddr
+,   output  [7:0]           mem_arlen
+,   output  [2:0]           mem_arsize
+,   output  [1:0]           mem_arburst
+,   output                  mem_arvalid
+,   input                   mem_arready
 
-    input   [DATA_W-1:0]    mem_rdata,
-    input   [ID_W-1:0]      mem_rid,
-    input   [3:0]           mem_rresp,
-    input                   mem_rvalid,
-    input                   mem_rlast,
-    output                  mem_rready,
+,   input   [DATA_W-1:0]    mem_rdata
+,   input   [ID_W-1:0]      mem_rid
+,   input   [3:0]           mem_rresp
+,   input                   mem_rvalid
+,   input                   mem_rlast
+,   output                  mem_rready
 
     // WRITE
-    output  [ID_W-1:0]      mem_awid,
-    output  [ADDR_W-1:0]    mem_awaddr,
-    output  [7:0]           mem_awlen,
-    output  [2:0]           mem_awsize,
-    output  [1:0]           mem_awburst,
-    output                  mem_awvalid,
-    input                   mem_awready,
+,   output  [ID_W-1:0]      mem_awid
+,   output  [ADDR_W-1:0]    mem_awaddr
+,   output  [7:0]           mem_awlen
+,   output  [2:0]           mem_awsize
+,   output  [1:0]           mem_awburst
+,   output                  mem_awvalid
+,   input                   mem_awready
     
-    output  [DATA_W-1:0]    mem_wdata,
-    output  [STRB_W-1:0]    mem_wstrb,
-    output                  mem_wlast,
-    output                  mem_wvalid,
-    input                   mem_wready,
+,   output  [DATA_W-1:0]    mem_wdata
+,   output  [STRB_W-1:0]    mem_wstrb
+,   output                  mem_wlast
+,   output                  mem_wvalid
+,   input                   mem_wready
     
-    input                   mem_bvalid,
-    input   [ID_W-1:0]      mem_bid,
-    input   [1:0]           mem_bresp,
-    output                  mem_bready
+,   input                   mem_bvalid
+,   input   [ID_W-1:0]      mem_bid
+,   input   [1:0]           mem_bresp
+,   output                  mem_bready
 );
     localparam IDLE         = 3'd0;
     localparam SNOOP_REQ    = 3'd1;

@@ -3,27 +3,27 @@ module RV32IMF #(
     parameter WIDTH_DATA = 32,
     parameter WIDTH_ADDR = 32
 )(
-    input   clk, rst_n,
+    input   clk, rst_n
 
     // cpu <-> dcache
-    input   [WIDTH_DATA-1:0]    data_rdata,
-    input                       dcache_stall,
-    input                       raw_hazard,
-    output                      data_req,
-    output                      data_wr,
-    output  [1:0]               data_size,
-    output  [WIDTH_ADDR - 1:0]  data_addr,
-    output  [WIDTH_DATA - 1:0]  data_wdata,
+,   input   [WIDTH_DATA-1:0]    data_rdata
+,   input                       dcache_stall
+,   input                       raw_hazard
+,   output                      data_req
+,   output                      data_wr
+,   output  [1:0]               data_size
+,   output  [WIDTH_ADDR - 1:0]  data_addr
+,   output  [WIDTH_DATA - 1:0]  data_wdata
 
     // cpu <-> icache
-    input                       icache_stall,
-    input   [WIDTH_DATA - 1:0]  imem_instr,
+,   input                       icache_stall
+,   input   [WIDTH_DATA - 1:0]  imem_instr
 
-    output                      icache_req,
-    output                      icache_flush,
-    output  [WIDTH_ADDR - 1:0]  icache_addr,
+,   output                      icache_req
+,   output                      icache_flush
+,   output  [WIDTH_ADDR - 1:0]  icache_addr
 
-    output  [WIDTH_DATA - 1:0]  W_Result_output
+,   output  [WIDTH_DATA - 1:0]  W_Result_output
     // input   [WIDTH_DATA - 1:0]  imem_instr, dmem_rdata,
     // output  [WIDTH_ADDR - 1:0]  imem_addr, 
     // output  [WIDTH_DATA - 1:0]  dmem_wdata,

@@ -2,11 +2,11 @@
 module mul24 #(
     parameter DATA_WIDH = 24
 )(
-    input   clk, rst_n, valid_input,
+    input   clk, rst_n, valid_input
     // input   [1:0] is_unsigned,         
-    input   [DATA_WIDH - 1:0] a, b,
-    output  valid_output,
-    output  [(DATA_WIDH * 2) - 1:0] R
+,   input   [DATA_WIDH - 1:0] a, b
+,   output  valid_output
+,   output  [(DATA_WIDH * 2) - 1:0] R
 );
     /*
     00: unsigned x unsigned

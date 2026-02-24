@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 module cla_8b(
-    input  [7:0]  a, b,
-    input         cin,
-    output [7:0]  sum,
-    output        cout  // carry-out cua 8-bit
+    input  [7:0]  a, b
+,   input         cin
+,   output [7:0]  sum
+,   output        cout  // carry-out cua 8-bit
 );
     wire P0, P1, G0, G1;
     wire C1;

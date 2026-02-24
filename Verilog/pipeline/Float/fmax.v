@@ -2,9 +2,9 @@
 module fmax #(
     parameter WIDTH = 32
 )(
-    input  [WIDTH-1:0] a, b,
-    output reg [WIDTH-1:0] out,
-    output reg exception
+    input  [WIDTH-1:0] a, b
+,   output reg [WIDTH-1:0] out
+,   output reg exception
 );
     localparam [31:0] QNAN = 32'h7FC0_0000;
 

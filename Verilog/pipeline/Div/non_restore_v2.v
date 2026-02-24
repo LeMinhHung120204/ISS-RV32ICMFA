@@ -2,10 +2,10 @@
 module non_restore_v2 #(
     parameter DATA_WIDTH = 32
 )(
-    input   clk, rst_n, is_unsigned, valid_input,
-    input   [DATA_WIDTH - 1:0] dividend, divisor,
-    output  [DATA_WIDTH - 1:0] quotient, remainder,
-    output  valid_output
+    input   clk, rst_n, is_unsigned, valid_input
+,   input   [DATA_WIDTH - 1:0] dividend, divisor
+,   output  [DATA_WIDTH - 1:0] quotient, remainder
+,   output  valid_output
 );
     localparam num_reg = 17;
     localparam num_tmp = 17;

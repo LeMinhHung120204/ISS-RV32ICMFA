@@ -4,9 +4,9 @@ module PC #(
     parameter START_PC  = 32'd0
     // parameter END_PC    = 32'd1024
 )(
-    input       clk, rst_n, EN,
-    input       [WIDTH - 1:0] PCNext,
-    output reg  [WIDTH - 1:0] PC
+    input       clk, rst_n, EN
+,   input       [WIDTH - 1:0] PCNext
+,   output reg  [WIDTH - 1:0] PC
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin

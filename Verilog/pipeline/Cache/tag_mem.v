@@ -4,23 +4,23 @@ module tag_mem #(
     parameter TAG_W         = 24,
     parameter INDEX_W       = $clog2(NUM_SETS)
 )(
-    input                   clk, rst_n, 
-    input                   tag_we,
-    input                   moesi_we,
-    input                   valid_we,
-    input                   invalid,
-    input   [INDEX_W-1:0]   read_index,
-    input   [INDEX_W-1:0]   write_index,
-    input   [TAG_W-1:0]     din_tag,
-    input   [2:0]           moesi_next_state,
+    input                   clk, rst_n 
+,   input                   tag_we
+,   input                   moesi_we
+,   input                   valid_we
+,   input                   invalid
+,   input   [INDEX_W-1:0]   read_index
+,   input   [INDEX_W-1:0]   write_index
+,   input   [TAG_W-1:0]     din_tag
+,   input   [2:0]           moesi_next_state
 
     // L1 request
-    input   [INDEX_W-1:0]   L1_read_index,
+,   input   [INDEX_W-1:0]   L1_read_index
 
-    output reg  [TAG_W-1:0] dout_tag,
-    output reg              valid,
-    output reg  [2:0]       moesi_current_state,
-    output reg  [2:0]       L1_moesi_current_state
+,   output reg  [TAG_W-1:0] dout_tag
+,   output reg              valid
+,   output reg  [2:0]       moesi_current_state
+,   output reg  [2:0]       L1_moesi_current_state
 );
     localparam STATE_I = 3'd4;
 

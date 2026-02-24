@@ -13,54 +13,54 @@ module dcache_v2 #(
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
 )(
-    input clk, rst_n,
+    input clk, rst_n
 
     // ================= CPU INTERFACE =================
-    input                       cpu_req, cpu_we,
-    input   [ADDR_W-1:0]        cpu_addr,
-    input   [DATA_W-1:0]        cpu_din,
-    input   [1:0]               cpu_size,
+,   input                       cpu_req, cpu_we
+,   input   [ADDR_W-1:0]        cpu_addr
+,   input   [DATA_W-1:0]        cpu_din
+,   input   [1:0]               cpu_size
     
     // Them tin hieu Atomic tu CPU
-    input                       cpu_lr,
-    input                       cpu_sc,
-    input                       cpu_amo,
-    input   [2:0]               cpu_amo_op,
-    output                      o_sc_success, // Tra ve ket qua SC (0=Success, 1=Fail)
+,   input                       cpu_lr
+,   input                       cpu_sc
+,   input                       cpu_amo
+,   input   [2:0]               cpu_amo_op
+,   output                      o_sc_success // Tra ve ket qua SC (0=Success, 1=Fail)
 
-    output  reg [DATA_W-1:0]    data_rdata,
-    output                      pipeline_stall,
-    output                      raw_hazard,
+,   output  reg [DATA_W-1:0]    data_rdata
+,   output                      pipeline_stall
+,   output                      raw_hazard
 
     // ================= L2 INTERFACE =================
     // Request address
-    output                      o_l2_req_valid,
-    input                       i_l2_req_ready,
-    output  [1:0]               o_l2_req_cmd, 
-    output  [ADDR_W-1:0]        o_l2_req_addr,
+,   output                      o_l2_req_valid
+,   input                       i_l2_req_ready
+,   output  [1:0]               o_l2_req_cmd 
+,   output  [ADDR_W-1:0]        o_l2_req_addr
 
     // Request Moesi
-    input   [11:0]              i_l2_req_moesi_state,
+,   input   [11:0]              i_l2_req_moesi_state
     
     // Write Data (WB)
-    output  reg [CACHE_DATA_W-1:0]  o_l2_wdata,
-    output                          o_l2_wdata_valid,
-    input                           i_l2_wdata_ready,
+,   output  reg [CACHE_DATA_W-1:0]  o_l2_wdata
+,   output                          o_l2_wdata_valid
+,   input                           i_l2_wdata_ready
 
     // Read Data (Refill)
-    input                       i_l2_rdata_valid,
-    input   [CACHE_DATA_W-1:0]  i_l2_rdata,
-    output                      o_l2_rdata_ready,
+,   input                       i_l2_rdata_valid
+,   input   [CACHE_DATA_W-1:0]  i_l2_rdata
+,   output                      o_l2_rdata_ready
 
     // Snoop Interface
-    input                       i_snoop_valid,
-    input   [ADDR_W-1:0]        i_snoop_addr,
-    input                       i_snoop_req_invalid,
+,   input                       i_snoop_valid
+,   input   [ADDR_W-1:0]        i_snoop_addr
+,   input                       i_snoop_req_invalid
     
-    output                          o_snoop_complete,
-    output  reg                     o_snoop_hit,
-    output  reg                     o_snoop_dirty,
-    output  reg [CACHE_DATA_W-1:0]  o_snoop_data
+,   output                          o_snoop_complete
+,   output  reg                     o_snoop_hit
+,   output  reg                     o_snoop_dirty
+,   output  reg [CACHE_DATA_W-1:0]  o_snoop_data
 
 );
     // ---------------------------------------- INTERNAL SIGNALS ----------------------------------------

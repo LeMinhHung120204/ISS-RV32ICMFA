@@ -15,101 +15,101 @@ module L2_cache #(
     parameter ID_W          = 2,
     parameter STRB_W        = (DATA_W/8)
 )(
-    input ACLK, ARESETn,
+    input ACLK, ARESETn
 
     // Request (Command/Address)
-    input                       i_req_valid,  
-    input   [1:0]               i_req_cmd,    // 00: Read, 01: Write, 10: Upgrade/Invalidate
-    input   [ADDR_W-1:0]        i_L1_read_addr,
-    input   [ADDR_W-1:0]        i_req_addr,   
-    output                      o_req_ready,  
-    output  [11:0]              o_L1_moesi_state,
+,   input                       i_req_valid  
+,   input   [1:0]               i_req_cmd    // 00: Read, 01: Write, 10: Upgrade/Invalidate
+,   input   [ADDR_W-1:0]        i_L1_read_addr
+,   input   [ADDR_W-1:0]        i_req_addr   
+,   output                      o_req_ready  
+,   output  [11:0]              o_L1_moesi_state
 
     // Write Data (Data from L1 writeback)
-    input  [CACHE_DATA_W-1:0]   i_wdata,     
-    input                       i_wdata_valid,
-    output                      o_wdata_ready,
+,   input  [CACHE_DATA_W-1:0]   i_wdata     
+,   input                       i_wdata_valid
+,   output                      o_wdata_ready
 
     // Read Data (Data to L1 refill)
-    output [CACHE_DATA_W-1:0]   o_rdata,      
-    output                      o_rdata_valid,
-    input                       i_rdata_ready, // Signal from L1 indicating it's ready
+,   output [CACHE_DATA_W-1:0]   o_rdata      
+,   output                      o_rdata_valid
+,   input                       i_rdata_ready // Signal from L1 indicating it's ready
 
     // Snoop Internal (Forwarding -> L1)
-    output                      o_int_snoop_valid,
-    output [ADDR_W-1:0]         o_int_snoop_addr,
-    output                      snoop_req_invalidate,
+,   output                      o_int_snoop_valid
+,   output [ADDR_W-1:0]         o_int_snoop_addr
+,   output                      snoop_req_invalidate
 
-    input                       i_int_snoop_hit,
-    input                       i_l1_snoop_complete,
-    input                       i_int_snoop_dirty,
-    input  [CACHE_DATA_W-1:0]   i_int_snoop_data,
+,   input                       i_int_snoop_hit
+,   input                       i_l1_snoop_complete
+,   input                       i_int_snoop_dirty
+,   input  [CACHE_DATA_W-1:0]   i_int_snoop_data
 
     // (cache L2 <-> cache L3)
     // AW channel 
-    input                       iAWREADY,
-    output  [ID_W-1:0]          oAWID,
-    output  [ADDR_W-1:0]        oAWADDR,
-    output  [7:0]               oAWLEN,
-    output  [2:0]               oAWSIZE,
-    output  [1:0]               oAWBURST,
-    output                      oAWVALID,
+,   input                       iAWREADY
+,   output  [ID_W-1:0]          oAWID
+,   output  [ADDR_W-1:0]        oAWADDR
+,   output  [7:0]               oAWLEN
+,   output  [2:0]               oAWSIZE
+,   output  [1:0]               oAWBURST
+,   output                      oAWVALID
     // tin hieu them
-    output  [2:0]               oAWSNOOP,
-    output  [1:0]               oAWDOMAIN,
+,   output  [2:0]               oAWSNOOP
+,   output  [1:0]               oAWDOMAIN
     
     // W channel
-    input                           iWREADY,
-    output reg  [DATA_W-1:0]        oWDATA,
-    output  [STRB_W-1:0]            oWSTRB,
-    output                          oWLAST,
-    output                          oWVALID,
+,   input                           iWREADY
+,   output reg  [DATA_W-1:0]        oWDATA
+,   output  [STRB_W-1:0]            oWSTRB
+,   output                          oWLAST
+,   output                          oWVALID
     
     // B channel
-    input   [ID_W-1:0]          iBID,
-    input   [1:0]               iBRESP,
-    input                       iBVALID,
-    output                      oBREADY,
+,   input   [ID_W-1:0]          iBID
+,   input   [1:0]               iBRESP
+,   input                       iBVALID
+,   output                      oBREADY
 
     // AR channel
-    input                       iARREADY,
-    output  [ID_W-1:0]          oARID,
-    output  [ADDR_W-1:0]        oARADDR,
-    output  [7:0]               oARLEN,
-    output  [2:0]               oARSIZE,
-    output  [1:0]               oARBURST,
-    output                      oARVALID,
+,   input                       iARREADY
+,   output  [ID_W-1:0]          oARID
+,   output  [ADDR_W-1:0]        oARADDR
+,   output  [7:0]               oARLEN
+,   output  [2:0]               oARSIZE
+,   output  [1:0]               oARBURST
+,   output                      oARVALID
     // tin hieu them
-    output  [3:0]               oARSNOOP,
-    output  [1:0]               oARDOMAIN,
+,   output  [3:0]               oARSNOOP
+,   output  [1:0]               oARDOMAIN
 
     // R channel
-    input   [ID_W-1:0]          iRID,
-    input   [DATA_W-1:0]        iRDATA,
+,   input   [ID_W-1:0]          iRID
+,   input   [DATA_W-1:0]        iRDATA
     //  RRESP[3:2] (interconnect)
     //  RRESP[1:0] (memory)
-    input   [3:0]               iRRESP,
-    input                       iRLAST,
-    input                       iRVALID,
-    output                      oRREADY,
+,   input   [3:0]               iRRESP
+,   input                       iRLAST
+,   input                       iRVALID
+,   output                      oRREADY
 
     // Snoop channel
     // AC channel
-    input                       iACVALID,
-    input   [ADDR_W-1:0]        iACADDR,
-    input   [3:0]               iACSNOOP,
-    output                      oACREADY,
+,   input                       iACVALID
+,   input   [ADDR_W-1:0]        iACADDR
+,   input   [3:0]               iACSNOOP
+,   output                      oACREADY
 
     // CR channel
-    input                       iCRREADY,
-    output                      oCRVALID,
-    output  [4:0]               oCRRESP,
+,   input                       iCRREADY
+,   output                      oCRVALID
+,   output  [4:0]               oCRRESP
     
     // CD channel
-    input                       iCDREADY,
-    output                      oCDVALID,
-    output reg  [DATA_W-1:0]    oCDDATA,
-    output                      oCDLAST
+,   input                       iCDREADY
+,   output                      oCDVALID
+,   output reg  [DATA_W-1:0]    oCDDATA
+,   output                      oCDLAST
 );
    // ---------------------------------------- INTERNAL WIRES ----------------------------------------
     wire [TAG_W-1:0]        s1_tag, s1_ac_tag;

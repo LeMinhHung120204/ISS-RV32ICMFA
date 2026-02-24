@@ -2,9 +2,9 @@
 module feq #(
     parameter WIDTH = 32
 )(
-    input  [WIDTH-1:0]  a, b,
-    output [WIDTH-1:0]  out,
-    output              exception // =1 neu co input sNaN 
+    input  [WIDTH-1:0]  a, b
+,   output [WIDTH-1:0]  out
+,   output              exception // =1 neu co input sNaN 
 );
     wire        sa = a[31];
     wire        sb = b[31];

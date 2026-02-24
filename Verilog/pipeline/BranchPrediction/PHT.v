@@ -4,16 +4,16 @@
 // 8 entries, 2-bit saturating counter
 // From Lee Min Hunz with love
 module PHT(
-    input           clk, rst_n,
-    input           E_Branch,
-    input           E_Jump,
-    input           Taken,        // 1 if taken, 0 if not taken
-    input [2:0]     F_PC,   
-    input [2:0]     E_PC, 
-    input [2:0]     E_GHSR,   
+    input           clk, rst_n
+,   input           E_Branch
+,   input           E_Jump
+,   input           Taken        // 1 if taken, 0 if not taken
+,   input [2:0]     F_PC   
+,   input [2:0]     E_PC 
+,   input [2:0]     E_GHSR   
 
-    output          predict,
-    output [2:0]    GHSR_out
+,   output          predict
+,   output [2:0]    GHSR_out
 );
     reg [2:0] GHSR;
     reg [1:0] next_state;

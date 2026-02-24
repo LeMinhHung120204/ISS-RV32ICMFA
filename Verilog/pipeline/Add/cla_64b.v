@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 module cla_64b(
-    input  [63:0] a, b,
-    input         cin,
-    output [63:0] sum,
-    output        cout
+    input  [63:0] a, b
+,   input         cin
+,   output [63:0] sum
+,   output        cout
 );
     wire G0, G1, G2, G3;
     wire P0, P1, P2, P3;

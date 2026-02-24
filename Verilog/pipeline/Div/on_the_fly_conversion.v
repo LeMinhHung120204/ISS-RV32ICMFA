@@ -1,12 +1,12 @@
 `timescale 1ns/1ps
 module on_the_fly_conversion(
-input clk,
-input rst_n,
+input clk
+,   input rst_n
 
-input[2:0] q_in,
-input[1:0] state_in ,
+,   input[2:0] q_in
+,   input[1:0] state_in 
 
-output[31:0] q_out
+,   output[31:0] q_out
 
 );
 

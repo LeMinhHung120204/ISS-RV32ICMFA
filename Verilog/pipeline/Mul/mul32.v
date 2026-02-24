@@ -2,12 +2,12 @@
 module mul32 #(
     parameter DATA_WIDH = 32
 )(
-    input   clk, rst_n, valid_input,
-    input   [1:0] is_unsigned,         
-    input   [DATA_WIDH - 1:0] a, b,
-    output  [DATA_WIDH - 1:0] R_high, R_low,
-    output  valid_output, 
-    output  reg is_busy
+    input   clk, rst_n, valid_input
+,   input   [1:0] is_unsigned         
+,   input   [DATA_WIDH - 1:0] a, b
+,   output  [DATA_WIDH - 1:0] R_high, R_low
+,   output  valid_output 
+,   output  reg is_busy
 );
     /*
     00: unsigned x unsigned

@@ -2,8 +2,8 @@
 module csa #(
     parameter WIDTH = 32
 )(
-	input  [WIDTH - 1:0] x, y, z,
-	output [WIDTH - 1:0] sum, carry
+	input  [WIDTH - 1:0] x, y, z
+,   output [WIDTH - 1:0] sum, carry
 );
 	wire [WIDTH - 1:0] carry_stage;
 
@@ -28,8 +28,8 @@ module csa #(
 endmodule
 
 module fulladder (
-	input a, b, cin,
-	output sum, carry
+	input a, b, cin
+,   output sum, carry
 );
 	assign {carry, sum} = a + b + cin;
 endmodule

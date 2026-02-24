@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 module cla_4b (
-    input  [3:0] a, b,
-    input        cin,
-    output [3:0] sum,
-    output       G,   // group generate
-    output       P    // group propagate
+    input  [3:0] a, b
+,   input        cin
+,   output [3:0] sum
+,   output       G   // group generate
+,   output       P    // group propagate
 );
 
     wire [3:0] g, p, c;

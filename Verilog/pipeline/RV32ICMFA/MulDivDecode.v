@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 module MulDivDecode(
-    input   MulDivOp,
-    input   [2:0] funct3,
-    output reg  [1:0] Mul_Div_unsigned, MulDivControl,
-    output reg  is_high, valid_MDU
+    input   MulDivOp
+,   input   [2:0] funct3
+,   output reg  [1:0] Mul_Div_unsigned, MulDivControl
+,   output reg  is_high, valid_MDU
 );
     /*
         Mul_Div_unsigned: 00:signed, 01:unsigned, 11:(signed x unsigned)

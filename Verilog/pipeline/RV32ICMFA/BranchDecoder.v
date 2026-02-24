@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 module BranchDecoder(
-    input E_Jump, E_Zero, E_Branch, E_signed_less,
-    input [2:0] funct3,
-    output E_PCSrc
+    input E_Jump, E_Zero, E_Branch, E_signed_less
+,   input [2:0] funct3
+,   output E_PCSrc
 );
     reg E_con;
     always @(*) begin

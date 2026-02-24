@@ -7,47 +7,47 @@ module DataMem_wrapper #(
     parameter RESET_VALUE   = 0,
     parameter STRB_W        = DATA_W / 8
 )(
-    input   ACLK,
-    input   ARESETn,
+    input   ACLK
+,   input   ARESETn
 
     // AW Channel
-    input [ID_W-1:0]    i_axi_awid,
-    input [ADDR_W-1:0]  i_axi_awaddr,
-    input [7:0]         i_axi_awlen,
-    input [2:0]         i_axi_awsize,
-    input [1:0]         i_axi_awburst,
-    input               i_axi_awvalid,
-    output              o_axi_awready,
+,   input [ID_W-1:0]    i_axi_awid
+,   input [ADDR_W-1:0]  i_axi_awaddr
+,   input [7:0]         i_axi_awlen
+,   input [2:0]         i_axi_awsize
+,   input [1:0]         i_axi_awburst
+,   input               i_axi_awvalid
+,   output              o_axi_awready
     
     // W Channel
-    output              o_axi_wready,
-    input [DATA_W-1:0]  i_axi_wdata,
-    input [STRB_W-1:0]  i_axi_wstrb,
-    input               i_axi_wlast,
-    input               i_axi_wvalid,
+,   output              o_axi_wready
+,   input [DATA_W-1:0]  i_axi_wdata
+,   input [STRB_W-1:0]  i_axi_wstrb
+,   input               i_axi_wlast
+,   input               i_axi_wvalid
 
     // B Channel
-    output [ID_W-1:0]   o_axi_bid,
-    output [1:0]        o_axi_bresp,
-    output              o_axi_bvalid,
-    input               i_axi_bready,
+,   output [ID_W-1:0]   o_axi_bid
+,   output [1:0]        o_axi_bresp
+,   output              o_axi_bvalid
+,   input               i_axi_bready
 
     // AR Channel
-    output              o_axi_arready,
-    input [ID_W-1:0]    i_axi_arid,
-    input [ADDR_W-1:0]  i_axi_araddr,
-    input [7:0]         i_axi_arlen,
-    input [2:0]         i_axi_arsize,
-    input [1:0]         i_axi_arburst,
-    input               i_axi_arvalid,
+,   output              o_axi_arready
+,   input [ID_W-1:0]    i_axi_arid
+,   input [ADDR_W-1:0]  i_axi_araddr
+,   input [7:0]         i_axi_arlen
+,   input [2:0]         i_axi_arsize
+,   input [1:0]         i_axi_arburst
+,   input               i_axi_arvalid
 
     // R Channel
-    output [ID_W-1:0]   o_axi_rid,
-    output [DATA_W-1:0] o_axi_rdata,
-    output [1:0]        o_axi_rresp,
-    output              o_axi_rlast,
-    output              o_axi_rvalid,
-    input               i_axi_rready
+,   output [ID_W-1:0]   o_axi_rid
+,   output [DATA_W-1:0] o_axi_rdata
+,   output [1:0]        o_axi_rresp
+,   output              o_axi_rlast
+,   output              o_axi_rvalid
+,   input               i_axi_rready
 );  
     // ---------------------------------------- FIFO Width Definitions ----------------------------------------
     localparam FF_AW_W = DATA_W + ID_W + 8 + 3 + 2;     // AW: ADDR + ID + LEN + SIZE + BURST

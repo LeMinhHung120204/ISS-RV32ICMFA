@@ -7,21 +7,21 @@ module data_mem #(
     parameter CACHE_DATA_W  = (1<<WORD_OFF_W) * 32,
     parameter STRB_W        = (DATA_W/8)
 )(
-    input                           clk, rst_n, 
-    input   [INDEX_W-1:0]           read_index,
-    input   [INDEX_W-1:0]           write_index,
+    input                           clk, rst_n 
+,   input   [INDEX_W-1:0]           read_index
+,   input   [INDEX_W-1:0]           write_index
 
     // refill nguyen 1 line
-    input                           refill_we,
-    input   [CACHE_DATA_W-1:0]      refill_din,
+,   input                           refill_we
+,   input   [CACHE_DATA_W-1:0]      refill_din
 
     // ghi 32 bit
-    input                           cpu_we,
-    input   [DATA_W-1:0]            cpu_din,
-    input   [STRB_W-1:0]            cpu_wstrb,
-    input   [WORD_OFF_W-1:0]        cpu_offset,
+,   input                           cpu_we
+,   input   [DATA_W-1:0]            cpu_din
+,   input   [STRB_W-1:0]            cpu_wstrb
+,   input   [WORD_OFF_W-1:0]        cpu_offset
     
-    output reg  [CACHE_DATA_W-1:0]  dout
+,   output reg  [CACHE_DATA_W-1:0]  dout
 );
 
     reg [CACHE_DATA_W-1:0] data_mem [0:NUM_SETS-1];

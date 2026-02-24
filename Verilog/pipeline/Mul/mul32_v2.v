@@ -2,10 +2,10 @@
 module mul32_v2 #(
     parameter DATA_WIDH = 32
 )(
-    input   clk, rst_n,
-    input   is_unsigned,         
-    input   [DATA_WIDH - 1:0] a, b,
-    output  [(DATA_WIDH * 2) - 1:0] R
+    input   clk, rst_n
+,   input   is_unsigned         
+,   input   [DATA_WIDH - 1:0] a, b
+,   output  [(DATA_WIDH * 2) - 1:0] R
 );
     localparam num_reg = 18;
     localparam OUTW    = DATA_WIDH*2;

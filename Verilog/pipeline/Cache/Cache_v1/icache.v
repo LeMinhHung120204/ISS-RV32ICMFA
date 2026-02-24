@@ -12,29 +12,29 @@ module icache #(
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
     parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
 )(
-    input clk, rst_n,
+    input clk, rst_n
 
     // cache <-> CPU
-    input                       cpu_req,
-    input                       icache_flush,
-    input   [ADDR_W-1:0]        cpu_addr,
-    output  [DATA_W-1:0]        data_rdata,
-    output                      pipeline_stall,
+,   input                       cpu_req
+,   input                       icache_flush
+,   input   [ADDR_W-1:0]        cpu_addr
+,   output  [DATA_W-1:0]        data_rdata
+,   output                      pipeline_stall
 
     // icache <-> dcache
-    input                       dcache_stall,
-    input                       raw_hazard, 
+,   input                       dcache_stall
+,   input                       raw_hazard 
 
     // cache <-> L2
     // Request
-    input                       i_l2_req_ready,
-    output                      o_l2_req_valid,
-    output  [ADDR_W-1:0]        o_l2_req_addr,
+,   input                       i_l2_req_ready
+,   output                      o_l2_req_valid
+,   output  [ADDR_W-1:0]        o_l2_req_addr
 
     // Read Data (Refill L2 -> icache)
-    input                       i_l2_rdata_valid,
-    input   [CACHE_DATA_W-1:0]  i_l2_rdata,
-    output                      o_l2_rdata_ready
+,   input                       i_l2_rdata_valid
+,   input   [CACHE_DATA_W-1:0]  i_l2_rdata
+,   output                      o_l2_rdata_ready
 );
 
     // ---------------------------------------- INTERNAL SIGNALS ----------------------------------------

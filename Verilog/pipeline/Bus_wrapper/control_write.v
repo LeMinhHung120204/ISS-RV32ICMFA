@@ -2,24 +2,24 @@
 module control_write #(
     parameter DATA_W = 32
 )(
-    input                       clk,
-    input                       rst_n,
+    input                       clk
+,   input                       rst_n
     // AW Channel
-    input                       awvalid,
-    input       [1:0]           awburst,
-    input       [2:0]           awsize,
-    input       [7:0]           awlen,      // hien tai chua su dung tai su dung wlast de ket thuc burst
-    input       [DATA_W-1:0]    awaddr,
-    output reg                  awready,
+,   input                       awvalid
+,   input       [1:0]           awburst
+,   input       [2:0]           awsize
+,   input       [7:0]           awlen      // hien tai chua su dung tai su dung wlast de ket thuc burst
+,   input       [DATA_W-1:0]    awaddr
+,   output reg                  awready
 
     // W Channel
-    input                       wvalid,
-    input                       wlast,
-    output reg                  wready,
+,   input                       wvalid
+,   input                       wlast
+,   output reg                  wready
 
     // Memory Interface
-    output      [DATA_W-1:0]    w_addr,
-    output reg                  write_en            
+,   output      [DATA_W-1:0]    w_addr
+,   output reg                  write_en            
 );
 
     localparam IDLE    = 1'd0;

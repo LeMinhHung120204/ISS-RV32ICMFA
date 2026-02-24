@@ -2,19 +2,19 @@
 
 // 2-master Round-Robin arbiter for AXI Read channel
 module AXI_Arbiter_R (
-	input  ACLK,
-	input  ARESETn,
+	input  ACLK
+,   input  ARESETn
 	// Masters
-	input  m0_ARVALID,
-	input  m0_RREADY,
-	input  m1_ARVALID,
-	input  m1_RREADY,
+,   input  m0_ARVALID
+,   input  m0_RREADY
+,   input  m1_ARVALID
+,   input  m1_RREADY
 	// Slave signals
-	input  s_RVALID,
-	input  s_RLAST,
+,   input  s_RVALID
+,   input  s_RLAST
 	// Grants
-	output reg m0_rgrnt,
-	output reg m1_rgrnt
+,   output reg m0_rgrnt
+,   output reg m1_rgrnt
 );
 
 	parameter M0 = 1'b0;

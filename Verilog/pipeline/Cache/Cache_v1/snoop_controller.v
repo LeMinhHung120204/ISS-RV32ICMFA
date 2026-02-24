@@ -2,49 +2,49 @@
 module snoop_controller #(
     parameter ADDR_W = 32
 )(
-    input                   clk, rst_n,
+    input                   clk, rst_n
     
     // thong tin tu L2 Tag & State
-    input                   snoop_hit, 
-    input                   is_unique, // High if E or M
-    input                   is_dirty,  // High if O or M
-    input                   is_owner,  // High if O or M
+,   input                   snoop_hit 
+,   input                   is_unique // High if E or M
+,   input                   is_dirty  // High if O or M
+,   input                   is_owner  // High if O or M
 
     // thong tin snoop tu L1 (Forwarding result)
-    input                   i_l1_snoop_complete, // L1 bao da check xong
-    input                   i_l1_is_dirty,       // L1 bao co data dirty
-    input                   i_l1_has_data,       // L1 co giu copy
+,   input                   i_l1_snoop_complete // L1 bao da check xong
+,   input                   i_l1_is_dirty       // L1 bao co data dirty
+,   input                   i_l1_has_data       // L1 co giu copy
 
-    input                   snoop_can_access_ram,
+,   input                   snoop_can_access_ram
 
-    output  reg             moesi_we,
-    output  reg             snoop_req_invalidate,
-    output  reg             snoop_busy,
-    output  reg             l1_forward_valid,
-    output  reg             reg_snoop_stall,
+,   output  reg             moesi_we
+,   output  reg             snoop_req_invalidate
+,   output  reg             snoop_busy
+,   output  reg             l1_forward_valid
+,   output  reg             reg_snoop_stall
 
     // Tin hieu dieu khien MOESI Controller
-    output                  bus_rw,             // 1: Write (Invalidate), 0: Read
-    output reg              bus_snoop_valid,    // Trigger update MOESI state
+,   output                  bus_rw             // 1: Write (Invalidate), 0: Read
+,   output reg              bus_snoop_valid    // Trigger update MOESI state
     
-    output  [3:0]           burst_cnt_snoop,
-    output reg              use_l1_data_mux,    // Chon data tu L1 hay L2 RAM
+,   output  [3:0]           burst_cnt_snoop
+,   output reg              use_l1_data_mux    // Chon data tu L1 hay L2 RAM
 
     // AC channel (Address / Control Input)
-    input                   ACVALID,
-    input   [3:0]           ACSNOOP,
+,   input                   ACVALID
+,   input   [3:0]           ACSNOOP
     // input   [2:0]           ACPROT,
-    output  reg             ACREADY,
+,   output  reg             ACREADY
 
     // CR channel (Response Output)
-    input                   CRREADY,
-    output  reg             CRVALID,
-    output  [4:0]           CRRESP,
+,   input                   CRREADY
+,   output  reg             CRVALID
+,   output  [4:0]           CRRESP
 
     // CD channel (Data Output)
-    input                   CDREADY,
-    output reg              CDLAST,
-    output reg              CDVALID
+,   input                   CDREADY
+,   output reg              CDLAST
+,   output reg              CDVALID
 );
     localparam  IDLE    = 3'd0,
                 LOOKUP  = 3'd1,

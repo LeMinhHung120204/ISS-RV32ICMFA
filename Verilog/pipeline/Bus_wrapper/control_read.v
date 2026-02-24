@@ -2,27 +2,27 @@
 module control_read #(
     parameter DATA_W = 32
 )(
-    input                               clk,
-    input                               rst_n,
+    input                               clk
+,   input                               rst_n
     
     // AR Channel
-    input                               arvalid,
-    output reg                          arready,
-    input       [1:0]                   arburst,
-    input       [2:0]                   arsize,
-    input       [7:0]                   arlen,
-    input       [DATA_W-1:0]            araddr,
+,   input                               arvalid
+,   output reg                          arready
+,   input       [1:0]                   arburst
+,   input       [2:0]                   arsize
+,   input       [7:0]                   arlen
+,   input       [DATA_W-1:0]            araddr
     
     // R Channel 
-    input                               fifo_r_push_able,
-    input                               fifo_r_pop_able,
-    input                               rvalid_from_mem,
-    output reg                          last_data_from_mem,
+,   input                               fifo_r_push_able
+,   input                               fifo_r_pop_able
+,   input                               rvalid_from_mem
+,   output reg                          last_data_from_mem
 
     // Memory Interface
-    input                               fifo_ar_full,
-    output      [DATA_W-1:0]            r_addr,
-    output reg                          read_en
+,   input                               fifo_ar_full
+,   output      [DATA_W-1:0]            r_addr
+,   output reg                          read_en
 );
 
     localparam IDLE = 1'd0;

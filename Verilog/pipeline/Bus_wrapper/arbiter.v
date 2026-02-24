@@ -4,24 +4,24 @@ module arbiter #(
     parameter CODE_START    = 32'h0000_0000, 
     parameter DATA_START    = 32'h0000_4000
 )(
-    input           clk, rst_n,
+    input           clk, rst_n
 
     // --- Client 0: I-Cache (Read Only) ---
-    input                   i_c0_req_valid,
-    input   [ADDR_W-1:0]    i_c0_req_addr,
-    output  reg             o_c0_req_ready,
+,   input                   i_c0_req_valid
+,   input   [ADDR_W-1:0]    i_c0_req_addr
+,   output  reg             o_c0_req_ready
 
     // --- Client 1: D-Cache (Read/Write) ---
-    input                   i_c1_req_valid,
-    input   [1:0]           i_c1_req_cmd,
-    input   [ADDR_W-1:0]    i_c1_req_addr,
-    output  reg             o_c1_req_ready,
+,   input                   i_c1_req_valid
+,   input   [1:0]           i_c1_req_cmd
+,   input   [ADDR_W-1:0]    i_c1_req_addr
+,   output  reg             o_c1_req_ready
 
     // --- Output to L2 Cache ---
-    input                       i_l2_ready,
-    output  reg                 o_l2_valid,
-    output  reg [1:0]           o_l2_cmd,
-    output  reg [ADDR_W-1:0]    o_l2_addr
+,   input                       i_l2_ready
+,   output  reg                 o_l2_valid
+,   output  reg [1:0]           o_l2_cmd
+,   output  reg [ADDR_W-1:0]    o_l2_addr
 );
 
     reg priority_ptr;

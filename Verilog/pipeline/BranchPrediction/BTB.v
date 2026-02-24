@@ -6,15 +6,15 @@
 module BTB #(
     parameter W_ADDR = 32
 )(
-    input                   clk, rst_n,
-    input [W_ADDR-1:0]      F_PC,
-    output reg [W_ADDR-1:0] pc_prediction,
-    output                  hit,
+    input                   clk, rst_n
+,   input [W_ADDR-1:0]      F_PC
+,   output reg [W_ADDR-1:0] pc_prediction
+,   output                  hit
 
-    input [W_ADDR-1:0]      E_PC,           
-    input [W_ADDR-1:0]      branch_target,  
-    input                   E_Branch,       
-    input                   E_Jump          
+,   input [W_ADDR-1:0]      E_PC           
+,   input [W_ADDR-1:0]      branch_target  
+,   input                   E_Branch       
+,   input                   E_Jump          
 );
     localparam INDEX_BITS = 3;            
     localparam TAG_BITS   = W_ADDR - 2 - INDEX_BITS;

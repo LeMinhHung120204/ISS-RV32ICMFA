@@ -2,10 +2,10 @@
 module fadd #(
     parameter WIDTH = 32
 )(
-    input   clk, rst_n, valid_input,
-    input   [WIDTH-1:0] a, b,
-    output  valid_output,
-    output  [WIDTH-1:0] y
+    input   clk, rst_n, valid_input
+,   input   [WIDTH-1:0] a, b
+,   output  valid_output
+,   output  [WIDTH-1:0] y
 );
     reg [3:0]       state;
     localparam [31:0] POS_INF = 32'h7F800000;

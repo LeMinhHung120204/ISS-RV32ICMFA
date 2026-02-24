@@ -2,20 +2,20 @@
 
 // 2-master Round-Robin arbiter for AXI Write channel
 module AXI_Arbiter_W (
-    input  ACLK,
-    input  ARESETn,
+    input  ACLK
+,   input  ARESETn
     // Masters
-    input  m0_AWVALID,
-    input  m0_WVALID,
-    input  m0_BREADY,
-    input  m1_AWVALID,
-    input  m1_WVALID,
-    input  m1_BREADY,
+,   input  m0_AWVALID
+,   input  m0_WVALID
+,   input  m0_BREADY
+,   input  m1_AWVALID
+,   input  m1_WVALID
+,   input  m1_BREADY
     // Slave signals
-    input  s_BVALID,
+,   input  s_BVALID
     // Grants
-    output reg m0_wgrnt,
-    output reg m1_wgrnt
+,   output reg m0_wgrnt
+,   output reg m1_wgrnt
 );
 
     parameter M0 = 1'b0;

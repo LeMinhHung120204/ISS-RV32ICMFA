@@ -2,10 +2,10 @@
 module fmadd #(
     parameter WIDTH = 32
 )(
-    input   clk, rst_n, valid_input,
-    input   [WIDTH-1:0] rs1, rs2, rs3,
-    output  [WIDTH-1:0] rd,
-    output  valid_output
+    input   clk, rst_n, valid_input
+,   input   [WIDTH-1:0] rs1, rs2, rs3
+,   output  [WIDTH-1:0] rd
+,   output  valid_output
 );
     reg     [WIDTH-1:0] reg_rs1, reg_rs2, reg_rs3;
     reg     reg_ivalid;

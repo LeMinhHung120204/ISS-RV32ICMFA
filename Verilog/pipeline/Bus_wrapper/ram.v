@@ -4,15 +4,15 @@ module ram #(
     parameter ADDR_W        = 8,
     parameter RESET_VALUE   = 32'h0000_0000
 )(
-    input               clk, 
-    input               rst_n,
-    input               we,
-    input               re,
-    input  [ADDR_W-1:0] w_addr,
-    input  [ADDR_W-1:0] r_addr,
-    input  [DATA_W-1:0] w_data,
-    output [DATA_W-1:0] r_data,
-    output reg          valid
+    input               clk 
+,   input               rst_n
+,   input               we
+,   input               re
+,   input  [ADDR_W-1:0] w_addr
+,   input  [ADDR_W-1:0] r_addr
+,   input  [DATA_W-1:0] w_data
+,   output [DATA_W-1:0] r_data
+,   output reg          valid
 );
     reg [DATA_W-1:0] mem [0:(1 << ADDR_W) - 1];
     reg [DATA_W-1:0] OutMem;
