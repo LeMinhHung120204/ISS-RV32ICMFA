@@ -5,28 +5,35 @@ module RV32IA #(
     parameter START_PC      = 32'd0
     // parameter END_PC        = 32'd1024
 )(
-    input   clk, rst_n,
-    input   test_stall,
+    input   clk
+,   input   rst_n
+,   input   test_stall
 
     // cpu <-> dcache
-    input   [WIDTH_DATA-1:0]    data_rdata,
-    input                       dcache_stall,
-    input                       raw_hazard,
-    output                      data_req,
-    output                      data_wr,
-    output  [1:0]               data_size,
-    output  [WIDTH_ADDR - 1:0]  data_addr,
-    output  [WIDTH_DATA - 1:0]  data_wdata,
+,   input   [WIDTH_DATA-1:0]    data_rdata
+,   input                       dcache_stall
+,   input                       raw_hazard
+,   output                      data_req
+,   output                      data_wr
+,   output  [1:0]               data_size
+,   output  [WIDTH_ADDR - 1:0]  data_addr
+,   output  [WIDTH_DATA - 1:0]  data_wdata
+
+    // cpu atomic interface
+,   output                      cpu_lr
+,   output                      cpu_sc
+,   output                      cpu_amo
+,   output  [2:0]               cpu_amo_op
 
     // cpu <-> icache
-    input                       icache_stall,
-    input   [WIDTH_DATA - 1:0]  imem_instr,
+,   input                       icache_stall
+,   input   [WIDTH_DATA - 1:0]  imem_instr
 
-    output                      icache_req,
-    output                      icache_flush,
-    output  [WIDTH_ADDR - 1:0]  icache_addr,
+,   output                      icache_req
+,   output                      icache_flush
+,   output  [WIDTH_ADDR - 1:0]  icache_addr
 
-    output  [WIDTH_DATA - 1:0]  W_Result_output
+,   output  [WIDTH_DATA - 1:0]  W_Result_output
 );
 
     // ----------------------- fetch signals -----------------------
@@ -451,6 +458,11 @@ module RV32IA #(
     assign data_addr    = M_ALUResult;
     assign data_wdata   = M_WriteData;
     assign data_req     = M_data_req;
+
+    assign cpu_lr       = M_lr;
+    assign cpu_sc       = M_sc;
+    assign cpu_amo      = M_amo;
+    assign cpu_amo_op   = M_amo_op;
 
     // ---------------------------------------- PC Result Mux ----------------------------------------
     mux2_1 mux_ResPC(

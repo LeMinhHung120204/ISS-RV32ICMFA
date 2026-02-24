@@ -10,7 +10,7 @@ module tb_soc_top;
     parameter ADDR_W        = 32;
     parameter DATA_W        = 32; // use 32-bit beats for TB
     parameter STRB_W        = DATA_W/8;
-    parameter RAM_ADDR_W    = 14;
+    parameter RAM_ADDR_W    = 16;
     parameter RESET_VALUE   = 32'h00000013; // nop
 
     // Cau hinh core

@@ -21,10 +21,10 @@ module dcache_v2 #(
     input   [DATA_W-1:0]        cpu_din,
     input   [1:0]               cpu_size,
     
-    // [MOI] Them tin hieu Atomic tu CPU
-    input                       cpu_atomic_lr,
-    input                       cpu_atomic_sc,
-    input                       cpu_atomic_amo,
+    // Them tin hieu Atomic tu CPU
+    input                       cpu_lr,
+    input                       cpu_sc,
+    input                       cpu_amo,
     input   [2:0]               cpu_amo_op,
     output                      o_sc_success, // Tra ve ket qua SC (0=Success, 1=Fail)
 
@@ -134,7 +134,8 @@ module dcache_v2 #(
                 .tag_we         (tag_we & way_select[i]),
                 .valid_we       (refill_we & way_select[i]),
                 .invalid        (invalid & way_hit[i]),
-                .read_index     (read_index_src ? s1_index : s2_index),         
+                // .read_index     (read_index_src ? s1_index : s2_index),     
+                .read_index     (s1_index),         
                 .write_index    (s2_index),        
                 .din_tag        (s2_tag),
                 .valid          (current_valid[i]),
@@ -148,7 +149,8 @@ module dcache_v2 #(
             ) u_data_mem (
                 .clk            (clk), 
                 .rst_n          (rst_n),
-                .read_index     (read_index_src ? s1_index : s2_index),
+                // .read_index     (read_index_src ? s1_index : s2_index),
+                .read_index     (s1_index),
                 .write_index    (s2_index),
                 .refill_we      (refill_we & way_select[i]),
                 .refill_din     (refill_buffer),
@@ -188,9 +190,9 @@ module dcache_v2 #(
         .s1_is_snoop    (i_snoop_valid), 
         
         // [MOI] Inputs Atomic
-        .s1_lr          (cpu_atomic_lr),
-        .s1_sc          (cpu_atomic_sc),
-        .s1_amo         (cpu_atomic_amo),
+        .s1_lr          (cpu_lr),
+        .s1_sc          (cpu_sc),
+        .s1_amo         (cpu_amo),
         .s1_amo_op      (cpu_amo_op),
 
         // Outputs (Stage 2)
@@ -358,7 +360,7 @@ module dcache_v2 #(
             if (refill_we) begin
                 dirty_array[s2_index] <= dirty_array[s2_index] & (~way_select);
             end 
-            else if (data_we && cpu_hit && ~s2_is_snoop) begin 
+            else if (s2_we && cpu_hit && ~s2_is_snoop) begin 
                 dirty_array[s2_index] <= dirty_array[s2_index] | way_hit;
             end
         end
