@@ -216,7 +216,7 @@ module tb_soc_top;
         c1_stall    = 1;
         c0_stall    = 0;
         
-        #4000;
+        #1500;
         c1_stall    = 0;
     end
 

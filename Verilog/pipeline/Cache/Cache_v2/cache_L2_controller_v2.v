@@ -11,8 +11,10 @@ module cache_L2_controller_v2 #(
 
     // --- Control Signals ---
 ,   input           snoop_busy          
+,   input           snoop_hit
+,   input           snoop_req_invalidate
 ,   output  reg     snoop_can_access_ram
-    // output  reg     read_index_src,
+// ,   output  reg     read_index_src
     // output  reg     wb_error,
 
     // --- L1 Interface (Thay cho CPU) ---
@@ -104,6 +106,8 @@ module cache_L2_controller_v2 #(
     localparam CMD_READ_UNIQUE  = 2'b11;
 
     reg [3:0] state, next_state;
+    reg snoop_collision;
+
 
     // AXI Constants
     // Use 16 beats (0..15) of 32-bit transfers for a full 512-bit line
@@ -117,18 +121,13 @@ module cache_L2_controller_v2 #(
     assign oAWDOMAIN    = 2'b01; 
 
     wire need_upgrade;
-    // assign need_upgrade = (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == 3'd3) || (current_moesi_state == 3'd1)); // 3=Shared, 1=Owned
-
     assign need_upgrade = hit && (
                             (i_req_cmd == CMD_UPGRADE) || 
                             (i_req_cmd == CMD_READ_UNIQUE) || 
                             ((i_req_cmd == CMD_WRITE_BACK) && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O)))
-                        );
+                        );                  
 
-    // assign need_upgrade =   ( (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_READ_UNIQUE) ) 
-    //                         || (i_req_cmd == CMD_WRITE_BACK) && hit && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O));
-                            
-
+    // -------------------------------------- synchronous logic --------------------------------------
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
             burst_cnt           <= 4'd0;
@@ -161,6 +160,24 @@ module cache_L2_controller_v2 #(
         end 
     end 
 
+    always @(posedge clk or negedge rst_n) begin
+        if(~rst_n) begin 
+            snoop_collision <= 1'b0;
+        end 
+        else begin
+            if (state == TAG_CHECK && i_req_valid && !snoop_busy) begin
+                snoop_collision <= 1'b0;
+            end
+            
+            // collision assert when wait Upgrade/Read BUT Snoop HIT
+            // AND snoop INVALIDATE
+            else if ((state == ALLOC_AR || state == ALLOC_R || state == WAIT_SNOOP) && snoop_hit && snoop_req_invalidate) begin
+                snoop_collision <= 1'b1; 
+            end
+        end 
+    end
+
+    // ---------------------- FSM: State Update & Output Logic ---------------------
     always @(*) begin
         next_state = state;
         case(state)
@@ -355,24 +372,38 @@ module cache_L2_controller_v2 #(
             //     snoop_can_access_ram    = 1'b0;
             //     tag_we                  = 1'b1;
             //     moesi_we                = 1'b1;
-            //     refill_we               = 1'b1; 
-            // end 
+                
+            //     // Chi bat refill_we (Ghi Data RAM) khi thuc su co Data moi
+            //     // - Neu la Upgrade (CleanUnique): Khong co data -> refill_we = 0
+            //     // - Neu la Writeback Upgrade (CMD_WRITE_BACK): Data chua den (se den o L1_WB_RX) -> refill_we = 0
+            //     // - Neu la Read Miss / ReadUnique Miss: Co data tu Bus -> refill_we = 1
+                
+            //     if (need_upgrade || (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_WRITE_BACK)) begin
+            //          refill_we = 1'b0; // Chi sua Tag/MOESI, giu nguyen Data
+            //     end
+            //     else begin
+            //          refill_we = 1'b1; // Ghi Data tu Bus vao RAM
+            //     end
+            // end
 
             UPDATE: begin
                 snoop_can_access_ram    = 1'b0;
-                tag_we                  = 1'b1;
-                moesi_we                = 1'b1;
-                
-                // Chi bat refill_we (Ghi Data RAM) khi thuc su co Data moi
-                // - Neu la Upgrade (CleanUnique): Khong co data -> refill_we = 0
-                // - Neu la Writeback Upgrade (CMD_WRITE_BACK): Data chua den (se den o L1_WB_RX) -> refill_we = 0
-                // - Neu la Read Miss / ReadUnique Miss: Co data tu Bus -> refill_we = 1
-                
-                if (need_upgrade || (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_WRITE_BACK)) begin
-                     refill_we = 1'b0; // Chi sua Tag/MOESI, giu nguyen Data
+                if (!snoop_collision) begin
+                    tag_we      = 1'b1;
+                    moesi_we    = 1'b1;
+
+                    if (need_upgrade || (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_WRITE_BACK)) begin
+                        refill_we = 1'b0; 
+                    end
+                    else begin
+                        refill_we = 1'b1; 
+                    end
                 end
                 else begin
-                     refill_we = 1'b1; // Ghi Data tu Bus vao RAM
+                    // if snoop request invalid data -> cancel update, khong cap nhat MOESI, tag, giu nguyen data (refill_we = 0)
+                    tag_we      = 1'b0;
+                    moesi_we    = 1'b0;
+                    refill_we   = 1'b0;
                 end
             end
 

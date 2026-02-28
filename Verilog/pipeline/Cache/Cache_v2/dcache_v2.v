@@ -134,8 +134,8 @@ module dcache_v2 #(
                 .tag_we         (tag_we & way_select[i]),
                 .valid_we       (refill_we & way_select[i]),
                 .invalid        (invalid & way_hit[i]),
-                // .read_index     (read_index_src ? s1_index : s2_index),     
-                .read_index     (s1_index),         
+                .read_index     (read_index_src ? s1_index : s2_index),     
+                // .read_index     (s1_index),         
                 .write_index    (s2_index),        
                 .din_tag        (s2_tag),
                 .valid          (current_valid[i]),
@@ -149,8 +149,8 @@ module dcache_v2 #(
             ) u_data_mem (
                 .clk            (clk), 
                 .rst_n          (rst_n),
-                // .read_index     (read_index_src ? s1_index : s2_index),
-                .read_index     (s1_index),
+                .read_index     (read_index_src ? s1_index : s2_index),
+                // .read_index     (s1_index),
                 .write_index    (s2_index),
                 .refill_we      (refill_we & way_select[i]),
                 .refill_din     (refill_buffer),
@@ -164,7 +164,7 @@ module dcache_v2 #(
     endgenerate
 
     // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
-    assign pipeline_stall   = (s2_req & ~cpu_hit & ~s2_is_snoop) | stall_contoller | i_snoop_valid;
+    assign pipeline_stall   = stall_contoller | i_snoop_valid;
     assign raw_hazard       = cpu_req & data_we & (s1_index == s2_index);
 
     acc_cmp #(
@@ -360,7 +360,8 @@ module dcache_v2 #(
             if (refill_we) begin
                 dirty_array[s2_index] <= dirty_array[s2_index] & (~way_select);
             end 
-            else if (s2_we && cpu_hit && ~s2_is_snoop) begin 
+            // else if (s2_we && cpu_hit && ~s2_is_snoop) begin 
+            else if (data_we) begin
                 dirty_array[s2_index] <= dirty_array[s2_index] | way_hit;
             end
         end

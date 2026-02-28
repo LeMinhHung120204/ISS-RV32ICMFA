@@ -305,14 +305,6 @@ module L2_cache_v2 #(
     assign way_hit[3] = (tag_read[3] == tag_select) & (moesi_current_state[3] != 3'd4);
 
     assign snoop_hit = |way_hit & s2_is_snoop;
-    // always @(*) begin
-    //     if (s2_is_snoop) begin 
-    //         snoop_hit = |way_hit;
-    //     end 
-    //     else begin            
-    //         snoop_hit = 1'b0;
-    //     end 
-    // end
     
     assign any_hit = |way_hit;
     wire [NUM_WAYS-1:0] way_select_final = (any_hit) ? way_hit : way_select;
@@ -399,6 +391,8 @@ module L2_cache_v2 #(
 
         // Inputs
         .snoop_busy             (snoop_busy),
+        .snoop_hit              (snoop_hit),
+        .snoop_req_invalidate   (snoop_req_invalidate),
         .snoop_can_access_ram   (snoop_can_access_ram),
         
         .i_req_valid            (s2_req), 
@@ -479,7 +473,6 @@ module L2_cache_v2 #(
         
         // thong tin tu L2
         .snoop_hit              (snoop_hit),
-        // .snoop_hit              (any_hit),
         .is_unique              (is_unique), 
         .is_dirty               (is_dirty), 
         .is_owner               (is_owner),
