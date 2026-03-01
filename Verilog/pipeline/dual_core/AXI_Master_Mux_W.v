@@ -1,6 +1,29 @@
 `timescale 1ns/1ns
-
-// AXI Write master multiplexer for 2 masters -> 1 slave (AW, W, B channels)
+// ============================================================================
+// AXI Write Master Multiplexer (2:1)
+// ============================================================================
+//
+// Multiplexes write requests from 2 masters to 1 slave.
+// Uses external grant signals to select which master owns the bus.
+//
+// Data Flow:
+//   Master 0 ───┬───> MUX ───> Slave (Memory)
+//   Master 1 ───┘       <───  (Write Response)
+//
+// AW Channel (Address Write):
+//   - Forwards awid, awaddr, awvalid from granted master
+//   - Returns awready only to granted master
+//
+// W Channel (Write Data):
+//   - Forwards wdata, wvalid from granted master
+//   - Returns wready only to granted master
+//
+// B Channel (Write Response):
+//   - Broadcasts bresp, bid to both masters
+//   - Gates bvalid with grant signal
+//   - Forwards bready from granted master only
+//
+// ============================================================================
 module AXI_Master_Mux_W #(
     parameter ADDR_W = 32,
     parameter DATA_W = 64,
@@ -47,26 +70,34 @@ module AXI_Master_Mux_W #(
 ,   input               m1_wgrnt
 );
 
-    // AW channel
+    // ================================================================
+    // AW CHANNEL - Address Write Request
+    // ================================================================
     assign s_awid       = m0_wgrnt ? m0_awid : m1_awid;
     assign s_awaddr     = m0_wgrnt ? m0_awaddr : m1_awaddr;
     assign s_awvalid    = m0_wgrnt ? m0_awvalid : m1_awvalid;
     assign m0_awready   = m0_wgrnt ? s_awready : 1'b0;
     assign m1_awready   = m1_wgrnt ? s_awready : 1'b0;
 
-    // W channel
+    // ================================================================
+    // W CHANNEL - Write Data
+    // ================================================================
     assign s_wdata      = m0_wgrnt ? m0_wdata : m1_wdata;
     assign s_wvalid     = m0_wgrnt ? m0_wvalid : m1_wvalid;
     assign m0_wready    = m0_wgrnt ? s_wready : 1'b0;
     assign m1_wready    = m1_wgrnt ? s_wready : 1'b0;
 
-    // B channel: route response back to the correct master
+    // ================================================================
+    // B CHANNEL - Write Response
+    // ================================================================
+    // Gate bvalid: only granted master sees valid response
     assign m0_bvalid    = s_bvalid & m0_wgrnt;
     assign m1_bvalid    = s_bvalid & m1_wgrnt;
     assign m0_bresp     = s_bresp;
     assign m1_bresp     = s_bresp;
     assign m0_bid       = s_bid;
     assign m1_bid       = s_bid;
+    // Forward ready from granted master
     assign s_bready     = m0_wgrnt ? m0_bready : m1_bready;
 
 endmodule

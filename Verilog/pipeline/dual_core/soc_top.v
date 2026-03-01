@@ -1,27 +1,43 @@
 `timescale 1ns/1ps
-
+// ============================================================================
+// SoC Top - Dual-Core RISC-V System-on-Chip
+// ============================================================================
+//
+// Top-level module integrating two RV32IA cores with cache coherence.
+//
+// Memory Map:
+//   0x0000_0000 - 0x0000_3FFF : Core A Instruction Memory (16KB)
+//   0x0000_4000 - 0x0000_7FFF : Core B Instruction Memory (16KB)
+//   0x0001_0000 - 0x0001_FFFF : Shared Data Memory (64KB)
+//
+// Cache Configuration:
+//   - L1 Cache: NUM_WAYS ways, NUM_SETS sets, 64B cache line
+//   - L2 Cache: NUM_WAYS ways, NUM_SETS_L2 sets, 64B cache line
+//   - Coherence: MOESI protocol via ACE snoop
+//
+// ============================================================================
 module soc_top #(
-    // Cau hinh core
-    parameter MEM_BASE      = 32'h0000_0000,
-    parameter ID_W          = 1, // 2 cores
+    // Core Configuration
+    parameter MEM_BASE      = 32'h0000_0000,    // Memory base address
+    parameter ID_W          = 1,                // Transaction ID width (2 cores)
 
-    // --- VUNG CHO CORE A ---
-    parameter CODE_A_START  = 32'h0000_0000, 
+    // Core A Instruction Memory
+    parameter CODE_A_START  = 32'h0000_0000,    // Core A instruction base
 
-    // --- VUNG CHO CORE B ---
-    parameter CODE_B_START  = 32'h0000_4000,
+    // Core B Instruction Memory
+    parameter CODE_B_START  = 32'h0000_4000,    // Core B instruction base
 
-    // --- DATA: CHUNG (Shared Memory) ---
-    parameter DATA_START    = 32'h0001_0000,
+    // Shared Data Memory
+    parameter DATA_START    = 32'h0001_0000,    // Shared data base
 
-    // Cau hinh cache
-    parameter NUM_WAYS      = 4,
-    parameter NUM_SETS      = 16,
-    parameter NUM_SETS_L2   = 32,
-    parameter WORD_OFF_W    = 4, // 16 words
-    parameter BYTE_OFF_W    = 2,
-    parameter DATA_W        = 32,
-    parameter STRB_W        = DATA_W/8
+    // Cache Configuration
+    parameter NUM_WAYS      = 4,                // Cache associativity
+    parameter NUM_SETS      = 16,               // L1 cache sets
+    parameter NUM_SETS_L2   = 32,               // L2 cache sets
+    parameter WORD_OFF_W    = 4,                // Word offset (16 words/line)
+    parameter BYTE_OFF_W    = 2,                // Byte offset (4 bytes/word)
+    parameter DATA_W        = 32,               // Data width
+    parameter STRB_W        = DATA_W/8          // Write strobe width
 )(
     input ACLK, ARESETn
 ,   input c0_stall, c1_stall // for debug purpose only

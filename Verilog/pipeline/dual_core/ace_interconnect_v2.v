@@ -1,4 +1,26 @@
 `timescale 1ns/1ps
+// ============================================================================
+// ACE Interconnect v2 - Dual-Core Cache Coherence Controller
+// ============================================================================
+// 
+// This module implements an ACE (AXI Coherent Extension) interconnect for
+// a dual-core system. It manages cache coherence between two cores using
+// the snoop protocol.
+//
+// Key Features:
+//   - Round-robin arbitration for read/write requests
+//   - Snoop protocol for cache-to-cache transfers
+//   - Supports ReadShared, ReadUnique, CleanInvalid, MakeInvalid
+//   - Separate FSMs for read and write transactions
+//
+// Transaction Flow (Read Example):
+//   1. Core A issues read request (AR channel)
+//   2. Interconnect snoops Core B (AC channel) 
+//   3. Core B responds with state (CR channel)
+//   4. If hit: Core B sends data (CD channel) -> Core A
+//      If miss: Interconnect fetches from memory -> Core A
+//
+// ============================================================================
 module ace_interconnect_v2 #(
     parameter ADDR_W    = 32,
     parameter DATA_W    = 32,
@@ -151,20 +173,24 @@ module ace_interconnect_v2 #(
     // ================================================================
     // LOCAL PARAMETERS - FSM States
     // ================================================================
-    // Common States
-    localparam IDLE         = 3'd0;
-    localparam SNOOP_REQ    = 3'd1;
-    localparam WAIT_CR      = 3'd2;
+    // Read FSM: IDLE -> SNOOP_REQ -> WAIT_CR -> (R_MEM_REQ/R_DATA_SNOOP) -> IDLE
+    // Write FSM: IDLE -> SNOOP_REQ -> WAIT_CR -> (W_MEM_REQ/W_DATA_SNOOP) -> IDLE
+    // ================================================================
+    
+    // Common States (shared encoding)
+    localparam IDLE         = 3'd0;     // Waiting for request
+    localparam SNOOP_REQ    = 3'd1;     // Sending snoop to peer core (AC channel)
+    localparam WAIT_CR      = 3'd2;     // Waiting for snoop response (CR channel)
     
     // Read FSM States
-    localparam R_MEM_REQ    = 3'd3;
-    localparam R_DATA_MEM   = 3'd4;
-    localparam R_DATA_SNOOP = 3'd5;
+    localparam R_MEM_REQ    = 3'd3;     // Send read request to memory
+    localparam R_DATA_MEM   = 3'd4;     // Receive data from memory
+    localparam R_DATA_SNOOP = 3'd5;     // Receive data from peer cache (CD channel)
     
-    // Write FSM States
-    localparam W_MEM_REQ    = 3'd3;
-    localparam W_DATA_SNOOP = 3'd4;
-    localparam W_WAIT_B     = 3'd5;
+    // Write FSM States  
+    localparam W_MEM_REQ    = 3'd3;     // Send write request to memory
+    localparam W_DATA_SNOOP = 3'd4;     // Peer has dirty data (ownership transfer)
+    localparam W_WAIT_B     = 3'd5;     // Wait for write response (B channel)
 
     // ================================================================
     // REG DECLARATIONS
@@ -197,16 +223,22 @@ module ace_interconnect_v2 #(
     // ================================================================
     // WIRE DECLARATIONS
     // ================================================================
-    // Muxed Read Data (from Memory or Snoop)
+    // Read Data Mux Output (selects between memory and snoop data)
     wire [DATA_W-1:0]   mux_s0_rdata,  mux_s1_rdata;
     wire [ID_W-1:0]     mux_s0_rid,    mux_s1_rid;
     wire [3:0]          mux_s0_rresp,  mux_s1_rresp;
     wire                mux_s0_rvalid, mux_s1_rvalid;
     wire                mux_s0_rlast,  mux_s1_rlast;
 
-    // Gated Ready Signals for AXI Mux
+    // Gated Ready Signals (only accept data when in correct state)
     wire                m0_rready_gated;
     wire                m1_rready_gated;
+
+    // ================================================================
+    // READ DATA PATH MUX
+    // ================================================================
+    // Select data source: Memory (default) or Snoop (cache-to-cache)
+    // When in R_DATA_SNOOP state, data comes from peer cache's CD channel
 
     assign s0_axi_rdata     = (r_state == R_DATA_SNOOP) ? s1_ace_cddata : mux_s0_rdata;
     assign s1_axi_rdata     = (r_state == R_DATA_SNOOP) ? s0_ace_cddata : mux_s1_rdata;
@@ -223,7 +255,14 @@ module ace_interconnect_v2 #(
     assign s0_axi_rid       = (r_state == R_DATA_SNOOP) ? s0_ar_id : mux_s0_rid;
     assign s1_axi_rid       = (r_state == R_DATA_SNOOP) ? s1_ar_id : mux_s1_rid;
 
-    // ================================================================ REQUEST BUFFERS & PENDING LOGIC (READ/WRITE) ================================================================
+    // ================================================================
+    // REQUEST CAPTURE & PENDING LOGIC
+    // ================================================================
+    // Capture AR/AW channel info when handshake occurs (valid & ready)
+    // Set pending flag until transaction completes
+    // ================================================================
+    
+    // -------------------- READ REQUEST CAPTURE --------------------
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             s0_pending_r    <= 1'b0;
@@ -263,6 +302,7 @@ module ace_interconnect_v2 #(
         end
     end
 
+    // -------------------- WRITE REQUEST CAPTURE --------------------
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             s0_pending_w    <= 1'b0;
@@ -302,13 +342,17 @@ module ace_interconnect_v2 #(
         end
     end
 
-    // Ready Signals (Only ready if buffer is empty)
+    // Ready Signals: Only accept new request when buffer is empty
     assign s0_axi_arready = !s0_pending_r;
     assign s1_axi_arready = !s1_pending_r;
     assign s0_axi_awready = !s0_pending_w;
     assign s1_axi_awready = !s1_pending_w;
 
-    // ================================================================ READ FSM ================================================================
+    // ================================================================
+    // READ FSM - State Register & Arbitration
+    // ================================================================
+    // Round-robin arbitration: alternate between cores when both pending
+    // ================================================================
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -361,23 +405,27 @@ module ace_interconnect_v2 #(
             end
 
             WAIT_CR: begin
-                // Core 0
+                // Wait for snoop response from peer cache
+                // CRRESP[0] = DataTransfer: peer will send data
+                // CRRESP[2] = PassDirty: peer has dirty copy
+                
+                // Core 0 requested, waiting for Core 1's response
                 if (grant_r_s0 && s1_ace_crvalid) begin
                     if (s1_ace_crresp[0] || s1_ace_crresp[2]) begin
-                        r_next_state = R_DATA_SNOOP; // HIT/DIRTY
+                        r_next_state = R_DATA_SNOOP; // HIT: Get data from peer
                     end 
                     else begin                                      
-                        r_next_state = R_MEM_REQ;    // MISS/CLEAN
+                        r_next_state = R_MEM_REQ;    // MISS: Fetch from memory
                     end 
                 end 
 
-                // Core 1
+                // Core 1 requested, waiting for Core 0's response
                 else if (!grant_r_s0 && s0_ace_crvalid) begin
                     if (s0_ace_crresp[0] || s0_ace_crresp[2]) begin 
-                        r_next_state = R_DATA_SNOOP;
+                        r_next_state = R_DATA_SNOOP; // HIT: Get data from peer
                     end 
                     else begin             
-                        r_next_state = R_MEM_REQ;
+                        r_next_state = R_MEM_REQ;    // MISS: Fetch from memory
                     end 
                 end
             end
@@ -396,7 +444,8 @@ module ace_interconnect_v2 #(
             end
 
             R_DATA_SNOOP: begin
-                // Wait for CD data from Peer
+                // Receive data burst from peer cache (CD channel)
+                // Complete when CDLAST is asserted
                 if (grant_r_s0) begin
                     if (s1_ace_cdvalid && s0_axi_rready && s1_ace_cdlast) begin 
                         r_next_state = IDLE;
@@ -412,8 +461,7 @@ module ace_interconnect_v2 #(
         endcase
     end
 
-    // Capture Read Snoop Response
-    // Hien tai chua dung
+    // -------------------- Capture Snoop Response (for future use) --------------------
     always @(posedge clk) begin
         if (~rst_n) begin
             r_snoop_resp_capt <= 5'd0;
@@ -430,7 +478,9 @@ module ace_interconnect_v2 #(
         end
     end
 
-    // ================================================================ WRITE FSM ================================================================
+    // ================================================================
+    // WRITE FSM - State Register & Arbitration  
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             w_state         <= IDLE;
@@ -478,21 +528,24 @@ module ace_interconnect_v2 #(
                 end
             end
 
-            WAIT_CR: begin                
+            WAIT_CR: begin   
+                // Wait for snoop response
+                // CRRESP[2] = PassDirty: peer has dirty data that needs writeback
+                
                 if (grant_w_s0 && s1_ace_crvalid) begin
                     if (s1_ace_crresp[2]) begin 
-                        w_next_state = W_DATA_SNOOP; // Peer has Dirty data
+                        w_next_state = W_DATA_SNOOP; // Peer has dirty data
                     end 
                     else begin                 
-                        w_next_state = W_MEM_REQ;    // Clean/Miss
+                        w_next_state = W_MEM_REQ;    // Clean/Miss: proceed to memory
                     end
                 end 
                 else if (!grant_w_s0 && s0_ace_crvalid) begin
                     if (s0_ace_crresp[2]) begin
-                        w_next_state = W_DATA_SNOOP;
+                        w_next_state = W_DATA_SNOOP; // Peer has dirty data
                     end 
                     else begin                  
-                        w_next_state = W_MEM_REQ;
+                        w_next_state = W_MEM_REQ;    // Clean/Miss: proceed to memory
                     end 
                 end
             end
@@ -510,8 +563,8 @@ module ace_interconnect_v2 #(
             end
 
             W_DATA_SNOOP: begin
-                // Ownership transfer (Peer sends dirty data, we discard or merge? User logic dependent).
-                // Assuming we just wait for CDVALID then done.
+                // Ownership transfer: Peer sends dirty data
+                // For writeback: just wait for peer to acknowledge
                 if (grant_w_s0) begin
                     if (s1_ace_cdvalid) begin 
                         w_next_state = IDLE;
@@ -527,7 +580,13 @@ module ace_interconnect_v2 #(
         endcase
     end
 
-    // ================================================================ OUTPUT ASSIGNMENTS & MUXING ================================================================
+    // ================================================================
+    // SNOOP OUTPUT LOGIC (AC Channel)
+    // ================================================================
+    // Send snoop request to the OTHER core (not the requester)
+    // grant_r_s0=1: Core 0 requesting -> snoop Core 1
+    // grant_r_s0=0: Core 1 requesting -> snoop Core 0
+    // ================================================================
     always @(*) begin
         s0_ace_acvalid  = 0; 
         s0_ace_acaddr   = 0; 
@@ -536,32 +595,35 @@ module ace_interconnect_v2 #(
         s1_ace_acaddr   = 0; 
         s1_ace_acsnoop  = 0;
         
-        // --- Snoop toi CORE 0 ---
+        // --- Snoop to CORE 0 (when Core 1 is requesting) ---
         if (!grant_r_s0 && r_state == SNOOP_REQ) begin
             s0_ace_acvalid  = 1'b1;
-            s0_ace_acaddr   = s1_ar_addr;
-            s0_ace_acsnoop  = s1_ar_snoop;
+            s0_ace_acaddr   = s1_ar_addr;   // Address from Core 1's request
+            s0_ace_acsnoop  = s1_ar_snoop;  // Snoop type from Core 1's request
         end 
         else if (!grant_w_s0 && w_state == SNOOP_REQ) begin
-            // write back nen khong can gui snoop
+            // Writeback: no snoop needed (write-through)
             s0_ace_acvalid  = 1'b0; 
             s0_ace_acsnoop  = 4'b0000;
         end
 
-        // --- Snoop toi CORE 1 ---
+        // --- Snoop to CORE 1 (when Core 0 is requesting) ---
         if (grant_r_s0 && r_state == SNOOP_REQ) begin
             s1_ace_acvalid  = 1'b1;
-            s1_ace_acaddr   = s0_ar_addr;
-            s1_ace_acsnoop  = s0_ar_snoop;
+            s1_ace_acaddr   = s0_ar_addr;   // Address from Core 0's request
+            s1_ace_acsnoop  = s0_ar_snoop;  // Snoop type from Core 0's request
         end 
         else if (grant_w_s0 && w_state == SNOOP_REQ) begin
-            // write back nen khong can gui snoop
+            // Writeback: no snoop needed (write-through)
             s1_ace_acvalid  = 1'b0;
             s1_ace_acsnoop  = 4'b0000;
         end
     end
 
-    // ================================================================ MUX & MEMORY CONNECTIONS ================================================================
+    // ================================================================
+    // AXI MUX INSTANTIATION
+    // ================================================================
+    // Gate ready signals: only accept data when FSM is in correct state
     assign m0_rready_gated  = s0_axi_rready && (r_state == R_DATA_MEM);
     assign m1_rready_gated  = s1_axi_rready && (r_state == R_DATA_MEM);
 
@@ -652,7 +714,10 @@ module ace_interconnect_v2 #(
         .m1_wgrnt   (!grant_w_s0)
     );
     
-    // Assign extra mem signals (Burst/Size/Len) - Muxed based on Grant
+    // ================================================================
+    // MEMORY BURST PARAMETERS
+    // ================================================================
+    // Mux burst parameters based on which core has grant
     assign mem_arlen    = grant_r_s0 ? s0_axi_arlen     : s1_axi_arlen;
     assign mem_arsize   = grant_r_s0 ? s0_axi_arsize    : s1_axi_arsize;
     assign mem_arburst  = grant_r_s0 ? s0_axi_arburst   : s1_axi_arburst;
