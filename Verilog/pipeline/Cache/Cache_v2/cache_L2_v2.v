@@ -19,7 +19,7 @@ module L2_cache_v2 #(
 
     // Request (Command/Address)
 ,   input                       i_req_valid  
-,   input   [1:0]               i_req_cmd    // 00: Read, 01: Write, 10: Upgrade/Invalidate
+,   input   [1:0]               i_req_cmd    // 00: Read_Shared, 01: Write_Back, 10: UPGRADE/INVALIDATE, 11: Read_Unique
 ,   input   [ADDR_W-1:0]        i_L1_read_addr
 ,   input   [ADDR_W-1:0]        i_req_addr   
 ,   output                      o_req_ready  

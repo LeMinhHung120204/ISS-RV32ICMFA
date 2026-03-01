@@ -19,7 +19,7 @@ module cache_L2_controller_v2 #(
 
     // --- L1 Interface (Thay cho CPU) ---
 ,   input           i_req_valid         
-,   input  [1:0]    i_req_cmd           // 00: Read, 01: Write, 10: UPGRADE/INVALIDATE
+,   input  [1:0]    i_req_cmd           // 00: Read_Shared, 01: Write_Back, 10: UPGRADE/INVALIDATE, 11: Read_Unique
     
     // nhan data tu L1
 ,   input           i_wdata_valid
@@ -181,17 +181,46 @@ module cache_L2_controller_v2 #(
     always @(*) begin
         next_state = state;
         case(state)
+            // TAG_CHECK: begin
+            //     if (~snoop_busy && i_req_valid) begin
+            //         if (hit) begin
+            //             if (need_upgrade) begin
+            //                 next_state = ALLOC_AR; // Gui CleanUnique
+            //             end 
+            //             else if (i_req_cmd == CMD_WRITE_BACK) begin
+            //                 next_state = L1_WB_RX; // Hit M/E -> Ghi ngay
+            //             end
+            //             else begin
+            //                 next_state = TAG_CHECK; // Read Hit -> Xong
+            //             end
+            //         end 
+            //         else begin 
+            //             if (is_valid && victim_dirty) begin
+            //                 next_state = WB_AW;    // Write back victim
+            //             end 
+            //             else 
+            //                 next_state = ALLOC_AR; // Allocate (Read Miss)
+            //         end
+            //     end
+            // end
+
             TAG_CHECK: begin
                 if (~snoop_busy && i_req_valid) begin
                     if (hit) begin
-                        if (need_upgrade) begin
-                            next_state = ALLOC_AR; // Gui CleanUnique
+                        // UPGRADE / WRITE
+                        if (i_req_cmd == CMD_UPGRADE) begin
+                            if (current_moesi_state == STATE_S || current_moesi_state == STATE_O) begin
+                                next_state = ALLOC_AR; // Invalidate core khac
+                            end 
+                            else begin // State E/M
+                                next_state = UPDATE;
+                            end
                         end 
                         else if (i_req_cmd == CMD_WRITE_BACK) begin
-                            next_state = L1_WB_RX; // Hit M/E -> Ghi ngay
+                            next_state = L1_WB_RX;
                         end
                         else begin
-                            next_state = TAG_CHECK; // Read Hit -> Xong
+                            next_state = TAG_CHECK;    // Read Hit
                         end
                     end 
                     else begin 
@@ -279,33 +308,13 @@ module cache_L2_controller_v2 #(
         oWSTRB                  = {STRB_W{1'b0}};
 
         case(state)
-            // TAG_CHECK: begin
-            //     snoop_can_access_ram = 1'b1;
-                
-            //     if (i_req_valid && (i_req_cmd == CMD_READ) && hit) begin 
-            //         o_rdata_ready = 1'b1;
-            //     end
-                
-            //     if (~snoop_busy && (next_state == TAG_CHECK)) begin
-            //         o_req_ready = 1'b1; 
-            //     end
-            //     else begin
-            //         o_req_ready = 1'b0;
-            //     end
-            // end
-
             TAG_CHECK: begin
-                // snoop_can_access_ram = 1'b1;
-                
                 if (i_req_valid && hit && !need_upgrade) begin
                     if (i_req_cmd == CMD_READ_SHARED || i_req_cmd == CMD_READ_UNIQUE) begin
                         o_rdata_ready = 1'b1;
                     end
                 end
                 
-                // if (~snoop_busy && (next_state == TAG_CHECK)) begin
-                //     o_req_ready = 1'b1; 
-                // end
                 if (~snoop_busy) begin
                     o_req_ready = 1'b1; 
                 end
@@ -333,22 +342,8 @@ module cache_L2_controller_v2 #(
                 oBREADY = 1'b1;
             end 
 
-            // ALLOC_AR: begin 
-            //     oARVALID = 1'b1; 
-            //     snoop_can_access_ram = 1'b1; 
-            //     if (need_upgrade) begin
-            //         // CleanUnique: Bao moi nguoi Invalidate, tao giu data (vi tao sap ghi de)
-            //         oARSNOOP = 4'b1011; 
-            //     end
-            //     else begin
-            //         // ReadShared: Doc thong thuong (Miss)
-            //         oARSNOOP = 4'b0001; 
-            //     end
-            // end
-
             ALLOC_AR: begin 
                 oARVALID = 1'b1; 
-                // snoop_can_access_ram = 1'b1; 
                 if (need_upgrade) begin
                     // 1. CleanUnique: Hit S/O hoac Writeback S/O -> Chi can Invalidate
                     oARSNOOP = 4'b1011; 
@@ -365,7 +360,6 @@ module cache_L2_controller_v2 #(
 
             ALLOC_R: begin  
                 oRREADY = 1'b1; 
-                // snoop_can_access_ram = 1'b1;
             end 
 
             // UPDATE: begin
@@ -408,7 +402,6 @@ module cache_L2_controller_v2 #(
             end
 
             WAIT_SNOOP: begin
-                // snoop_can_access_ram = 1'b1;
             end
 
             WAIT_RAM: begin   

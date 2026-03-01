@@ -207,7 +207,7 @@ module tb_soc_top;
 
         $display("[SCENARIO] Both cores starting...");
 
-        #5000; 
+        #2000; 
         $display("Simulation Finished.");
         $finish;
     end

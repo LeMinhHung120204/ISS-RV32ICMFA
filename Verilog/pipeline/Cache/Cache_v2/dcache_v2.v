@@ -179,7 +179,8 @@ module dcache_v2 #(
         .flush          (1'b0),
 
         // Inputs (Stage 1)
-        .s1_req         (cpu_req | i_snoop_valid),
+        // .s1_req         (cpu_req | i_snoop_valid),
+        .s1_req         (cpu_req),
         .s1_we          (cpu_we),
         .s1_size        (cpu_size),
         .s1_wdata       (cpu_din),

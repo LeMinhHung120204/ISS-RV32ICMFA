@@ -52,7 +52,7 @@ module dcache_controller_v2 (
     // Command Encoding
     localparam CMD_READ_SHARED  = 2'b00; 
     localparam CMD_WRITE_BACK   = 2'b01; 
-    localparam CMD_UPGRADE      = 2'b10; 
+    localparam CMD_UPGRADE      = 2'b10; // S/O -> E
     localparam CMD_READ_UNIQUE  = 2'b11; 
 
     // MOESI State Encoding

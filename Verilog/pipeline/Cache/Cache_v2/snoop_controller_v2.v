@@ -57,12 +57,32 @@ module snoop_controller_v2 #(
     reg [4:0]   reg_CRRESP;
     reg [3:0]   burst_cnt;
 
+    reg reg_snoop_hit;
+    reg reg_is_unique;
+    reg reg_is_dirty;
+    reg reg_is_owner;
+
     reg snoop_requires_data;
     // reg snoop_req_invalidate;
     
     reg final_is_dirty;
     reg final_has_data;
     reg resp_dt, resp_pd, resp_is, resp_wu;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            reg_snoop_hit   <= 1'b0;
+            reg_is_unique   <= 1'b0;
+            reg_is_dirty    <= 1'b0;
+            reg_is_owner    <= 1'b0;
+        end 
+        else if (state == LOOKUP && snoop_can_access_ram) begin
+            reg_snoop_hit   <= snoop_hit;
+            reg_is_unique   <= is_unique;
+            reg_is_dirty    <= is_dirty;
+            reg_is_owner    <= is_owner;
+        end
+    end
 
     // -------------------------------- DECODER ACSNOOP --------------------------------
     always @(*) begin
@@ -104,10 +124,10 @@ module snoop_controller_v2 #(
 
     // --------------------- LOGIC TINH CRRESP (Gop L1 + L2) ---------------------
     always @(*) begin
-        final_is_dirty = is_dirty | i_l1_is_dirty;
-        final_has_data = is_owner | is_unique | i_l1_has_data; 
+        final_is_dirty  = reg_is_dirty | i_l1_is_dirty;
+        final_has_data  = reg_is_owner | reg_is_unique | i_l1_has_data;
 
-        if (snoop_hit) begin
+        if (reg_snoop_hit | i_l1_has_data) begin
             // Data Transfer (dt): Gui data neu snoop can va minh co data
             resp_dt = snoop_requires_data & final_has_data;
             
@@ -118,7 +138,7 @@ module snoop_controller_v2 #(
             resp_is = !snoop_req_invalidate;
             
             // Was Unique (wu): Bao truoc do minh doc quyen
-            resp_wu = is_unique;
+            resp_wu = reg_is_unique;
         end 
         else begin
             resp_dt = 1'b0; 
@@ -151,7 +171,7 @@ module snoop_controller_v2 #(
                 
                 // quyet dinh xem Data gui di (neu co) lay tu dau?
                 // Neu L1 bao Dirty -> uu tien lay data moi nhat tu L1
-                if (snoop_hit && i_l1_is_dirty) 
+                if (reg_snoop_hit && i_l1_is_dirty)
                     use_l1_data_mux <= 1'b1;
                 else
                     use_l1_data_mux <= 1'b0; // lay tu L2 RAM
@@ -206,7 +226,7 @@ module snoop_controller_v2 #(
                 l1_forward_valid    = 1'b1;
                 reg_snoop_stall     = 1'b1;
                 if (i_l1_snoop_complete) begin
-                    if (snoop_hit && (snoop_req_invalidate || is_unique)) begin
+                    if (reg_snoop_hit && (snoop_req_invalidate || reg_is_unique)) begin
                         // moesi_we        = 1'b1; 
                         bus_snoop_valid = 1'b1;
                     end
@@ -217,7 +237,7 @@ module snoop_controller_v2 #(
             RESP: begin
                 CRVALID = 1'b1;
                 if (CRREADY) begin
-                    if (snoop_hit && (snoop_req_invalidate || is_unique)) begin
+                    if (reg_snoop_hit && (snoop_req_invalidate || reg_is_unique)) begin
                         moesi_we        = 1'b1;
                         bus_snoop_valid = 1'b1;
                     end
