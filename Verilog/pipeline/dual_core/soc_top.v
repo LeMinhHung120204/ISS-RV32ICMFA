@@ -62,8 +62,15 @@ module soc_top #(
 ,   output          m_axi_rready
 );
 
-    // INTERNAL WIRES
-    // ------------------- CORE A INTERFACE -------------------
+    // ================================================================
+    // INTERNAL WIRES - LOCAL PARAMETERS
+    // ================================================================
+    // Compute AXI size field from DATA_W/STRB_W
+    localparam [2:0] AW_SIZE = $clog2(STRB_W);
+
+    // ================================================================
+    // INTERNAL WIRES - CORE A (Client 0) Interface
+    // ================================================================
     wire [ID_W-1:0]     c0_arid;   
     wire [31:0]         c0_araddr;
     wire [3:0]          c0_arsnoop;
@@ -99,7 +106,9 @@ module soc_top #(
     wire [1:0]          c0_bresp;
     wire                c0_bready;
 
-    // ------------------- CORE B INTERFACE -------------------
+    // ================================================================
+    // INTERNAL WIRES - CORE B (Client 1) Interface
+    // ================================================================
     wire [ID_W-1:0]     c1_arid;   
     wire [31:0]         c1_araddr;
     wire [3:0]          c1_arsnoop;
@@ -135,7 +144,9 @@ module soc_top #(
     wire [1:0]          c1_bresp;
     wire                c1_bready;
 
-    // --- Memory bridge wires (connect interconnect <-> top-level external AXI fields)
+    // ================================================================
+    // INTERNAL WIRES - Memory Bridge (Interconnect <-> External AXI)
+    // ================================================================
     wire [ID_W-1:0]     mem_arid;  
     wire [31:0]         mem_araddr;
     wire [7:0]          mem_arlen, mem_awlen;
@@ -159,11 +170,14 @@ module soc_top #(
     wire [1:0]          mem_bresp;
     wire                mem_bready;
 
-    // compute AXI size field from DATA_W/STRB_W
-    localparam [2:0] AW_SIZE = $clog2(STRB_W);
 
+    // ================================================================
+    // MODULE INSTANTIATIONS
+    // ================================================================
 
-    // ------------------- INSTANTIATE CORE A (ID = 0) -------------------
+    // ================================================================
+    // CORE A (ID = 0)
+    // ================================================================
     single_core #( 
         .ID_W           (ID_W),
         .CORE_ID        (1'b0),
@@ -233,7 +247,9 @@ module soc_top #(
         .s_ace_cdlast   (c0_cdlast)
     );
 
-    // ------------------- INSTANTIATE CORE B (ID = 1) -------------------
+    // ================================================================
+    // CORE B (ID = 1)
+    // ================================================================
     single_core #( 
         .ID_W           (ID_W),
         .CORE_ID        (1'b1),
@@ -303,7 +319,9 @@ module soc_top #(
         .s_ace_cdlast   (c1_cdlast)
     );
 
-    // ------------------- INSTANTIATE INTERCONNECT -------------------    
+    // ================================================================
+    // ACE INTERCONNECT
+    // ================================================================    
     ace_interconnect_v2 #(
         .ID_W       (ID_W),
         .DATA_W     (DATA_W)
@@ -446,6 +464,9 @@ module soc_top #(
         .mem_bready     (mem_bready)
     );
 
+    // ================================================================
+    // OUTPUT ASSIGNMENTS - External AXI Master Interface
+    // ================================================================
     // Write address channel
     assign m_axi_awid    = mem_awid;
     assign m_axi_awaddr  = mem_awaddr;

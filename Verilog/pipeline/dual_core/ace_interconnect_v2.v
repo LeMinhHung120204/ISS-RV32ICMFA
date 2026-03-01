@@ -147,28 +147,66 @@ module ace_interconnect_v2 #(
 ,   input   [1:0]           mem_bresp
 ,   output                  mem_bready
 );
+
+    // ================================================================
+    // LOCAL PARAMETERS - FSM States
+    // ================================================================
+    // Common States
     localparam IDLE         = 3'd0;
     localparam SNOOP_REQ    = 3'd1;
     localparam WAIT_CR      = 3'd2;
-    // Read States
+    
+    // Read FSM States
     localparam R_MEM_REQ    = 3'd3;
     localparam R_DATA_MEM   = 3'd4;
     localparam R_DATA_SNOOP = 3'd5;
-    // Write States
+    
+    // Write FSM States
     localparam W_MEM_REQ    = 3'd3;
     localparam W_DATA_SNOOP = 3'd4;
     localparam W_WAIT_B     = 3'd5;
 
-    reg [2:0] r_state, r_next_state;
-    reg [2:0] w_state, w_next_state;
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // FSM State Registers
+    reg [2:0]           r_state, r_next_state;      // Read FSM
+    reg [2:0]           w_state, w_next_state;      // Write FSM
 
+    // Pending Flags (track active requests)
+    reg                 s0_pending_r, s1_pending_r; // Read pending
+    reg                 s0_pending_w, s1_pending_w; // Write pending
 
-    wire [DATA_W-1:0]   mux_s0_rdata;
-    wire [DATA_W-1:0]   mux_s1_rdata;
-    wire [ID_W-1:0]     mux_s0_rid, mux_s1_rid;
-    wire [3:0]          mux_s0_rresp, mux_s1_rresp;
+    // Read Request Buffers (captured from AR channel)
+    reg [ID_W-1:0]      s0_ar_id,    s1_ar_id;
+    reg [ADDR_W-1:0]    s0_ar_addr,  s1_ar_addr;
+    reg [3:0]           s0_ar_snoop, s1_ar_snoop;
+    
+    // Write Request Buffers (captured from AW channel)
+    reg [ID_W-1:0]      s0_aw_id,    s1_aw_id;
+    reg [ADDR_W-1:0]    s0_aw_addr,  s1_aw_addr;
+    reg [2:0]           s0_aw_snoop, s1_aw_snoop;
+
+    // Grant & Arbitration Registers (Round-Robin)
+    reg                 grant_r_s0, last_grant_r;   // Read arbitration
+    reg                 grant_w_s0, last_grant_w;   // Write arbitration
+
+    // Snoop Response Capture
+    reg [4:0]           r_snoop_resp_capt;          // Captured snoop response
+
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // Muxed Read Data (from Memory or Snoop)
+    wire [DATA_W-1:0]   mux_s0_rdata,  mux_s1_rdata;
+    wire [ID_W-1:0]     mux_s0_rid,    mux_s1_rid;
+    wire [3:0]          mux_s0_rresp,  mux_s1_rresp;
     wire                mux_s0_rvalid, mux_s1_rvalid;
-    wire                mux_s0_rlast, mux_s1_rlast;
+    wire                mux_s0_rlast,  mux_s1_rlast;
+
+    // Gated Ready Signals for AXI Mux
+    wire                m0_rready_gated;
+    wire                m1_rready_gated;
 
     assign s0_axi_rdata     = (r_state == R_DATA_SNOOP) ? s1_ace_cddata : mux_s0_rdata;
     assign s1_axi_rdata     = (r_state == R_DATA_SNOOP) ? s0_ace_cddata : mux_s1_rdata;
@@ -186,24 +224,6 @@ module ace_interconnect_v2 #(
     assign s1_axi_rid       = (r_state == R_DATA_SNOOP) ? s1_ar_id : mux_s1_rid;
 
     // ================================================================ REQUEST BUFFERS & PENDING LOGIC (READ/WRITE) ================================================================
-    // Pending Flags
-    reg s0_pending_r, s1_pending_r;
-    reg s0_pending_w, s1_pending_w;
-
-    // Read Buffers
-    reg [ID_W-1:0]   s0_ar_id,      s1_ar_id;
-    reg [ADDR_W-1:0] s0_ar_addr,    s1_ar_addr;
-    reg [3:0]        s0_ar_snoop,   s1_ar_snoop;
-    
-    // Write Buffers
-    reg [ID_W-1:0]   s0_aw_id,      s1_aw_id;
-    reg [ADDR_W-1:0] s0_aw_addr,    s1_aw_addr;
-    reg [2:0]        s0_aw_snoop,   s1_aw_snoop;
-
-    // Grant Logic
-    reg grant_r_s0, last_grant_r;
-    reg grant_w_s0, last_grant_w;
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             s0_pending_r    <= 1'b0;
@@ -289,7 +309,6 @@ module ace_interconnect_v2 #(
     assign s1_axi_awready = !s1_pending_w;
 
     // ================================================================ READ FSM ================================================================
-    reg [4:0] r_snoop_resp_capt;
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -543,8 +562,8 @@ module ace_interconnect_v2 #(
     end
 
     // ================================================================ MUX & MEMORY CONNECTIONS ================================================================
-    wire m0_rready_gated    = s0_axi_rready && (r_state == R_DATA_MEM);
-    wire m1_rready_gated    = s1_axi_rready && (r_state == R_DATA_MEM);
+    assign m0_rready_gated  = s0_axi_rready && (r_state == R_DATA_MEM);
+    assign m1_rready_gated  = s1_axi_rready && (r_state == R_DATA_MEM);
 
     AXI_Master_Mux_R #(
         .ADDR_W (ADDR_W), 
