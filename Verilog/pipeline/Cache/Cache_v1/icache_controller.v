@@ -1,4 +1,25 @@
 `timescale 1ns/1ps
+// ============================================================================
+// ICache Controller - Instruction Cache FSM
+// ============================================================================
+//
+// Controls L1 instruction cache operations. Read-only cache with
+// simple refill logic (no writeback needed).
+//
+// FSM States:
+//   TAG_CHECK --> [miss] --> ALLOC_REQ --> ALLOC_WAIT --> UPDATE --> WAIT_RAM
+//       ^                                                              |
+//       |______________________________________________________________|  
+//       |<--- [hit] ----|
+//
+// State Descriptions:
+//   TAG_CHECK  : Compare tag, check hit/miss
+//   ALLOC_REQ  : Send refill request to L2
+//   ALLOC_WAIT : Wait for L2 data response
+//   UPDATE     : Write refill data to cache RAM
+//   WAIT_RAM   : Wait one cycle for SRAM write to complete
+//
+// ============================================================================
 module icache_controller #(
     parameter DATA_W    = 32,
     parameter ADDR_W    = 32
@@ -54,41 +75,47 @@ module icache_controller #(
     // ================================================================
     // NEXT STATE LOGIC
     // ================================================================
+    // Simple miss handling: request -> wait -> update -> done
+    // ================================================================
     always @(*) begin
         next_state = state;
         case(state)
             TAG_CHECK: begin
+                // On miss, initiate refill from L2
                 if (cpu_req) begin
                     if (hit) begin
-                        next_state = TAG_CHECK;
+                        next_state = TAG_CHECK;     // Hit: serve immediately
                     end 
                     else begin
-                        next_state = ALLOC_REQ; // Clean -> Read L2
+                        next_state = ALLOC_REQ;     // Miss: fetch from L2
                     end
                 end
             end
 
-            // --- ALLOCATION FLOW (REFILL) ---
+            // --------------------------------------------------------
+            // REFILL FLOW: Request -> Wait -> Update -> Done
+            // --------------------------------------------------------
             ALLOC_REQ: begin
-                // Gui request address len cache L2
+                // Send address to L2, wait for ready
                 if (i_mem_req_ready) begin
                     next_state = ALLOC_WAIT;
                 end 
             end
+            
             ALLOC_WAIT: begin
-                // Nhan Data vao refill buffer
+                // Wait for L2 to return cache line
                 if (i_mem_rdata_valid) begin
                     next_state = UPDATE;
                 end
             end
 
             UPDATE: begin
-                // ghi refill buffer vao cache
+                // Write received data to cache RAM
                 next_state = WAIT_RAM;
             end
 
             WAIT_RAM: begin
-                // cho 1 cky de ghi
+                // Wait one cycle for SRAM write completion
                 next_state = TAG_CHECK;
             end 
 
@@ -99,32 +126,35 @@ module icache_controller #(
     // ================================================================
     // OUTPUT LOGIC
     // ================================================================
+    // Generate control signals based on current state
+    // ================================================================
     always @(*) begin
+        // Default: no activity
         o_mem_req_valid     = 1'b0;
         o_mem_rdata_ready   = 1'b0;
         tag_we              = 1'b0;
         stall               = 1'b0;
         refill_we           = 1'b0;
-        read_index_src      = 1'b0;
+        read_index_src      = 1'b0;     // 0=S2 index, 1=S1 index
 
         case(state)
             ALLOC_REQ: begin
-                o_mem_req_valid = 1'b1;
+                o_mem_req_valid = 1'b1; // Request refill from L2
             end
 
             ALLOC_WAIT: begin
-                o_mem_req_valid     = 1'b1;
-                o_mem_rdata_ready   = 1'b1; // san sang nhan data vao refill buffer
+                o_mem_req_valid     = 1'b1; // Keep request active
+                o_mem_rdata_ready   = 1'b1; // Ready to receive data
             end
 
             UPDATE: begin
-                tag_we      = 1'b1;
-                refill_we   = 1'b1;
+                tag_we      = 1'b1;     // Write new tag
+                refill_we   = 1'b1;     // Write refill data to RAM
             end
 
             WAIT_RAM: begin
-                stall           = 1'b1;
-                read_index_src  = 1'b1;
+                stall           = 1'b1; // Hold pipeline
+                read_index_src  = 1'b1; // Use S1 index for next lookup
             end 
         endcase
     end

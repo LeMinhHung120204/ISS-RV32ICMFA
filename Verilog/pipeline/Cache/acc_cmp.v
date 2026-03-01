@@ -1,4 +1,24 @@
 `timescale 1ns/1ps
+// ============================================================================
+// Access Compare - Stage 1 to Stage 2 Pipeline Register
+// ============================================================================
+//
+// Registers address decode results from Stage 1 (address decode) to
+// Stage 2 (tag compare). Handles stall, flush, and snoop pipelining.
+//
+// Pipeline Flow:
+//   Stage 1 (S1)          Stage 2 (S2)
+//   +---------------+     +---------------+
+//   | Address Decode| --> | Tag Compare   |
+//   | s1_tag/index  |     | s2_tag/index  |
+//   +---------------+     +---------------+
+//
+// Control Signals:
+//   - stall: Hold S2 values (cache miss, hazard)
+//   - flush: Clear S2 values (branch mispredict)
+//   - snoop_stall: Hold S2 snoop values (snoop in progress)
+//
+// ============================================================================
 module acc_cmp #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,

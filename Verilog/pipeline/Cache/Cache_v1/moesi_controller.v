@@ -1,4 +1,30 @@
 `timescale 1ns/1ps
+// ============================================================================
+// MOESI State Controller - Cache Coherence State Machine
+// ============================================================================
+//
+// Implements the MOESI cache coherence protocol state transitions.
+// Handles state changes from CPU requests, bus snoops, and refill operations.
+//
+// MOESI States:
+//   +---+----------+-------+---------+-------+
+//   | S | Name     | Valid | Dirty   | Excl  |
+//   +---+----------+-------+---------+-------+
+//   | M | Modified | Yes   | Yes     | Yes   |  <- Only copy, dirty
+//   | O | Owned    | Yes   | Yes     | No    |  <- Owner of dirty shared line
+//   | E | Exclusive| Yes   | No      | Yes   |  <- Only copy, clean
+//   | S | Shared   | Yes   | No      | No    |  <- Multiple copies, clean
+//   | I | Invalid  | No    | -       | -     |  <- No valid copy
+//   +---+----------+-------+---------+-------+
+//
+// State Transitions:
+//   CPU Read Miss:  I -> E (if unique) or S (if shared)
+//   CPU Write Miss: I -> M (if unique) or via Upgrade
+//   CPU Write Hit:  S/E/O -> M
+//   Snoop Read:     M/E -> O/S (downgrade, share data)
+//   Snoop Write:    Any -> I (invalidate)
+//
+// ============================================================================
 module moesi_controller(
     input   [2:0]   current_state
 ,   input           is_shared_response
@@ -36,10 +62,11 @@ module moesi_controller(
     // ================================================================
     // STATE DECODE LOGIC
     // ================================================================
-    assign is_dirty     = (current_state == STATE_M) | (current_state == STATE_O);
-    assign is_unique    = (current_state == STATE_M) | (current_state == STATE_E);
-    assign is_owner     = (current_state == STATE_M) | (current_state == STATE_O);
-    assign is_valid     = (current_state != STATE_I);
+    // Extract state properties for external use
+    assign is_dirty     = (current_state == STATE_M) | (current_state == STATE_O);  // Has dirty data
+    assign is_unique    = (current_state == STATE_M) | (current_state == STATE_E);  // Only copy
+    assign is_owner     = (current_state == STATE_M) | (current_state == STATE_O);  // Responsible for data
+    assign is_valid     = (current_state != STATE_I);                               // Has valid copy
 
     // ================================================================
     // NEXT STATE LOGIC
@@ -47,57 +74,62 @@ module moesi_controller(
     always @(*) begin
         next_state = current_state;
         // ========================
-        // SNOOP REQUEST HANDLING
+        // SNOOP REQUEST HANDLING (Highest Priority)
         // ========================
+        // External core wants access to this cache line
         if (bus_snoop_valid && snoop_hit) begin
-            if (bus_rw) begin   // Bus write
+            if (bus_rw) begin   // Bus Write (CleanInvalid/MakeInvalid)
+                // Other core wants exclusive access -> Invalidate our copy
                 next_state = STATE_I; 
             end
-            else begin // Bus read (ReadShared)
+            else begin // Bus Read (ReadShared)
+                // Other core wants to read -> Downgrade to shared
                 case (current_state)
-                    STATE_M, STATE_O:   next_state = STATE_O; // Chia se du lieu Dirty -> Owned
+                    STATE_M, STATE_O:   next_state = STATE_O; // Keep ownership of dirty data
                     STATE_E: begin            
                         if (l1_dirty) begin 
-                            next_state = STATE_O; // L1 co data dirty -> Owned
+                            next_state = STATE_O; // L1 modified -> Owned (dirty shared)
                         end 
                         else begin
-                            next_state = STATE_S; // L1 khong co data dirty -> Shared
+                            next_state = STATE_S; // L1 clean -> Shared
                         end 
                     end 
-                    STATE_S:            next_state = STATE_S;
+                    STATE_S:            next_state = STATE_S; // Already shared
                     default:            next_state = STATE_I;
                 endcase
             end
         end
 
         // ========================
-        // REFILL HANDLING
+        // REFILL HANDLING (Cache Miss Resolution)
         // ========================
+        // Data received from memory or peer cache
         else if (refill_we) begin
             if (is_dirty_response) begin
-                // Nhan data Dirty ty Cache khac
+                // Received dirty data from peer cache (cache-to-cache transfer)
                 if (is_shared_response) 
-                    next_state = STATE_O; // Dirty + Shared -> Owned
+                    next_state = STATE_O; // Dirty + Shared -> Owned (share dirty line)
                 else 
-                    next_state = STATE_M; // Dirty + Unique -> Modified
+                    next_state = STATE_M; // Dirty + Unique -> Modified (got exclusive dirty)
             end
             else begin
-                // Nhan data Clean tu RAM hoac Cache khac
+                // Received clean data from memory or peer cache
                 if (is_shared_response) 
                     next_state = STATE_S; // Clean + Shared -> Shared
                 else      
-                    next_state = STATE_E; // Clean + Unique -> Exclusive
+                    next_state = STATE_E; // Clean + Unique -> Exclusive (only copy)
             end
         end
 
         // ========================
-        // CPU HIT HANDLING
+        // CPU HIT HANDLING (Local Access)
         // ========================
+        // CPU accessing a line that exists in cache
         else if (cpu_req_valid && cpu_hit) begin
-            if (cpu_rw) begin // Write Hit
+            if (cpu_rw) begin // Write Hit -> Always upgrade to Modified
                 next_state = STATE_M; 
             end 
-            else begin // Read Hit
+            else begin // Read Hit -> Keep current state
                 next_state = current_state; 
             end 
         end 
