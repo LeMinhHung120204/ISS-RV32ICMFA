@@ -162,6 +162,22 @@ module snoop_controller_v2 #(
     // ================================================================
     // FSM STATE UPDATE & BUFFER LOGIC
     // ================================================================
+    // Latch tag lookup results at end of LOOKUP state
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            reg_snoop_hit   <= 1'b0;
+            reg_is_unique   <= 1'b0;
+            reg_is_dirty    <= 1'b0;
+            reg_is_owner    <= 1'b0;
+        end 
+        else if (state == LOOKUP && snoop_can_access_ram) begin
+            reg_snoop_hit   <= snoop_hit;
+            reg_is_unique   <= is_unique;
+            reg_is_dirty    <= is_dirty;
+            reg_is_owner    <= is_owner;
+        end
+    end
+
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             state           <= IDLE;
