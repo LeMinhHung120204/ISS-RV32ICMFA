@@ -1,4 +1,16 @@
 `timescale 1ns/1ps
+// ============================================================================
+// EX_MEM Pipeline Register  
+// ============================================================================
+// Pipeline stage: Execute (EX) -> Memory (MEM)
+//
+// Function:
+//   - Registers ALU result and data to be stored
+//   - Passes control signals for memory access and writeback
+//   - Includes atomic operation signals (LR/SC/AMO) for RV32A extension
+//
+// Stall behavior: On EN=1, register values are held (for dcache stall)
+// ============================================================================
 module EX_MEM #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32

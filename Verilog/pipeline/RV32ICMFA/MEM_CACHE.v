@@ -1,4 +1,17 @@
 `timescale 1ns/1ps
+// ============================================================================
+// MEM_CACHE Pipeline Register
+// ============================================================================
+// Pipeline stage: Memory (MEM) -> Cache Wait (C)
+//
+// Function:
+//   - Holds ALU result and control signals while waiting for dcache
+//   - Enables forwarding from cache stage to earlier stages  
+//   - Stalls when dcache is busy (EN=1 holds values)
+//
+// Note: This stage allows the pipeline to tolerate dcache latency
+//       without stalling the entire pipeline on every memory access.
+// ============================================================================
 module MEM_CACHE #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32

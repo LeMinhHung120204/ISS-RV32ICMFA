@@ -1,4 +1,14 @@
 `timescale 1ns/1ps
+// ============================================================================
+// MEM_WB Pipeline Register
+// ============================================================================
+// Pipeline stage: Cache (C) -> Writeback (WB)
+//
+// Function:
+//   - Registers final result (after cache response) for writeback
+//   - Passes register write control signals
+//   - No stall input - always updates (WB is final stage)
+// ============================================================================
 module MEM_WB #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32

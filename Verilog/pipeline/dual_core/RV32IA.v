@@ -36,61 +36,81 @@ module RV32IA #(
 ,   output  [WIDTH_DATA - 1:0]  W_Result_output
 );
 
-    // ----------------------- fetch signals -----------------------
-    reg  [WIDTH_ADDR-1:0]   PCNext;
-    wire [WIDTH_DATA-1:0]   F_RD;
-    wire [WIDTH_ADDR-1:0]   F_PC, F_PCPlus4;
-    wire                    F_Stall;
-    wire                    F_Predict_Taken;
-    wire [2:0]              F_GHSR;
-    wire [31:0]             F_Predict_Target;
-    
-    // ----------------------- IF signals (S2 - after icache) -----------------------
-    wire                    s2_Predict_Taken;
-    wire [2:0]              s2_GHSR;
-    wire [WIDTH_ADDR-1:0]   s2_PC, s2_PCPlus4;
-    wire                    fetch_pipe_Flush;
+    // ================================================================
+    // SIGNAL DECLARATIONS - Organized by Pipeline Stage
+    // ================================================================
+    // Pipeline: IF(S1) -> S2(icache) -> ID -> EX -> MEM -> CACHE -> WB
+    // ================================================================
 
-    // ----------------------- ID signals -----------------------
-    wire [WIDTH_DATA-1:0]   D_Instr, D_ImmExt;
-    wire [WIDTH_ADDR-1:0]   D_PC, D_PCPlus4;
-    wire [WIDTH_DATA-1:0]   RDX1, RDX2;
-    wire [4:0]              A1, A2, WD3;
+    // ================================================================
+    // FETCH STAGE (S1) - PC Generation & Branch Prediction
+    // ================================================================
+    reg  [WIDTH_ADDR-1:0]   PCNext;             // Next PC (from prediction or correction)
+    wire [WIDTH_DATA-1:0]   F_RD;               // Fetched instruction from icache
+    wire [WIDTH_ADDR-1:0]   F_PC, F_PCPlus4;    // Current PC and PC+4
+    wire                    F_Stall;            // Stall fetch stage
+    wire                    F_Predict_Taken;    // Branch prediction result
+    wire [2:0]              F_GHSR;             // Global History Shift Register
+    wire [31:0]             F_Predict_Target;   // Predicted target address
+    
+    // ================================================================
+    // STAGE 2 (S2) - Post-ICache Pipeline Register
+    // ================================================================
+    wire                    s2_Predict_Taken;   // Prediction from S1 (pipelined)
+    wire [2:0]              s2_GHSR;            // GHSR from S1 (pipelined)
+    wire [WIDTH_ADDR-1:0]   s2_PC, s2_PCPlus4;  // PC values (pipelined)
+    wire                    fetch_pipe_Flush;   // Flush fetch pipeline on mispredict
+
+    // ================================================================
+    // DECODE STAGE (ID) - Instruction Decode & Register Read
+    // ================================================================
+    wire [WIDTH_DATA-1:0]   D_Instr, D_ImmExt;          // Instruction & sign-extended immediate
+    wire [WIDTH_ADDR-1:0]   D_PC, D_PCPlus4;            // PC values
+    wire [WIDTH_DATA-1:0]   RDX1, RDX2;                 // Register file read data
+    wire [4:0]              A1, A2, WD3;                // Register addresses (rs1, rs2, rd)
+    // Control signals from decoder
     wire                    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_addr_addend_sel, D_ResPCSel;
     wire [3:0]              D_ALUControl;
     wire [2:0]              D_ResultSrc, D_ImmSrc, D_StoreSrc;
     wire                    D_Predict_Taken;
     wire [2:0]              D_GHSR;
-    wire                    D_data_req;
-    wire                    D_Stall, D_Flush;
+    wire                    D_data_req;                 // Data memory request
+    wire                    D_Stall, D_Flush;           // Hazard control
 
-    // ----------------------- atomic signals -----------------------
-    wire            D_amo;
-    wire    [2:0]   D_amo_op;
-    wire            D_lr, D_sc;
+    // Atomic Instructions (RV32A Extension)
+    wire            D_amo;          // Atomic Memory Operation
+    wire    [2:0]   D_amo_op;       // AMO operation type
+    wire            D_lr, D_sc;     // Load-Reserved, Store-Conditional
 
-    // ----------------------- EX signals -----------------------
-    wire [WIDTH_DATA-1:0]   E_RD1, E_RD2;
-    wire [WIDTH_DATA-1:0]   E_ImmExt, E_ALUResult;
-    wire [WIDTH_ADDR-1:0]   E_PC, E_PCPlus4, E_PCtmp, E_PCTarget;
-    wire [4:0]              E_rs1, E_rs2, E_rd;
-    wire [WIDTH_DATA-1:0]   E_SrcA, E_SrcB, E_WriteData;
+    // ================================================================
+    // EXECUTE STAGE (EX) - ALU & Branch Resolution
+    // ================================================================
+    wire [WIDTH_DATA-1:0]   E_RD1, E_RD2;               // Register values (pipelined)
+    wire [WIDTH_DATA-1:0]   E_ImmExt, E_ALUResult;      // Immediate & ALU output
+    wire [WIDTH_ADDR-1:0]   E_PC, E_PCPlus4, E_PCtmp, E_PCTarget;  // PC & branch target
+    wire [4:0]              E_rs1, E_rs2, E_rd;         // Register addresses
+    wire [WIDTH_DATA-1:0]   E_SrcA, E_SrcB, E_WriteData; // ALU operands & store data
+    // Control signals
     wire                    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel;
     wire [3:0]              E_ALUControl;
     wire [2:0]              E_ResultSrc, E_funct3, E_StoreSrc;
-    wire                    E_Predict_Taken;
+    // Branch prediction correction
+    wire                    E_Predict_Taken;            // Prediction from earlier stages
     wire [2:0]              E_GHSR;
-    wire                    E_Mispredict;
-    wire [31:0]             E_Correct_PC;
+    wire                    E_Mispredict;               // Branch misprediction detected
+    wire [31:0]             E_Correct_PC;               // Correct PC on mispredict
     wire                    E_data_req;
     wire                    E_Stall, E_Flush;
-    wire [1:0]              ForwardAE, ForwardBE;
+    wire [1:0]              ForwardAE, ForwardBE;       // Forwarding mux selects
 
+    // Atomic signals (pipelined)
     wire                    E_amo;
     wire    [2:0]           E_amo_op;
     wire                    E_lr, E_sc;
 
-    // ----------------------- MEM signals -----------------------
+    // ================================================================
+    // MEMORY STAGE (MEM) - Data Cache Request
+    // ================================================================
     wire [WIDTH_DATA-1:0]   M_ALUResult, M_WriteData, M_ImmExt;
     wire [WIDTH_ADDR-1:0]   M_PCPlus4, M_PCTarget, M_ResPC;
     wire [4:0]              M_rd;
@@ -98,31 +118,43 @@ module RV32IA #(
     wire [2:0]              M_ResultSrc, M_StoreSrc;
     wire                    M_data_req;
     wire                    M_Stall;
+    // Atomic signals (pipelined)
     wire                    M_amo;
     wire    [2:0]           M_amo_op;
     wire                    M_lr, M_sc;
 
-    // ----------------------- CACHE signals -----------------------
+    // ================================================================
+    // CACHE STAGE (C) - Wait for Cache Response
+    // ================================================================
     wire [WIDTH_DATA-1:0]   C_Result, C_ImmExt, C_mux_result, C_ReadData;
     wire [WIDTH_ADDR-1:0]   C_ResPC;
     wire [4:0]              C_rd;
     wire                    C_RegWrite;
     wire [2:0]              C_ResultSrc;
 
-    // ----------------------- WB signals -----------------------
-    wire [WIDTH_DATA-1:0]   W_mux_result;
-    wire [4:0]              W_rd;
-    wire                    W_RegWrite;
+    // ================================================================
+    // WRITEBACK STAGE (WB) - Write Result to Register File
+    // ================================================================
+    wire [WIDTH_DATA-1:0]   W_mux_result;       // Final result to write
+    wire [4:0]              W_rd;               // Destination register
+    wire                    W_RegWrite;         // Write enable
     wire [2:0]              W_ResultSrc;
     
 
     assign W_Result_output  = W_mux_result;
     
 
-    // ---------------------------------------- Branch prediction ----------------------------------------
+    // ================================================================
+    // BRANCH PREDICTION UNIT
+    // ================================================================
+    // PC Selection Priority:
+    //   1. Mispredict correction (highest)
+    //   2. Predicted taken branch
+    //   3. Sequential (PC+4)
+    // ================================================================
     assign F_PCPlus4    = F_PC + 32'd4;
-    assign E_Mispredict = (E_PCSrc != E_Predict_Taken);
-    assign E_Correct_PC = E_PCSrc ? E_PCTarget : E_PCPlus4;
+    assign E_Mispredict = (E_PCSrc != E_Predict_Taken);  // Compare actual vs predicted
+    assign E_Correct_PC = E_PCSrc ? E_PCTarget : E_PCPlus4;  // Correct PC on mispredict
     
 
     always @(*) begin
@@ -136,6 +168,9 @@ module RV32IA #(
         endcase
     end
 
+    // ================================================================
+    // BPU & BRANCH DECODER INSTANTIATION
+    // ================================================================
     BPU #(
         .W_ADDR(WIDTH_ADDR)
     ) BPU_inst (
@@ -165,7 +200,10 @@ module RV32IA #(
         .funct3         (E_funct3),
         .E_PCSrc        (E_PCSrc)
     );
-    // ---------------------------------------- WB state ----------------------------------------
+
+    // ================================================================
+    // HAZARD UNIT - Stall, Flush, and Forwarding Control
+    // ================================================================
     assign icache_flush = fetch_pipe_Flush;
 
     HazardUnit HazardUnit_inst(
@@ -204,7 +242,10 @@ module RV32IA #(
         .ForwardAE          (ForwardAE),
         .ForwardBE          (ForwardBE)
     );
-    // ---------------------------------------- IF state ----------------------------------------
+
+    // ================================================================
+    // FETCH STAGE (S1) - PC Register
+    // ================================================================
     PC #(
         .WIDTH      (WIDTH_ADDR), 
         .START_PC   (START_PC)
@@ -216,13 +257,16 @@ module RV32IA #(
         .PC     (F_PC)
     );
 
-    // ---------------------------------------- CACHE CONNECTION ----------------------------------------
+    // ================================================================
+    // I-CACHE CONNECTION
+    // ================================================================
     assign icache_addr = F_PC;          // S1 -> Cache
-    assign icache_req  = rst_n;         // luon yeu canh lenh khi khong reset
-    assign F_RD        = imem_instr;    // S2 (Cache) -> 
+    assign icache_req  = rst_n;         // Always request when not reset
+    assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
 
-    // ---------------------------------------- fetch_pipe REGISTER (IF -> S2) ----------------------------------------
-
+    // ================================================================
+    // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
+    // ================================================================
     fetch_pipe fetch_pipe_register (
         .clk    (clk),
         .rst_n  (rst_n),
@@ -240,8 +284,9 @@ module RV32IA #(
         .s2_PCPlus4         (s2_PCPlus4      )
     );
 
-    // ---------------------------------------- IF/ID REGISTER (S2 -> Decode) ----------------------------------------
-
+    // ================================================================
+    // PIPELINE REGISTER: S2 -> ID (IF_ID)
+    // ================================================================
     IF_ID IF_ID_register(
         .clk                (clk),
         .rst_n              (rst_n),
@@ -260,10 +305,12 @@ module RV32IA #(
         .D_Predict_Taken    (D_Predict_Taken)
     );
 
-    // ---------------------------------------- ID state ----------------------------------------
-    assign A1   = D_Instr[19:15];
-    assign A2   = D_Instr[24:20];
-    assign WD3  = D_Instr[11:7];
+    // ================================================================
+    // DECODE STAGE (ID) - Control Unit & Register File
+    // ================================================================
+    assign A1   = D_Instr[19:15];   // rs1
+    assign A2   = D_Instr[24:20];   // rs2  
+    assign WD3  = D_Instr[11:7];    // rd
     
     ControlUnit ControlUnit_ins(
         .op                 (D_Instr[6:0]),
@@ -306,6 +353,9 @@ module RV32IA #(
         .ImmExt (D_ImmExt)
     );
 
+    // ================================================================
+    // PIPELINE REGISTER: ID -> EX (ID_EX)
+    // ================================================================
     ID_EX ID_EX_register(
         .clk                (clk),
         .rst_n              (rst_n),
@@ -367,7 +417,9 @@ module RV32IA #(
         .E_sc               (E_sc)
     );
 
-    // ---------------------------------------- Ex state ----------------------------------------
+    // ================================================================
+    // EXECUTE STAGE (EX) - ALU & Forwarding
+    // ================================================================
     ALU alu_inst(
         .ALUControl (E_ALUControl),
         .in1        (E_SrcA),
@@ -410,8 +462,11 @@ module RV32IA #(
         .res    (E_SrcB)
     );
 
-    assign E_PCTarget   = E_ImmExt + E_PCtmp;
+    assign E_PCTarget   = E_ImmExt + E_PCtmp;  // Branch/Jump target address
 
+    // ================================================================
+    // PIPELINE REGISTER: EX -> MEM (EX_MEM)
+    // ================================================================
     EX_MEM EX_MEM_register(
         .clk    (clk),
         .rst_n  (rst_n),
@@ -452,19 +507,24 @@ module RV32IA #(
         .M_sc           (M_sc)
     );
 
-    // ---------------------------------------- DATA CACHE INTERFACE ----------------------------------------
+    // ================================================================
+    // MEMORY STAGE (MEM) - D-Cache Interface
+    // ================================================================
     assign data_wr      = M_MemWrite;
-    assign data_size    = M_StoreSrc;
+    assign data_size    = M_StoreSrc;   // lb/sb=00, lh/sh=01, lw/sw=10
     assign data_addr    = M_ALUResult;
     assign data_wdata   = M_WriteData;
     assign data_req     = M_data_req;
 
-    assign cpu_lr       = M_lr;
-    assign cpu_sc       = M_sc;
-    assign cpu_amo      = M_amo;
-    assign cpu_amo_op   = M_amo_op;
+    // Atomic instruction signals to D-Cache
+    assign cpu_lr       = M_lr;         // Load-Reserved
+    assign cpu_sc       = M_sc;         // Store-Conditional
+    assign cpu_amo      = M_amo;        // Atomic operation
+    assign cpu_amo_op   = M_amo_op;     // AMO type
 
-    // ---------------------------------------- PC Result Mux ----------------------------------------
+    // ================================================================
+    // PC RESULT MUX - For JALR/JAL
+    // ================================================================
     mux2_1 mux_ResPC(
         .in0    (M_PCTarget),
         .in1    (M_PCPlus4),
@@ -472,7 +532,9 @@ module RV32IA #(
         .res    (M_ResPC)
     );
 
-    // ---------------------------------------- [PIPELINE REGISTER] MEM -> CACHE ----------------------------------------
+    // ================================================================
+    // PIPELINE REGISTER: MEM -> CACHE (MEM_CACHE)
+    // ================================================================
     MEM_CACHE MEM_CACHE_register(
         .clk            (clk),
         .rst_n          (rst_n),
@@ -493,7 +555,10 @@ module RV32IA #(
         .C_ResultSrc    (C_ResultSrc)
     );
 
-    // ---------------------------------------- CACHE RESPONSE & FINAL SELECTION ----------------------------------------
+    // ================================================================
+    // CACHE STAGE (C) - Cache Response & Result Selection
+    // ================================================================
+    // ResultSrc: 00=ALU, 01=Memory, 10=PC+4, 11=Immediate
     assign C_ReadData   = data_rdata;
     mux4_1 mux_C_Result (
         .in0    (C_Result),
@@ -504,8 +569,9 @@ module RV32IA #(
         .res    (C_mux_result)
     );
 
-    // ---------------------------------------- [PIPELINE REGISTER] CACHE -> WRITEBACK ----------------------------------------
-
+    // ================================================================
+    // PIPELINE REGISTER: CACHE -> WRITEBACK (MEM_WB)
+    // ================================================================
     MEM_WB MEM_WB_register(
         .clk            (clk),
         .rst_n          (rst_n),

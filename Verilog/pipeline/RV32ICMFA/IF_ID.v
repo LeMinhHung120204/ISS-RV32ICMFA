@@ -1,4 +1,17 @@
 `timescale 1ns/1ps
+// ============================================================================
+// IF_ID Pipeline Register
+// ============================================================================
+// Pipeline stage: Stage2/ICache (S2) -> Decode (ID)
+//
+// Function:
+//   - Registers fetched instruction and PC values
+//   - Passes branch prediction info to decode stage
+//   - Supports flush (misprediction) and stall (data hazard)
+//
+// Flush behavior: On D_Flush, instruction is replaced with NOP (0x00000000)
+// Stall behavior: On EN=1, register values are held
+// ============================================================================
 module IF_ID #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32

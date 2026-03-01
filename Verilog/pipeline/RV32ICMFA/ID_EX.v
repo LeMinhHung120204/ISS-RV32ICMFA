@@ -1,4 +1,17 @@
 `timescale 1ns/1ps
+// ============================================================================
+// ID_EX Pipeline Register
+// ============================================================================
+// Pipeline stage: Decode (ID) -> Execute (EX)
+// 
+// Function:
+//   - Registers decoded instruction data and control signals
+//   - Supports flush (from branch misprediction) and stall (from hazards)
+//   - Passes register values, immediate, PC, and control signals to EX stage
+//
+// Flush behavior: On E_Flush, all control signals are cleared (NOP insertion)
+// Stall behavior: On EN=1, register values are held (pipeline freeze)
+// ============================================================================
 module ID_EX #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32

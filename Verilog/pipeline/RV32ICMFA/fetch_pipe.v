@@ -1,4 +1,18 @@
 `timescale 1ns/1ps
+// ============================================================================
+// fetch_pipe Pipeline Register
+// ============================================================================
+// Pipeline stage: Fetch/S1 -> Stage2/S2 (ICache latency compensation)
+//
+// Function:
+//   - Holds PC and branch prediction signals during icache access
+//   - Synchronizes fetch stage with icache response
+//   - Supports flush (misprediction) and stall (icache miss)
+//
+// Note: This register exists because icache has 1-cycle latency.
+//       S1: Send address to icache
+//       S2: Receive instruction from icache
+// ============================================================================
 module fetch_pipe #(
     parameter DATA_W = 32,
     parameter ADDR_W = 32
