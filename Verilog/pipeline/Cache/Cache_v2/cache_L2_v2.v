@@ -1,5 +1,37 @@
 `timescale 1ns/1ps
-
+// ============================================================================
+// L2 Cache v2 - Unified L2 Cache with ACE Interface
+// ============================================================================
+//
+// Unified L2 cache serving both ICache and DCache.
+// Implements MOESI coherence via ACE interface.
+//
+// Features:
+//   - N-way set associative (default 4-way)
+//   - 64-byte cache line (16 words)
+//   - MOESI coherence protocol states
+//   - ACE master interface to interconnect
+//   - Snoop forwarding to L1 caches
+//   - PLRU replacement
+//
+// Request Commands (i_req_cmd):
+//   00 = Read_Shared   : Read for shared access (may hit in peer)
+//   01 = Write_Back    : Evict dirty line to memory
+//   10 = Upgrade       : Upgrade S->E/M (invalidate peers)
+//   11 = Read_Unique   : Read for exclusive access
+//
+// Interfaces:
+//   L1 Interface:
+//     - Request: cmd + address from L1 cache
+//     - Write: Dirty line from L1 writeback
+//     - Read: Cache line for L1 refill
+//     - Snoop: Forward external snoops to L1
+//
+//   ACE Interface (to Interconnect):
+//     - AXI4 AW/W/B (write), AR/R (read) channels
+//     - ACE AC/CR/CD channels for snoop protocol
+//
+// ============================================================================
 module L2_cache_v2 #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,

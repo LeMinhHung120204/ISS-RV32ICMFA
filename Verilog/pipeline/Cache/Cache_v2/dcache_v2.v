@@ -1,4 +1,38 @@
 `timescale 1ns/1ps
+// ============================================================================
+// DCache v2 - L1 Data Cache with Atomic & Coherence Support
+// ============================================================================
+//
+// Write-back, write-allocate L1 data cache with MOESI coherence.
+// Supports RV32A atomic instructions (LR/SC/AMO).
+//
+// Features:
+//   - N-way set associative (default 4-way)
+//   - 64-byte cache line (16 words)
+//   - Write-back policy with dirty tracking
+//   - PLRU replacement
+//   - Atomic operations: LR.W, SC.W, AMO*
+//   - Snoop interface for cache coherence
+//
+// Interfaces:
+//   CPU Interface:
+//     - cpu_req/we: Read/write request
+//     - cpu_lr/sc/amo: Atomic operation signals
+//     - data_rdata: Read data to CPU
+//     - pipeline_stall: Stall CPU on miss
+//
+//   L2 Interface:
+//     - Request channel: Read/write/upgrade requests
+//     - Write data: Writeback dirty lines
+//     - Read data: Refill on miss
+//     - MOESI state: Coherence state from L2
+//
+//   Snoop Interface:
+//     - Receive snoop from L2 (forwarded from interconnect)
+//     - Return hit/dirty status
+//     - Invalidate/downgrade on external request
+//
+// ============================================================================
 module dcache_v2 #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,

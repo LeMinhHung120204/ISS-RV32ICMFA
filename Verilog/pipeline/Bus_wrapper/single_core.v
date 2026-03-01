@@ -1,23 +1,43 @@
 `timescale 1ns / 1ps
+// ============================================================================
+// Single Core Wrapper - CPU + Cache Hierarchy with ACE Interface
+// ============================================================================
+//
+// Instantiates a complete single-core system including:
+//   - RV32IA CPU core (7-stage pipeline)
+//   - L1 Instruction Cache (ICache)
+//   - L1 Data Cache (DCache) with atomic support
+//   - L2 Unified Cache
+//   - ACE (AXI Coherent Extension) interface for dual-core coherence
+//
+// ACE Interface:
+//   - Master: Normal AXI4 read/write + arsnoop/awsnoop encoding
+//   - Snoop: AC (address), CR (response), CD (data) channels
+//
+// Atomic Support:
+//   - LR/SC (Load-Reserved/Store-Conditional)
+//   - AMO (Atomic Memory Operations)
+//
+// ============================================================================
 module single_core #(
-    parameter CORE_ID       = 1'b0,
-    parameter ID_W          = 2,
-    parameter ADDR_W        = 32,
-    parameter DATA_W        = 32,
+    parameter CORE_ID       = 1'b0,             // Core identifier (0 or 1)
+    parameter ID_W          = 2,                // Transaction ID width
+    parameter ADDR_W        = 32,               // Address width
+    parameter DATA_W        = 32,               // Data width
 
-    // Cau hinh core
-    parameter CODE_START     = 32'h0000_0000, 
-    parameter DATA_START     = 32'h0000_4000,
+    // Memory Map Configuration
+    parameter CODE_START     = 32'h0000_0000,   // Instruction base address
+    parameter DATA_START     = 32'h0000_4000,   // Data base address
 
-    // Cau hinh cache
-    parameter NUM_WAYS      = 4,
-    parameter NUM_SETS      = 16,
-    parameter INDEX_W       = $clog2(NUM_SETS),
-    parameter NUM_SETS_L2   = 32,
-    parameter WORD_OFF_W    = 4, // 16 words
-    parameter BYTE_OFF_W    = 2,
-    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,
-    parameter STRB_W        = DATA_W/8
+    // Cache Configuration
+    parameter NUM_WAYS      = 4,                // Cache associativity
+    parameter NUM_SETS      = 16,               // L1 cache sets
+    parameter INDEX_W       = $clog2(NUM_SETS), // Index width
+    parameter NUM_SETS_L2   = 32,               // L2 cache sets
+    parameter WORD_OFF_W    = 4,                // Word offset (16 words/line)
+    parameter BYTE_OFF_W    = 2,                // Byte offset (4 bytes/word)
+    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32,  // Cache line width
+    parameter STRB_W        = DATA_W/8          // Write strobe width
 )(
     input   ACLK
 ,   input   ARESETn

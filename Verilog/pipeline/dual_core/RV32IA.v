@@ -1,4 +1,28 @@
 `timescale 1ns/1ps
+// ============================================================================
+// RV32IA - RISC-V 32-bit Integer + Atomic Extension CPU Core
+// ============================================================================
+//
+// A 7-stage pipelined RISC-V processor supporting RV32IA ISA extensions.
+// Designed for dual-core configuration with cache coherence support.
+//
+// ISA Extensions:
+//   - RV32I: Base integer instructions
+//   - RV32A: Atomic instructions (LR.W, SC.W, AMO*)
+//
+// Features:
+//   - Branch prediction with BTB and PHT
+//   - Data forwarding (EX-EX, MEM-EX, CACHE-EX)
+//   - Hazard detection and pipeline stalling
+//   - Integrated with L1 ICache and DCache
+//   - ACE snoop interface for cache coherence
+//
+// Atomic Support:
+//   - LR.W (Load-Reserved): cpu_lr asserted
+//   - SC.W (Store-Conditional): cpu_sc asserted
+//   - AMO* (Atomic Memory Op): cpu_amo + cpu_amo_op
+//
+// ============================================================================
 module RV32IA #(
     parameter WIDTH_DATA    = 32,
     parameter WIDTH_ADDR    = 32,

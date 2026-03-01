@@ -1,4 +1,36 @@
 `timescale 1ns/1ps
+// ============================================================================
+// Snoop Controller v2 - ACE Snoop Protocol Handler
+// ============================================================================
+//
+// Handles incoming snoop requests from the ACE interconnect.
+// Implements the snoop side of MOESI cache coherence protocol.
+//
+// ACE Snoop Transaction Flow:
+//   1. Interconnect sends snoop request (AC channel)
+//   2. Controller looks up tag in L2 cache
+//   3. Forward snoop to L1 if needed
+//   4. Send response (CR channel) with hit/dirty/shared info
+//   5. Send data (CD channel) if peer needs it
+//
+// Snoop Types (ACSNOOP encoding):
+//   0x0 = ReadOnce       : Read without caching
+//   0x1 = ReadShared     : Read for shared access
+//   0x2 = ReadClean      : Read clean copy
+//   0x3 = ReadNotShared  : Read unique access
+//   0x7 = ReadUnique     : Read for exclusive access
+//   0x8 = CleanShared    : Clean to shared state
+//   0xC = CleanInvalid   : Clean and invalidate
+//   0xD = MakeInvalid    : Invalidate without writeback
+//
+// Response (CRRESP encoding):
+//   [0] = DataTransfer   : Will send data on CD channel
+//   [1] = Error          : Error occurred
+//   [2] = PassDirty      : Passing dirty ownership
+//   [3] = IsShared       : Line will remain shared
+//   [4] = WasUnique      : Had exclusive copy
+//
+// ============================================================================
 module snoop_controller_v2 #(
     parameter ADDR_W = 32
 )(
