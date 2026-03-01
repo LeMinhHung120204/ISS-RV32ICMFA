@@ -1,4 +1,10 @@
 `timescale 1ns/1ps
+// ============================================================================
+// Control Read - AXI Read Burst Controller
+// ============================================================================
+// Handles AXI AR channel handshake and generates sequential read addresses
+// for burst transfers. Supports FIXED, INCR, and WRAP burst types.
+// ============================================================================
 module control_read #(
     parameter DATA_W = 32
 )(
@@ -25,36 +31,27 @@ module control_read #(
 ,   output reg                          read_en
 );
 
-    localparam IDLE = 1'd0;
-    localparam READ = 1'd1;
+    // ================================================================
+    // LOCAL PARAMETERS
+    // ================================================================
+    localparam IDLE = 1'd0;     // Waiting for AR handshake
+    localparam READ = 1'd1;     // Generating read addresses
 
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
     reg                 state, next_state;
-    reg [7:0]           count_addr, read_count;     
-    reg [DATA_W-1:0]    reg_addr;
+    reg [7:0]           count_addr, read_count;     // Address counter, read beat counter
+    reg [DATA_W-1:0]    reg_addr;                   // Current address (word-aligned)
 
-    // Registers to latch Control info
-    reg [1:0]       reg_arburst;
-    reg [2:0]       reg_arsize;
-    reg [7:0]       reg_arlen;
+    // Latched burst parameters
+    reg [1:0]       reg_arburst;    // Burst type
+    reg [2:0]       reg_arsize;     // Beat size
+    reg [7:0]       reg_arlen;      // Burst length - 1
 
     // ================================================================
-    // ARREADY LOGIC
+    // ARREADY LOGIC - Accept new request when FIFO not full
     // ================================================================
-    // always @(posedge clk or negedge rst_n) begin
-    //     if (!rst_n) arready <= 1'b0;
-    //     else begin
-    //         if (state == IDLE && !arvalid) begin
-    //             arready <= 1'b1;
-    //         end 
-    //         else if (arvalid && arready) begin   
-    //             arready <= 1'b0; 
-    //         end 
-    //         else if (state != IDLE) begin        
-    //             arready <= 1'b0;
-    //         end 
-    //     end
-    // end
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) 
             arready <= 1'b0;
@@ -67,7 +64,7 @@ module control_read #(
     end
 
     // ================================================================
-    // ADDRESS COMPUTATION
+    // ADDRESS GENERATION - Latch params on handshake, increment on each beat
     // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -113,9 +110,8 @@ module control_read #(
     end
     
     // ================================================================
-    // OUTPUT LOGIC
+    // RLAST GENERATION - Assert on last beat of burst
     // ================================================================
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             read_count <= 8'd0;
@@ -140,7 +136,7 @@ module control_read #(
 
 
     // ================================================================
-    // FSM
+    // FSM - IDLE waits for request, READ generates address sequence
     // ================================================================
     always @(*) begin
         case (state)

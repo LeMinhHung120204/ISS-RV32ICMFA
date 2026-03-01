@@ -6,17 +6,6 @@
 // Implements the MOESI cache coherence protocol state transitions.
 // Handles state changes from CPU requests, bus snoops, and refill operations.
 //
-// MOESI States:
-//   +---+----------+-------+---------+-------+
-//   | S | Name     | Valid | Dirty   | Excl  |
-//   +---+----------+-------+---------+-------+
-//   | M | Modified | Yes   | Yes     | Yes   |  <- Only copy, dirty
-//   | O | Owned    | Yes   | Yes     | No    |  <- Owner of dirty shared line
-//   | E | Exclusive| Yes   | No      | Yes   |  <- Only copy, clean
-//   | S | Shared   | Yes   | No      | No    |  <- Multiple copies, clean
-//   | I | Invalid  | No    | -       | -     |  <- No valid copy
-//   +---+----------+-------+---------+-------+
-//
 // State Transitions:
 //   CPU Read Miss:  I -> E (if unique) or S (if shared)
 //   CPU Write Miss: I -> M (if unique) or via Upgrade

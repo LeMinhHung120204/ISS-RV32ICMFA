@@ -1,4 +1,10 @@
 `timescale 1ns/1ps
+// ============================================================================
+// Control Write - AXI Write Burst Controller
+// ============================================================================
+// Handles AXI AW/W channel handshakes and generates sequential write addresses.
+// Supports FIXED, INCR, and WRAP burst types. Uses WLAST to detect burst end.
+// ============================================================================
 module control_write #(
     parameter DATA_W = 32
 )(
@@ -22,16 +28,23 @@ module control_write #(
 ,   output reg                  write_en            
 );
 
-    localparam IDLE    = 1'd0;
-    localparam WRITE   = 1'd1;
+    // ================================================================
+    // LOCAL PARAMETERS
+    // ================================================================
+    localparam IDLE    = 1'd0;  // Waiting for AW handshake
+    localparam WRITE   = 1'd1;  // Receiving W beats
 
+    // ================================================================
+    // REG DECLARATIONS  
+    // ================================================================
     reg             state, next_state;
-    
+    reg [DATA_W-1:0]    reg_addr;       // Current write address
+    reg [1:0]           reg_awburst;    // Burst type
+    reg [2:0]           reg_awsize;     // Beat size
 
-    reg [DATA_W-1:0]    reg_addr;
-    reg [1:0]           reg_awburst;
-    reg [2:0]           reg_awsize;
-
+    // ================================================================
+    // AWREADY - Accept new request when idle
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin 
             awready <= 1'b0;
@@ -49,20 +62,9 @@ module control_write #(
         end
     end
 
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin 
-            wready <= 1'b0;
-        end 
-        else begin
-            if (state == WRITE) begin 
-                wready <= 1'b1;
-            end
-            else begin   
-                wready <= 1'b0;
-            end 
-        end
-    end
-
+    // ================================================================
+    // ADDRESS GENERATION - Latch on AW handshake, increment on W beats
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             reg_addr    <= {DATA_W{1'b0}};
@@ -109,7 +111,7 @@ module control_write #(
     end
 
     // ================================================================
-    // FSM
+    // FSM - IDLE waits for AW, WRITE receives data until WLAST
     // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin 

@@ -7,12 +7,6 @@
 // Used by both CPU requests and snoop requests.
 //
 // Address Format (32-bit, 64B cache line, 16 sets):
-//   +------------------+-------+-----------+-----------+
-//   |       TAG        | INDEX | WORD_OFF  | BYTE_OFF  |
-//   +------------------+-------+-----------+-----------+
-//   | [31:10] 22 bits  | [9:6] | [5:2]     | [1:0]     |
-//   |                  | 4 bits| 4 bits    | 2 bits    |
-//   +------------------+-------+-----------+-----------+
 //
 // Fields:
 //   TAG      : Identifies unique cache line (address bits [31:10])

@@ -1,4 +1,10 @@
 `timescale 1ns/1ps
+// ============================================================================
+// Arbiter - Round-Robin L1 Cache Arbiter for L2 Access
+// ============================================================================
+// Arbitrates between ICache (read-only) and DCache (read/write) requests.
+// Uses alternating priority to ensure fairness.
+// ============================================================================
 module arbiter #(
     parameter ADDR_W        = 32,
     parameter CODE_START    = 32'h0000_0000, 
@@ -24,8 +30,11 @@ module arbiter #(
 ,   output  reg [ADDR_W-1:0]    o_l2_addr
 );
 
-    reg priority_ptr;
-    reg grant_c0, grant_c1;
+    // ================================================================
+    // GRANT LOGIC - Priority-based selection
+    // ================================================================
+    reg priority_ptr;       // 0: ICache priority, 1: DCache priority
+    reg grant_c0, grant_c1; // Grant signals
 
     always @(*) begin
         grant_c0 = 1'b0;
@@ -49,6 +58,9 @@ module arbiter #(
         end
     end
 
+    // ================================================================
+    // OUTPUT MUX - Route selected request to L2
+    // ================================================================
     always @(*) begin
         o_l2_valid      = 1'b0;
         o_l2_cmd        = 2'b00;
@@ -57,38 +69,33 @@ module arbiter #(
         o_c1_req_ready  = 1'b0;
 
         if (grant_c0) begin
+            // ICache request: always ReadShared, add CODE_START offset
             o_l2_valid      = 1'b1;
-            o_l2_cmd        = 2'b00; // I-Cache Read
-            // o_l2_addr       = i_c0_req_addr;
+            o_l2_cmd        = 2'b00;
             o_l2_addr       = CODE_START | i_c0_req_addr;
-
-            // L2 Ready thi C0 cung Ready
             o_c0_req_ready  = i_l2_ready; 
         end
         else if (grant_c1) begin
+            // DCache request: pass command, add DATA_START offset
             o_l2_valid      = 1'b1;
             o_l2_cmd        = i_c1_req_cmd;
-            // o_l2_addr       = i_c1_req_addr;
-            // o_l2_addr       = {4'h2, i_c1_req_addr[27:0]}; // phan vung icache va dcache
             o_l2_addr       = DATA_START | i_c1_req_addr;
-    
             o_c1_req_ready  = i_l2_ready;
         end
     end
 
+    // ================================================================
+    // PRIORITY UPDATE - Alternate after each granted request
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             priority_ptr <= 1'b0;
         end 
         else begin
+            // Flip priority after successful transaction
             if (o_l2_valid && i_l2_ready) begin
-                // Logic: dao bit nguoi thang
-                if (grant_c0) begin      
-                    priority_ptr <= 1'b1;
-                end 
-                else if (grant_c1) begin 
-                    priority_ptr <= 1'b0;
-                end 
+                if (grant_c0)      priority_ptr <= 1'b1;  // Next: DCache priority
+                else if (grant_c1) priority_ptr <= 1'b0;  // Next: ICache priority
             end
         end
     end

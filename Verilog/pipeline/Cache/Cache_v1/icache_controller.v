@@ -6,12 +6,6 @@
 // Controls L1 instruction cache operations. Read-only cache with
 // simple refill logic (no writeback needed).
 //
-// FSM States:
-//   TAG_CHECK --> [miss] --> ALLOC_REQ --> ALLOC_WAIT --> UPDATE --> WAIT_RAM
-//       ^                                                              |
-//       |______________________________________________________________|  
-//       |<--- [hit] ----|
-//
 // State Descriptions:
 //   TAG_CHECK  : Compare tag, check hit/miss
 //   ALLOC_REQ  : Send refill request to L2

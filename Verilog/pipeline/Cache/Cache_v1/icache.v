@@ -1,4 +1,10 @@
 `timescale 1ns/1ps
+// ============================================================================
+// ICache - L1 Instruction Cache (Read-Only)
+// ============================================================================
+// N-way set-associative instruction cache with PLRU replacement.
+// 2-stage pipeline: S1 (address decode) -> S2 (tag compare + data read)
+// ============================================================================
 module icache #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,

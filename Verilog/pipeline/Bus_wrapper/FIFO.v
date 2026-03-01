@@ -1,5 +1,11 @@
     `timescale 1ns / 1ps
-    module FIFO #(
+// ============================================================================
+// FIFO - First-In-First-Out Buffer
+// ============================================================================
+// Synchronous FIFO with configurable width and depth.
+// Uses wrap-around pointers with MSB for full/empty detection.
+// ============================================================================
+module FIFO #(
         parameter DATA_W = 32,
         parameter DEPTH  = 8,
         parameter ADDR_W = $clog2(DEPTH)
@@ -36,8 +42,10 @@
             end
         end
 
-        //VD: wptr = 1000 (da quay vong), rptr = 0000 -> Full
+        // Full: pointers differ only in MSB (write wrapped, read hasn't)
         assign full     = (wptr[ADDR_W] != rptr[ADDR_W]) && (wptr[ADDR_W-1:0] == rptr[ADDR_W-1:0]);
+        // Empty: pointers are equal
         assign empty    = (wptr == rptr);
+        // Combinational read output
         assign dout     = mem[rptr[ADDR_W-1:0]];
     endmodule 
