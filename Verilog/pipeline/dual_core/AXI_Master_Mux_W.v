@@ -6,10 +6,6 @@
 // Multiplexes write requests from 2 masters to 1 slave.
 // Uses external grant signals to select which master owns the bus.
 //
-// Data Flow:
-//   Master 0 ───┬───> MUX ───> Slave (Memory)
-//   Master 1 ───┘       <───  (Write Response)
-//
 // AW Channel (Address Write):
 //   - Forwards awid, awaddr, awvalid from granted master
 //   - Returns awready only to granted master

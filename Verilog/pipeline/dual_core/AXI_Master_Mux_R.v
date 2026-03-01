@@ -6,10 +6,6 @@
 // Multiplexes read requests from 2 masters to 1 slave.
 // Uses external grant signals to select which master owns the bus.
 //
-// Data Flow:
-//   Master 0 ───┬───> MUX ───> Slave (Memory)
-//   Master 1 ───┘       <───  (Read Data)
-//
 // AR Channel (Address Read):
 //   - Forwards arid, araddr, arvalid from granted master
 //   - Returns arready only to granted master
