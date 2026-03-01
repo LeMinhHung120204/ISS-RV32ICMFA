@@ -15,7 +15,8 @@ module L2_cache_v2 #(
     parameter ID_W          = 2,
     parameter STRB_W        = (DATA_W/8)
 )(
-    input ACLK, ARESETn
+    input ACLK
+,   input ARESETn
 
     // Request (Command/Address)
 ,   input                       i_req_valid  
