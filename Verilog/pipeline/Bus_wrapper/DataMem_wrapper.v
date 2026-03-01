@@ -49,14 +49,18 @@ module DataMem_wrapper #(
 ,   output              o_axi_rvalid
 ,   input               i_axi_rready
 );  
-    // ---------------------------------------- FIFO Width Definitions ----------------------------------------
+    // ================================================================
+    // FIFO WIDTH DEFINITIONS
+    // ================================================================
     localparam FF_AW_W = DATA_W + ID_W + 8 + 3 + 2;     // AW: ADDR + ID + LEN + SIZE + BURST
     localparam FF_W_W  = DATA_W + STRB_W + 1;           // W: DATA + STRB + LAST
     localparam FF_B_W  = ID_W + 2;                      // B: ID + RESP
     localparam FF_AR_W = DATA_W + ID_W + 8 + 3 + 2;     // AR: ADDR + ID + LEN + SIZE + BURST
     localparam FF_R_W  = DATA_W + ID_W + 2 + 1;         // R: DATA + ID + RESP + LAST
 
-    // ---------------------------------------- FIFO Signals ----------------------------------------
+    // ================================================================
+    // FIFO SIGNALS
+    // ================================================================
     wire [FF_AW_W - 1:0]    fifo_aw_dout;
     wire [FF_W_W - 1:0]     fifo_w_dout; 
     wire [FF_B_W - 1:0]     fifo_b_dout; 
@@ -81,7 +85,9 @@ module DataMem_wrapper #(
     wire                    ctrl_w_ready;
     // wire                    ctrl_r_last; 
     
-    // ---------------------------------------- Unpack FIFOs (Tach day) ----------------------------------------
+    // ================================================================
+    // UNPACK FIFOs
+    // ================================================================
     // AW FIFO
     wire [DATA_W-1:0] fifo_awaddr  = fifo_aw_dout[FF_AW_W-1 -: DATA_W];
     wire [ID_W-1:0]   fifo_awid    = fifo_aw_dout[FF_AW_W-1 - DATA_W -: ID_W];
@@ -101,7 +107,9 @@ module DataMem_wrapper #(
     wire [2:0]        fifo_arsize  = fifo_ar_dout[FF_AR_W-1 - DATA_W - ID_W - 8 -: 3];
     wire [1:0]        fifo_arburst = fifo_ar_dout[FF_AR_W-1 - DATA_W - ID_W - 8 - 3 -: 2];
     
-    // ---------------------------------------- LOGIC dieu khien ----------------------------------------
+    // ================================================================
+    // CONTROL LOGIC
+    // ================================================================
 
     // AXI OUTPUT ASSIGNMENTS
     assign o_axi_awready = ~fifo_aw_full;
@@ -125,7 +133,9 @@ module DataMem_wrapper #(
     assign fifo_w_push   = ~fifo_w_full  & i_axi_wvalid;
     assign fifo_ar_push  = ~fifo_ar_full & i_axi_arvalid;
     
-    // ---------------------------------------- WRITE PATH ----------------------------------------
+    // ================================================================
+    // WRITE PATH
+    // ================================================================
     assign fifo_w_pop       = core_write_en; 
     wire write_burst_done   = core_write_en && fifo_wlast;
 
@@ -138,7 +148,9 @@ module DataMem_wrapper #(
     assign fifo_b_pop       = i_axi_bready & ~fifo_b_empty;
 
 
-    // ---------------------------------------- READ PATH ----------------------------------------
+    // ================================================================
+    // READ PATH
+    // ================================================================
     assign fifo_r_push   = rvalid_from_mem & ~fifo_r_full;
 
     // Pop AR_FIFO: CHi POP khi đa push beat cuoi cung vao R_FIFO
@@ -146,7 +158,9 @@ module DataMem_wrapper #(
     assign fifo_ar_pop   = fifo_r_push && last_data_from_mem;
     assign fifo_r_pop    = i_axi_rready & ~fifo_r_empty;
 
-    // ----------------------------------------- INSTANTIATE MODULES -----------------------------------------
+    // ================================================================
+    // MODULE INSTANTIATIONS
+    // ================================================================
     control_write #(
         .DATA_W (DATA_W)
     ) u_control_write (
@@ -216,7 +230,9 @@ module DataMem_wrapper #(
         .valid      (rvalid_from_mem)
     );
 
-    // ----------------------------------------- INSTANTIATE FIFOs -----------------------------------------
+    // ================================================================
+    // FIFO INSTANTIATIONS
+    // ================================================================
     FIFO #(
         .DATA_W (FF_AW_W), 
         .DEPTH  (RAM_ADDR_W)
