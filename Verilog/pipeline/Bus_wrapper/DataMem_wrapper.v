@@ -1,4 +1,10 @@
 `timescale 1ns/1ps
+// ============================================================================
+// DataMem Wrapper - AXI4 Slave Memory Controller
+// ============================================================================
+// Provides AXI4 interface to RAM with FIFO buffering for all channels.
+// Supports burst read/write with flow control.
+// ============================================================================
 module DataMem_wrapper #(
     parameter RAM_ADDR_W    = 8,
     parameter ID_W          = 2,
@@ -134,27 +140,25 @@ module DataMem_wrapper #(
     assign fifo_ar_push  = ~fifo_ar_full & i_axi_arvalid;
     
     // ================================================================
-    // WRITE PATH
+    // WRITE PATH - AW/W -> RAM -> B
     // ================================================================
     assign fifo_w_pop       = core_write_en; 
     wire write_burst_done   = core_write_en && fifo_wlast;
 
-    // Push B_FIFO: Khi burst write xong.
+    // Push B response when burst completes
     assign fifo_b_push      = write_burst_done & ~fifo_b_full;
     
-    // Pop AW_FIFO: CHi POP khi đa push xong Response vao B_FIFO
-    // Ly do: Can giu AWID o dau ra FIFO cho den giay phut cuoi cung de dua vao B_FIFO
+    // Pop AW after B response pushed (need AWID for B channel)
     assign fifo_aw_pop      = fifo_b_push; 
     assign fifo_b_pop       = i_axi_bready & ~fifo_b_empty;
 
 
     // ================================================================
-    // READ PATH
+    // READ PATH - AR -> RAM -> R
     // ================================================================
     assign fifo_r_push   = rvalid_from_mem & ~fifo_r_full;
 
-    // Pop AR_FIFO: CHi POP khi đa push beat cuoi cung vao R_FIFO
-    // Ly do: Can giu ARID de gan vao moi beat du lieu tra ve?
+    // Pop AR after last beat pushed to R (need ARID for each beat)
     assign fifo_ar_pop   = fifo_r_push && last_data_from_mem;
     assign fifo_r_pop    = i_axi_rready & ~fifo_r_empty;
 
@@ -199,8 +203,8 @@ module DataMem_wrapper #(
         .arlen      (fifo_arlen),
         .araddr     (fifo_araddr),
 
-        .fifo_r_push_able   (~fifo_r_full),     // R_FIFO con' cho~ thi cu doc tu mem ra fifo
-        .fifo_r_pop_able    (~fifo_r_empty),    // R_FIFO con' data thi moi doc tu fifo ra AXI
+        .fifo_r_push_able   (~fifo_r_full),     // Can push to R_FIFO
+        .fifo_r_pop_able    (~fifo_r_empty),    // Can pop from R_FIFO
         
         // Memory Interface
         .fifo_ar_full       (fifo_ar_full),
@@ -269,7 +273,7 @@ module DataMem_wrapper #(
         .rst_n  (ARESETn),
         .push   (fifo_b_push), 
         .pop    (fifo_b_pop),
-        // Lay ID tu AW FIFO (Vi luc nay AW FIFO chua pop)
+        // Get ID from AW FIFO (not popped yet)
         .din    ({fifo_awid, 2'b00}),
         .empty  (fifo_b_empty), 
         .full   (fifo_b_full), 

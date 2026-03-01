@@ -1,6 +1,11 @@
 `timescale 1ns / 1ps
-// Branch Prediction Unit
-// from Lee Min Hunz with love
+// ============================================================================
+// BPU - Branch Prediction Unit
+// ============================================================================
+// Combines BTB (Branch Target Buffer) and PHT (Pattern History Table)
+// to predict branch direction and target address.
+// Prediction: taken = BTB hit AND PHT predicts taken
+// ============================================================================
 module BPU #(
     parameter W_ADDR = 32
 )(
@@ -17,10 +22,14 @@ module BPU #(
 ,   output [W_ADDR-1:0] target_pc      
 ,   output [2:0]        F_GHSR 
 );
-    wire                btb_hit;
-    wire                pht_predict_taken;
-    wire [W_ADDR-1:0]   btb_pred_addr;
+    // ================================================================
+    // INTERNAL SIGNALS
+    // ================================================================
+    wire                btb_hit;            // BTB found matching entry
+    wire                pht_predict_taken;  // PHT predicts branch taken
+    wire [W_ADDR-1:0]   btb_pred_addr;      // Predicted target from BTB
     
+    // Final prediction: BTB must hit AND PHT must predict taken
     assign predict_taken    = btb_hit & pht_predict_taken;
     assign target_pc        = btb_pred_addr; 
 

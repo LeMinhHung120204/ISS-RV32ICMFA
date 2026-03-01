@@ -1,8 +1,12 @@
 `timescale 1ns / 1ps
-// Branch Target Buffer
-// 4-way set associative, 8 sets
-// PLRU replacement policy
-// From Lee Min Hunz with love
+// ============================================================================
+// BTB - Branch Target Buffer
+// ============================================================================
+// 4-way set associative, 8 sets. Stores branch target addresses.
+// Uses PLRU replacement policy.
+// On hit: returns predicted target address.
+// Updated when branch/jump executes in EX stage.
+// ============================================================================
 module BTB #(
     parameter W_ADDR = 32
 )(
@@ -16,39 +20,51 @@ module BTB #(
 ,   input                   E_Branch       
 ,   input                   E_Jump          
 );
-    localparam INDEX_BITS = 3;            
-    localparam TAG_BITS   = W_ADDR - 2 - INDEX_BITS;
+    // ================================================================
+    // LOCAL PARAMETERS
+    // ================================================================
+    localparam INDEX_BITS = 3;                          // 8 sets
+    localparam TAG_BITS   = W_ADDR - 2 - INDEX_BITS;    // Remaining bits for tag
 
+    // ================================================================
+    // ADDRESS DECODE
+    // ================================================================
+    // Fetch stage lookup
     wire [INDEX_BITS-1:0] f_index   = F_PC[4:2];
     wire [TAG_BITS-1:0]   f_tag     = F_PC[W_ADDR-1:5];
 
+    // Execute stage update
     wire [INDEX_BITS-1:0] e_index   = E_PC[4:2];
     wire [TAG_BITS-1:0]   e_tag     = E_PC[W_ADDR-1:5];
-    
     wire update_en                  = E_Branch | E_Jump;
 
-    reg [W_ADDR-1:0]    data_mem0 [0:7]; 
+    // ================================================================
+    // MEMORY ARRAYS - 4 ways x 8 sets
+    // ================================================================
+    reg [W_ADDR-1:0]    data_mem0 [0:7];    // Target addresses
     reg [W_ADDR-1:0]    data_mem1 [0:7]; 
     reg [W_ADDR-1:0]    data_mem2 [0:7]; 
     reg [W_ADDR-1:0]    data_mem3 [0:7]; 
 
-    reg [TAG_BITS-1:0]  tag_mem0  [0:7];
+    reg [TAG_BITS-1:0]  tag_mem0  [0:7];    // Tags
     reg [TAG_BITS-1:0]  tag_mem1  [0:7];
     reg [TAG_BITS-1:0]  tag_mem2  [0:7];
     reg [TAG_BITS-1:0]  tag_mem3  [0:7];
 
-    reg                 valid0    [0:7];
+    reg                 valid0    [0:7];    // Valid bits
     reg                 valid1    [0:7];
     reg                 valid2    [0:7];
     reg                 valid3    [0:7];
 
-    wire [3:0] read_hit_ways;
-    wire [3:0] write_hit_ways;
-    wire [3:0] plru_victim_way; 
-    wire [3:0] final_target_way; 
+    wire [3:0] read_hit_ways;       // One-hot read hit
+    wire [3:0] write_hit_ways;      // One-hot write hit
+    wire [3:0] plru_victim_way;     // Replacement victim
+    wire [3:0] final_target_way;    // Way to update 
 
 
-    // ------------------------------ check read hit ------------------------------
+    // ================================================================
+    // READ LOGIC - Check hit in fetch stage
+    // ================================================================
     assign read_hit_ways[0] = (tag_mem0[f_index] == f_tag) && valid0[f_index];
     assign read_hit_ways[1] = (tag_mem1[f_index] == f_tag) && valid1[f_index];
     assign read_hit_ways[2] = (tag_mem2[f_index] == f_tag) && valid2[f_index];
@@ -56,7 +72,9 @@ module BTB #(
     assign hit              = |read_hit_ways;
 
 
-    // ------------------------------ read data ------------------------------
+    // ================================================================
+    // READ DATA MUX - Select target from hitting way
+    // ================================================================
     always @(*) begin
         case(read_hit_ways)
             4'b0001: pc_prediction = data_mem0[f_index];
@@ -68,13 +86,17 @@ module BTB #(
     end
     
 
-    // ------------------------------ check write hit ------------------------------
+    // ================================================================
+    // WRITE LOGIC - Update on branch/jump in EX stage
+    // ================================================================
+    // Check if entry already exists (update in place vs allocate new)
     assign write_hit_ways[0]    = (tag_mem0[e_index] == e_tag) && valid0[e_index];
     assign write_hit_ways[1]    = (tag_mem1[e_index] == e_tag) && valid1[e_index];
     assign write_hit_ways[2]    = (tag_mem2[e_index] == e_tag) && valid2[e_index];
     assign write_hit_ways[3]    = (tag_mem3[e_index] == e_tag) && valid3[e_index];
     
     wire write_hit_any          = |write_hit_ways;
+    // If hit: update existing entry; else: use PLRU victim
     assign final_target_way     = write_hit_any ? write_hit_ways : plru_victim_way;
 
     integer k;
@@ -121,6 +143,9 @@ module BTB #(
         end
     end
 
+    // ================================================================
+    // PLRU REPLACEMENT - Select victim way on miss
+    // ================================================================
     cache_replacement #(
         .N_WAYS(4), 
         .N_LINES(8)
