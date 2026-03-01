@@ -42,39 +42,9 @@ module HazardUnit #(
 ,   output              E_Flush
 );
 
-// // Solve Data Hazard
-//     always @(*) begin
-//         if ((E_Rs1 == M_Rd) && (E_Rs1 != 0) && ((M_RegWrite & ~E_RegSrc1) | (M_FRegWrite & E_RegSrc1)))
-//             ForwardAE = 2'b01;
-//         else if ((E_Rs1 == C_Rd) && (E_Rs1 != 0) && ((C_RegWrite & ~E_RegSrc1) | (C_FRegWrite & E_RegSrc1)))
-//             ForwardAE = 2'b10;
-//         else if ((E_Rs1 == W_Rd) && (E_Rs1 != 0) && ((W_RegWrite & ~E_RegSrc1) | (W_FRegWrite & E_RegSrc1)))
-//             ForwardAE = 2'b11;
-//         else
-//             ForwardAE = 2'b00;
-
-//         if ((E_Rs2 == M_Rd) && (E_Rs2 != 0) && ((M_RegWrite & ~E_RegSrc2) | (M_FRegWrite & E_RegSrc2)))
-//             ForwardBE = 2'b01;
-//         else if ((E_Rs2 == C_Rd) && (E_Rs2 != 0) && ((C_RegWrite & ~E_RegSrc2) | (C_FRegWrite & E_RegSrc2)))
-//             ForwardBE = 2'b10;
-//         else if ((E_Rs2 == W_Rd) && (E_Rs2 != 0) && ((W_RegWrite & ~E_RegSrc2) | (W_FRegWrite & E_RegSrc2)))
-//             ForwardBE = 2'b11;
-//         else
-//             ForwardBE = 2'b00;
-//     end
-
-    // always @(*) begin
-    //     if ((E_RsF3 == M_Rd) & M_FRegWrite & (E_RsF3 != 5'd0)) begin
-    //         ForwardFCE = 2'b10;
-    //     end
-    //     else if ((E_RsF3 == W_Rd) & W_FRegWrite & (E_RsF3 != 5'd0)) begin
-    //         ForwardFCE = 2'b01;
-    //     end
-    //     else begin
-    //         ForwardFCE = 2'b00;
-    //     end
-    // end
-
+    // ================================================================
+    // FORWARDING MATCH SIGNALS
+    // ================================================================
     wire match_M_A  = (E_Rs1 == M_Rd) && (|E_Rs1) && (E_RegSrc1 ? M_FRegWrite : M_RegWrite);
     wire match_C_A  = (E_Rs1 == C_Rd) && (|E_Rs1) && (E_RegSrc1 ? C_FRegWrite : C_RegWrite);
     wire match_W_A  = (E_Rs1 == W_Rd) && (|E_Rs1) && (E_RegSrc1 ? W_FRegWrite : W_RegWrite);
@@ -86,6 +56,9 @@ module HazardUnit #(
     // wire match_M_F3 = (E_RsF3 == M_Rd) && (|E_RsF3) && M_FRegWrite;
     // wire match_W_F3 = (E_RsF3 == W_Rd) && (|E_RsF3) && W_FRegWrite;
 
+    // ================================================================
+    // FORWARDING MUX SELECT LOGIC
+    // ================================================================
     always @(*) begin
         // --- Forwarding cho A ---
         casez ({match_M_A, match_C_A, match_W_A})
@@ -104,15 +77,9 @@ module HazardUnit #(
         endcase
     end
 
-    // always @(*) begin
-    //     // --- Forwarding cho C ---
-    //     casez ({match_M_F3, match_W_F3})
-    //         2'b1? : ForwardFCE = 2'b10;
-    //         2'b01 : ForwardFCE = 2'b01;
-    //         default: ForwardFCE = 2'b00;
-    //     endcase
-    // end
-
+    // ================================================================
+    // STALL & FLUSH LOGIC
+    // ================================================================
     // Stall when a load hazard
     wire lw_Stall;
     assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));

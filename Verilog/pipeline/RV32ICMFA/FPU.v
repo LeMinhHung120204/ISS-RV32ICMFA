@@ -10,15 +10,26 @@ module FPU #(
     // output  done,
 ,   output stall
 );
+
+    // ================================================================
+    // RESULT WIRES
+    // ================================================================
     wire    [WIDTH-1:0] res_fclass, res_fadd,   res_fcvt_s_w,   res_fcvt_s_wu,  res_fcvt_w_s,   res_fcvt_wu_s, 
                         res_div,    res_feq,    res_fle,        res_flt,        res_fmadd,      res_fmax,   res_fmin,   res_fmul, 
                         res_fsgnj,  res_fsgnjn, res_fsgnjx,     res_fsqrt;
     wire                done_add,   done_fcvt_s_w,              done_fcvt_s_wu, done_fcvt_w_s,  done_fcvt_wu_s,         done_fdiv, 
                         done_fmadd, done_fmul,  done_fsqrt;
-    
+
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
     reg [8:0]       valid_input;
     reg [WIDTH-1:0] in1, in2, in3, oRes;
     reg valid_output, reg_stall;
+
+    // ================================================================
+    // STALL LOGIC
+    // ================================================================
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin

@@ -10,36 +10,30 @@ module MDU #(
     // output done,
 ,   output stall
 );
+
+    // ================================================================
+    // INTERNAL WIRES
+    // ================================================================
     wire    [DATA_WIDTH - 1:0]  E_MulHigh, E_MulLow;
     wire    [DATA_WIDTH - 1:0]  E_quotient, E_remainder;
     wire    mul_busy, div_busy, done;
 
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
     reg                         valid_inputMul, valid_inputDiv;
     reg     [1:0]               reg_control;
-//    reg     [DATA_WIDTH-1:0]    reg_rs1, reg_rs2, A, B;
     reg     [DATA_WIDTH-1:0]    A, B;
 
-//    always @(posedge clk or negedge rst_n) begin
-//        if (~rst_n) begin
-////            reg_rs1     <= 32'd0;
-////            reg_rs2     <= 32'd0;
-////            reg_stall   <= 1'b0;
-//        end 
-//        else begin
-//            if (valid_input) begin
-////                reg_rs1     <= rs1;
-////                reg_rs2     <= rs2;
-//                reg_stall   <= 1'b1;
-//                if (done) begin
-//                    reg_stall <= 1'b0;
-//                end 
-//            end
-//        end
-//    end
-
+    // ================================================================
+    // STALL LOGIC
+    // ================================================================
     assign done = valid_outputDiv | valid_outputMul;
     assign stall = ((mul_busy | div_busy | valid_input) & (~done));
 
+    // ================================================================
+    // OUTPUT MUX
+    // ================================================================
     always @(*) begin
         case(MulDivControl)
             2'b00: begin
@@ -63,7 +57,11 @@ module MDU #(
                 OutData        = 32'd0;
             end
         endcase
-    end 
+    end
+
+    // ================================================================
+    // MULTIPLIER INSTANTIATION
+    // ================================================================
     mul32 mul_inst(
        .clk(clk),
        .rst_n(rst_n),
@@ -77,6 +75,9 @@ module MDU #(
        .is_busy(mul_busy)
     );
 
+    // ================================================================
+    // DIVIDER INSTANTIATION
+    // ================================================================
     non_restore div_inst(
        .clk(clk),
        .rst_n(rst_n),

@@ -11,6 +11,9 @@ module RV32I #(
     // output  [7:0]               dmem_addr,
     // output                      dmem_we
 );
+    // ================================================================
+    // DATA PATH WIRES
+    // ================================================================
     wire [WIDTH_DATA - 1:0] RDX1, RDX2, RDF1, RDF2, RDF3, F_RD, D_RD1, D_RD2;
     wire [WIDTH_DATA - 1:0] E_RD1, E_RD2, E_RDF2, E_RD3;
     wire [WIDTH_DATA - 1:0] D_Instr, D_ImmExt;
@@ -22,7 +25,9 @@ module RV32I #(
     wire [WIDTH_DATA - 1:0] E_SrcA, E_SrcB, E_SrcFA, E_SrcFB, E_SrcFC;
     wire [WIDTH_DATA - 1:0] E_WriteData;
 
-    // ----------------------- Tin hieu dieu khien -----------------------
+    // ================================================================
+    // CONTROL SIGNALS
+    // ================================================================
     wire    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_FRegWrite, D_addr_addend_sel, D_ResPCSel, 
             D_valid_MDU, D_Valid_FPU, D_RegSrc1, D_RegSrc2;
     wire    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel,
@@ -38,20 +43,28 @@ module RV32I #(
     wire [2:0] D_StoreSrc, E_StoreSrc, M_StoreSrc;
     wire [1:0] D_ResExSel, D_Mul_Div_unsigned, D_MulDivControl, E_Mul_Div_unsigned, E_MulDivControl, E_ResExSel, M_ResExSel;
 
-    // ----------------------- Tin hieu dieu khien MDU -----------------------
+    // ================================================================
+    // MDU SIGNALS
+    // ================================================================
     wire [WIDTH_DATA - 1:0] E_MDUResult, M_MDUResult;
     wire [1:0] Mul_Div_unsigned;
     wire is_high, E_MDU_done, E_MulDivStall;
 
-    // ----------------------- Tin hieu dieu khien FPU -----------------------
+    // ================================================================
+    // FPU SIGNALS
+    // ================================================================
     wire [WIDTH_DATA-1:0] E_FPUResult, M_FPUResult;
     // wire E_FPU_done, E_FPUStall;
 
-    // ----------------------- Tin hieu Hazard -----------------------
+    // ================================================================
+    // HAZARD CONTROL SIGNALS
+    // ================================================================
     wire F_Stall, D_Stall, E_Stall, D_Flush, E_Flush;
     wire [1:0] ForwardAE, ForwardBE, ForwardFCE;
 
-    // ----------------------- Tin hieu PC -----------------------
+    // ================================================================
+    // PC SIGNALS
+    // ================================================================
     reg [WIDTH_ADDR - 1:0] PCNext;
     wire [WIDTH_ADDR - 1:0] F_PC, F_PCPlus4;
     wire [WIDTH_ADDR - 1:0] D_PC, D_PCPlus4;
@@ -59,7 +72,9 @@ module RV32I #(
     wire [WIDTH_ADDR - 1:0] M_PCPlus4, M_ResPC, M_PCTarget;
     wire [WIDTH_ADDR - 1:0] W_PCPlus4, W_ResPC;
 
-    // ----------------------- Tin hieu Branch prediction -----------------------
+    // ================================================================
+    // BRANCH PREDICTION SIGNALS
+    // ================================================================
     wire        F_Predict_Taken, D_Predict_Taken, E_Predict_Taken;  
     wire [2:0]  F_GHSR, D_GHSR, E_GHSR;
     wire [31:0] F_Predict_Target, D_Predict_Target, E_Predict_Target;
@@ -71,7 +86,9 @@ module RV32I #(
     assign W_Result_output  = WB_Result;
     
 
-    // ---------------------------------------- Branch prediction ----------------------------------------
+    // ================================================================
+    // BRANCH PREDICTION LOGIC
+    // ================================================================
     assign F_PCPlus4    = F_PC + 32'd4;
     assign E_Mispredict = (E_PCSrc != E_Predict_Taken);
     assign E_Correct_PC = E_PCSrc ? E_PCTarget : E_PCPlus4;
@@ -123,7 +140,9 @@ end
         .funct3         (E_funct3),
         .E_PCSrc        (E_PCSrc)
     );
-    // ---------------------------------------- WB state ----------------------------------------
+    // ================================================================
+    // WB STAGE
+    // ================================================================
 
     mux4_1 mux_W_Result (
         .in0    (W_Result),
@@ -199,7 +218,9 @@ end
         .FPUControl         (D_FPUControl),
         .FRegWrite          (D_FRegWrite)
     );
-    // ---------------------------------------- IF state ----------------------------------------
+    // ================================================================
+    // IF STAGE
+    // ================================================================
     PC PC_inst(
         .clk    (clk),
         .rst_n  (rst_n),
@@ -231,7 +252,9 @@ end
         .D_Predict_Taken    (D_Predict_Taken)
     );
 
-    // ---------------------------------------- ID state ----------------------------------------
+    // ================================================================
+    // ID STAGE
+    // ================================================================
     RegFile register_file(
         .clk    (clk),
         .rst_n  (rst_n),
@@ -355,7 +378,9 @@ end
         .E_Predict_Taken    (E_Predict_Taken)
     );
 
-    // ---------------------------------------- Ex state ----------------------------------------
+    // ================================================================
+    // EX STAGE
+    // ================================================================
     ALU alu_inst(
         .ALUControl (E_ALUControl),
         .in1        (E_SrcA),
@@ -495,7 +520,9 @@ end
         .M_MDU_FPUEn    (M_MDU_FPUEn)
     );
 
-    // ---------------------------------------- MEM state ----------------------------------------
+    // ================================================================
+    // MEM STAGE
+    // ================================================================
     DataMem data_memory(
         .clk        (clk),
         .rst_n      (rst_n),
