@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module BranchDecoder(
     input E_Jump, E_Zero, E_Branch, E_signed_less
 ,   input [2:0] funct3

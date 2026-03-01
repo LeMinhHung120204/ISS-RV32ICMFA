@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module Extend(
     input       [2:0]   ImmSrc
 ,   input       [31:0]  Instr

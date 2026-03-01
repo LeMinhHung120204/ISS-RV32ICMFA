@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+// from Lee Min Hunz with luv
 module atomic_decoder (
     input               AtomicOp
 ,   input       [4:0]   funct5

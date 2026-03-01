@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module fcvt_s_w(
     input  clk, rst_n, valid_input
 ,   input  signed [31:0] a

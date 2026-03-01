@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module cla_4b (
     input  [3:0] a, b
 ,   input        cin

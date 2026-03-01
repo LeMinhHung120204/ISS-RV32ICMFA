@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module AluDecoder(
     input       [1:0]   ALUOp
 ,   input       [2:0]   funct3

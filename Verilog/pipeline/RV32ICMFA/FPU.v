@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+// from Lee Min Hunz with luv
 module FPU #(
     parameter WIDTH = 32
 )(

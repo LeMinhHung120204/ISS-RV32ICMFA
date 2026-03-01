@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 // ============================================================================
 // MOESI State Controller - Cache Coherence State Machine
 // ============================================================================

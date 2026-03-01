@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module PC #(
     parameter WIDTH     = 32,
     parameter START_PC  = 32'd0

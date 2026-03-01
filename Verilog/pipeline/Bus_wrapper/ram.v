@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module ram #(
     parameter DATA_W        = 32,
     parameter ADDR_W        = 8,

@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module mul24 #(
     parameter DATA_WIDH = 24
 )(

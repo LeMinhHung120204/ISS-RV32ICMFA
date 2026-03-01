@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module MainDecoder(
     input       [6:0] op, funct7
 ,   input       [2:0] funct3

@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module on_the_fly_conversion(
 input clk
 ,   input rst_n
