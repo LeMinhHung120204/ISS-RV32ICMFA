@@ -49,20 +49,26 @@ module dcache_controller_v2 (
 ,   output  reg             o_mem_rdata_ready
 );
 
-    // Command Encoding
+    // ================================================================
+    // LOCAL PARAMETERS - Command Encoding
+    // ================================================================
     localparam CMD_READ_SHARED  = 2'b00; 
     localparam CMD_WRITE_BACK   = 2'b01; 
     localparam CMD_UPGRADE      = 2'b10; // S/O -> E
-    localparam CMD_READ_UNIQUE  = 2'b11; 
+    localparam CMD_READ_UNIQUE  = 2'b11;
 
-    // MOESI State Encoding
+    // ================================================================
+    // LOCAL PARAMETERS - MOESI State Encoding
+    // ================================================================
     localparam STATE_M = 3'd0;
     localparam STATE_O = 3'd1;
     localparam STATE_E = 3'd2;
     localparam STATE_S = 3'd3;
     localparam STATE_I = 3'd4;
 
-    // FSM State Encoding
+    // ================================================================
+    // LOCAL PARAMETERS - FSM State Encoding
+    // ================================================================
     localparam TAG_CHECK    = 4'd0;
     localparam ALLOC_REQ    = 4'd1;
     localparam ALLOC_WAIT   = 4'd2;
@@ -72,19 +78,36 @@ module dcache_controller_v2 (
     localparam WAIT_SNOOP   = 4'd6;
     localparam WAIT_RAM     = 4'd7;
     localparam UPGRADE_REQ  = 4'd8;
-    localparam SC_CHECK     = 4'd9;  // Store-Conditional check
-    // localparam AMO_READ     = 4'd10; // AMO: Read phase
-    localparam AMO_WRITE    = 4'd10; // AMO: Write phase
+    localparam SC_CHECK     = 4'd9;     // Store-Conditional check
+    localparam AMO_WRITE    = 4'd10;    // AMO: Write phase
 
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // FSM State Registers
     reg [3:0]   state, next_state;
-    // ============ RESERVATION REGISTERS ============
-    reg                 res_valid;
-    reg [31:0]          res_addr;
-    
-    // Kiem tra xem dia chi CPU dang ghi co khop voi Reservation ko
-    wire res_hit = res_valid && (res_addr == cpu_addr);
 
-    // ============ RESERVATION LOGIC ============
+    // Reservation Registers (for LR/SC)
+    reg         res_valid;
+    reg [31:0]  res_addr;
+
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // Reservation Hit Check
+    wire        res_hit;
+    wire        snoop_addr_match;
+
+    // ================================================================
+    // DERIVED SIGNALS
+    // ================================================================
+    // Check if CPU write address matches Reservation
+    assign res_hit          = res_valid && (res_addr == cpu_addr);
+    assign snoop_addr_match = (cpu_addr[31:6] == i_snoop_addr[31:6]);
+
+    // ================================================================
+    // RESERVATION LOGIC (LR/SC)
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             res_valid   <= 1'b0;
@@ -111,7 +134,9 @@ module dcache_controller_v2 (
         end
     end
 
-    // ============ FSM UPDATE ============
+    // ================================================================
+    // FSM STATE UPDATE
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
             state <= TAG_CHECK;
@@ -121,7 +146,9 @@ module dcache_controller_v2 (
         end
     end
 
-    // ============ OUTPUT LOGIC (Sequential) ============
+    // ================================================================
+    // SC SUCCESS OUTPUT LOGIC (Sequential)
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             o_sc_success <= 1'b0;
@@ -142,7 +169,9 @@ module dcache_controller_v2 (
         end
     end
 
-    // ============ NEXT STATE LOGIC ============
+    // ================================================================
+    // NEXT STATE LOGIC
+    // ================================================================
     always @(*) begin
         next_state      = state;
         case(state)
@@ -186,7 +215,9 @@ module dcache_controller_v2 (
                 end
             end
 
-            // ============ SC Logic ============
+    // ================================================================
+    // SC LOGIC
+    // ================================================================
             SC_CHECK: begin
                 // kiem tra xem co quyen ghi (M/E) va Reservation con hieu luc khong
                 if (res_hit && (i_l2_moesi_state == STATE_E || i_l2_moesi_state == STATE_M)) begin
@@ -203,7 +234,9 @@ module dcache_controller_v2 (
                 end
             end
 
-            // ============ AMO Flow ============
+            // ================================================================
+            // AMO FLOW
+            // ================================================================
             // AMO_READ: begin
             //     if (i_mem_rdata_valid) begin
             //         next_state = AMO_WRITE;
@@ -215,7 +248,9 @@ module dcache_controller_v2 (
                 next_state = WAIT_RAM;
             end
 
-            // ============ Standard Flows ============
+            // ================================================================
+            // STANDARD FLOWS
+            // ================================================================
             UPGRADE_REQ: begin
                 if (i_mem_req_ready) next_state = TAG_CHECK;
             end
@@ -256,7 +291,9 @@ module dcache_controller_v2 (
     end
 
 
-    // ============ OUTPUT LOGIC ============
+    // ================================================================
+    // OUTPUT LOGIC
+    // ================================================================
     always @(*) begin
         // Default values
         o_mem_req_valid     = 1'b0;
@@ -351,9 +388,9 @@ module dcache_controller_v2 (
             end 
         endcase
     end
-// ============ SNOOP STALL LOGIC (ADDRESS COLLISION) ============
-    wire snoop_addr_match = (cpu_addr[31:6] == i_snoop_addr[31:6]); 
-
+    // ================================================================
+    // SNOOP STALL LOGIC (ADDRESS COLLISION)
+    // ================================================================
     always @(*) begin
         case(state)
             AMO_WRITE, SC_CHECK, UPDATE: snoop_stall = snoop_addr_match;

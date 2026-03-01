@@ -63,33 +63,60 @@ module dcache_v2 #(
 ,   output  reg [CACHE_DATA_W-1:0]  o_snoop_data
 
 );
-    // ---------------------------------------- INTERNAL SIGNALS ----------------------------------------
-    wire [TAG_W-1:0]        s1_tag, s2_tag;
-    wire [INDEX_W-1:0]      s1_index, s2_index;
-    wire [WORD_OFF_W-1:0]   s1_word_off, s2_word_off;
-    wire [BYTE_OFF_W-1:0]   s1_byte_off, s2_byte_off;
+
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // Pipeline Buffers
+    reg [CACHE_DATA_W-1:0]  refill_buffer;
     
+    // Data Output & Selection
+    reg [DATA_W-1:0]        word_select;
+    
+    // MOESI State Selection
+    reg [2:0]               moesi_selected_state;
+
+    // Dirty Array (per set, per way)
+    reg [NUM_WAYS-1:0]      dirty_array [0:NUM_SETS-1];
+
+    // Victim Tag (for writeback address)
+    reg [TAG_W-1:0]         victim_tag;
+
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // Stage 1 Address Decode
+    wire [TAG_W-1:0]        s1_tag;
+    wire [INDEX_W-1:0]      s1_index;
+    wire [WORD_OFF_W-1:0]   s1_word_off;
+    wire [BYTE_OFF_W-1:0]   s1_byte_off;
+    
+    // Stage 2 Pipeline Signals
+    wire [TAG_W-1:0]        s2_tag;
+    wire [INDEX_W-1:0]      s2_index;
+    wire [WORD_OFF_W-1:0]   s2_word_off;
+    wire [BYTE_OFF_W-1:0]   s2_byte_off;
     wire                    s2_req;
     wire                    s2_we;
     wire [1:0]              s2_size;
     wire [DATA_W-1:0]       s2_wdata;
+    wire                    s2_is_snoop;
     
+    // Stage 2 Atomic Signals
     wire                    s2_atomic_lr;
     wire                    s2_atomic_sc;
     wire                    s2_atomic_amo;
     wire [2:0]              s2_amo_op;
 
-    wire                    s2_is_snoop;
-
-    // AMO result
+    // AMO ALU
     wire [DATA_W-1:0]       amo_alu_result;
 
-    // Arrays & Counters
+    // Memory Arrays (Tag & Data RAMs)
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
     wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
-    reg  [CACHE_DATA_W-1:0] refill_buffer;
+    wire [NUM_WAYS-1:0]     current_valid;
 
-    // Controller signals
+    // Controller Signals
     wire                    tag_we, data_we, refill_we;
     wire [NUM_WAYS-1:0]     way_hit;
     wire [NUM_WAYS-1:0]     way_select;
@@ -98,8 +125,34 @@ module dcache_v2 #(
     wire                    snoop_stall;
     wire                    stall_contoller;
 
-    // ---------------------------------------- STAGE 1: ACCESS & SNOOP MUX ----------------------------------------
-    wire [ADDR_W-1:0] s1_mux_addr   = (i_snoop_valid) ? i_snoop_addr : (cpu_addr | DATA_START);
+    // Dirty/Valid Status
+    wire [NUM_WAYS-1:0]     current_dirty;
+    wire                    invalid;
+    wire                    victim_dirty_bit;
+    wire                    victim_valid_bit;
+
+    // Address Generation
+    wire [ADDR_W-1:0]       s1_mux_addr;
+    wire [ADDR_W-1:0]       s2_full_addr;
+    wire [ADDR_W-1:0]       victim_addr_full;
+    wire [ADDR_W-1:0]       refill_addr_full;
+
+    // ================================================================
+    // DERIVED SIGNALS
+    // ================================================================
+    assign s1_mux_addr      = (i_snoop_valid) ? i_snoop_addr : (cpu_addr | DATA_START);
+    assign current_dirty    = dirty_array[s2_index];
+    assign invalid          = s2_is_snoop && o_snoop_hit && i_snoop_req_invalid;
+    assign s2_full_addr     = {s2_tag, s2_index, s2_word_off, s2_byte_off};
+    assign victim_dirty_bit = |(current_dirty & way_select);
+    assign victim_valid_bit = |(current_valid & way_select);
+    assign victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign o_l2_req_addr    = (o_l2_req_cmd[0]) ? victim_addr_full : refill_addr_full;
+
+    // ================================================================
+    // STAGE 1: ACCESS & SNOOP MUX
+    // ================================================================
     
     access #(
         .ADDR_W     (ADDR_W), 
@@ -113,14 +166,14 @@ module dcache_v2 #(
         .cpu_byte_off   (s1_byte_off)
     );
 
-    // ---------------------------------------- SNOOP ----------------------------------------
-
+    // ================================================================
+    // SNOOP
+    // ================================================================
     assign o_snoop_complete = s2_is_snoop;
-    // ---------------------------------------- SRAM ARRAYS ----------------------------------------
-    wire [NUM_WAYS-1:0] current_valid;
-    wire invalid;
 
-    assign invalid = s2_is_snoop && o_snoop_hit && i_snoop_req_invalid;
+    // ================================================================
+    // SRAM ARRAYS
+    // ================================================================
     genvar i;
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
@@ -163,7 +216,9 @@ module dcache_v2 #(
         end
     endgenerate
 
-    // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
+    // ================================================================
+    // PIPELINE REGISTER
+    // ================================================================
     assign pipeline_stall   = stall_contoller | i_snoop_valid;
     assign raw_hazard       = cpu_req & data_we & (s1_index == s2_index);
 
@@ -214,16 +269,13 @@ module dcache_v2 #(
         .s2_amo_op      (s2_amo_op)
     );
 
-    // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
-    reg [NUM_WAYS-1:0]  dirty_array [0:NUM_SETS-1];
-    wire [NUM_WAYS-1:0] current_dirty = dirty_array[s2_index];
-    
+    // ================================================================
+    // STAGE 2: HIT LOGIC
+    // ================================================================
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
     assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
     assign way_hit[2] = (tag_read[2] == s2_tag) & current_valid[2];
     assign way_hit[3] = (tag_read[3] == s2_tag) & current_valid[3];
-
-    reg [2:0] moesi_selected_state;
     always @(*) begin
         case(way_hit)
             4'b0001: moesi_selected_state = i_l2_req_moesi_state[2:0];
@@ -258,11 +310,9 @@ module dcache_v2 #(
         endcase
     end
 
-    // ---------------------------------------- CONTROLLER INSTANTIATION ----------------------------------------
-    wire [ADDR_W-1:0] s2_full_addr = {s2_tag, s2_index, s2_word_off, s2_byte_off};
-    wire victim_dirty_bit = |(current_dirty & way_select);
-    wire victim_valid_bit = |(current_valid & way_select);
-
+    // ================================================================
+    // CONTROLLER INSTANTIATION
+    // ================================================================
     dcache_controller_v2 u_controller (
         .clk                (clk), 
         .rst_n              (rst_n),
@@ -309,8 +359,10 @@ module dcache_v2 #(
         .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 
-    // ---------------------------------------- L2 MUX & REFILL LOGIC ----------------------------------------
-    reg [TAG_W-1:0] victim_tag;
+    // ================================================================
+    // L2 MUX & REFILL LOGIC
+    // ================================================================
+    // Victim Tag Selection
     always @(*) begin
         case(way_select)
             4'b0001: victim_tag = tag_read[0];
@@ -320,11 +372,6 @@ module dcache_v2 #(
             default: victim_tag = {TAG_W{1'b0}};
         endcase
     end
-    
-    wire [ADDR_W-1:0] victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    wire [ADDR_W-1:0] refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-
-    assign o_l2_req_addr = (o_l2_req_cmd[0]) ? victim_addr_full : refill_addr_full;
 
     // Data Mux cho WriteBack
     always @(*) begin
@@ -381,7 +428,9 @@ module dcache_v2 #(
         .way_select (way_select)
     );
 
-    // ---------------------------------------- AMO ALU INSTANTIATION ----------------------------------------
+    // ================================================================
+    // AMO ALU INSTANTIATION
+    // ================================================================
     amo_alu #(
         .DATA_WIDTH (DATA_W)
     ) u_amo_alu (
@@ -391,8 +440,9 @@ module dcache_v2 #(
         .o_amo_alu_result   (amo_alu_result) 
     );
 
-    // ---------------------------------------- DATA OUTPUT MUX ----------------------------------------
-    reg [DATA_W-1:0] word_select;
+    // ================================================================
+    // DATA OUTPUT MUX
+    // ================================================================
     always @(*) begin
         case(way_hit)
             4'b0001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];

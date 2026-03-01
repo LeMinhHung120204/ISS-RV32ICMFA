@@ -46,45 +46,58 @@ module snoop_controller_v2 #(
 ,   output reg              CDLAST
 ,   output reg              CDVALID
 );
-    localparam  IDLE    = 3'd0,
-                LOOKUP  = 3'd1,
-                WAIT_L1 = 3'd2,
-                RESP    = 3'd3,
-                DATA    = 3'd4;
 
+    // ================================================================
+    // LOCAL PARAMETERS - FSM State Encoding
+    // ================================================================
+    localparam IDLE     = 3'd0;     // Wait for snoop request
+    localparam LOOKUP   = 3'd1;     // Tag lookup in L2
+    localparam WAIT_L1  = 3'd2;     // Wait for L1 snoop result
+    localparam RESP     = 3'd3;     // Send snoop response (CR channel)
+    localparam DATA     = 3'd4;     // Send snoop data (CD channel)
+
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // FSM State Registers
     reg [2:0]   state, next_state;
-    reg [3:0]   reg_ACSNOOP;
-    reg [4:0]   reg_CRRESP;
-    reg [3:0]   burst_cnt;
-
-    reg reg_snoop_hit;
-    reg reg_is_unique;
-    reg reg_is_dirty;
-    reg reg_is_owner;
-
-    reg snoop_requires_data;
-    // reg snoop_req_invalidate;
     
-    reg final_is_dirty;
-    reg final_has_data;
-    reg resp_dt, resp_pd, resp_is, resp_wu;
+    // Snoop Request Buffers
+    reg [3:0]   reg_ACSNOOP;        // Captured snoop type
+    reg [4:0]   reg_CRRESP;         // Computed snoop response
+    
+    // Burst Counter
+    reg [3:0]   burst_cnt;
+    
+    // Captured Lookup Results
+    reg         reg_snoop_hit;
+    reg         reg_is_unique;
+    reg         reg_is_dirty;
+    reg         reg_is_owner;
 
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            reg_snoop_hit   <= 1'b0;
-            reg_is_unique   <= 1'b0;
-            reg_is_dirty    <= 1'b0;
-            reg_is_owner    <= 1'b0;
-        end 
-        else if (state == LOOKUP && snoop_can_access_ram) begin
-            reg_snoop_hit   <= snoop_hit;
-            reg_is_unique   <= is_unique;
-            reg_is_dirty    <= is_dirty;
-            reg_is_owner    <= is_owner;
-        end
-    end
+    // Snoop Requirement Flags
+    reg         snoop_requires_data;
+    
+    // Final Response Computation
+    reg         final_is_dirty;
+    reg         final_has_data;
+    reg         resp_dt, resp_pd, resp_is, resp_wu;
 
-    // -------------------------------- DECODER ACSNOOP --------------------------------
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // (No standalone wires - all derived signals use assign)
+
+    // ================================================================
+    // DERIVED SIGNALS
+    // ================================================================
+    assign bus_rw           = snoop_req_invalidate;
+    assign burst_cnt_snoop  = burst_cnt;
+    assign CRRESP           = reg_CRRESP;
+
+    // ================================================================
+    // CAPTURE LOOKUP RESULTS (Sequential)
+    // ================================================================
     always @(*) begin
         case (reg_ACSNOOP)    
             4'b0000: begin // ReadOnce
@@ -118,11 +131,9 @@ module snoop_controller_v2 #(
         endcase
     end
 
-    assign bus_rw           = snoop_req_invalidate;
-    assign burst_cnt_snoop  = burst_cnt;
-    assign CRRESP           = reg_CRRESP;
-
-    // --------------------- LOGIC TINH CRRESP (Gop L1 + L2) ---------------------
+    // ================================================================
+    // CRRESP COMPUTATION (Combine L1 + L2 Results)
+    // ================================================================
     always @(*) begin
         final_is_dirty  = reg_is_dirty | i_l1_is_dirty;
         final_has_data  = reg_is_owner | reg_is_unique | i_l1_has_data;
@@ -148,7 +159,9 @@ module snoop_controller_v2 #(
         end
     end
 
-    // --------------------- FSM ---------------------
+    // ================================================================
+    // FSM STATE UPDATE & BUFFER LOGIC
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             state           <= IDLE;
@@ -186,7 +199,9 @@ module snoop_controller_v2 #(
         end
     end
 
-    // --------------------- NEXT STATE & OUTPUT ---------------------
+    // ================================================================
+    // NEXT STATE & OUTPUT LOGIC
+    // ================================================================
     always @(*) begin
         snoop_busy          = 1'b1;
         ACREADY             = 1'b0;

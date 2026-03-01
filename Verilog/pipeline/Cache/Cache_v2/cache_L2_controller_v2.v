@@ -80,54 +80,78 @@ module cache_L2_controller_v2 #(
 ,   output  reg                 oRREADY
 );
 
-    // State Encoding
+    // ================================================================
+    // LOCAL PARAMETERS - FSM State Encoding
+    // ================================================================
     localparam TAG_CHECK    = 4'd0;
-    localparam L1_WB_RX     = 4'd1;
-    localparam WB_AW        = 4'd2;
-    localparam WB_W         = 4'd3;
-    localparam WB_B         = 4'd4;
-    localparam ALLOC_AR     = 4'd5;
-    localparam ALLOC_R      = 4'd6;
-    localparam UPDATE       = 4'd7;
-    localparam FAULT        = 4'd8;
-    localparam WAIT_SNOOP   = 4'd9;
-    localparam WAIT_RAM     = 4'd10;
+    localparam L1_WB_RX     = 4'd1;     // Receive writeback from L1
+    localparam WB_AW        = 4'd2;     // Writeback Address phase
+    localparam WB_W         = 4'd3;     // Writeback Data phase
+    localparam WB_B         = 4'd4;     // Writeback Response phase
+    localparam ALLOC_AR     = 4'd5;     // Allocate Read Address
+    localparam ALLOC_R      = 4'd6;     // Allocate Read Data
+    localparam UPDATE       = 4'd7;     // Update Tag/MOESI/Data
+    localparam FAULT        = 4'd8;     // Error state
+    localparam WAIT_SNOOP   = 4'd9;     // Wait for snoop completion
+    localparam WAIT_RAM     = 4'd10;    // Wait for RAM access
 
-    // MOESI State Encoding
+    // ================================================================
+    // LOCAL PARAMETERS - MOESI State Encoding
+    // ================================================================
     localparam STATE_M = 3'd0;
     localparam STATE_O = 3'd1;
     localparam STATE_E = 3'd2;
     localparam STATE_S = 3'd3;
     localparam STATE_I = 3'd4;
 
+    // ================================================================
+    // LOCAL PARAMETERS - Command Encoding
+    // ================================================================
     localparam CMD_READ_SHARED  = 2'b00; 
     localparam CMD_WRITE_BACK   = 2'b01; 
     localparam CMD_UPGRADE      = 2'b10; 
     localparam CMD_READ_UNIQUE  = 2'b11;
 
-    reg [3:0] state, next_state;
-    reg snoop_collision;
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // FSM State Registers
+    reg [3:0]   state, next_state;
+    
+    // Snoop Collision Detection
+    reg         snoop_collision;
 
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // Upgrade Detection
+    wire        need_upgrade;
 
-    // AXI Constants
-    // Use 16 beats (0..15) of 32-bit transfers for a full 512-bit line
-    assign oAWLEN       = 8'd15;    // 16 beats
-    assign oAWSIZE      = 3'b010;   // 4 byte (32-bit)
-    assign oAWBURST     = 2'b01; 
-    assign oARLEN       = 8'd15; 
-    assign oARSIZE      = 3'b010;   // 4 byte (32-bit)
-    assign oARBURST     = 2'b01; 
-    assign oARDOMAIN    = 2'b01; 
-    assign oAWDOMAIN    = 2'b01; 
-
-    wire need_upgrade;
+    // ================================================================
+    // DERIVED SIGNALS
+    // ================================================================
     assign need_upgrade = hit && (
                             (i_req_cmd == CMD_UPGRADE) || 
                             (i_req_cmd == CMD_READ_UNIQUE) || 
                             ((i_req_cmd == CMD_WRITE_BACK) && ((current_moesi_state == STATE_S) || (current_moesi_state == STATE_O)))
-                        );                  
+                        );
 
-    // -------------------------------------- synchronous logic --------------------------------------
+    // ================================================================
+    // AXI CONSTANT ASSIGNMENTS
+    // ================================================================
+    // Use 16 beats (0..15) of 32-bit transfers for a full 512-bit line
+    assign oAWLEN       = 8'd15;    // 16 beats
+    assign oAWSIZE      = 3'b010;   // 4 byte (32-bit)
+    assign oAWBURST     = 2'b01;    // INCR
+    assign oARLEN       = 8'd15;    // 16 beats
+    assign oARSIZE      = 3'b010;   // 4 byte (32-bit)
+    assign oARBURST     = 2'b01;    // INCR
+    assign oARDOMAIN    = 2'b01;    // Inner Shareable
+    assign oAWDOMAIN    = 2'b01;    // Inner Shareable
+
+    // ================================================================
+    // BURST COUNTER & RESPONSE CAPTURE (Sequential)
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
             burst_cnt           <= 4'd0;
@@ -151,6 +175,9 @@ module cache_L2_controller_v2 #(
         end 
     end 
 
+    // ================================================================
+    // FSM STATE UPDATE
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
             state <= TAG_CHECK;
@@ -160,24 +187,28 @@ module cache_L2_controller_v2 #(
         end 
     end 
 
+    // ================================================================
+    // SNOOP COLLISION DETECTION
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin 
             snoop_collision <= 1'b0;
         end 
         else begin
+            // Clear collision at start of new transaction
             if (state == TAG_CHECK && i_req_valid && !snoop_busy) begin
                 snoop_collision <= 1'b0;
             end
-            
-            // collision assert when wait Upgrade/Read BUT Snoop HIT
-            // AND snoop INVALIDATE
+            // Collision asserts when waiting for Upgrade/Read but Snoop HIT with INVALIDATE
             else if ((state == ALLOC_AR || state == ALLOC_R || state == WAIT_SNOOP) && snoop_hit && snoop_req_invalidate) begin
                 snoop_collision <= 1'b1; 
             end
         end 
     end
 
-    // ---------------------- FSM: State Update & Output Logic ---------------------
+    // ================================================================
+    // NEXT STATE LOGIC
+    // ================================================================
     always @(*) begin
         next_state = state;
         case(state)
@@ -287,6 +318,9 @@ module cache_L2_controller_v2 #(
         endcase
     end 
 
+    // ================================================================
+    // OUTPUT LOGIC
+    // ================================================================
     always @(*) begin
         oAWVALID                = 1'b0; 
         oWVALID                 = 1'b0; 

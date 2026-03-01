@@ -111,63 +111,92 @@ module L2_cache_v2 #(
 ,   output reg  [DATA_W-1:0]    oCDDATA
 ,   output                      oCDLAST
 );
-   // ---------------------------------------- INTERNAL WIRES ----------------------------------------
+
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // MOESI State Selection
+    reg [2:0]               moesi_selected_state;
+    
+    // Data Buffers
+    reg [CACHE_DATA_W-1:0]  refill_buffer;      // Buffer for memory refill data
+    reg [CACHE_DATA_W-1:0]  snoop_buffer;       // Buffer for snoop response data
+    reg [CACHE_DATA_W-1:0]  line_select;        // Selected cache line output
+
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // Stage 1 Address Decode (Cycle 1: Access)
     wire [TAG_W-1:0]        s1_tag, s1_ac_tag;
     wire [INDEX_W-1:0]      s1_index, s1_ac_index;
     wire [WORD_OFF_W-1:0]   s1_word_off;
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
 
+    // Stage 2 Pipeline Signals (Cycle 2: Compare)
     wire                    s2_req;
-    // wire                    s2_we;
-    // wire [DATA_W-1:0]       s2_wdata;
     wire [TAG_W-1:0]        s2_tag, s2_snoop_tag;
     wire [INDEX_W-1:0]      s2_index, s2_snoop_index;
     wire [WORD_OFF_W-1:0]   s2_word_off;
     wire [BYTE_OFF_W-1:0]   s2_byte_off;
+    wire [1:0]              s2_cmd;
+    wire                    s2_is_snoop;
 
     // Control Signals
-    wire                snoop_busy;
-    wire                snoop_hit;
-    wire                snoop_can_access_ram;
-    wire                reg_snoop_stall;
-    wire                s2_is_snoop;
-    // wire                read_index_src;
+    wire                    snoop_busy;
+    wire                    snoop_hit;
+    wire                    snoop_can_access_ram;
+    wire                    reg_snoop_stall;
+    wire                    stall_contoller;
+    wire                    bus_rw;
 
-    // Memory Arrays
+    // Memory Arrays Output
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
     wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
     
     // MOESI & Hit Logic
-    wire [3:0]  way_hit;
-    wire        any_hit;
-    wire [2:0]  moesi_current_state     [0:NUM_WAYS-1];
-    wire [2:0]  L1_moesi_current_state  [0:NUM_WAYS-1];
-    reg  [2:0]  moesi_selected_state;
-    wire [2:0]  moesi_next_state;
-    wire        bus_snoop_valid;
-    wire        moesi_we, snoop_moesi_we, main_moesi_we;
-    wire        is_unique, is_dirty, is_owner, is_valid;
+    wire [3:0]              way_hit;
+    wire [3:0]              way_select;
+    wire [3:0]              way_select_final;
+    wire [3:0]              choosen_way;
+    wire                    any_hit;
+    wire [2:0]              moesi_current_state     [0:NUM_WAYS-1];
+    wire [2:0]              L1_moesi_current_state  [0:NUM_WAYS-1];
+    wire [2:0]              moesi_next_state;
+    wire                    bus_snoop_valid;
+    wire                    moesi_we, snoop_moesi_we, main_moesi_we;
+    wire                    is_unique, is_dirty, is_owner, is_valid;
     
     // Controller Output Signals
     wire                    tag_we;
     wire                    refill_we;
-    // wire                    data_we;
-    reg  [CACHE_DATA_W-1:0] refill_buffer;
-    reg  [CACHE_DATA_W-1:0] snoop_buffer;
+    wire                    o_rdata_ready_ctrl;
+    wire [3:0]              burst_cnt;
     wire [3:0]              burst_cnt_snoop;
-    wire [NUM_WAYS-1:0]     way_select;
+    wire                    use_l1_data_mux;
+    wire                    is_shared_response;
+    wire                    is_dirty_response;
 
-    // Controller specific for L2
-    wire o_rdata_ready_ctrl;
+    // Address Muxing
+    wire [ADDR_W-1:0]       s1_mux_addr;
+    wire [INDEX_W-1:0]      lq_req_moesi_index;
+    wire [TAG_W-1:0]        tag_select;
 
-    wire use_l1_data_mux;
-    // Burst counter from controller (0..15)
-    wire [3:0]  burst_cnt;
-    wire [1:0]  s2_cmd;
+    // ================================================================
+    // DERIVED SIGNALS
+    // ================================================================
+    assign s1_mux_addr      = (iACVALID) ? iACADDR : i_req_addr;
+    assign choosen_way      = (any_hit) ? way_hit : way_select;
+    assign moesi_we         = main_moesi_we | snoop_moesi_we;
+    assign tag_select       = (s2_is_snoop) ? s2_snoop_tag : s2_tag;
+    assign way_select_final = (any_hit) ? way_hit : way_select;
+    assign o_L1_moesi_state = {L1_moesi_current_state[3], L1_moesi_current_state[2], 
+                               L1_moesi_current_state[1], L1_moesi_current_state[0]};
+    assign o_rdata          = line_select;
+    assign o_rdata_valid    = o_rdata_ready_ctrl;
 
-   // ---------------------------------------- STAGE 1: ACCESS ----------------------------------------
-    wire [ADDR_W-1:0]   s1_mux_addr = (iACVALID) ? iACADDR : i_req_addr;
-    wire [INDEX_W-1:0]  lq_req_moesi_index;
+    // ================================================================
+    // STAGE 1: ACCESS
+    // ================================================================
     access #(
         .ADDR_W     (ADDR_W),
         .DATA_W     (DATA_W),
@@ -186,11 +215,9 @@ module L2_cache_v2 #(
         .dcache_req_moesi_index (lq_req_moesi_index)
     );
 
-    // ---------------------------------------- SRAM ARRAYS ----------------------------------------
-    wire [3:0] choosen_way;
-    
-    assign choosen_way  = (any_hit) ? way_hit : way_select;
-    assign moesi_we     = main_moesi_we | snoop_moesi_we;
+    // ================================================================
+    // SRAM ARRAYS
+    // ================================================================
     // --- Tag RAMs ---
     genvar i;
     generate
@@ -217,9 +244,6 @@ module L2_cache_v2 #(
             );
         end
     endgenerate
-
-    assign o_L1_moesi_state = {L1_moesi_current_state[3], L1_moesi_current_state[2], 
-                                L1_moesi_current_state[1], L1_moesi_current_state[0]};
 
     // --- Data RAMs ---
     generate
@@ -248,8 +272,9 @@ module L2_cache_v2 #(
         end
     endgenerate
 
-    // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
-    wire stall_contoller;
+    // ================================================================
+    // PIPELINE REGISTER
+    // ================================================================
     assign pipeline_stall = (s2_req & ~any_hit) | stall_contoller; 
     
     acc_cmp #(
@@ -295,19 +320,16 @@ module L2_cache_v2 #(
         .s2_snoop_index (s2_snoop_index)
     );
 
-   // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
-    wire [TAG_W-1:0] tag_select;
-
-    assign tag_select = (s2_is_snoop) ? s2_snoop_tag : s2_tag;
+    // ================================================================
+    // STAGE 2: HIT LOGIC
+    // ================================================================
     assign way_hit[0] = (tag_read[0] == tag_select) & (moesi_current_state[0] != 3'd4);
     assign way_hit[1] = (tag_read[1] == tag_select) & (moesi_current_state[1] != 3'd4);
     assign way_hit[2] = (tag_read[2] == tag_select) & (moesi_current_state[2] != 3'd4);
     assign way_hit[3] = (tag_read[3] == tag_select) & (moesi_current_state[3] != 3'd4);
 
     assign snoop_hit = |way_hit & s2_is_snoop;
-    
-    assign any_hit = |way_hit;
-    wire [NUM_WAYS-1:0] way_select_final = (any_hit) ? way_hit : way_select;
+    assign any_hit   = |way_hit;
     
     always @(*) begin
         case (way_select_final)
@@ -319,8 +341,9 @@ module L2_cache_v2 #(
         endcase
     end
 
-    // ---------------------------------------- OUTPUT DATA LOGIC (L2 -> L1) ----------------------------------------
-    reg [CACHE_DATA_W-1:0] line_select;
+    // ================================================================
+    // OUTPUT DATA LOGIC (L2 -> L1)
+    // ================================================================
     
     always @(*) begin
         case(way_hit)
@@ -331,12 +354,11 @@ module L2_cache_v2 #(
             default: line_select = {CACHE_DATA_W{1'b0}};
         endcase
     end
-    
-    assign o_rdata          = line_select;
-    assign o_rdata_valid    = o_rdata_ready_ctrl; // Controller báo valid
 
-    // ---------------------------------------- REFILL BUFFER LOGIC ----------------------------------------
-    // Nhan data tu 2 nguon: Memory (Refill) hoac L1 (Writeback)
+    // ================================================================
+    // REFILL & SNOOP BUFFER LOGIC
+    // ================================================================
+    // Refill Buffer: Receive data from Memory (AXI R) or L1 (Writeback)
     always @(posedge ACLK or negedge ARESETn) begin
         if (~ARESETn) begin
             refill_buffer <= {CACHE_DATA_W{1'b0}};
@@ -352,21 +374,23 @@ module L2_cache_v2 #(
                 refill_buffer <= i_wdata;
             end
         end 
-    end 
+    end
 
+    // Snoop Buffer: Capture forwarding data from L1
     always @(posedge ACLK or negedge ARESETn) begin
         if (~ARESETn) begin
             snoop_buffer <= {CACHE_DATA_W{1'b0}};
         end 
         else begin 
-            // Snoop Forwarding Data from L1
             if (i_int_snoop_hit & i_l1_snoop_complete) begin
                 snoop_buffer <= i_int_snoop_data;
             end
         end 
     end
 
-    // ---------------------------------------- REPLACEMENT POLICY ----------------------------------------
+    // ================================================================
+    // REPLACEMENT POLICY
+    // ================================================================
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS), 
         .N_LINES    (NUM_SETS) 
@@ -379,9 +403,9 @@ module L2_cache_v2 #(
         .way_select (way_select)
     );
 
-    // ---------------------------------------- MAIN CONTROLLER ----------------------------------------
-    wire is_shared_response;
-    wire is_dirty_response;
+    // ================================================================
+    // MAIN CONTROLLER
+    // ================================================================
     cache_L2_controller_v2 #(
         .DATA_W         (DATA_W), 
         .ADDR_W         (ADDR_W)
@@ -460,8 +484,10 @@ module L2_cache_v2 #(
     assign oAWADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign oARADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
-    // ---------------------------------------- SNOOP & FORWARDING ----------------------------------------    
-    // Forwarding Address/Type
+    // ================================================================
+    // SNOOP FORWARDING & MOESI CONTROLLER
+    // ================================================================    
+    // Forwarding Address to L1
     assign o_int_snoop_addr     = {s2_snoop_tag, s2_snoop_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // 2. Snoop Controller
@@ -536,8 +562,10 @@ module L2_cache_v2 #(
 
         .next_state         (moesi_next_state)
     );
-    // ---------------------------------------- Mux Write Data ---------------------------------------- 
-    // Mux Write Data cho Bus (Evict/Snoop Response)
+    // ================================================================
+    // MUX WRITE DATA
+    // ================================================================ 
+    // Mux Write Data for Bus (Evict/Snoop Response)
     always @(*) begin
         // select 32-bit word out of 512-bit line based on burst_cnt
         case(way_select_final)
