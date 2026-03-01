@@ -37,27 +37,55 @@ module icache #(
 ,   output                      o_l2_rdata_ready
 );
 
-    // ---------------------------------------- INTERNAL SIGNALS ----------------------------------------
-    wire [TAG_W-1:0]        s1_tag, s2_tag;
-    wire [INDEX_W-1:0]      s1_index, s2_index;
-    wire [WORD_OFF_W-1:0]   s1_word_off, s2_word_off;
-    wire [BYTE_OFF_W-1:0]   s1_byte_off, s2_byte_off;
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // Pipeline Buffers
+    reg [CACHE_DATA_W-1:0]  refill_buffer;
     
+    // Data Output Selection
+    reg [DATA_W-1:0]        word_select;
+
+    // ================================================================
+    // WIRE DECLARATIONS
+    // ================================================================
+    // Stage 1 Address Decode
+    wire [TAG_W-1:0]        s1_tag;
+    wire [INDEX_W-1:0]      s1_index;
+    wire [WORD_OFF_W-1:0]   s1_word_off;
+    wire [BYTE_OFF_W-1:0]   s1_byte_off;
+    
+    // Stage 2 Pipeline Signals
+    wire [TAG_W-1:0]        s2_tag;
+    wire [INDEX_W-1:0]      s2_index;
+    wire [WORD_OFF_W-1:0]   s2_word_off;
+    wire [BYTE_OFF_W-1:0]   s2_byte_off;
     wire                    s2_req;
 
-    // Arrays & Counters
+    // Memory Arrays Output
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
     wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
-    reg  [CACHE_DATA_W-1:0] refill_buffer;
+    wire [NUM_WAYS-1:0]     current_valid;
 
-    // Controller signals
+    // Controller Signals
     wire                    tag_we, refill_we;
     wire [NUM_WAYS-1:0]     way_hit;
     wire [NUM_WAYS-1:0]     way_select;
     wire                    cpu_hit;
     wire                    read_index_src;
+    wire                    stall_contoller;
 
-    // ---------------------------------------- STAGE 1: ACCESS ----------------------------------------
+    // ================================================================
+    // DERIVED SIGNALS
+    // ================================================================
+    assign o_l2_req_addr    = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign pipeline_stall   = (s2_req & ~cpu_hit) | stall_contoller;
+    assign cpu_hit          = (|way_hit) & s2_req;
+    assign data_rdata       = word_select;
+
+    // ================================================================
+    // STAGE 1: ACCESS
+    // ================================================================
     access #(
         .ADDR_W     (ADDR_W), 
         .DATA_W     (DATA_W), 
@@ -70,8 +98,9 @@ module icache #(
         .cpu_byte_off   (s1_byte_off)
     );
     
-    // ---------------------------------------- SRAM ARRAYS ----------------------------------------
-    wire [NUM_WAYS-1:0] current_valid;
+    // ================================================================
+    // SRAM ARRAYS
+    // ================================================================
     genvar i;
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : rams
@@ -123,9 +152,9 @@ module icache #(
         end
     endgenerate
 
-    // ---------------------------------------- PIPELINE REGISTER ----------------------------------------
-    wire stall_contoller;
-    assign pipeline_stall = (s2_req & ~cpu_hit) | stall_contoller;
+    // ================================================================
+    // PIPELINE REGISTER
+    // ================================================================
     
     acc_cmp #(
         .ADDR_W     (ADDR_W), 
@@ -152,19 +181,17 @@ module icache #(
         .s2_byte_off    (s2_byte_off)
     );
 
-    // ---------------------------------------- STAGE 2: HIT LOGIC ----------------------------------------
+    // ================================================================
+    // STAGE 2: HIT LOGIC
+    // ================================================================
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
     assign way_hit[1] = (tag_read[1] == s2_tag) & current_valid[1];
     assign way_hit[2] = (tag_read[2] == s2_tag) & current_valid[2];
     assign way_hit[3] = (tag_read[3] == s2_tag) & current_valid[3];
 
-    assign cpu_hit = (|way_hit) & s2_req;
-
-    // ---------------------------------------- L2 INTERFACE ----------------------------------------
-    assign o_l2_req_addr = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-
-    // ---------------------------------------- LOGIC VALID ARRAY ----------------------------------------
-    // Refill Buffer
+    // ================================================================
+    // REFILL BUFFER LOGIC
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin 
             refill_buffer <= {CACHE_DATA_W{1'b0}};
@@ -174,7 +201,9 @@ module icache #(
         end
     end
 
-    // ---------------------------------------- CONTROLLER ----------------------------------------
+    // ================================================================
+    // REPLACEMENT & CONTROLLER
+    // ================================================================
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS), 
         .N_LINES    (NUM_SETS) 
@@ -209,8 +238,9 @@ module icache #(
         .o_mem_rdata_ready  (o_l2_rdata_ready)
     );
 
-    // ---------------------------------------- OUTPUT MUX ----------------------------------------
-    reg [DATA_W-1:0] word_select;
+    // ================================================================
+    // OUTPUT MUX
+    // ================================================================
     always @(*) begin
         case({s2_req, way_hit})
             5'b10001: word_select = data_read[0][s2_word_off * DATA_W +: DATA_W];
@@ -220,7 +250,5 @@ module icache #(
             default: word_select = 32'd0;
         endcase
     end
-    
-    assign data_rdata = word_select;
 
 endmodule

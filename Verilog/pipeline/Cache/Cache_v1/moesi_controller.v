@@ -23,20 +23,32 @@ module moesi_controller(
 ,   output              is_valid       
 ,   output reg [2:0]    next_state
 );
-    localparam  STATE_M = 3'd0,
-                STATE_O = 3'd1,
-                STATE_E = 3'd2,
-                STATE_S = 3'd3,
-                STATE_I = 3'd4;
-    
+
+    // ================================================================
+    // LOCAL PARAMETERS - MOESI State Encoding
+    // ================================================================
+    localparam  STATE_M = 3'd0,   // Modified  - Dirty, Exclusive
+                STATE_O = 3'd1,   // Owned     - Dirty, Shared
+                STATE_E = 3'd2,   // Exclusive - Clean, Exclusive
+                STATE_S = 3'd3,   // Shared    - Clean, Shared
+                STATE_I = 3'd4;   // Invalid
+
+    // ================================================================
+    // STATE DECODE LOGIC
+    // ================================================================
     assign is_dirty     = (current_state == STATE_M) | (current_state == STATE_O);
     assign is_unique    = (current_state == STATE_M) | (current_state == STATE_E);
     assign is_owner     = (current_state == STATE_M) | (current_state == STATE_O);
     assign is_valid     = (current_state != STATE_I);
 
+    // ================================================================
+    // NEXT STATE LOGIC
+    // ================================================================
     always @(*) begin
         next_state = current_state;
-        // SNOOP REQUEST
+        // ========================
+        // SNOOP REQUEST HANDLING
+        // ========================
         if (bus_snoop_valid && snoop_hit) begin
             if (bus_rw) begin   // Bus write
                 next_state = STATE_I; 
@@ -58,7 +70,9 @@ module moesi_controller(
             end
         end
 
-        // REFILL
+        // ========================
+        // REFILL HANDLING
+        // ========================
         else if (refill_we) begin
             if (is_dirty_response) begin
                 // Nhan data Dirty ty Cache khac
@@ -76,7 +90,9 @@ module moesi_controller(
             end
         end
 
-        // CPU HIT (Xu ly Hit)
+        // ========================
+        // CPU HIT HANDLING
+        // ========================
         else if (cpu_req_valid && cpu_hit) begin
             if (cpu_rw) begin // Write Hit
                 next_state = STATE_M; 

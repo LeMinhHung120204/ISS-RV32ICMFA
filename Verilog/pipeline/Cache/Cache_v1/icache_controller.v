@@ -24,14 +24,23 @@ module icache_controller #(
 ,   output  reg     o_mem_rdata_ready
 );
 
-    // State Encoding
-    localparam TAG_CHECK    = 4'd0;
-    localparam ALLOC_REQ    = 4'd1;
-    localparam ALLOC_WAIT   = 4'd2;
-    localparam UPDATE       = 4'd3;
-    localparam WAIT_RAM     = 4'd4;
+    // ================================================================
+    // LOCAL PARAMETERS - FSM State Encoding
+    // ================================================================
+    localparam TAG_CHECK    = 4'd0;   // Check tag for hit/miss
+    localparam ALLOC_REQ    = 4'd1;   // Send refill request to L2
+    localparam ALLOC_WAIT   = 4'd2;   // Wait for L2 data
+    localparam UPDATE       = 4'd3;   // Write data to cache
+    localparam WAIT_RAM     = 4'd4;   // Wait one cycle for SRAM write
 
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
     reg [3:0] state, next_state;
+
+    // ================================================================
+    // STATE REGISTER
+    // ================================================================
 
     always @(posedge clk or negedge rst_n) begin
         if(~rst_n) begin
@@ -42,6 +51,9 @@ module icache_controller #(
         end
     end
 
+    // ================================================================
+    // NEXT STATE LOGIC
+    // ================================================================
     always @(*) begin
         next_state = state;
         case(state)
@@ -84,6 +96,9 @@ module icache_controller #(
         endcase
     end
 
+    // ================================================================
+    // OUTPUT LOGIC
+    // ================================================================
     always @(*) begin
         o_mem_req_valid     = 1'b0;
         o_mem_rdata_ready   = 1'b0;

@@ -46,25 +46,47 @@ module snoop_controller #(
 ,   output reg              CDLAST
 ,   output reg              CDVALID
 );
-    localparam  IDLE    = 3'd0,
-                LOOKUP  = 3'd1,
-                WAIT_L1 = 3'd2,
-                RESP    = 3'd3,
-                DATA    = 3'd4;
 
+    // ================================================================
+    // LOCAL PARAMETERS - FSM State Encoding
+    // ================================================================
+    localparam  IDLE    = 3'd0,   // Waiting for snoop request
+                LOOKUP  = 3'd1,   // Tag lookup in L2
+                WAIT_L1 = 3'd2,   // Forward to L1 and wait result
+                RESP    = 3'd3,   // Send CRRESP
+                DATA    = 3'd4;   // Send CDDATA burst
+
+    // ================================================================
+    // REG DECLARATIONS
+    // ================================================================
+    // FSM State
     reg [2:0]   state, next_state;
+    
+    // Latched Inputs
     reg [3:0]   reg_ACSNOOP;
     reg [4:0]   reg_CRRESP;
-    reg [3:0]   burst_cnt;
-
-    reg snoop_requires_data;
-    // reg snoop_req_invalidate;
     
-    reg final_is_dirty;
-    reg final_has_data;
-    reg resp_dt, resp_pd, resp_is, resp_wu;
+    // Burst Counter
+    reg [3:0]   burst_cnt;
+    
+    // Snoop Type Decode
+    reg         snoop_requires_data;
+    
+    // Response Computation
+    reg         final_is_dirty;
+    reg         final_has_data;
+    reg         resp_dt, resp_pd, resp_is, resp_wu;
 
-    // -------------------------------- DECODER ACSNOOP --------------------------------
+    // ================================================================
+    // WIRE DECLARATIONS / DERIVED SIGNALS
+    // ================================================================
+    assign bus_rw           = snoop_req_invalidate;
+    assign burst_cnt_snoop  = burst_cnt;
+    assign CRRESP           = reg_CRRESP;
+
+    // ================================================================
+    // ACSNOOP DECODER
+    // ================================================================
     always @(*) begin
         case (reg_ACSNOOP)    
             4'b0000: begin // ReadOnce
@@ -98,11 +120,9 @@ module snoop_controller #(
         endcase
     end
 
-    assign bus_rw           = snoop_req_invalidate;
-    assign burst_cnt_snoop  = burst_cnt;
-    assign CRRESP           = reg_CRRESP;
-
-    // --------------------- LOGIC TINH CRRESP (Gop L1 + L2) ---------------------
+    // ================================================================
+    // CRRESP COMPUTATION (Combine L1 + L2 info)
+    // ================================================================
     always @(*) begin
         final_is_dirty = is_dirty | i_l1_is_dirty;
         final_has_data = is_owner | is_unique | i_l1_has_data; 
@@ -128,7 +148,9 @@ module snoop_controller #(
         end
     end
 
-    // --------------------- FSM ---------------------
+    // ================================================================
+    // STATE REGISTER
+    // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             state           <= IDLE;
@@ -166,7 +188,9 @@ module snoop_controller #(
         end
     end
 
-    // --------------------- NEXT STATE & OUTPUT ---------------------
+    // ================================================================
+    // NEXT STATE & OUTPUT LOGIC
+    // ================================================================
     always @(*) begin
         snoop_busy          = 1'b1;
         ACREADY             = 1'b0;
