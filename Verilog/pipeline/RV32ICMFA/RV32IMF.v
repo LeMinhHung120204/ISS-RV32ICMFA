@@ -270,7 +270,7 @@ module RV32IMF #(
         .op                 (D_Instr[6:0]),
         .funct3             (D_Instr[14:12]),
         .funct7             (D_Instr[31:25]),
-        .funct5             (D_Instr[24:20]),
+        .funct5             (D_Instr[31:27]),
         .ResultSrc          (D_ResultSrc),
         .MemWrite           (D_MemWrite),
         .ALUControl         (D_ALUControl),

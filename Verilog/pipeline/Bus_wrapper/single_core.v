@@ -115,7 +115,7 @@ module single_core #(
     wire [DATA_W-1:0]   data_rdata, data_wdata;
     wire [ADDR_W-1:0]   data_addr;
     wire [1:0]          data_size;
-    wire                data_req, data_wr, dcache_stall, raw_hazard;
+    wire                data_req, data_wr, dcache_stall;
 
     wire                cpu_lr;
     wire                cpu_sc;
@@ -176,7 +176,6 @@ module single_core #(
         .data_addr      (data_addr), 
         .data_wdata     (data_wdata),
         .dcache_stall   (dcache_stall),
-        .raw_hazard     (raw_hazard),
 
         .cpu_lr         (cpu_lr),
         .cpu_sc         (cpu_sc),
@@ -210,7 +209,6 @@ module single_core #(
         .icache_flush   (icache_flush),
 
         .dcache_stall   (dcache_stall), 
-        .raw_hazard     (raw_hazard),
         
         .pipeline_stall (icache_stall),
         .data_rdata     (imem_instr),
@@ -240,7 +238,7 @@ module single_core #(
         .clk            (ACLK), 
         .rst_n          (ARESETn),
 
-        .cpu_req            (data_req), 
+        .cpu_req            (data_req | cpu_lr | cpu_sc | cpu_amo), 
         .cpu_we             (data_wr), 
         .cpu_addr           (data_addr),
         .cpu_din            (data_wdata), 
@@ -253,7 +251,6 @@ module single_core #(
         .cpu_amo_op         (cpu_amo_op),
 
         .pipeline_stall     (dcache_stall),
-        .raw_hazard         (raw_hazard),
 
         .i_l2_req_ready     (l1d_req_ready), 
         .o_l2_req_valid     (l1d_req_valid),

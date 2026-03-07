@@ -30,7 +30,6 @@ module icache #(
 
     // icache <-> dcache
 ,   input                       dcache_stall
-,   input                       raw_hazard 
 
     // cache <-> L2
     // Request
@@ -170,7 +169,7 @@ module icache #(
     ) acc_cmp_inst (
         .clk            (clk), 
         .rst_n          (rst_n),
-        .stall          (pipeline_stall | dcache_stall | raw_hazard),
+        .stall          (pipeline_stall | dcache_stall),
         .flush          (icache_flush),
 
         // Inputs

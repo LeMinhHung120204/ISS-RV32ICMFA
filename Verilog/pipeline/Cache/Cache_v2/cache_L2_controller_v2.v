@@ -208,142 +208,33 @@ module cache_L2_controller_v2 #(
     end
 
     // ================================================================
-    // NEXT STATE LOGIC
+    // NEXT STATE & OUTPUT LOGIC
     // ================================================================
     always @(*) begin
-        next_state = state;
-        case(state)
-            // TAG_CHECK: begin
-            //     if (~snoop_busy && i_req_valid) begin
-            //         if (hit) begin
-            //             if (need_upgrade) begin
-            //                 next_state = ALLOC_AR; // Gui CleanUnique
-            //             end 
-            //             else if (i_req_cmd == CMD_WRITE_BACK) begin
-            //                 next_state = L1_WB_RX; // Hit M/E -> Ghi ngay
-            //             end
-            //             else begin
-            //                 next_state = TAG_CHECK; // Read Hit -> Xong
-            //             end
-            //         end 
-            //         else begin 
-            //             if (is_valid && victim_dirty) begin
-            //                 next_state = WB_AW;    // Write back victim
-            //             end 
-            //             else 
-            //                 next_state = ALLOC_AR; // Allocate (Read Miss)
-            //         end
-            //     end
-            // end
-
-            TAG_CHECK: begin
-                if (~snoop_busy && i_req_valid) begin
-                    if (hit) begin
-                        // UPGRADE / WRITE
-                        if (i_req_cmd == CMD_UPGRADE) begin
-                            if (current_moesi_state == STATE_S || current_moesi_state == STATE_O) begin
-                                next_state = ALLOC_AR; // Invalidate core khac
-                            end 
-                            else begin // State E/M
-                                next_state = UPDATE;
-                            end
-                        end 
-                        else if (i_req_cmd == CMD_WRITE_BACK) begin
-                            next_state = L1_WB_RX;
-                        end
-                        else begin
-                            next_state = TAG_CHECK;    // Read Hit
-                        end
-                    end 
-                    else begin 
-                        if (is_valid && victim_dirty) begin
-                            next_state = WB_AW;    // Write back victim
-                        end 
-                        else 
-                            next_state = ALLOC_AR; // Allocate (Read Miss)
-                    end
-                end
-            end
-
-            // --- L1 Writeback Receiver ---
-            L1_WB_RX: begin
-                // ghi 1 luc 512 bit 
-                if (i_wdata_valid) next_state = UPDATE; 
-            end
-
-            // --- Writeback ---
-            WB_AW: begin    
-                next_state = (iAWREADY) ? WB_W : WB_AW;
-            end 
-
-            WB_W: begin     
-                next_state = (iWREADY & (burst_cnt == 4'd15)) ? WB_B : WB_W;
-            end 
-
-            WB_B: begin
-                if (iBVALID) begin
-                    // Xong WB Victim -> Quay lai viec chinh (Nhan data L1 hooc doc Mem)
-                    next_state = (i_req_cmd == CMD_WRITE_BACK) ? L1_WB_RX : ALLOC_AR;
-                end 
-                else begin
-                    next_state = WB_B;
-                end 
-            end 
-
-            // --- allocate ---
-            ALLOC_AR: begin 
-                next_state = (iARREADY) ? ALLOC_R : ALLOC_AR;
-            end 
-
-            ALLOC_R: begin
-                if (iRVALID & iRLAST) begin
-                    next_state = (snoop_busy) ? WAIT_SNOOP : UPDATE;     
-                end 
-            end 
-
-            WAIT_SNOOP: begin 
-                if (~snoop_busy) begin 
-                    next_state = UPDATE;
-                end 
-            end 
-
-            UPDATE: begin    
-                next_state = WAIT_RAM;
-            end
-
-            WAIT_RAM: begin   
-                next_state = TAG_CHECK;
-            end 
-
-            default:    next_state = TAG_CHECK;
-        endcase
-    end 
-
-    // ================================================================
-    // OUTPUT LOGIC
-    // ================================================================
-    always @(*) begin
-        oAWVALID                = 1'b0; 
-        oWVALID                 = 1'b0; 
-        oBREADY                 = 1'b0; 
-        oARVALID                = 1'b0; 
+        // 1. Default assignments to prevent latches
+        next_state              = state;
+        oAWVALID                = 1'b0;
+        oWVALID                 = 1'b0;
+        oBREADY                 = 1'b0;
+        oARVALID                = 1'b0;
         oRREADY                 = 1'b0;
-        tag_we                  = 1'b0; 
+        tag_we                  = 1'b0;
         moesi_we                = 1'b0;
         refill_we               = 1'b0;
-        // read_index_src          = 1'b0; 
-        o_wdata_ready           = 1'b0; 
+        o_wdata_ready           = 1'b0;
         o_rdata_ready           = 1'b0;
         oWLAST                  = 1'b0;
         snoop_can_access_ram    = 1'b1;
         o_req_ready             = 1'b0;
-        stall                   = 1'b0;   
-        oAWSNOOP                = 3'b0; 
+        stall                   = 1'b0;
+        oAWSNOOP                = 3'b0;
         oARSNOOP                = 4'b0;
         oWSTRB                  = {STRB_W{1'b0}};
 
+        // 2. State-specific logic
         case(state)
             TAG_CHECK: begin
+                // --- Outputs ---
                 if (i_req_valid && hit && !need_upgrade) begin
                     if (i_req_cmd == CMD_READ_SHARED || i_req_cmd == CMD_READ_UNIQUE) begin
                         o_rdata_ready = 1'b1;
@@ -351,37 +242,90 @@ module cache_L2_controller_v2 #(
                 end
                 
                 if (~snoop_busy) begin
-                    o_req_ready = 1'b1; 
+                    o_req_ready = 1'b1;
                 end
                 else begin
                     o_req_ready = 1'b0;
                 end
+
+                // --- Next State ---
+                if (~snoop_busy && i_req_valid) begin
+                    if (hit) begin
+                        // UPGRADE / WRITE
+                        if (i_req_cmd == CMD_UPGRADE) begin
+                            if (current_moesi_state == STATE_S || current_moesi_state == STATE_O) begin
+                                next_state = ALLOC_AR; // Invalidate core khac
+                            end
+                            else begin // State E/M
+                                next_state = UPDATE;
+                            end
+                        end
+                        else if (i_req_cmd == CMD_WRITE_BACK) begin
+                            next_state = L1_WB_RX;
+                        end
+                        else begin
+                            next_state = TAG_CHECK; // Read Hit
+                        end
+                    end
+                    else begin
+                        if (is_valid && victim_dirty) begin
+                            next_state = WB_AW; // Write back victim
+                        end
+                        else begin
+                            next_state = ALLOC_AR; // Allocate (Read Miss)
+                        end
+                    end
+                end
             end
 
             L1_WB_RX: begin
+                // --- Outputs ---
                 o_wdata_ready = 1'b1; // Bat co nhan data tu L1
+                
+                // --- Next State ---
+                // ghi 1 luc 512 bit 
+                if (i_wdata_valid) next_state = UPDATE;
             end
 
-            WB_AW: begin 
-                oAWVALID = 1'b1; 
+            WB_AW: begin
+                // --- Outputs ---
+                oAWVALID = 1'b1;
                 oAWSNOOP = 3'b011; // WriteBack
+                
+                // --- Next State ---
+                next_state = (iAWREADY) ? WB_W : WB_AW;
             end
 
             WB_W: begin
+                // --- Outputs ---
                 oWVALID = 1'b1;
                 oWSTRB  = {STRB_W{1'b1}};
                 oWLAST  = (burst_cnt == 4'd15);
+                
+                // --- Next State ---
+                next_state = (iWREADY & (burst_cnt == 4'd15)) ? WB_B : WB_W;
             end
-            
-            WB_B: begin  
-                oBREADY = 1'b1;
-            end 
 
-            ALLOC_AR: begin 
-                oARVALID = 1'b1; 
+            WB_B: begin
+                // --- Outputs ---
+                oBREADY = 1'b1;
+                
+                // --- Next State ---
+                if (iBVALID) begin
+                    // Xong WB Victim -> Quay lai viec chinh (Nhan data L1 hooc doc Mem)
+                    next_state = (i_req_cmd == CMD_WRITE_BACK) ? L1_WB_RX : ALLOC_AR;
+                end
+                else begin
+                    next_state = WB_B;
+                end
+            end
+
+            ALLOC_AR: begin
+                // --- Outputs ---
+                oARVALID = 1'b1;
                 if (need_upgrade) begin
                     // 1. CleanUnique: Hit S/O hoac Writeback S/O -> Chi can Invalidate
-                    oARSNOOP = 4'b1011; 
+                    oARSNOOP = 4'b1011;
                 end
                 else if (i_req_cmd == CMD_READ_UNIQUE) begin
                     // 2. ReadUnique: Write Miss -> Doc ve voi quyen ghi
@@ -389,43 +333,42 @@ module cache_L2_controller_v2 #(
                 end
                 else begin
                     // 3. ReadShared: Read Miss -> Doc ve binh thuong
-                    oARSNOOP = 4'b0001; 
+                    oARSNOOP = 4'b0001;
+                end
+                
+                // --- Next State ---
+                next_state = (iARREADY) ? ALLOC_R : ALLOC_AR;
+            end
+
+            ALLOC_R: begin
+                // --- Outputs ---
+                oRREADY = 1'b1;
+                
+                // --- Next State ---
+                if (iRVALID & iRLAST) begin
+                    next_state = (snoop_busy) ? WAIT_SNOOP : UPDATE;
                 end
             end
 
-            ALLOC_R: begin  
-                oRREADY = 1'b1; 
-            end 
-
-            // UPDATE: begin
-            //     snoop_can_access_ram    = 1'b0;
-            //     tag_we                  = 1'b1;
-            //     moesi_we                = 1'b1;
-                
-            //     // Chi bat refill_we (Ghi Data RAM) khi thuc su co Data moi
-            //     // - Neu la Upgrade (CleanUnique): Khong co data -> refill_we = 0
-            //     // - Neu la Writeback Upgrade (CMD_WRITE_BACK): Data chua den (se den o L1_WB_RX) -> refill_we = 0
-            //     // - Neu la Read Miss / ReadUnique Miss: Co data tu Bus -> refill_we = 1
-                
-            //     if (need_upgrade || (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_WRITE_BACK)) begin
-            //          refill_we = 1'b0; // Chi sua Tag/MOESI, giu nguyen Data
-            //     end
-            //     else begin
-            //          refill_we = 1'b1; // Ghi Data tu Bus vao RAM
-            //     end
-            // end
+            WAIT_SNOOP: begin
+                // --- Next State ---
+                if (~snoop_busy) begin
+                    next_state = UPDATE;
+                end
+            end
 
             UPDATE: begin
+                // --- Outputs ---
                 snoop_can_access_ram    = 1'b0;
                 if (!snoop_collision) begin
                     tag_we      = 1'b1;
                     moesi_we    = 1'b1;
 
                     if (need_upgrade || (i_req_cmd == CMD_UPGRADE) || (i_req_cmd == CMD_WRITE_BACK)) begin
-                        refill_we = 1'b0; 
+                        refill_we = 1'b0;
                     end
                     else begin
-                        refill_we = 1'b1; 
+                        refill_we = 1'b1;
                     end
                 end
                 else begin
@@ -434,15 +377,22 @@ module cache_L2_controller_v2 #(
                     moesi_we    = 1'b0;
                     refill_we   = 1'b0;
                 end
+                
+                // --- Next State ---
+                next_state = WAIT_RAM;
             end
 
-            WAIT_SNOOP: begin
-            end
-
-            WAIT_RAM: begin   
+            WAIT_RAM: begin
+                // --- Outputs ---
                 stall           = 1'b1;
-                // read_index_src  = 1'b1;
-            end 
+                
+                // --- Next State ---
+                next_state = TAG_CHECK;
+            end
+
+            default: begin
+                next_state = TAG_CHECK;
+            end
         endcase
-    end 
+    end
 endmodule

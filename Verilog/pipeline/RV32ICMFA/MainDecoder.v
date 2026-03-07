@@ -196,7 +196,7 @@ module MainDecoder(
                 ResPCSel        = 1'b0;
 
                 RegWrite        = 1'b1;
-                ImmSrc          = 3'd0;
+                ImmSrc          = 3'd5;
                 ALUSrc          = 1'b1;
                 MemWrite        = 1'b0;
                 ResultSrc       = 3'b000;

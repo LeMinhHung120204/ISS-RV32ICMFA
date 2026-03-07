@@ -65,7 +65,6 @@ module dcache_v2 #(
 
 ,   output  reg [DATA_W-1:0]    data_rdata
 ,   output                      pipeline_stall
-,   output                      raw_hazard
 
     // ================= L2 INTERFACE =================
     // Request address
@@ -107,6 +106,8 @@ module dcache_v2 #(
     
     // Data Output & Selection
     reg [DATA_W-1:0]        word_select;
+    reg [DATA_W-1:0]        raw_rdata;
+    reg                     raw_en;
     
     // MOESI State Selection
     reg [2:0]               moesi_selected_state;
@@ -255,7 +256,28 @@ module dcache_v2 #(
     // PIPELINE REGISTER
     // ================================================================
     assign pipeline_stall   = stall_contoller | i_snoop_valid;
-    assign raw_hazard       = cpu_req & data_we & (s1_index == s2_index);
+
+    // Khi refill thi read index lai index thi ton 1 chu khi
+    // assign raw_hazard       = cpu_req & data_we & (s1_index == s2_index);
+
+    // when write hit and after that we read from the same address
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            raw_rdata <= {DATA_W{1'b0}};
+            raw_en      <= 1'b0;
+        end 
+        else begin
+            if (s1_index == s2_index && data_we && cpu_hit) begin
+                raw_rdata <= s2_wdata;;
+                raw_en      <= 1'b1;
+            end
+            else begin
+                raw_rdata <= {DATA_W{1'b0}};
+                raw_en      <= 1'b0;
+            end
+        end
+    end
+    
 
     acc_cmp #(
         .ADDR_W     (ADDR_W), 
@@ -489,23 +511,28 @@ module dcache_v2 #(
     end 
 
     always @(*) begin
-        case(s2_size)
-            2'b00: data_rdata = word_select; // Word
-            2'b01: begin // Byte
-                case(s2_byte_off)
-                    2'b00: data_rdata = {24'd0, word_select[7:0]};
-                    2'b01: data_rdata = {24'd0, word_select[15:8]};
-                    2'b10: data_rdata = {24'd0, word_select[23:16]};
-                    2'b11: data_rdata = {24'd0, word_select[31:24]};
-                endcase
-            end 
-            2'b10: begin // Half
-                case(s2_byte_off[1])
-                    1'b0: data_rdata = {16'd0, word_select[15:0]};
-                    1'b1: data_rdata = {16'd0, word_select[31:16]};
-                endcase
-            end
-            default: data_rdata = word_select;
-        endcase
+        if (raw_en) begin
+            data_rdata = raw_rdata;
+        end 
+        else begin
+            case(s2_size)
+                2'b00: data_rdata = word_select; // Word
+                2'b01: begin // Byte
+                    case(s2_byte_off)
+                        2'b00: data_rdata = {24'd0, word_select[7:0]};
+                        2'b01: data_rdata = {24'd0, word_select[15:8]};
+                        2'b10: data_rdata = {24'd0, word_select[23:16]};
+                        2'b11: data_rdata = {24'd0, word_select[31:24]};
+                    endcase
+                end 
+                2'b10: begin // Half
+                    case(s2_byte_off[1])
+                        1'b0: data_rdata = {16'd0, word_select[15:0]};
+                        1'b1: data_rdata = {16'd0, word_select[31:16]};
+                    endcase
+                end
+                default: data_rdata = word_select;
+            endcase
+        end
     end
 endmodule

@@ -68,12 +68,19 @@ module icache_controller #(
     end
 
     // ================================================================
-    // NEXT STATE LOGIC
-    // ================================================================
-    // Simple miss handling: request -> wait -> update -> done
+    // NEXT STATE & OUTPUT LOGIC
     // ================================================================
     always @(*) begin
-        next_state = state;
+        // 1. Default assignments to prevent latches
+        next_state        = state;
+        o_mem_req_valid   = 1'b0;
+        o_mem_rdata_ready = 1'b0;
+        tag_we            = 1'b0;
+        stall             = 1'b0;
+        refill_we         = 1'b0;
+        read_index_src    = 1'b0;     // 0=S2 index, 1=S1 index
+
+        // 2. State-specific logic
         case(state)
             TAG_CHECK: begin
                 // On miss, initiate refill from L2
@@ -87,71 +94,40 @@ module icache_controller #(
                 end
             end
 
-            // --------------------------------------------------------
-            // REFILL FLOW: Request -> Wait -> Update -> Done
-            // --------------------------------------------------------
             ALLOC_REQ: begin
-                // Send address to L2, wait for ready
+                o_mem_req_valid = 1'b1;             // Output: Request refill from L2
+                
                 if (i_mem_req_ready) begin
-                    next_state = ALLOC_WAIT;
+                    next_state = ALLOC_WAIT;        // Next State
                 end 
             end
             
             ALLOC_WAIT: begin
-                // Wait for L2 to return cache line
+                o_mem_req_valid   = 1'b1;           // Output: Keep request active
+                o_mem_rdata_ready = 1'b1;           // Output: Ready to receive data
+                
                 if (i_mem_rdata_valid) begin
-                    next_state = UPDATE;
+                    next_state = UPDATE;            // Next State
                 end
             end
 
             UPDATE: begin
-                // Write received data to cache RAM
-                next_state = WAIT_RAM;
+                tag_we     = 1'b1;                  // Output: Write new tag
+                refill_we  = 1'b1;                  // Output: Write refill data to RAM
+                
+                next_state = WAIT_RAM;              // Next State
             end
 
             WAIT_RAM: begin
-                // Wait one cycle for SRAM write completion
+                stall          = 1'b1;              // Output: Hold pipeline
+                read_index_src = 1'b1;              // Output: Use S1 index for next lookup
+                
+                next_state     = TAG_CHECK;         // Next State
+            end 
+
+            default: begin
                 next_state = TAG_CHECK;
-            end 
-
-            default: next_state = TAG_CHECK;
+            end
         endcase
     end
-
-    // ================================================================
-    // OUTPUT LOGIC
-    // ================================================================
-    // Generate control signals based on current state
-    // ================================================================
-    always @(*) begin
-        // Default: no activity
-        o_mem_req_valid     = 1'b0;
-        o_mem_rdata_ready   = 1'b0;
-        tag_we              = 1'b0;
-        stall               = 1'b0;
-        refill_we           = 1'b0;
-        read_index_src      = 1'b0;     // 0=S2 index, 1=S1 index
-
-        case(state)
-            ALLOC_REQ: begin
-                o_mem_req_valid = 1'b1; // Request refill from L2
-            end
-
-            ALLOC_WAIT: begin
-                o_mem_req_valid     = 1'b1; // Keep request active
-                o_mem_rdata_ready   = 1'b1; // Ready to receive data
-            end
-
-            UPDATE: begin
-                tag_we      = 1'b1;     // Write new tag
-                refill_we   = 1'b1;     // Write refill data to RAM
-            end
-
-            WAIT_RAM: begin
-                stall           = 1'b1; // Hold pipeline
-                read_index_src  = 1'b1; // Use S1 index for next lookup
-            end 
-        endcase
-    end
-
 endmodule

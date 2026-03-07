@@ -37,7 +37,6 @@ module RV32IA #(
     // cpu <-> dcache
 ,   input   [WIDTH_DATA-1:0]    data_rdata
 ,   input                       dcache_stall
-,   input                       raw_hazard
 ,   output                      data_req
 ,   output                      data_wr
 ,   output  [1:0]               data_size
@@ -241,7 +240,6 @@ module RV32IA #(
         .dcache_stall   (dcache_stall),
         .E_MulDivStall  (1'b0),
         .E_FPUStall     (1'b0),
-        .raw_hazard     (raw_hazard),
         
         .E_ResultSrc    (E_ResultSrc),
         .E_RegSrc1      (1'b0),
@@ -341,7 +339,7 @@ module RV32IA #(
         .op                 (D_Instr[6:0]),
         .funct3             (D_Instr[14:12]),
         .funct7             (D_Instr[31:25]),
-        .funct5             (D_Instr[24:20]),
+        .funct5             (D_Instr[31:27]),
         .ResultSrc          (D_ResultSrc),
         .MemWrite           (D_MemWrite),
         .ALUControl         (D_ALUControl),
@@ -537,7 +535,7 @@ module RV32IA #(
     // ================================================================
     assign data_wr      = M_MemWrite;
     assign data_size    = M_StoreSrc;   // lb/sb=00, lh/sh=01, lw/sw=10
-    assign data_addr    = M_ALUResult;
+    assign data_addr    = M_ALUResult; // For AMO/SC/LR, use address from register; otherwise use ALU result
     assign data_wdata   = M_WriteData;
     assign data_req     = M_data_req;
 
@@ -600,6 +598,7 @@ module RV32IA #(
     MEM_WB MEM_WB_register(
         .clk            (clk),
         .rst_n          (rst_n),
+        .EN             (dcache_stall | test_stall),
         .M_rd           (C_rd),
         .M_RegWrite     (C_RegWrite),
         .M_ResultSrc    (C_ResultSrc),

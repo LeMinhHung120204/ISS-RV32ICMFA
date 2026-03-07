@@ -18,7 +18,6 @@ module HazardUnit #(
     
 ,   input       icache_stall
 ,   input       dcache_stall
-,   input       raw_hazard
 
 ,   input [2:0] E_ResultSrc
 ,   input [4:0] D_Rs1 
@@ -85,10 +84,10 @@ module HazardUnit #(
     wire lw_Stall;
     assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
 
-    assign M_Stall          = dcache_stall | raw_hazard;
-    assign E_Stall          = dcache_stall | raw_hazard | E_MulDivStall | E_FPUStall;
-    assign D_Stall          = dcache_stall | raw_hazard | lw_Stall | E_Stall;
-    assign F_Stall          = dcache_stall | raw_hazard | lw_Stall | E_Stall | icache_stall;
+    assign M_Stall          = dcache_stall ;
+    assign E_Stall          = dcache_stall | E_MulDivStall | E_FPUStall;
+    assign D_Stall          = dcache_stall | lw_Stall | E_Stall;
+    assign F_Stall          = dcache_stall | lw_Stall | E_Stall | icache_stall;
     
     // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
     assign E_Flush          = lw_Stall | E_Mispredict;

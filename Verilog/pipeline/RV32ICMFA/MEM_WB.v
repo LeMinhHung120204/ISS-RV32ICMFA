@@ -15,49 +15,33 @@ module MEM_WB #(
     parameter ADDR_WIDTH = 32
 )(
     input                       clk, rst_n
+,   input                       EN
 ,   input                       M_RegWrite 
 ,   input                       M_FRegWrite 
-,   input                       M_MDU_FPUEn
-    // input [DATA_WIDTH - 1:0]    M_Result, 
+,   input                       M_MDU_FPUEn 
 ,   input [DATA_WIDTH - 1:0]    C_mux_result
-    // input [DATA_WIDTH - 1:0]    M_ReadData, 
-    // input [DATA_WIDTH - 1:0]    M_ImmExt,
-    // input [ADDR_WIDTH - 1:0]    M_ResPC,
 ,   input [4:0]                 M_rd
 ,   input [2:0]                 M_ResultSrc
     
-    // input [DATA_WIDTH-1:0] M_atomic_rdata,
 ,   output reg                      W_RegWrite 
 ,   output reg                      W_FRegWrite 
-,   output reg                      W_MDU_FPUEn
-    // output reg [DATA_WIDTH - 1:0]   W_Result, 
+,   output reg                      W_MDU_FPUEn 
 ,   output reg [DATA_WIDTH - 1:0]   W_mux_result
-    // output reg [DATA_WIDTH - 1:0]   W_ReadData, 
-    // output reg [DATA_WIDTH - 1:0]   W_ImmExt,
-    // output reg [ADDR_WIDTH - 1:0]   W_ResPC,
 ,   output reg [4:0]                W_rd
 ,   output reg [2:0]                W_ResultSrc
     
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-//            W_Result    <= 32'd0; 
-//            W_ReadData  <= 32'd0;
-//            W_ImmExt    <= 32'd0;
             W_mux_result    <= 32'd0;
-//            W_ResPC     <= 32'd0;
             W_rd        <= 5'd0;
             W_ResultSrc <= 3'b0;
             W_RegWrite  <= 1'b0;
             W_FRegWrite <= 1'b0;
             W_MDU_FPUEn <= 1'b0;
         end 
-        else begin
-            // W_Result    <= M_Result   ; 
-            // W_ReadData  <= M_ReadData ;
-            // W_ImmExt    <= M_ImmExt   ;
+        else if (!EN) begin
             W_mux_result    <= C_mux_result;
-            // W_ResPC     <= M_ResPC    ;
             W_rd        <= M_rd       ;
             W_ResultSrc <= M_ResultSrc;
             W_RegWrite  <= M_RegWrite ;

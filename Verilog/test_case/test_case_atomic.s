@@ -3,11 +3,12 @@
 .section .text
 .org 0x0                  # Bắt đầu code tại địa chỉ 0x0
 _boot:
-    li      x10, 0x100         # Ép cứng địa chỉ biến tại 0x100 để dễ theo dõi
-
+    addi   x10,  x0, 4
+    addi   x11, x0, 1
+    sw     x10, (x0)
     # 1. Test Atomic Add
-    li      x11, 1
-    amoadd.w x12, x11, (x10)   # Read 0x100 -> Add -> Write 0x100
+    amoadd.w x12, x11, (x0)   # Read 4 -> Add -> Write 5
+    lw     x2,  (x0)
 
     # 2. Test Atomic Swap
     li      x13, 0xAAAA5555

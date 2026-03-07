@@ -88,6 +88,8 @@ module dcache_controller_v2 (
     // FSM State Registers
     reg [3:0]   state, next_state;
 
+    // for AMO
+    reg         amo_done;
     // Reservation Registers (for LR/SC)
     reg         res_valid;
     reg [31:0]  res_addr;
@@ -135,6 +137,26 @@ module dcache_controller_v2 (
         end
     end
 
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            amo_done <= 1'b0;
+        end 
+        else begin
+            // 1. SET cho lenh AMO
+            if (state == AMO_WRITE) begin
+                amo_done <= 1'b1;
+            end
+            // 2. SET cho lenh SC
+            else if (state == SC_CHECK && i_l2_moesi_state != STATE_S && i_l2_moesi_state != STATE_O) begin
+                amo_done <= 1'b1;
+            end
+            // 3. Clear
+            else if (state == TAG_CHECK && stall == 1'b0) begin
+                amo_done <= 1'b0;
+            end
+        end
+    end
+
     // ================================================================
     // FSM STATE UPDATE
     // ================================================================
@@ -171,42 +193,87 @@ module dcache_controller_v2 (
     end
 
     // ================================================================
-    // NEXT STATE LOGIC
+    // COMBINED NEXT STATE & OUTPUT LOGIC
     // ================================================================
     always @(*) begin
-        next_state      = state;
+        next_state          = state;
+        o_mem_req_valid     = 1'b0;
+        o_mem_req_cmd       = 2'b00;
+        o_mem_wdata_valid   = 1'b0;
+        o_mem_rdata_ready   = 1'b0;
+        data_we             = 1'b0;
+        tag_we              = 1'b0;
+        refill_we           = 1'b0;
+        stall               = 1'b1;
+        read_index_src      = 1'b0;
+
+        // ----------------------------------------------------------------
+        // State Machine
+        // ----------------------------------------------------------------
         case(state)
             TAG_CHECK: begin
-                if (cpu_req) begin
+                if (!cpu_req) begin
+                    stall = 1'b0;
+                end
+                else begin
                     // --- 1. HANDLE MISS ---
                     if (!hit) begin
-                         if ((~victim_valid) || (~victim_dirty))
-                            next_state = ALLOC_REQ; // Clean -> Read L2
+                        if ((~victim_valid) || (~victim_dirty))
+                            next_state = ALLOC_REQ;
                         else
-                            next_state = WB_REQ;    // Dirty -> Write L2
+                            next_state = WB_REQ;
                     end
                     // --- 2. HANDLE HIT ---
                     else begin
+                        // ------ Output Logic (Stall / WE) ------
+                        // SC / AMO
+                        if (i_atomic_sc || i_atomic_amo) begin
+                            if (amo_done) begin
+                                stall = 1'b0; // AMO da xly xong, cho phep instruction tiep theo tien hanh
+                            end
+                            else begin
+                                stall = 1'b1; // Stall cho den khi AMO xly xong
+                            end
+                            // stall = 1'b1;
+                        end
+                        // Write / LR in S/O
+                        else if ((cpu_we || i_atomic_lr) && (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O)) begin
+                            stall = 1'b1;
+                        end
+                        // Write hit in M/E
+                        else if (cpu_we && (i_l2_moesi_state == STATE_M || i_l2_moesi_state == STATE_E)) begin
+                            data_we = 1'b1;
+                            stall   = 1'b0; 
+                        end
+                        // Read hit / LR in M/E
+                        else if (!cpu_we) begin
+                            stall = 1'b0;
+                        end
+
+                        // ------ Next State Logic ------
                         // 2a. ATOMIC: Store-Conditional
                         if (i_atomic_sc) begin
-                            next_state = SC_CHECK;
+                            if (amo_done) 
+                                next_state = TAG_CHECK;
+                            else          
+                                next_state = SC_CHECK;
+                            // next_state = SC_CHECK;
                         end
                         // 2b. ATOMIC: Load-Reserved hoac AMO
-                        // Bat buoc phai co quyen GHI (M hoac E) moi duoc lam
                         else if (i_atomic_lr || i_atomic_amo) begin
                             if (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O)
-                                next_state = UPGRADE_REQ; // Hit S -> Can Upgrade
-                            else if (i_atomic_amo)
-                                next_state = AMO_WRITE;    // Hit M/E -> Bat dau AMO
+                                next_state = UPGRADE_REQ;
+                            else if (i_atomic_amo & !amo_done)
+                                next_state = AMO_WRITE;
                             else
-                                next_state = TAG_CHECK;   // Hit M/E + LR -> Xong luon (vi LR chi la Load)
+                                next_state = TAG_CHECK;
                         end
                         // 2c. Normal Write
                         else if (cpu_we) begin
                             if (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O)
                                 next_state = UPGRADE_REQ;
                             else
-                                next_state = TAG_CHECK; // Write Hit M/E -> Xong
+                                next_state = TAG_CHECK;
                         end
                         // 2d. Normal Read
                         else begin
@@ -216,59 +283,55 @@ module dcache_controller_v2 (
                 end
             end
 
-    // ================================================================
-    // SC LOGIC
-    // ================================================================
             SC_CHECK: begin
-                // kiem tra xem co quyen ghi (M/E) va Reservation con hieu luc khong
                 if (res_hit && (i_l2_moesi_state == STATE_E || i_l2_moesi_state == STATE_M)) begin
-                    // Success -> Ghi vao Cache (set Dirty) -> Xong
-                    next_state      = WAIT_RAM; 
+                    data_we    = 1'b1;     
+                    next_state = WAIT_RAM;
                 end
                 else if (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O) begin
-                    // Neu Hit ma la S/O thi phai Upgrade truoc khi thu SC
-                    next_state = UPGRADE_REQ; // Fail
+                    next_state = UPGRADE_REQ; // Fail -> Need Upgrade
                 end 
                 else begin
-                    next_state = TAG_CHECK; // Fail
-                        
+                    next_state = TAG_CHECK;   // Fail
                 end
             end
 
-            // ================================================================
-            // AMO FLOW
-            // ================================================================
-            // AMO_READ: begin
-            //     if (i_mem_rdata_valid) begin
-            //         next_state = AMO_WRITE;
-            //     end
-            // end
-            
             AMO_WRITE: begin
-                // Ghi ket qua ALU vao lai Cache
+                data_we    = 1'b1;
                 next_state = WAIT_RAM;
             end
 
-            // ================================================================
-            // STANDARD FLOWS
-            // ================================================================
             UPGRADE_REQ: begin
+                o_mem_req_valid = 1'b1;
+                o_mem_req_cmd   = CMD_UPGRADE;
                 if (i_mem_req_ready) next_state = TAG_CHECK;
             end
 
             WB_REQ: begin
+                o_mem_req_valid = 1'b1;
+                o_mem_req_cmd   = CMD_WRITE_BACK;
                 if (i_mem_req_ready) next_state = WB_DATA;
             end
             
             WB_DATA: begin
+                o_mem_wdata_valid = 1'b1;
                 if (i_mem_wdata_ready) next_state = ALLOC_REQ;
             end
 
             ALLOC_REQ: begin
+                o_mem_req_valid = 1'b1;
+                //If Write Miss / Atomic -> request Unique (Read Unique)
+                if (cpu_we || i_atomic_lr || i_atomic_amo || i_atomic_sc) 
+                    o_mem_req_cmd = CMD_READ_UNIQUE;
+                else 
+                    o_mem_req_cmd = CMD_READ_SHARED;
+
                 if (i_mem_req_ready) next_state = ALLOC_WAIT;
             end
 
             ALLOC_WAIT: begin
+                o_mem_req_valid   = 1'b1;
+                o_mem_rdata_ready = 1'b1; 
                 if (i_mem_rdata_valid) begin
                     if (snoop_busy) next_state = WAIT_SNOOP;
                     else            next_state = UPDATE;
@@ -280,115 +343,22 @@ module dcache_controller_v2 (
             end
 
             UPDATE: begin
+                tag_we     = 1'b1;
+                refill_we  = 1'b1;
                 next_state = WAIT_RAM;
             end
 
             WAIT_RAM: begin
-                next_state = TAG_CHECK;
+                read_index_src = 1'b1;
+                next_state     = TAG_CHECK;
             end 
             
-            default: next_state = TAG_CHECK;
+            default: begin
+                next_state = TAG_CHECK;
+            end
         endcase
     end
 
-
-    // ================================================================
-    // OUTPUT LOGIC
-    // ================================================================
-    always @(*) begin
-        // Default values
-        o_mem_req_valid     = 1'b0;
-        o_mem_req_cmd       = 2'b00;
-        o_mem_wdata_valid   = 1'b0;
-        o_mem_rdata_ready   = 1'b0;
-        
-        data_we             = 1'b0;
-        tag_we              = 1'b0;
-        refill_we           = 1'b0;
-        stall               = 1'b1;
-        read_index_src      = 1'b0;
-
-        case(state)
-            TAG_CHECK: begin
-                if (!cpu_req) begin
-                    stall = 1'b0;
-                end
-                else if (hit) begin
-                    // SC / AMO
-                    if (i_atomic_sc || i_atomic_amo) begin
-                        stall = 1'b1;
-                    end
-                    // Write / LR in S/O
-                    else if ((cpu_we || i_atomic_lr) && (i_l2_moesi_state == STATE_S || i_l2_moesi_state == STATE_O)) begin
-                        stall = 1'b1;
-                    end
-                    // write hit in M/E
-                    else if (cpu_we && (i_l2_moesi_state == STATE_M || i_l2_moesi_state == STATE_E)) begin
-                        data_we = 1'b1;
-                        stall   = 1'b0; 
-                    end
-                    // read hit / LR in M/E
-                    else if (!cpu_we) begin
-                        stall = 1'b0;
-                    end
-                end
-            end
-
-            SC_CHECK: begin
-                if (res_hit && (i_l2_moesi_state == STATE_E || i_l2_moesi_state == STATE_M)) begin
-                    data_we = 1'b1; // Write to cache
-                end
-            end
-
-            // AMO Flow
-            // AMO_READ: begin
-            //     o_mem_req_valid = 1'b1;
-            //     o_mem_req_cmd   = CMD_READ_UNIQUE; 
-            // end
-
-            AMO_WRITE: begin
-                data_we         = 1'b1; // Ghi ket qua ALU vao Cache
-            end
-
-            // Memory Request Flows
-            UPGRADE_REQ: begin
-                o_mem_req_valid = 1'b1;
-                o_mem_req_cmd   = CMD_UPGRADE;
-            end
-
-            WB_REQ: begin
-                o_mem_req_valid = 1'b1;
-                o_mem_req_cmd   = CMD_WRITE_BACK;
-            end
-
-            WB_DATA: begin
-                o_mem_wdata_valid = 1'b1;
-            end
-
-            ALLOC_REQ: begin
-                o_mem_req_valid = 1'b1;
-                // Neu la Write Miss hoac Atomic -> Xin quyen Unique (Read Unique)
-                if (cpu_we || i_atomic_lr || i_atomic_amo || i_atomic_sc) 
-                    o_mem_req_cmd = CMD_READ_UNIQUE; 
-                else 
-                    o_mem_req_cmd = CMD_READ_SHARED;
-            end
-
-            ALLOC_WAIT: begin
-                o_mem_req_valid     = 1'b1;
-                o_mem_rdata_ready   = 1'b1; 
-            end
-
-            UPDATE: begin
-                tag_we      = 1'b1;
-                refill_we   = 1'b1;
-            end
-
-            WAIT_RAM: begin
-                read_index_src  = 1'b1;
-            end 
-        endcase
-    end
     // ================================================================
     // SNOOP STALL LOGIC (ADDRESS COLLISION)
     // ================================================================
