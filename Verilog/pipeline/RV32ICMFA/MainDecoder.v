@@ -199,7 +199,8 @@ module MainDecoder(
                 ImmSrc          = 3'd5;
                 ALUSrc          = 1'b1;
                 MemWrite        = 1'b0;
-                ResultSrc       = 3'b000;
+                ResultSrc       = 3'b101;
+                // ResultSrc       = 3'b000;
                 Branch          = 1'b0;
                 ALUOp           = 2'b00;
                 Jump            = 1'b0;

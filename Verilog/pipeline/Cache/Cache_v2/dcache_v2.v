@@ -143,6 +143,7 @@ module dcache_v2 #(
     wire                    s2_atomic_sc;
     wire                    s2_atomic_amo;
     wire [2:0]              s2_amo_op;
+    wire                    sc_done;
 
     // AMO ALU
     wire [DATA_W-1:0]       amo_alu_result;
@@ -389,6 +390,7 @@ module dcache_v2 #(
         .i_atomic_sc        (s2_atomic_sc),
         .i_atomic_amo       (s2_atomic_amo),
         .o_sc_success       (o_sc_success),
+        .sc_done            (sc_done),
 
         // Snoop Info
         .i_snoop_invalidate (i_snoop_req_invalid && i_snoop_valid),
@@ -511,7 +513,10 @@ module dcache_v2 #(
     end 
 
     always @(*) begin
-        if (raw_en) begin
+        if (sc_done) begin
+            data_rdata = {31'd0, o_sc_success};
+        end 
+        else if (raw_en) begin
             data_rdata = raw_rdata;
         end 
         else begin

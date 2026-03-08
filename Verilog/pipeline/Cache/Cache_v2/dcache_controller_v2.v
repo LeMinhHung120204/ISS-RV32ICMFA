@@ -20,6 +20,8 @@ module dcache_controller_v2 (
 ,   input                   i_atomic_sc     // Store-Conditional  
 ,   input                   i_atomic_amo    // AMO operation
 ,   output  reg             o_sc_success    // SC result (0=success, 1=fail)
+,   output  reg             sc_done
+
 
     // Snoop invalidation (tu L2)
 ,   input                   i_snoop_invalidate
@@ -140,6 +142,7 @@ module dcache_controller_v2 (
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             amo_done <= 1'b0;
+            sc_done  <= 1'b0;
         end 
         else begin
             // 1. SET cho lenh AMO
@@ -153,6 +156,13 @@ module dcache_controller_v2 (
             // 3. Clear
             else if (state == TAG_CHECK && stall == 1'b0) begin
                 amo_done <= 1'b0;
+            end
+
+            if (state == SC_CHECK) begin
+                sc_done <= 1'b1;
+            end
+            else if (state == TAG_CHECK && stall == 1'b0) begin
+                sc_done <= 1'b0;
             end
         end
     end
@@ -174,20 +184,20 @@ module dcache_controller_v2 (
     // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            o_sc_success <= 1'b0;
+            o_sc_success <= 1'b1;
         end
         else begin
             if (state == SC_CHECK) begin
                 if (res_hit && (i_l2_moesi_state == STATE_E || i_l2_moesi_state == STATE_M)) begin
-                    o_sc_success <= 1'b1; // SUCCESS
+                    o_sc_success <= 1'b0; // SUCCESS
                 end
                 else if (i_l2_moesi_state != STATE_S && i_l2_moesi_state != STATE_O) begin
-                    o_sc_success <= 1'b0; // FAIL
+                    o_sc_success <= 1'b1; // FAIL
                 end
             end
             // Reset bd xly mot instruction moi
             else if (state == TAG_CHECK && cpu_req && !stall) begin
-                o_sc_success <= 1'b0; 
+                o_sc_success <= 1'b1; 
             end
         end
     end

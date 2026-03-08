@@ -3,25 +3,19 @@
 .section .text
 .org 0x0                  # Bắt đầu code tại địa chỉ 0x0
 _boot:
-    addi   x10,  x0, 4
+    addi   x10, x0, 4
+    addi   x18, x0, 18
     addi   x11, x0, 1
     sw     x10, (x0)
     # 1. Test Atomic Add
     amoadd.w x12, x11, (x0)   # Read 4 -> Add -> Write 5
     lw     x2,  (x0)
 
-    # 2. Test Atomic Swap
-    li      x13, 0xAAAA5555
-    amoswap.w x14, x13, (x10)
-
-    # 3. Test Atomic Max
-    li      x15, 0xBBBBBBBB
-    amomax.w x16, x15, (x10)
-
     # 4. Test LR/SC (Cực kỳ quan trọng cho hệ thống Dual-core MOESI của bạn)
     # Kiểm tra xem Reservation Set có hoạt động đúng tại địa chỉ 0x100 không
-    lr.w    x17, (x10)
-    sc.w    x18, x17, (x10)    # x18 = 0 nếu thành công
+    lr.w    x17, (x0)
+    sc.w    x18, x17, (x0)    # x18 = 0 nếu thành công
+    sc.w    x18, x17, (x0)    # x18 = 1 nếu that bai
 
 loop: 
     j loop 
