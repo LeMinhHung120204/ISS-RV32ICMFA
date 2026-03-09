@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+// from Lee Min Hunz with luv
 module d_cache #(
     parameter ADDR_W        = 32,
     parameter DATA_W        = 32,
@@ -133,7 +135,6 @@ module d_cache #(
     wire        refill_we;
     wire [3:0]  burst_cnt;
     wire [3:0]  burst_cnt_snoop;
-    wire        use_l1_data_mux;
     wire        is_shared_response;
     wire        is_dirty_response;
 
@@ -333,13 +334,11 @@ module d_cache #(
     // ================================================================
     // REFILL & SNOOP BUFFER LOGIC
     // ================================================================
-    // Refill Buffer: Receive data from Memory (AXI R) or L1 (Writeback)
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             refill_buffer <= {LINE_W{1'b0}};
         end 
         else begin 
-            // Case 1: Refill from Snoop (AXI R Channel)
             if (i_resp_valid & o_resp_ready & (iRID == CORE_ID)) begin
                 // refill_buffer[burst_cnt * DATA_W +: DATA_W] <= iRDATA;
                 refill_buffer <= i_resp_data;
@@ -363,43 +362,48 @@ module d_cache #(
     );
 
     // ================================================================
-    // MAIN CONTROLLER
+    // MAIN L1 CONTROLLER
     // ================================================================
-    cache_L2_controller_v2 #(
-        .DATA_W         (DATA_W), 
-        .ADDR_W         (ADDR_W)
-    ) u_controller (
+    dcache_controller u_controller (
         .clk        (clk), 
         .rst_n      (rst_n),
 
-        // Inputs
-        .snoop_busy             (snoop_busy),
-        .snoop_hit              (snoop_hit),
-        .snoop_req_invalidate   (snoop_req_invalidate),
-        .snoop_can_access_ram   (snoop_can_access_ram),
+        // CPU Inputs
+        .cpu_req                (s2_req), 
+        .cpu_we                 (s2_we),
+        .cpu_addr               (s2_full_addr),
         
-        .i_req_valid            (s2_req), 
-        .i_req_cmd              (s2_cmd),
-        
+        // Atomics
+        .i_atomic_lr            (s2_atomic_lr),
+        .i_atomic_sc            (s2_atomic_sc),
+        .i_atomic_amo           (s2_atomic_amo),
+        .o_sc_success           (o_sc_success),
+        .sc_done                (sc_done),
+
+        // Controller Status Data
         .hit                    (any_hit),
         .victim_dirty           (is_dirty),      
         .is_valid               (is_valid),
         .current_moesi_state    (moesi_selected_state),
-        
-        // Data Path Handshake
-        .i_wdata_valid      (i_wdata_valid), // Input tu L1
-        .o_wdata_ready      (o_wdata_ready),
 
-        // Outputs to Datapath
-        .tag_we             (tag_we),
-        .moesi_we           (main_moesi_we),
-        .refill_we          (refill_we),
-        // .read_index_src     (read_index_src),
-        .stall              (stall_contoller),
-        .is_shared_response (is_shared_response),
-        .is_dirty_response  (is_dirty_response),
-        .o_req_ready        (o_req_ready),
-        .burst_cnt          (burst_cnt)
+        // Snoop interface info
+        .i_snoop_invalidate     (snoop_req_invalidate),
+        .i_snoop_addr           (i_snp_req_addr),
+        .snoop_busy             (snoop_busy),
+        
+        // Data Path Control Outputs
+        .tag_we                 (tag_we),
+        .moesi_we               (main_moesi_we),
+        .refill_we              (refill_we),
+        .data_we                (data_we),
+        .stall                  (stall_contoller), // Đẩy ra Pipeline
+
+        // Arbiter Interface
+        .o_req_valid            (o_req_valid),
+        .i_req_ready            (i_req_ready),
+        .o_req_cmd              (o_req_cmd),      // Đẩy CMD đi Arbiter
+        .o_req_wb               (),               // (Có thể nối hoặc ko để báo evicting core)
+        .i_resp_valid           (i_resp_valid)
     );
 
     // ID Assignments
@@ -409,48 +413,25 @@ module d_cache #(
     assign oARADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // ================================================================
-    // SNOOP FORWARDING & MOESI CONTROLLER
+    // SNOOP DECODE & RESPONSE (Thay cho snoop_controller_v2)
     // ================================================================    
-    // Forwarding Address to L1
-    assign o_int_snoop_addr     = {s2_snoop_tag, s2_snoop_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-
-    // 2. Snoop Controller
-    snoop_controller_v2 #( 
-        .ADDR_W(ADDR_W) 
-    ) u_snoop_ctrl (
-        .clk                    (clk), 
-        .rst_n                  (rst_n),
-        
-        // thong tin tu L2
-        .snoop_hit              (snoop_hit),
-        .is_unique              (is_unique), 
-        .is_dirty               (is_dirty), 
-        .is_owner               (is_owner),
-        .snoop_can_access_ram   (snoop_can_access_ram),
-        .reg_snoop_stall        (reg_snoop_stall),
-        
-        // Output dieu khien L2
-        .moesi_we               (snoop_moesi_we),
-        .snoop_busy             (snoop_busy),
-        .bus_rw                 (bus_rw),
-        .bus_snoop_valid        (bus_snoop_valid),
-        .burst_cnt_snoop        (burst_cnt_snoop),
-
-        // AXI Snoop Channels
-        .ACVALID    (iACVALID), 
-        .ACSNOOP    (iACSNOOP), 
-        // .ACPROT     (3'b000), 
-        .ACREADY    (oACREADY),
-
-        .CRREADY    (iCRREADY), 
-        .CRVALID    (oCRVALID), 
-        .CRRESP     (oCRRESP),
-
-        .CDREADY    (iCDREADY), 
-        .CDLAST     (oCDLAST),  
-        .CDVALID    (oCDVALID)
-    );
-
+    // Giả sử Snoop CMD từ bus: 10 là Invalidate, các mã khác là Read
+    assign snoop_req_invalidate = (i_snp_req_cmd == 2'b10); // Decode từ cổng i_snp_req_cmd
+    
+    // Nối tín hiệu snoop xuống FSM và MOESI
+    assign bus_snoop_valid  = s2_is_snoop & snoop_hit;
+    assign bus_rw           = snoop_req_invalidate; 
+    assign snoop_busy       = 1'b0; // Không cần chặn stall, L1 xử lý snoop trong 1-2 cycle
+    
+    // Phản hồi Snoop (L1 -> Snoop Filter/Arbiter)
+    // Phản hồi Hit khi có snoop gửi xuống vòng 2
+    assign o_snp_req_ready  = 1'b1; // L1 luôn sẵn sàng nhận lệnh snoop (hoặc nối với stall)
+    assign o_snp_resp_valid = s2_is_snoop;
+    assign o_snp_resp_hit   = snoop_hit;
+    
+    // ================================================================
+    // MOESI CONTROLLER L1
+    // ================================================================
     moesi_controller u_moesi_ctrl (
         .current_state      (moesi_selected_state),
         
@@ -458,17 +439,18 @@ module d_cache #(
         .is_dirty_response  (is_dirty_response),
         .refill_we          (refill_we),
 
-        // Request L1 gui xuong
-        .cpu_req_valid      (s2_req),   
+        // Request từ CPU nội bộ
+        .cpu_req_valid      (s2_req & ~s2_is_snoop),   
         .cpu_hit            (any_hit), 
-        .cpu_rw             (s2_cmd[0]), 
-        .l1_dirty           (i_int_snoop_dirty),
+        .cpu_rw             (s2_we | s2_atomic_amo | s2_atomic_sc), // Bao gồm cả lệnh Atomic Write
 
+        // Request từ Snoop Bus
         .bus_snoop_valid    (bus_snoop_valid),
         .snoop_hit          (snoop_hit),
         .bus_rw             (bus_rw),          // 1=Invalidate, 0=Downgrade/Share
+        .l1_dirty           (is_dirty),
 
-        // Outputs (Trang thai logic)
+        // Outputs Cập nhật FSM
         .is_dirty           (is_dirty),
         .is_unique          (is_unique),
         .is_owner           (is_owner),
@@ -476,6 +458,7 @@ module d_cache #(
 
         .next_state         (moesi_next_state)
     );
+
     // ================================================================
     // AMO ALU INSTANTIATION
     // ================================================================
