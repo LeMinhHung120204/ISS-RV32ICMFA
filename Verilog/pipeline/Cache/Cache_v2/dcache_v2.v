@@ -245,7 +245,7 @@ module dcache_v2 #(
                 .refill_we      (refill_we & way_select[i]),
                 .refill_din     (refill_buffer),
                 .cpu_we         (data_we & way_hit[i]),
-                .cpu_din        (s2_atomic_amo ? amo_alu_result : s2_wdata),
+                .cpu_din        (s2_atomic_amo ? amo_alu_result : s2_wdata), // chua xu ly amo swap
                 .cpu_wstrb      (4'b1111),
                 .cpu_offset     (s2_word_off),
                 .dout           (data_read[i])
@@ -292,7 +292,6 @@ module dcache_v2 #(
         .flush          (1'b0),
 
         // Inputs (Stage 1)
-        // .s1_req         (cpu_req | i_snoop_valid),
         .s1_req         (cpu_req),
         .s1_we          (cpu_we),
         .s1_size        (cpu_size),
@@ -511,6 +510,47 @@ module dcache_v2 #(
             default: word_select = 32'd0;
         endcase
     end 
+
+    // wire [31:0] byte_aligned = word_select >> {s2_byte_off, 3'b000};
+    // wire [31:0] half_aligned = word_select >> {s2_byte_off[1], 4'b0000};
+
+    // always @(*) begin
+    //     casez ({sc_done, raw_en, s2_size})
+    //         // sc_done = 1
+    //         4'b1_?_??: data_rdata = {31'd0, o_sc_success}; 
+            
+    //         // sc_done = 0 & raw_en = 1
+    //         4'b0_1_??: data_rdata = raw_rdata;
+            
+    //         // s2_size
+    //         4'b0_0_01: data_rdata = {24'd0, byte_aligned[7:0]};  // Byte
+    //         4'b0_0_10: data_rdata = {16'd0, half_aligned[15:0]}; // Half
+    //         default:   data_rdata = word_select;                 // Word
+    //     endcase
+    // end
+
+   
+
+    // reg [31:0] formatted_data;
+    // always @(*) begin
+    //     case(s2_size)
+    //         2'b01:   formatted_data = {24'd0, byte_aligned[7:0]};
+    //         2'b10:   formatted_data = {16'd0, half_aligned[15:0]};
+    //         default: formatted_data = word_select;
+    //     endcase
+    // end
+
+    // always @(*) begin
+    //     if (sc_done) begin
+    //         data_rdata = {31'd0, o_sc_success};
+    //     end 
+    //     else if (raw_en) begin
+    //         data_rdata = raw_rdata;
+    //     end 
+    //     else begin
+    //         data_rdata = formatted_data;
+    //     end
+    // end
 
     always @(*) begin
         if (sc_done) begin
