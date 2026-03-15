@@ -494,7 +494,7 @@ module d_cache #(
     );
 
     // ---- MOESI CONTROLLER L1 ----
-    moesi_controller_v2 u_moesi_ctrl (
+    moesi_controller u_moesi_ctrl (
         .current_state      (moesi_selected_state),
         
         .is_shared_response (i_resp_is_shared),
