@@ -27,7 +27,7 @@ module d_coherence #(
 ,   output  reg [ADDR_W-1:0]    o_dc0_snp_req_addr
 ,   output  reg [1:0]           o_dc0_snp_req_cmd
 ,   output  reg                 o_dc0_resp_is_shared 
-,   output  reg                 o_dc0_resp_is_dirty  
+// ,   output  reg                 o_dc0_resp_is_dirty  
 
 ,   input                       i_dc0_snp_resp_valid
 ,   input                       i_dc0_snp_resp_hit
@@ -52,7 +52,7 @@ module d_coherence #(
 ,   output  reg [ADDR_W-1:0]    o_dc1_snp_req_addr
 ,   output  reg [1:0]           o_dc1_snp_req_cmd
 ,   output  reg                 o_dc1_resp_is_shared 
-,   output  reg                 o_dc1_resp_is_dirty  
+// ,   output  reg                 o_dc1_resp_is_dirty  
 
 ,   input                       i_dc1_snp_resp_valid
 ,   input                       i_dc1_snp_resp_hit
@@ -169,8 +169,8 @@ module d_coherence #(
         o_dc1_resp_valid        = 1'b0;
         o_dc0_resp_is_shared    = 1'b0; 
         o_dc1_resp_is_shared    = 1'b0;
-        o_dc0_resp_is_dirty     = 1'b0;  
-        o_dc1_resp_is_dirty     = 1'b0;
+        // o_dc0_resp_is_dirty     = 1'b0;  
+        // o_dc1_resp_is_dirty     = 1'b0;
 
         // Snoop Outputs
         o_dc0_snp_req_valid     = 1'b0; 
@@ -260,7 +260,7 @@ module d_coherence #(
                 if (current_grant == 1'b0) begin
                     o_dc0_resp_valid        = 1'b1;
                     o_dc0_resp_is_shared    = c2c_hit_buf; // Nếu hit từ Core 1 -> Chuyển sang S/O
-                    o_dc0_resp_is_dirty     = 1'b0;        // Setup tùy policy MOESI
+                    // o_dc0_resp_is_dirty     = 1'b0;        // Setup tùy policy MOESI
 
                     if (c2c_hit_buf) 
                         o_dc0_resp_data     = c2c_data_buf;
@@ -273,7 +273,7 @@ module d_coherence #(
                 else begin
                     o_dc1_resp_valid        = 1'b1;
                     o_dc1_resp_is_shared    = c2c_hit_buf;
-                    o_dc1_resp_is_dirty     = 1'b0;
+                    // o_dc1_resp_is_dirty     = 1'b0;
 
                     if (c2c_hit_buf) 
                         o_dc1_resp_data     = c2c_data_buf;

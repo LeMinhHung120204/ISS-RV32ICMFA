@@ -10,39 +10,39 @@ module main_l2_arbiter #(
     // ==========================================
     // INPUT TỪ I_ARBITER (Luồng Instruction)
     // ==========================================
-,   output                  o_l2_i_req_ready
+,   output  reg             o_l2_i_req_ready
 ,   input                   i_l2_i_req_valid
 ,   input   [ADDR_W-1:0]    i_l2_i_req_addr
     
 ,   input                   i_l2_i_rdata_ready
-,   output                  o_l2_i_rdata_valid
+,   output  reg             o_l2_i_rdata_valid
 ,   output  [LINE_W-1:0]    o_l2_i_rdata
 
     // ==========================================
     // INPUT TỪ D_COHERENCE (Luồng Data)
     // ==========================================
-,   output                  o_l2_d_req_ready
+,   output  reg             o_l2_d_req_ready
 ,   input                   i_l2_d_req_valid
 ,   input   [ADDR_W-1:0]    i_l2_d_req_addr
 ,   input                   i_l2_d_req_rw
 ,   input   [LINE_W-1:0]    i_l2_d_req_wdata
 
 ,   input                   i_l2_d_resp_ready
-,   output                  o_l2_d_resp_valid
+,   output  reg             o_l2_d_resp_valid
 ,   output  [LINE_W-1:0]    o_l2_d_resp_rdata
 
     // ==========================================
     // OUTPUT XUỐNG SHARED L2 CACHE
     // ==========================================
 ,   input                   i_l2_req_ready
-,   output                  o_l2_req_valid
+,   output  reg             o_l2_req_valid
 ,   output  [ADDR_W-1:0]    o_l2_req_addr
 ,   output                  o_l2_req_rw     // 0: Read, 1: Write
 ,   output  [LINE_W-1:0]    o_l2_req_wdata
 
 ,   input                   i_l2_resp_valid
 ,   input   [LINE_W-1:0]    i_l2_resp_rdata
-,   output                  o_l2_resp_ready
+,   output  reg             o_l2_resp_ready
 );
 
     // ================================================================

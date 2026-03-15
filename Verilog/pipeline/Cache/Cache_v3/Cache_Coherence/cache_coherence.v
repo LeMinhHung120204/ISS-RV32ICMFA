@@ -38,7 +38,7 @@ module cache_coherence #(
 ,   output  [ADDR_W-1:0]    o_dc0_snp_req_addr
 ,   output  [1:0]           o_dc0_snp_req_cmd
 ,   output                  o_dc0_resp_is_shared 
-,   output                  o_dc0_resp_is_dirty  
+// ,   output                  o_dc0_resp_is_dirty  
 
 ,   input                   i_dc0_snp_resp_valid
 ,   input                   i_dc0_snp_resp_hit
@@ -74,7 +74,7 @@ module cache_coherence #(
 ,   output  [ADDR_W-1:0]    o_dc1_snp_req_addr
 ,   output  [1:0]           o_dc1_snp_req_cmd
 ,   output                  o_dc1_resp_is_shared 
-,   output                  o_dc1_resp_is_dirty  
+// ,   output                  o_dc1_resp_is_dirty  
 
 ,   input                   i_dc1_snp_resp_valid
 ,   input                   i_dc1_snp_resp_hit
@@ -176,7 +176,7 @@ module cache_coherence #(
     ,   .o_dc0_snp_req_addr     (o_dc0_snp_req_addr)
     ,   .o_dc0_snp_req_cmd      (o_dc0_snp_req_cmd)
     ,   .o_dc0_resp_is_shared   (o_dc0_resp_is_shared)
-    ,   .o_dc0_resp_is_dirty    (o_dc0_resp_is_dirty)
+    // ,   .o_dc0_resp_is_dirty    (o_dc0_resp_is_dirty)
     ,   .i_dc0_snp_resp_valid   (i_dc0_snp_resp_valid)
     ,   .i_dc0_snp_resp_hit     (i_dc0_snp_resp_hit)
     ,   .i_dc0_snp_resp_data    (i_dc0_snp_resp_data)
@@ -196,7 +196,7 @@ module cache_coherence #(
     ,   .o_dc1_snp_req_addr     (o_dc1_snp_req_addr)
     ,   .o_dc1_snp_req_cmd      (o_dc1_snp_req_cmd)
     ,   .o_dc1_resp_is_shared   (o_dc1_resp_is_shared)
-    ,   .o_dc1_resp_is_dirty    (o_dc1_resp_is_dirty)
+    // ,   .o_dc1_resp_is_dirty    (o_dc1_resp_is_dirty)
     ,   .i_dc1_snp_resp_valid   (i_dc1_snp_resp_valid)
     ,   .i_dc1_snp_resp_hit     (i_dc1_snp_resp_hit)
     ,   .i_dc1_snp_resp_data    (i_dc1_snp_resp_data)
@@ -224,8 +224,8 @@ module cache_coherence #(
     ,   .i_l2_i_req_valid       (w_l2_i_req_valid)
     ,   .o_l2_i_req_ready       (w_l2_i_req_ready)
     ,   .i_l2_i_req_addr        (w_l2_i_req_addr)
-    ,   .i_l2_i_rdata_valid     (w_l2_i_rdata_valid)
-    ,   .o_l2_i_rdata_ready     (w_l2_i_rdata_ready)
+    ,   .o_l2_i_rdata_valid     (w_l2_i_rdata_valid)   
+    ,   .i_l2_i_rdata_ready     (w_l2_i_rdata_ready)
     ,   .o_l2_i_rdata           (w_l2_i_rdata)
 
         // Luồng Data từ d_coherence

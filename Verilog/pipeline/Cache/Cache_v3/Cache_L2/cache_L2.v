@@ -20,15 +20,15 @@ module cache_L2 #(
     // ==========================================
     // UPSTREAM: Giao tiếp với L1 (Từ I-Arbiter & D-Cache của Core này)
     // ==========================================
-,   output                  o_l1_req_ready
-,   input                   i_l1_req_valid
-,   input   [ADDR_W-1:0]    i_l1_req_addr
-,   input                   i_l1_req_rw     // 0: Read, 1: Write
-,   input   [LINE_W-1:0]    i_l1_req_wdata
+,   output                      o_l1_req_ready
+,   input                       i_l1_req_valid
+,   input   [ADDR_W-1:0]        i_l1_req_addr
+,   input                       i_l1_req_rw     // 0: Read, 1: Write
+,   input   [LINE_W-1:0]        i_l1_req_wdata
 
-,   output                  o_l1_resp_valid
-,   input                   i_l1_resp_ready
-,   output  [LINE_W-1:0]    o_l1_resp_rdata
+,   output                      o_l1_resp_valid
+,   input                       i_l1_resp_ready
+,   output reg  [LINE_W-1:0]    o_l1_resp_rdata
 
     // ==========================================
     //  (AXI Interface)
@@ -81,9 +81,6 @@ module cache_L2 #(
     // ================================================================
     // WIRE DECLARATIONS
     // ================================================================
-    // Output wires
-    wire [LINE_W-1:0]       o_l1_resp_rdata;
-    
     // Stage 1 Signals
     wire [TAG_W-1:0]        s1_tag;
     wire [TAG_W-1:0]        s1_ac_tag;
@@ -286,7 +283,7 @@ module cache_L2 #(
             ) u_data_mem (
                 .clk            (clk)
             ,   .rst_n          (rst_n)
-            ,   // .read_index     (read_index_src ? s1_index : s2_index),  
+                // .read_index     (read_index_src ? s1_index : s2_index),  
             ,   .read_index     (s1_index)
             ,   .dout           (data_read[i])
                 
@@ -312,7 +309,7 @@ module cache_L2 #(
         .DATA_W     (DATA_W), 
         .NUM_SETS   (NUM_SETS)
     ) acc_cmp_inst (
-        .clk        (clk), 
+        .clk        (clk)
     ,   .rst_n      (rst_n)
     ,   .stall      (pipeline_stall)
     ,   .flush      (1'b0)

@@ -55,7 +55,7 @@ module single_core #(
 ,   input   [ADDR_W-1:0]    i_snp_req_addr
 ,   input   [1:0]           i_snp_req_cmd
 ,   input                   i_resp_is_shared
-,   input                   i_resp_is_dirty
+// ,   input                   i_resp_is_dirty
     
 ,   output                  o_snp_resp_valid
 ,   output                  o_snp_resp_hit
@@ -171,7 +171,7 @@ module single_core #(
     ,   .cpu_sc                 (cpu_sc)
     ,   .cpu_amo                (cpu_amo)
     ,   .cpu_amo_op             (cpu_amo_op)
-    ,   .o_sc_success           (), // Bỏ trống nếu core không dùng cờ này trực tiếp
+    ,   .o_sc_success           () // Bỏ trống nếu core không dùng cờ này trực tiếp
     ,   .pipeline_stall         (dcache_stall)
         
         // ========================================================
@@ -195,7 +195,7 @@ module single_core #(
     ,   .i_snp_req_addr         (i_snp_req_addr)
     ,   .i_snp_req_cmd          (i_snp_req_cmd)
     ,   .i_resp_is_shared       (i_resp_is_shared)
-    ,   .i_resp_is_dirty        (i_resp_is_dirty)
+    // ,   .i_resp_is_dirty        (i_resp_is_dirty)
     ,   .o_snp_req_ready        (o_snp_req_ready)
 
         // --- DCACHE RESPONSE SNOOP (Trả lời cho Core kia) ---

@@ -36,10 +36,98 @@ module tb_soc_top;
 
     integer i;
 
+    // // -------------------------------------------------------------------------
+    // // External AXI4 Master Interface (from soc_top)
+    // // -------------------------------------------------------------------------
+    // wire [1:0]    m_axi_awid;
+    // wire [31:0]   m_axi_awaddr;
+    // wire [7:0]    m_axi_awlen;
+    // wire [2:0]    m_axi_awsize;
+    // wire [1:0]    m_axi_awburst;
+    // wire          m_axi_awvalid;
+    // wire          m_axi_awready;
+
+    // wire [DATA_W-1:0]  m_axi_wdata;
+    // wire [STRB_W-1:0]  m_axi_wstrb;
+    // wire               m_axi_wlast;
+    // wire               m_axi_wvalid;
+    // wire               m_axi_wready;
+
+    // wire [1:0]    m_axi_bid;
+    // wire [1:0]    m_axi_bresp;
+    // wire          m_axi_bvalid;
+    // wire          m_axi_bready;
+
+    // wire [1:0]    m_axi_arid;
+    // wire [31:0]   m_axi_araddr;
+    // wire [7:0]    m_axi_arlen;
+    // wire [2:0]    m_axi_arsize;
+    // wire [1:0]    m_axi_arburst;
+    // wire          m_axi_arvalid;
+    // wire          m_axi_arready;
+
+    // wire [1:0]    m_axi_rid;
+    // wire [DATA_W-1:0] m_axi_rdata;
+    // wire [3:0]    m_axi_rresp;
+    // wire          m_axi_rlast;
+    // wire          m_axi_rvalid;
+    // wire          m_axi_rready;
+
+    // // -------------------------------------------------------------------------
+    // // 2. Instantiate DUT (soc_top)
+    // // -------------------------------------------------------------------------
+    // soc_top #(
+    //     .CODE_A_START   (CODE_A_START),
+    //     .CODE_B_START   (CODE_B_START),
+    //     .DATA_START     (DATA_START)
+    // ) u_soc_top (
+    //     .ACLK           (ACLK),
+    //     .ARESETn        (ARESETn),
+    //     .c0_stall       (c0_stall),
+    //     .c1_stall       (c1_stall),
+
+    //     .m_axi_awid     (m_axi_awid),
+    //     .m_axi_awaddr   (m_axi_awaddr),
+    //     .m_axi_awlen    (m_axi_awlen),
+    //     .m_axi_awsize   (m_axi_awsize),
+    //     .m_axi_awburst  (m_axi_awburst),
+    //     .m_axi_awvalid  (m_axi_awvalid),
+    //     .m_axi_awready  (m_axi_awready),
+
+    //     .m_axi_wdata    (m_axi_wdata),
+    //     .m_axi_wstrb    (m_axi_wstrb),
+    //     .m_axi_wlast    (m_axi_wlast),
+    //     .m_axi_wvalid   (m_axi_wvalid),
+    //     .m_axi_wready   (m_axi_wready),
+
+    //     .m_axi_bid      (m_axi_bid),
+    //     .m_axi_bresp    (m_axi_bresp),
+    //     .m_axi_bvalid   (m_axi_bvalid),
+    //     .m_axi_bready   (m_axi_bready),
+
+    //     .m_axi_arid     (m_axi_arid),
+    //     .m_axi_araddr   (m_axi_araddr),
+    //     .m_axi_arlen    (m_axi_arlen),
+    //     .m_axi_arsize   (m_axi_arsize),
+    //     .m_axi_arburst  (m_axi_arburst),
+    //     .m_axi_arvalid  (m_axi_arvalid),
+    //     .m_axi_arready  (m_axi_arready),
+
+    //     .m_axi_rid      (m_axi_rid),
+    //     .m_axi_rdata    (m_axi_rdata),
+    //     .m_axi_rresp    (m_axi_rresp),
+    //     .m_axi_rlast    (m_axi_rlast),
+    //     .m_axi_rvalid   (m_axi_rvalid),
+    //     .m_axi_rready   (m_axi_rready)
+    // );
+
     // -------------------------------------------------------------------------
     // External AXI4 Master Interface (from soc_top)
     // -------------------------------------------------------------------------
-    wire [1:0]    m_axi_awid;
+    // dual_core hiện tại không hỗ trợ AXI ID, nên ta gán cứng = 0
+    wire [1:0]    m_axi_awid = 2'b00;
+    wire [1:0]    m_axi_arid = 2'b00;
+
     wire [31:0]   m_axi_awaddr;
     wire [7:0]    m_axi_awlen;
     wire [2:0]    m_axi_awsize;
@@ -58,7 +146,6 @@ module tb_soc_top;
     wire          m_axi_bvalid;
     wire          m_axi_bready;
 
-    wire [1:0]    m_axi_arid;
     wire [31:0]   m_axi_araddr;
     wire [7:0]    m_axi_arlen;
     wire [2:0]    m_axi_arsize;
@@ -76,49 +163,51 @@ module tb_soc_top;
     // -------------------------------------------------------------------------
     // 2. Instantiate DUT (soc_top)
     // -------------------------------------------------------------------------
-    soc_top #(
+    dual_core #(
         .CODE_A_START   (CODE_A_START),
         .CODE_B_START   (CODE_B_START),
         .DATA_START     (DATA_START)
     ) u_soc_top (
-        .ACLK           (ACLK),
-        .ARESETn        (ARESETn),
-        .c0_stall       (c0_stall),
-        .c1_stall       (c1_stall),
+        .clk            (ACLK),
+        .rst_n          (ARESETn),
+        
+        // Gộp stall của TB vào test_stall của dual_core
+        .test_stall     (c0_stall | c1_stall),
 
-        .m_axi_awid     (m_axi_awid),
-        .m_axi_awaddr   (m_axi_awaddr),
-        .m_axi_awlen    (m_axi_awlen),
-        .m_axi_awsize   (m_axi_awsize),
-        .m_axi_awburst  (m_axi_awburst),
-        .m_axi_awvalid  (m_axi_awvalid),
-        .m_axi_awready  (m_axi_awready),
+        // AW Channel
+        .iAWREADY       (m_axi_awready),
+        .oAWADDR        (m_axi_awaddr),
+        .oAWLEN         (m_axi_awlen),
+        .oAWSIZE        (m_axi_awsize),
+        .oAWBURST       (m_axi_awburst),
+        .oAWVALID       (m_axi_awvalid),
 
-        .m_axi_wdata    (m_axi_wdata),
-        .m_axi_wstrb    (m_axi_wstrb),
-        .m_axi_wlast    (m_axi_wlast),
-        .m_axi_wvalid   (m_axi_wvalid),
-        .m_axi_wready   (m_axi_wready),
+        // W Channel
+        .iWREADY        (m_axi_wready),
+        .oWDATA         (m_axi_wdata),
+        .oWSTRB         (m_axi_wstrb),
+        .oWLAST         (m_axi_wlast),
+        .oWVALID        (m_axi_wvalid),
 
-        .m_axi_bid      (m_axi_bid),
-        .m_axi_bresp    (m_axi_bresp),
-        .m_axi_bvalid   (m_axi_bvalid),
-        .m_axi_bready   (m_axi_bready),
+        // B Channel
+        .iBRESP         (m_axi_bresp),
+        .iBVALID        (m_axi_bvalid),
+        .oBREADY        (m_axi_bready),
 
-        .m_axi_arid     (m_axi_arid),
-        .m_axi_araddr   (m_axi_araddr),
-        .m_axi_arlen    (m_axi_arlen),
-        .m_axi_arsize   (m_axi_arsize),
-        .m_axi_arburst  (m_axi_arburst),
-        .m_axi_arvalid  (m_axi_arvalid),
-        .m_axi_arready  (m_axi_arready),
+        // AR Channel
+        .iARREADY       (m_axi_arready),
+        .oARADDR        (m_axi_araddr),
+        .oARLEN         (m_axi_arlen),
+        .oARSIZE        (m_axi_arsize),
+        .oARBURST       (m_axi_arburst),
+        .oARVALID       (m_axi_arvalid),
 
-        .m_axi_rid      (m_axi_rid),
-        .m_axi_rdata    (m_axi_rdata),
-        .m_axi_rresp    (m_axi_rresp),
-        .m_axi_rlast    (m_axi_rlast),
-        .m_axi_rvalid   (m_axi_rvalid),
-        .m_axi_rready   (m_axi_rready)
+        // R Channel
+        .iRDATA         (m_axi_rdata),
+        .iRRESP         (m_axi_rresp[1:0]), // Lấy 2 bit dưới vì mem trả về 4 bit
+        .iRLAST         (m_axi_rlast),
+        .iRVALID        (m_axi_rvalid),
+        .oRREADY        (m_axi_rready)
     );
 
     // -------------------------------------------------------------------------

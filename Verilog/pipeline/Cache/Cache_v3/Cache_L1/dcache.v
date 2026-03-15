@@ -42,9 +42,9 @@ module d_cache #(
 ,   output                  o_req_valid
 ,   output [ADDR_W-1:0]     o_req_addr
     // (00=Read Miss, 01=Write Miss, 10=Upgrade/Invalidate Others, 11=Writeback)
-,   output [1:0]            o_req_cmd    
-,   output [LINE_W-1:0]     o_req_data  // writeback data
-,   output                  o_req_wb    // Báo hiệu đang đẩy victim data (để Arbiter ưu tiên cấp bus)
+,   output [1:0]                o_req_cmd    
+,   output  reg [LINE_W-1:0]    o_req_data  // writeback data
+,   output                      o_req_wb    // Báo hiệu đang đẩy victim data (để Arbiter ưu tiên cấp bus)
     
     // SNOOP RESPONSE DCACHE
 ,   input                   i_resp_valid
@@ -56,17 +56,17 @@ module d_cache #(
 ,   input  [ADDR_W-1:0]     i_snp_req_addr
 ,   input  [1:0]            i_snp_req_cmd
 ,   input                   i_resp_is_shared 
-,   input                   i_resp_is_dirty
+// ,   input                   i_resp_is_dirty
 ,   output                  o_snp_req_ready
 
     // DCACHE RESPONSE SNOOP
 
     // hien tai dang dinh check va tra response luon con handshake thi lam o cache coherence 
-,   output                  o_snp_resp_valid
-// ,   input                   i_snp_resp_ready    // coi lai xu ly
-,   output                  o_snp_resp_hit      
-,   output [LINE_W-1:0]     o_snp_resp_data
-// ,   output                  snoop_req_invalidate
+,   output                      o_snp_resp_valid
+// ,   input                    i_snp_resp_ready    // coi lai xu ly
+,   output                      o_snp_resp_hit      
+,   output  reg [LINE_W-1:0]    o_snp_resp_data
+// ,   output                   snoop_req_invalidate
 );
 
     // ================================================================
@@ -364,7 +364,7 @@ module d_cache #(
             ,   .NUM_SETS   (NUM_SETS) 
             ) u_data_mem (
                 .clk            (clk)
-            ,   .rst_n          (rst_n),
+            ,   .rst_n          (rst_n)
                 // .read_index     (read_index_src ? s1_index : s2_index),  
             ,   .read_index     (s1_index)
             ,   .dout           (data_read[i])
@@ -444,9 +444,9 @@ module d_cache #(
     ) u_replacement (
         .clk        (clk)
     ,   .rst_n      (rst_n)
-    ,   .we         (any_hit),
-    ,   .way_hit    (way_hit),
-    ,   .addr       (s2_index),
+    ,   .we         (any_hit)
+    ,   .way_hit    (way_hit)
+    ,   .addr       (s2_index)
     ,   .way_select (way_select)
     );
 
@@ -500,7 +500,7 @@ module d_cache #(
         .current_state      (moesi_selected_state)
         
     ,   .is_shared_response (i_resp_is_shared)
-    ,   .is_dirty_response  (i_resp_is_dirty)
+    // ,   .is_dirty_response  (i_resp_is_dirty)
     ,   .refill_we          (refill_we)
 
         // Request từ CPU nội bộ

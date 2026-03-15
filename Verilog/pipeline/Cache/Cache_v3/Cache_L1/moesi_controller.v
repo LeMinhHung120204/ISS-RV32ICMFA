@@ -3,7 +3,7 @@
 module moesi_controller(
     input   [2:0]   current_state
 ,   input           is_shared_response
-,   input           is_dirty_response
+// ,   input           is_dirty_response
 ,   input           refill_we
 
     // Request from CPU 
