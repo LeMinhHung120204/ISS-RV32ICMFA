@@ -17,40 +17,40 @@ module icache #(
     parameter WORD_OFF_W    = 4, 
     parameter BYTE_OFF_W    = 2,
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
-    parameter CACHE_DATA_W  = (1 << WORD_OFF_W) * 32
+    parameter LINE_W        = (1 << WORD_OFF_W) * 32
 )(
     input clk, rst_n
 
     // cache <-> CPU
-,   input                       cpu_req
-,   input                       icache_flush
-,   input   [ADDR_W-1:0]        cpu_addr
-,   output  [DATA_W-1:0]        data_rdata
-,   output                      pipeline_stall
+,   input                   cpu_req
+,   input                   icache_flush
+,   input   [ADDR_W-1:0]    cpu_addr
+,   output  [DATA_W-1:0]    data_rdata
+,   output                  pipeline_stall
 
     // icache <-> dcache
-,   input                       dcache_stall
+,   input                   dcache_stall
 
     // cache <-> L2
     // Request
-,   input                       i_l2_req_ready
-,   output                      o_l2_req_valid
-,   output  [ADDR_W-1:0]        o_l2_req_addr
+,   input                   i_l2_req_ready
+,   output                  o_l2_req_valid
+,   output  [ADDR_W-1:0]    o_l2_req_addr
 
     // Read Data (Refill L2 -> icache)
-,   input                       i_l2_rdata_valid
-,   input   [CACHE_DATA_W-1:0]  i_l2_rdata
-,   output                      o_l2_rdata_ready
+,   input                   i_l2_rdata_valid
+,   input   [LINE_W-1:0]    i_l2_rdata
+,   output                  o_l2_rdata_ready
 );
 
     // ================================================================
     // REG DECLARATIONS
     // ================================================================
     // Pipeline Buffers
-    reg [CACHE_DATA_W-1:0]  refill_buffer;
+    reg [LINE_W-1:0]    refill_buffer;
     
     // Data Output Selection
-    reg [DATA_W-1:0]        word_select;
+    reg [DATA_W-1:0]    word_select;
 
     // ================================================================
     // WIRE DECLARATIONS
@@ -70,7 +70,7 @@ module icache #(
 
     // Memory Arrays Output
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
-    wire [CACHE_DATA_W-1:0] data_read   [0:NUM_WAYS-1];
+    wire [LINE_W-1:0]       data_read   [0:NUM_WAYS-1];
     wire [NUM_WAYS-1:0]     current_valid;
 
     // Controller Signals
@@ -86,7 +86,7 @@ module icache #(
     // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin 
-            refill_buffer <= {CACHE_DATA_W{1'b0}};
+            refill_buffer <= {LINE_W{1'b0}};
         end 
         else if (i_l2_rdata_valid && o_l2_rdata_ready) begin
              refill_buffer <= i_l2_rdata;
