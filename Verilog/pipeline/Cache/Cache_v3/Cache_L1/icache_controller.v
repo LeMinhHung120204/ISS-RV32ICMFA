@@ -16,8 +16,8 @@
 //
 // ============================================================================
 module icache_controller #(
-    parameter DATA_W    = 32,
-    parameter ADDR_W    = 32
+    parameter DATA_W    = 32
+,   parameter ADDR_W    = 32
 )(
     input               clk, rst_n
 

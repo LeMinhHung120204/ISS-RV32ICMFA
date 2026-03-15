@@ -2,8 +2,8 @@
 // from Lee Min Hunz with luv
 
 module d_coherence #(
-    parameter ADDR_W = 32,
-    parameter LINE_W = 128
+    parameter ADDR_W = 32
+,   parameter LINE_W = 128
 )(
     input   clk
 ,   input   rst_n

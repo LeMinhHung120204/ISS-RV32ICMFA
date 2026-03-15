@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 
 module main_l2_arbiter #(
-    parameter ADDR_W = 32,
-    parameter LINE_W = 128
+    parameter ADDR_W = 32
+,   parameter LINE_W = 128
 )(
     input clk   
 ,   input rst_n
@@ -139,7 +139,7 @@ module main_l2_arbiter #(
     // ================================================================
     // MULTIPLEXER (Định tuyến Address và Data xuống L2)
     // ================================================================
-    assign o_l2_req_addr     = (mux_d_sel) ? i_l2_d_req_addr  : i_l2_i_req_addr;
+    assign o_l2_req_addr    = (mux_d_sel) ? i_l2_d_req_addr  : i_l2_i_req_addr;
     assign o_l2_req_rw      = (mux_d_sel) ? i_l2_d_req_rw    : 1'b0; // I-Cache luôn là Read (0)
     assign o_l2_req_wdata   = (mux_d_sel) ? i_l2_d_req_wdata : {LINE_W{1'b0}};
 

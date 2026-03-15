@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
-module moesi_controller_v2(
+module moesi_controller(
     input   [2:0]   current_state
 ,   input           is_shared_response
 ,   input           is_dirty_response

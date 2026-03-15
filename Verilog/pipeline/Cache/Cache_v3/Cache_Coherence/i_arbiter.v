@@ -2,10 +2,10 @@
 // from Lee Min Hunz with luv
 
 module i_arbiter #(
-    parameter ADDR_W = 32,
-    parameter LINE_W = 128
+    parameter ADDR_W = 32
+,   parameter LINE_W = 128
 )(
-    input clk,
+    input clk
 ,   input rst_n
 
     // ==========================================

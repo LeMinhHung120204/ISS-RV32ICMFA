@@ -1,22 +1,23 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
 module d_cache #(
-    parameter ADDR_W        = 32,
-    parameter DATA_W        = 32,
-    parameter NUM_WAYS      = 4,
-    parameter NUM_SETS      = 16,
-    parameter DATA_START    = 32'h0000_4000,
+    parameter ADDR_W        = 32
+,   parameter DATA_W        = 32
+,   parameter NUM_WAYS      = 4
+,   parameter NUM_SETS      = 16
+,   parameter DATA_START    = 32'h0000_4000
     
     // Derived parameters
-    parameter INDEX_W       = $clog2(NUM_SETS),
-    parameter WORD_OFF_W    = 4, // 16 words
-    parameter BYTE_OFF_W    = 2,
-    parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W,
-    parameter LINE_W        = (1 << WORD_OFF_W) * 32
-    parameter ID_W          = 2,
-    parameter STRB_W        = (DATA_W/8)
+,   parameter INDEX_W       = $clog2(NUM_SETS)
+,   parameter WORD_OFF_W    = 4 // 16 words
+,   parameter BYTE_OFF_W    = 2
+,   parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
+,   parameter LINE_W        = (1 << WORD_OFF_W) * 32
+,   parameter ID_W          = 2
+,   parameter STRB_W        = (DATA_W/8)
 )(
-    input clk, rst_n
+    input clk
+,   input rst_n
 
     // ================= CPU INTERFACE =================
 ,   input                       cpu_req
@@ -37,8 +38,8 @@ module d_cache #(
 
     // ================= Snoop Interface =================
     // REQUEST CHANNEL (D-Cache request Snoop)
-,   output                  o_req_valid
 ,   input                   i_req_ready
+,   output                  o_req_valid
 ,   output [ADDR_W-1:0]     o_req_addr
     // (00=Read Miss, 01=Write Miss, 10=Upgrade/Invalidate Others, 11=Writeback)
 ,   output [1:0]            o_req_cmd    
@@ -47,25 +48,25 @@ module d_cache #(
     
     // SNOOP RESPONSE DCACHE
 ,   input                   i_resp_valid
-,   output                  o_resp_ready
 ,   input  [LINE_W-1:0]     i_resp_data
+,   output                  o_resp_ready
 
     // SNOOP REQUEST DCACHE
 ,   input                   i_snp_req_valid
-,   output                  o_snp_req_ready
 ,   input  [ADDR_W-1:0]     i_snp_req_addr
 ,   input  [1:0]            i_snp_req_cmd
 ,   input                   i_resp_is_shared 
 ,   input                   i_resp_is_dirty
+,   output                  o_snp_req_ready
 
     // DCACHE RESPONSE SNOOP
 
     // hien tai dang dinh check va tra response luon con handshake thi lam o cache coherence 
-,   output                  o_snp_resp_valid    // coi lai xu ly
+,   output                  o_snp_resp_valid
 // ,   input                   i_snp_resp_ready    // coi lai xu ly
 ,   output                  o_snp_resp_hit      
 ,   output [LINE_W-1:0]     o_snp_resp_data
-,   output                  snoop_req_invalidate
+// ,   output                  snoop_req_invalidate
 );
 
     // ================================================================
@@ -120,7 +121,8 @@ module d_cache #(
     wire                    ctrl_snoop_ready;
     wire                    snoop_can_access_ram;
     wire                    reg_snoop_stall;
-    wire                    stall_contoller;
+    wire                    stall_controller;
+    wire                    snoop_req_invalidate;
 
     // Memory Arrays Output
     wire [TAG_W-1:0]    tag_read    [0:NUM_WAYS-1];
@@ -170,13 +172,13 @@ module d_cache #(
     assign way_select_final = (any_hit) ? way_hit : way_select;
 
     // Pipeline Stall
-    assign pipeline_stall   = stall_contoller | i_snp_req_valid; 
+    assign pipeline_stall   = stall_controller | i_snp_req_valid; 
 
     // STAGE 2: HIT LOGIC
-    assign way_hit[0]   = (tag_read[0] == tag_select) & (moesi_current_state[0] != 3'd4);
-    assign way_hit[1]   = (tag_read[1] == tag_select) & (moesi_current_state[1] != 3'd4);
-    assign way_hit[2]   = (tag_read[2] == tag_select) & (moesi_current_state[2] != 3'd4);
-    assign way_hit[3]   = (tag_read[3] == tag_select) & (moesi_current_state[3] != 3'd4);
+    assign way_hit[0]       = (tag_read[0] == tag_select) & (moesi_current_state[0] != 3'd4);
+    assign way_hit[1]       = (tag_read[1] == tag_select) & (moesi_current_state[1] != 3'd4);
+    assign way_hit[2]       = (tag_read[2] == tag_select) & (moesi_current_state[2] != 3'd4);
+    assign way_hit[3]       = (tag_read[3] == tag_select) & (moesi_current_state[3] != 3'd4);
 
     assign any_hit          = |way_hit;
     assign o_snp_resp_hit   = any_hit & s2_is_snoop;
@@ -314,19 +316,19 @@ module d_cache #(
 
     // ---- STAGE 1: ACCESS ----
     access #(
-        .ADDR_W     (ADDR_W),
-        .DATA_W     (DATA_W),
-        .NUM_SETS   (NUM_SETS)
+        .ADDR_W     (ADDR_W)
+    ,   .DATA_W     (DATA_W)
+    ,   .NUM_SETS   (NUM_SETS)
     ) access_inst (
-        .cpu_addr       (s1_mux_addr),
-        .ac_addr        (i_snp_req_addr),
+        .cpu_addr       (s1_mux_addr)
+    ,   .ac_addr        (i_snp_req_addr)
 
-        .cpu_tag        (s1_tag),            
-        .ac_tag         (s1_ac_tag),
-        .cpu_index      (s1_index), 
-        .ac_index       (s1_ac_index),  
-        .cpu_word_off   (s1_word_off),
-        .cpu_byte_off   (s1_byte_off)
+    ,   .cpu_tag        (s1_tag)     
+    ,   .ac_tag         (s1_ac_tag)
+    ,   .cpu_index      (s1_index)
+    ,   .ac_index       (s1_ac_index)
+    ,   .cpu_word_off   (s1_word_off)
+    ,   .cpu_byte_off   (s1_byte_off)
     );
 
     // ---- SRAM ARRAYS ----
@@ -335,21 +337,21 @@ module d_cache #(
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : tag_rams
             tag_mem #( 
-                .NUM_SETS(NUM_SETS), 
-                .TAG_W(TAG_W) 
+                .NUM_SETS(NUM_SETS)
+            ,   .TAG_W(TAG_W) 
             ) u_tag_mem (
-                .clk                    (clk), 
-                .rst_n                  (rst_n),
+                .clk                    (clk)
+            ,   .rst_n                  (rst_n)
 
-                .tag_we                 (tag_we & way_select[i]),
-                .moesi_we               (moesi_we & choosen_way[i]),
+            ,   .tag_we                 (tag_we & way_select[i])
+            ,   .moesi_we               (moesi_we & choosen_way[i])
                 // .read_index             (read_index_src ? s1_index : s2_index),   
-                .read_index             (s1_index),   
-                .write_index            (s2_index),           
-                .din_tag                (s2_tag),            
-                .dout_tag               (tag_read[i]),
-                .moesi_next_state       (moesi_next_state),
-                .moesi_current_state    (moesi_current_state[i])
+            ,   .read_index             (s1_index)
+            ,   .write_index            (s2_index)
+            ,   .din_tag                (s2_tag)
+            ,   .dout_tag               (tag_read[i])
+            ,   .moesi_next_state       (moesi_next_state)
+            ,   .moesi_current_state    (moesi_current_state[i])
             );
         end
     endgenerate
@@ -358,191 +360,191 @@ module d_cache #(
     generate
         for (i = 0; i < NUM_WAYS; i = i + 1) begin : data_rams
             data_mem #( 
-                .DATA_W     (DATA_W), 
-                .NUM_SETS   (NUM_SETS) 
+                .DATA_W     (DATA_W)
+            ,   .NUM_SETS   (NUM_SETS) 
             ) u_data_mem (
-                .clk            (clk), 
-                .rst_n          (rst_n),
+                .clk            (clk)
+            ,   .rst_n          (rst_n),
                 // .read_index     (read_index_src ? s1_index : s2_index),  
-                .read_index     (s1_index),  
-                .dout           (data_read[i]),
+            ,   .read_index     (s1_index)
+            ,   .dout           (data_read[i])
                 
                 // Ghi nguyen dong cache
-                .refill_we      (refill_we & way_select[i]),
-                .write_index    (s2_index),
-                .refill_din     (refill_buffer),
+            ,   .refill_we      (refill_we & way_select[i])
+            ,   .write_index    (s2_index)
+            ,   .refill_din     (refill_buffer)
                 
-                .cpu_we         (data_we & way_hit[i]),
-                .cpu_din        (s2_atomic_amo ? amo_alu_result : s2_wdata), // chua xu ly amo swap
-                .cpu_wstrb      (4'b1111),
-                .cpu_offset     (s2_word_off),
+            ,   .cpu_we         (data_we & way_hit[i])
+            ,   .cpu_din        (s2_atomic_amo ? amo_alu_result : s2_wdata) // chua xu ly amo swap
+            ,   .cpu_wstrb      (4'b1111)
+            ,   .cpu_offset     (s2_word_off)
             );
         end
     endgenerate
 
     // ---- PIPELINE REGISTER (acc_cmp) ----
     acc_cmp #(
-        .ADDR_W     (ADDR_W), 
-        .DATA_W     (DATA_W), 
-        .NUM_SETS   (NUM_SETS)
+        .ADDR_W     (ADDR_W)
+    ,   .DATA_W     (DATA_W)
+    ,   .NUM_SETS   (NUM_SETS)
     ) acc_cmp_inst (
-        .clk        (clk), 
-        .rst_n      (rst_n),
-        .stall      (pipeline_stall),
-        .flush      (1'b0),
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .stall      (pipeline_stall)
+    ,   .flush      (1'b0)
 
         // Stage 1 Inputs (Mapped from L1 interface)
-        .s1_req         (cpu_req),
-        .s1_we          (cpu_we),
-        .s1_size        (cpu_size),
-        .s1_wdata       (cpu_din),
-        .s1_tag         (s1_tag),    
-        .s1_index       (s1_index),   
-        .s1_word_off    (s1_word_off),
-        .s1_byte_off    (s1_byte_off),
+    ,   .s1_req         (cpu_req)
+    ,   .s1_we          (cpu_we)
+    ,   .s1_size        (cpu_size)
+    ,   .s1_wdata       (cpu_din)
+    ,   .s1_tag         (s1_tag)    
+    ,   .s1_index       (s1_index)
+    ,   .s1_word_off    (s1_word_off)
+    ,   .s1_byte_off    (s1_byte_off)
 
-        .snoop_stall    (reg_snoop_stall),
-        .s1_is_snoop    (i_snp_req_valid),
-        .s1_cmd         (i_snp_req_cmd), 
-        .s1_snoop_tag   (s1_ac_tag),
-        .s1_snoop_index (s1_ac_index),
+    ,   .snoop_stall    (reg_snoop_stall)
+    ,   .s1_is_snoop    (i_snp_req_valid)
+    ,   .s1_cmd         (i_snp_req_cmd)
+    ,   .s1_snoop_tag   (s1_ac_tag)
+    ,   .s1_snoop_index (s1_ac_index)
 
         // Inputs Atomic
-        .s1_lr          (cpu_lr),
-        .s1_sc          (cpu_sc),
-        .s1_amo         (cpu_amo),
-        .s1_amo_op      (cpu_amo_op),
+    ,   .s1_lr          (cpu_lr)
+    ,   .s1_sc          (cpu_sc)
+    ,   .s1_amo         (cpu_amo)
+    ,   .s1_amo_op      (cpu_amo_op)
 
         // Stage 2 Outputs
-        .s2_req         (s2_req),
-        .s2_we          (s2_we),
-        .s2_cmd         (s2_cmd),
-        .s2_size        (s2_size),
-        .s2_wdata       (s2_wdata),
-        .s2_tag         (s2_tag),
-        .s2_index       (s2_index),
-        .s2_word_off    (s2_word_off),
-        .s2_byte_off    (s2_byte_off),
+    ,   .s2_req         (s2_req)
+    ,   .s2_we          (s2_we)
+    ,   .s2_cmd         (s2_cmd)
+    ,   .s2_size        (s2_size)
+    ,   .s2_wdata       (s2_wdata)
+    ,   .s2_tag         (s2_tag)
+    ,   .s2_index       (s2_index)
+    ,   .s2_word_off    (s2_word_off)
+    ,   .s2_byte_off    (s2_byte_off)
 
-        .s2_is_snoop    (s2_is_snoop),
-        .s2_snoop_tag   (s2_snoop_tag),
-        .s2_snoop_index (s2_snoop_index),
+    ,   .s2_is_snoop    (s2_is_snoop)
+    ,   .s2_snoop_tag   (s2_snoop_tag)
+    ,   .s2_snoop_index (s2_snoop_index)
 
         // Outputs Atomic
-        .s2_lr          (s2_atomic_lr),
-        .s2_sc          (s2_atomic_sc),
-        .s2_amo         (s2_atomic_amo),
-        .s2_amo_op      (s2_amo_op)
+    ,   .s2_lr          (s2_atomic_lr)
+    ,   .s2_sc          (s2_atomic_sc)
+    ,   .s2_amo         (s2_atomic_amo)
+    ,   .s2_amo_op      (s2_amo_op)
     );
 
     // ---- REPLACEMENT POLICY ----
     cache_replacement #( 
-        .N_WAYS     (NUM_WAYS), 
-        .N_LINES    (NUM_SETS) 
+        .N_WAYS     (NUM_WAYS)
+    ,   .N_LINES    (NUM_SETS) 
     ) u_replacement (
-        .clk        (clk), 
-        .rst_n      (rst_n),
-        .we         (any_hit),
-        .way_hit    (way_hit),
-        .addr       (s2_index),
-        .way_select (way_select)
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .we         (any_hit),
+    ,   .way_hit    (way_hit),
+    ,   .addr       (s2_index),
+    ,   .way_select (way_select)
     );
 
     // ---- MAIN L1 CONTROLLER ----
     dcache_controller u_controller (
-        .clk        (clk), 
-        .rst_n      (rst_n),
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
 
         // CPU Inputs
-        .cpu_req                (s2_req), 
-        .cpu_we                 (s2_we),
-        .cpu_addr               (s2_full_addr),
+    ,   .cpu_req                (s2_req)
+    ,   .cpu_we                 (s2_we)
+    ,   .cpu_addr               (s2_full_addr)
         
         // Atomics
-        .i_atomic_lr            (s2_atomic_lr),
-        .i_atomic_sc            (s2_atomic_sc),
-        .i_atomic_amo           (s2_atomic_amo),
-        .o_sc_success           (o_sc_success),
-        .sc_done                (sc_done),
+    ,   .i_atomic_lr            (s2_atomic_lr)
+    ,   .i_atomic_sc            (s2_atomic_sc)
+    ,   .i_atomic_amo           (s2_atomic_amo)
+    ,   .o_sc_success           (o_sc_success)
+    ,   .sc_done                (sc_done)
 
         // Controller Status Data
-        .hit                    (any_hit),
-        .victim_dirty           (is_dirty),      
-        .is_valid               (is_valid),
-        .current_moesi_state    (moesi_selected_state),
+    ,   .hit                    (any_hit)
+    ,   .victim_dirty           (is_dirty)
+    ,   .is_valid               (is_valid)
+    ,   .current_moesi_state    (moesi_selected_state)
 
         // Snoop interface info
-        .i_snoop_invalidate     (snoop_req_invalidate),
-        .i_snoop_addr           (i_snp_req_addr),
-        .snoop_busy             (snoop_busy),
-        .o_resp_ready           (o_resp_ready),
+    ,   .i_snoop_invalidate     (snoop_req_invalidate)
+    ,   .i_snoop_addr           (i_snp_req_addr)
+    ,   .snoop_busy             (snoop_busy)
+    ,   .o_resp_ready           (o_resp_ready)
         
         // Data Path Control Outputs
-        .tag_we                 (tag_we),
-        .moesi_we               (main_moesi_we),
-        .refill_we              (refill_we),
-        .data_we                (data_we),
-        .stall                  (stall_contoller), // Đẩy ra Pipeline
-        .o_snoop_ready_ctrl     (ctrl_snoop_ready),
+    ,   .tag_we                 (tag_we)
+    ,   .moesi_we               (main_moesi_we)
+    ,   .refill_we              (refill_we)
+    ,   .data_we                (data_we)
+    ,   .stall                  (stall_controller) // Đẩy ra Pipeline
+    ,   .o_snoop_ready_ctrl     (ctrl_snoop_ready)
 
         // Arbiter Interface
-        .o_req_valid            (o_req_valid),
-        .i_req_ready            (i_req_ready),
-        .o_req_cmd              (o_req_cmd),      // Đẩy CMD đi Arbiter
-        .o_req_wb               (o_req_wb),           
-        .i_resp_valid           (i_resp_valid)
+    ,   .o_req_valid            (o_req_valid)
+    ,   .i_req_ready            (i_req_ready)
+    ,   .o_req_cmd              (o_req_cmd)     // Đẩy CMD đi Arbiter
+    ,   .o_req_wb               (o_req_wb)          
+    ,   .i_resp_valid           (i_resp_valid)
     );
 
     // ---- MOESI CONTROLLER L1 ----
     moesi_controller u_moesi_ctrl (
-        .current_state      (moesi_selected_state),
+        .current_state      (moesi_selected_state)
         
-        .is_shared_response (i_resp_is_shared),
-        .is_dirty_response  (i_resp_is_dirty),
-        .refill_we          (refill_we),
+    ,   .is_shared_response (i_resp_is_shared)
+    ,   .is_dirty_response  (i_resp_is_dirty)
+    ,   .refill_we          (refill_we)
 
         // Request từ CPU nội bộ
-        .cpu_req_valid      (s2_req & ~s2_is_snoop),   
-        .cpu_hit            (cpu_hit), 
-        .cpu_rw             (s2_we | s2_atomic_amo | s2_atomic_sc), // Bao gồm cả lệnh Atomic Write
+    ,   .cpu_req_valid      (s2_req & ~s2_is_snoop)
+    ,   .cpu_hit            (cpu_hit)
+    ,   .cpu_rw             (s2_we | s2_atomic_amo | s2_atomic_sc) // Bao gồm cả lệnh Atomic Write
 
         // Request từ Snoop Bus
-        .snoop_valid            (s2_is_snoop),
-        .snoop_hit              (o_snp_resp_hit),
-        .snoop_req_invalidate   (snoop_req_invalidate),
+    ,   .snoop_valid            (s2_is_snoop)
+    ,   .snoop_hit              (o_snp_resp_hit)
+    ,   .snoop_req_invalidate   (snoop_req_invalidate)
 
         // Outputs Cập nhật FSM
-        .is_dirty           (is_dirty),
-        .is_unique          (is_unique),
-        .is_owner           (is_owner),
-        .is_valid           (is_valid),
+    ,   .is_dirty           (is_dirty)
+    ,   .is_unique          (is_unique)
+    ,   .is_owner           (is_owner)
+    ,   .is_valid           (is_valid)
 
-        .next_state         (moesi_next_state)
+    ,   .next_state         (moesi_next_state)
     );
 
     // Snoop controller
     snoop_controller #(
         .ADDR_W(ADDR_W)
     ) u_snoop_ctrl (
-        .i_snp_req_valid        (i_snp_req_valid),
-        .i_snp_req_cmd          (i_snp_req_cmd),
-        .i_snp_req_addr         (i_snp_req_addr),
-        .i_dcache_ready         (ctrl_snoop_ready),
-        .i_snp_resp_valid       (s2_is_snoop),
+        .i_snp_req_valid        (i_snp_req_valid)
+    ,   .i_snp_req_cmd          (i_snp_req_cmd)
+    ,   .i_snp_req_addr         (i_snp_req_addr)
+    ,   .i_dcache_ready         (ctrl_snoop_ready)
+    ,   .i_snp_resp_valid       (s2_is_snoop)
 
-        .o_snp_req_ready        (o_snp_req_ready),
-        .snoop_req_invalidate   (snoop_req_invalidate),
-        .o_snp_resp_valid       (o_snp_resp_valid)
+    ,   .o_snp_req_ready        (o_snp_req_ready)
+    ,   .snoop_req_invalidate   (snoop_req_invalidate)
+    ,   .o_snp_resp_valid       (o_snp_resp_valid)
     );  
 
     // ---- AMO ALU ----
     amo_alu #(
         .DATA_WIDTH (DATA_W)
     ) u_amo_alu (
-        .i_data_from_mem    (word_select),
-        .i_data_from_core   (s2_wdata),
-        .i_amo_op           (s2_amo_op),
-        .o_amo_alu_result   (amo_alu_result) 
+        .i_data_from_mem    (word_select)
+    ,   .i_data_from_core   (s2_wdata)
+    ,   .i_amo_op           (s2_amo_op)
+    ,   .o_amo_alu_result   (amo_alu_result) 
     );
 
 endmodule

@@ -2,9 +2,9 @@
 // from Lee Min Hunz with luv
 // L1 Data Cache Controller with MOESI Coherence & Atomic Support
 module dcache_controller #(
-    parameter DATA_W        = 32,
-    parameter ADDR_W        = 32,
-    parameter STRB_W        = (DATA_W/8)
+    parameter DATA_W        = 32
+,   parameter ADDR_W        = 32
+,   parameter STRB_W        = (DATA_W/8)
 )(
     input           clk, rst_n
 

@@ -1,9 +1,9 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
 
-module coherence_interconnect #(
-    parameter ADDR_W = 32,
-    parameter LINE_W = 128 // (4 words * 32 bits)
+module cache_coherence #(
+    parameter ADDR_W = 32
+,   parameter LINE_W = 128 // (4 words * 32 bits)
 )(
     input clk
 ,   input rst_n
@@ -122,131 +122,131 @@ module coherence_interconnect #(
 
     // 1. Khởi tạo Instruction Arbiter
     i_arbiter #(
-        .ADDR_W(ADDR_W),
-        .LINE_W(LINE_W)
+        .ADDR_W(ADDR_W)
+    ,   .LINE_W(LINE_W)
     ) u_i_arbiter (
-        .clk                (clk),
-        .rst_n              (rst_n),
+        .clk                (clk)
+    ,   .rst_n              (rst_n)
         
         // I-Cache 0
-        .i_ic0_req_valid    (i_ic0_req_valid),
-        .o_ic0_req_ready    (o_ic0_req_ready),
-        .i_ic0_req_addr     (i_ic0_req_addr),
-        .i_ic0_rdata_ready  (i_ic0_rdata_ready),
-        .o_ic0_rdata_valid  (o_ic0_rdata_valid),
-        .o_ic0_rdata        (o_ic0_rdata),
+    ,   .i_ic0_req_valid    (i_ic0_req_valid)
+    ,   .o_ic0_req_ready    (o_ic0_req_ready)
+    ,   .i_ic0_req_addr     (i_ic0_req_addr)
+    ,   .i_ic0_rdata_ready  (i_ic0_rdata_ready)
+    ,   .o_ic0_rdata_valid  (o_ic0_rdata_valid)
+    ,   .o_ic0_rdata        (o_ic0_rdata)
 
         // I-Cache 1
-        .i_ic1_req_valid    (i_ic1_req_valid),
-        .o_ic1_req_ready    (o_ic1_req_ready),
-        .i_ic1_req_addr     (i_ic1_req_addr),
-        .i_ic1_rdata_ready  (i_ic1_rdata_ready),
-        .o_ic1_rdata_valid  (o_ic1_rdata_valid),
-        .o_ic1_rdata        (o_ic1_rdata),
+    ,   .i_ic1_req_valid    (i_ic1_req_valid)
+    ,   .o_ic1_req_ready    (o_ic1_req_ready)
+    ,   .i_ic1_req_addr     (i_ic1_req_addr)
+    ,   .i_ic1_rdata_ready  (i_ic1_rdata_ready)
+    ,   .o_ic1_rdata_valid  (o_ic1_rdata_valid)
+    ,   .o_ic1_rdata        (o_ic1_rdata)
 
         // Downstream to Main Arbiter
-        .o_l2_i_req_valid   (w_l2_i_req_valid),
-        .i_l2_i_req_ready   (w_l2_i_req_ready),
-        .o_l2_i_req_addr    (w_l2_i_req_addr),
-        .o_l2_i_rdata_ready (w_l2_i_rdata_ready),
-        .i_l2_i_rdata_valid (w_l2_i_rdata_valid),
-        .i_l2_i_rdata       (w_l2_i_rdata)
+    ,   .o_l2_i_req_valid   (w_l2_i_req_valid)
+    ,   .i_l2_i_req_ready   (w_l2_i_req_ready)
+    ,   .o_l2_i_req_addr    (w_l2_i_req_addr)
+    ,   .o_l2_i_rdata_ready (w_l2_i_rdata_ready)
+    ,   .i_l2_i_rdata_valid (w_l2_i_rdata_valid)
+    ,   .i_l2_i_rdata       (w_l2_i_rdata)
     );
 
     // 2. Khởi tạo Data Coherence
     d_coherence #(
-        .ADDR_W(ADDR_W),
-        .LINE_W(LINE_W)
+        .ADDR_W(ADDR_W)
+    ,   .LINE_W(LINE_W)
     ) u_d_coherence (
-        .clk                    (clk),
-        .rst_n                  (rst_n),
+        .clk                    (clk)
+    ,   .rst_n                  (rst_n)
 
         // D-Cache 0 
-        .i_dc0_req_valid        (i_dc0_req_valid),
-        .o_dc0_req_ready        (o_dc0_req_ready),
-        .i_dc0_req_addr         (i_dc0_req_addr),
-        .i_dc0_req_cmd          (i_dc0_req_cmd),
-        .i_dc0_req_data         (i_dc0_req_data),
-        .o_dc0_resp_valid       (o_dc0_resp_valid),
-        .i_dc0_resp_ready       (i_dc0_resp_ready),
-        .o_dc0_resp_data        (o_dc0_resp_data),
+    ,   .i_dc0_req_valid        (i_dc0_req_valid)
+    ,   .o_dc0_req_ready        (o_dc0_req_ready)
+    ,   .i_dc0_req_addr         (i_dc0_req_addr)
+    ,   .i_dc0_req_cmd          (i_dc0_req_cmd)
+    ,   .i_dc0_req_data         (i_dc0_req_data)
+    ,   .o_dc0_resp_valid       (o_dc0_resp_valid)
+    ,   .i_dc0_resp_ready       (i_dc0_resp_ready)
+    ,   .o_dc0_resp_data        (o_dc0_resp_data)
 
-        .o_dc0_snp_req_valid    (o_dc0_snp_req_valid),
-        .i_dc0_snp_req_ready    (i_dc0_snp_req_ready),
-        .o_dc0_snp_req_addr     (o_dc0_snp_req_addr),
-        .o_dc0_snp_req_cmd      (o_dc0_snp_req_cmd),
-        .o_dc0_resp_is_shared   (o_dc0_resp_is_shared),
-        .o_dc0_resp_is_dirty    (o_dc0_resp_is_dirty),
-        .i_dc0_snp_resp_valid   (i_dc0_snp_resp_valid),
-        .i_dc0_snp_resp_hit     (i_dc0_snp_resp_hit),
-        .i_dc0_snp_resp_data    (i_dc0_snp_resp_data),
+    ,   .o_dc0_snp_req_valid    (o_dc0_snp_req_valid)
+    ,   .i_dc0_snp_req_ready    (i_dc0_snp_req_ready)
+    ,   .o_dc0_snp_req_addr     (o_dc0_snp_req_addr)
+    ,   .o_dc0_snp_req_cmd      (o_dc0_snp_req_cmd)
+    ,   .o_dc0_resp_is_shared   (o_dc0_resp_is_shared)
+    ,   .o_dc0_resp_is_dirty    (o_dc0_resp_is_dirty)
+    ,   .i_dc0_snp_resp_valid   (i_dc0_snp_resp_valid)
+    ,   .i_dc0_snp_resp_hit     (i_dc0_snp_resp_hit)
+    ,   .i_dc0_snp_resp_data    (i_dc0_snp_resp_data)
 
         // D-Cache 1 
-        .i_dc1_req_valid        (i_dc1_req_valid),
-        .o_dc1_req_ready        (o_dc1_req_ready),
-        .i_dc1_req_addr         (i_dc1_req_addr),
-        .i_dc1_req_cmd          (i_dc1_req_cmd),
-        .i_dc1_req_data         (i_dc1_req_data),
-        .o_dc1_resp_valid       (o_dc1_resp_valid),
-        .i_dc1_resp_ready       (i_dc1_resp_ready),
-        .o_dc1_resp_data        (o_dc1_resp_data),
+    ,   .i_dc1_req_valid        (i_dc1_req_valid)
+    ,   .o_dc1_req_ready        (o_dc1_req_ready)
+    ,   .i_dc1_req_addr         (i_dc1_req_addr)
+    ,   .i_dc1_req_cmd          (i_dc1_req_cmd)
+    ,   .i_dc1_req_data         (i_dc1_req_data)
+    ,   .o_dc1_resp_valid       (o_dc1_resp_valid)
+    ,   .i_dc1_resp_ready       (i_dc1_resp_ready)
+    ,   .o_dc1_resp_data        (o_dc1_resp_data)
 
-        .o_dc1_snp_req_valid    (o_dc1_snp_req_valid),
-        .i_dc1_snp_req_ready    (i_dc1_snp_req_ready),
-        .o_dc1_snp_req_addr     (o_dc1_snp_req_addr),
-        .o_dc1_snp_req_cmd      (o_dc1_snp_req_cmd),
-        .o_dc1_resp_is_shared   (o_dc1_resp_is_shared),
-        .o_dc1_resp_is_dirty    (o_dc1_resp_is_dirty),
-        .i_dc1_snp_resp_valid   (i_dc1_snp_resp_valid),
-        .i_dc1_snp_resp_hit     (i_dc1_snp_resp_hit),
-        .i_dc1_snp_resp_data    (i_dc1_snp_resp_data),
+    ,   .o_dc1_snp_req_valid    (o_dc1_snp_req_valid)
+    ,   .i_dc1_snp_req_ready    (i_dc1_snp_req_ready)
+    ,   .o_dc1_snp_req_addr     (o_dc1_snp_req_addr)
+    ,   .o_dc1_snp_req_cmd      (o_dc1_snp_req_cmd)
+    ,   .o_dc1_resp_is_shared   (o_dc1_resp_is_shared)
+    ,   .o_dc1_resp_is_dirty    (o_dc1_resp_is_dirty)
+    ,   .i_dc1_snp_resp_valid   (i_dc1_snp_resp_valid)
+    ,   .i_dc1_snp_resp_hit     (i_dc1_snp_resp_hit)
+    ,   .i_dc1_snp_resp_data    (i_dc1_snp_resp_data)
 
         // Downstream to Main Arbiter
-        .o_l2_d_req_valid       (w_l2_d_req_valid),
-        .i_l2_d_req_ready       (w_l2_d_req_ready),
-        .o_l2_d_req_addr        (w_l2_d_req_addr),
-        .o_l2_d_req_rw          (w_l2_d_req_rw),
-        .o_l2_d_req_wdata       (w_l2_d_req_wdata),
-        .i_l2_d_resp_valid      (w_l2_d_resp_valid),
-        .o_l2_d_resp_ready      (w_l2_d_resp_ready),
-        .i_l2_d_resp_rdata      (w_l2_d_resp_rdata)
+    ,   .o_l2_d_req_valid       (w_l2_d_req_valid)
+    ,   .i_l2_d_req_ready       (w_l2_d_req_ready)
+    ,   .o_l2_d_req_addr        (w_l2_d_req_addr)
+    ,   .o_l2_d_req_rw          (w_l2_d_req_rw)
+    ,   .o_l2_d_req_wdata       (w_l2_d_req_wdata)
+    ,   .i_l2_d_resp_valid      (w_l2_d_resp_valid)
+    ,   .o_l2_d_resp_ready      (w_l2_d_resp_ready)
+    ,   .i_l2_d_resp_rdata      (w_l2_d_resp_rdata)
     );
 
     // 3. Khởi tạo Main L2 Arbiter
     main_l2_arbiter #(
-        .ADDR_W(ADDR_W),
-        .LINE_W(LINE_W)
+        .ADDR_W(ADDR_W)
+    ,   .LINE_W(LINE_W)
     ) u_main_arbiter (
-        .clk                    (clk),
-        .rst_n                  (rst_n),
+        .clk                    (clk)
+    ,   .rst_n                  (rst_n)
 
         // Luồng Instruction từ i_arbiter
-        .i_l2_i_req_valid       (w_l2_i_req_valid),
-        .o_l2_i_req_ready       (w_l2_i_req_ready),
-        .i_l2_i_req_addr        (w_l2_i_req_addr),
-        .i_l2_i_rdata_valid     (w_l2_i_rdata_valid),
-        .o_l2_i_rdata_ready     (w_l2_i_rdata_ready),
-        .o_l2_i_rdata           (w_l2_i_rdata),
+    ,   .i_l2_i_req_valid       (w_l2_i_req_valid)
+    ,   .o_l2_i_req_ready       (w_l2_i_req_ready)
+    ,   .i_l2_i_req_addr        (w_l2_i_req_addr)
+    ,   .i_l2_i_rdata_valid     (w_l2_i_rdata_valid)
+    ,   .o_l2_i_rdata_ready     (w_l2_i_rdata_ready)
+    ,   .o_l2_i_rdata           (w_l2_i_rdata)
 
         // Luồng Data từ d_coherence
-        .i_l2_d_req_valid       (w_l2_d_req_valid),
-        .o_l2_d_req_ready       (w_l2_d_req_ready),
-        .i_l2_d_req_addr        (w_l2_d_req_addr),
-        .i_l2_d_req_rw          (w_l2_d_req_rw),
-        .i_l2_d_req_wdata       (w_l2_d_req_wdata),
-        .o_l2_d_resp_valid      (w_l2_d_resp_valid),
-        .i_l2_d_resp_ready      (w_l2_d_resp_ready),
-        .o_l2_d_resp_rdata      (w_l2_d_resp_rdata),
+    ,   .i_l2_d_req_valid       (w_l2_d_req_valid)
+    ,   .o_l2_d_req_ready       (w_l2_d_req_ready)
+    ,   .i_l2_d_req_addr        (w_l2_d_req_addr)
+    ,   .i_l2_d_req_rw          (w_l2_d_req_rw)
+    ,   .i_l2_d_req_wdata       (w_l2_d_req_wdata)
+    ,   .o_l2_d_resp_valid      (w_l2_d_resp_valid)
+    ,   .i_l2_d_resp_ready      (w_l2_d_resp_ready)
+    ,   .o_l2_d_resp_rdata      (w_l2_d_resp_rdata)
 
         // Giao tiếp trực tiếp với L2 Cache
-        .o_l2_req_valid         (o_l2_req_valid),
-        .i_l2_req_ready         (i_l2_req_ready),
-        .o_l2_req_addr          (o_l2_req_addr),
-        .o_l2_req_rw            (o_l2_req_rw),
-        .o_l2_req_wdata         (o_l2_req_wdata),
-        .i_l2_resp_valid        (i_l2_resp_valid),
-        .o_l2_resp_ready        (o_l2_resp_ready),
-        .i_l2_resp_rdata        (i_l2_resp_rdata)
+    ,   .o_l2_req_valid         (o_l2_req_valid)
+    ,   .i_l2_req_ready         (i_l2_req_ready)
+    ,   .o_l2_req_addr          (o_l2_req_addr)
+    ,   .o_l2_req_rw            (o_l2_req_rw)
+    ,   .o_l2_req_wdata         (o_l2_req_wdata)
+    ,   .i_l2_resp_valid        (i_l2_resp_valid)
+    ,   .o_l2_resp_ready        (o_l2_resp_ready)
+    ,   .i_l2_resp_rdata        (i_l2_resp_rdata)
     );
 
 endmodule
