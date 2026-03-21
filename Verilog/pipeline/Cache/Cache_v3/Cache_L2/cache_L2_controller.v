@@ -80,16 +80,17 @@ module cache_L2_controller #(
     // ================================================================
     // FSM STATES
     // ================================================================
-    localparam TAG_CHECK   = 3'd0;
-    localparam AW_REQ      = 3'd1;  
-    localparam W_DATA      = 3'd2;  
-    localparam B_WAIT      = 3'd3;  
-    localparam AR_REQ      = 3'd4;  
-    localparam R_WAIT      = 3'd5;  
-    localparam UPDATE_WM   = 3'd6;  
-    localparam REFILL_EXEC = 3'd7;  // State ghi dữ liệu từ Buffer -> SRAM
+    localparam TAG_CHECK    = 4'd0;
+    localparam AW_REQ       = 4'd1;  
+    localparam W_DATA       = 4'd2;  
+    localparam B_WAIT       = 4'd3;  
+    localparam AR_REQ       = 4'd4;  
+    localparam R_WAIT       = 4'd5;  
+    localparam UPDATE_WM    = 4'd6;  
+    localparam REFILL_EXEC  = 4'd7;  // State ghi dữ liệu từ Buffer -> SRAM
+    localparam WAIT_RAM     = 4'd8;
 
-    reg [2:0] state, next_state;
+    reg [3:0] state, next_state;
 
     // ================================================================
     // BURST COUNTER LOGIC
@@ -156,7 +157,8 @@ module cache_L2_controller #(
                             // WRITE HIT: Chấp nhận request để nạp data từ L1 vào refill_buffer
                             o_l1_req_ready  = 1'b1;
                             next_state      = REFILL_EXEC;
-                        end else begin
+                        end 
+                        else begin
                             // READ HIT: Bypass trả luôn
                             o_l1_req_ready  = 1'b1;
                             o_l1_resp_valid = 1'b1;
@@ -234,7 +236,14 @@ module cache_L2_controller #(
                 // Trả valid cho Arbiter biết L2 đã giải quyết xong
                 o_l1_resp_valid = 1'b1; 
                 
-                next_state      = TAG_CHECK;
+                next_state      = WAIT_RAM;
+            end
+
+            WAIT_RAM: begin
+                // Chờ SRAM hoàn thành việc ghi dữ liệu mới vào cache line (có thể cần vài chu kỳ)
+                // Trong thời gian này, không chấp nhận request mới từ L1 và không trả response về L1
+                // stall = 1'b1; 
+                next_state = TAG_CHECK;
             end
 
             default: next_state = TAG_CHECK;

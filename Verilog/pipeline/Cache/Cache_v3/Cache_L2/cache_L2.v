@@ -26,9 +26,10 @@ module cache_L2 #(
 ,   input                       i_l1_req_rw     // 0: Read, 1: Write
 ,   input   [LINE_W-1:0]        i_l1_req_wdata
 
-,   output                      o_l1_resp_valid
 ,   input                       i_l1_resp_ready
+,   output                      o_l1_resp_valid
 ,   output reg  [LINE_W-1:0]    o_l1_resp_rdata
+,   output                      pipeline_stall
 
     // ==========================================
     //  (AXI Interface)
@@ -113,7 +114,7 @@ module cache_L2 #(
     wire [NUM_WAYS-1:0]     way_select;
     // wire [NUM_WAYS-1:0]     way_select_final;
     wire                    stall_contoller;
-    wire                    pipeline_stall;
+    // wire                    pipeline_stall;
     wire                    refill_src;
     wire [3:0]              burst_cnt;
 
