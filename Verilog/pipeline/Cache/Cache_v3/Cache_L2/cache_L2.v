@@ -83,7 +83,7 @@ module cache_L2 #(
     // ================================================================
     // Stage 1 Signals
     wire [TAG_W-1:0]        s1_tag;
-    wire [TAG_W-1:0]        s1_ac_tag;
+    // wire [TAG_W-1:0]        s1_ac_tag;
     wire [INDEX_W-1:0]      s1_index;
     wire [WORD_OFF_W-1:0]   s1_word_off;
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
@@ -244,7 +244,7 @@ module cache_L2 #(
         .cpu_addr               (i_l1_req_addr)
 
     ,   .cpu_tag                (s1_tag)         
-    ,   .ac_tag                 (s1_ac_tag)
+    // ,   .ac_tag                 (s1_ac_tag)
     ,   .cpu_index              (s1_index)   
     ,   .cpu_word_off           (s1_word_off)
     ,   .cpu_byte_off           (s1_byte_off)
@@ -364,7 +364,7 @@ module cache_L2 #(
     ,   .rst_n              (rst_n)
 
         // L1 Interface
-    ,   .i_l1_req_valid     (i_l1_req_valid)
+    ,   .s2_req_valid       (s2_req)
     ,   .i_l1_req_rw        (s2_cmd[0]) // hien tai dung i_l1_req_rw
     ,   .hit                (any_hit)
     ,   .is_valid           (|current_valid)
@@ -377,6 +377,7 @@ module cache_L2 #(
     ,   .tag_we             (tag_we)
     ,   .refill_we          (refill_we)
     ,   .refill_src         (refill_src)    // chua dung
+    ,   .stall               (stall_contoller)
 
     // AXI Master Interface
     // AW Channel

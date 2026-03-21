@@ -403,7 +403,8 @@ module d_cache #(
     ,   .s1_word_off    (s1_word_off)
     ,   .s1_byte_off    (s1_byte_off)
 
-    ,   .snoop_stall    (reg_snoop_stall)
+    // ,   .snoop_stall    (reg_snoop_stall)   // chua co logic nay, tạm để 0
+    ,   .snoop_stall    (1'b0)
     ,   .s1_is_snoop    (i_snp_req_valid)
     ,   .s1_cmd         (i_snp_req_cmd)
     ,   .s1_snoop_tag   (s1_ac_tag)

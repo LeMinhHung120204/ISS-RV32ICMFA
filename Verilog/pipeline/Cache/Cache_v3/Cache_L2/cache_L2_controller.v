@@ -14,7 +14,7 @@ module cache_L2_controller #(
     // ==========================================
     // UPSTREAM: Giao tiếp với Main L2 Arbiter
     // ==========================================
-,   input                           i_l1_req_valid
+,   input                           s2_req_valid
 ,   output  reg                     o_l1_req_ready
 ,   input                           i_l1_req_rw     
 ,   output  reg                     o_l1_resp_valid
@@ -29,6 +29,7 @@ module cache_L2_controller #(
 ,   output  reg                     tag_we
 ,   output  reg                     refill_we
 ,   output  reg                     refill_src    
+,   output  reg                     stall
     
     // ==========================================
     // DOWNSTREAM: Giao tiếp AXI Master
@@ -138,6 +139,7 @@ module cache_L2_controller #(
         tag_we          = 1'b0;
         refill_we       = 1'b0;
         refill_src      = 1'b0;
+        stall           = 1'b0;
         
         oAWVALID        = 1'b0;
         oWVALID         = 1'b0;
@@ -148,7 +150,7 @@ module cache_L2_controller #(
 
         case (state)
             TAG_CHECK: begin
-                if (i_l1_req_valid) begin
+                if (s2_req_valid) begin
                     if (hit) begin
                         if (i_l1_req_rw == 1'b1) begin
                             // WRITE HIT: Chấp nhận request để nạp data từ L1 vào refill_buffer
