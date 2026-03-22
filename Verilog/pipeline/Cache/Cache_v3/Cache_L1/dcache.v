@@ -41,7 +41,7 @@ module d_cache #(
 ,   input                   i_req_ready
 ,   output                  o_req_valid
 ,   output [ADDR_W-1:0]     o_req_addr
-    // (00=Read Miss, 01=Write Miss, 10=Upgrade/Invalidate Others, 11=Writeback)
+    // (00=Read Shared, 01=Write Back, 10=Upgrade/Invalidate Others, 11=READ UNIQUE)
 ,   output [1:0]                o_req_cmd    
 ,   output  reg [LINE_W-1:0]    o_req_data  // writeback data
 ,   output                      o_req_wb    // Báo hiệu đang đẩy victim data (để Arbiter ưu tiên cấp bus)
@@ -68,6 +68,7 @@ module d_cache #(
 ,   output  reg [LINE_W-1:0]    o_snp_resp_data
 // ,   output                   snoop_req_invalidate
 );
+    localparam CMD_READ_SHARED = 2'b00, CMD_WRITE_BACK = 2'b01, CMD_UPGRADE = 2'b10, CMD_READ_UNIQUE = 2'b11;
 
     // ================================================================
     // 1) REG DECLARATIONS
@@ -90,8 +91,10 @@ module d_cache #(
     // 2) WIRE DECLARATIONS
     // ================================================================
     // Stage 1 Address Decode (Cycle 1: Access)
-    wire [TAG_W-1:0]        s1_tag, s1_ac_tag;
-    wire [INDEX_W-1:0]      s1_index, s1_ac_index;
+    wire [TAG_W-1:0]        s1_tag;
+    // wire [TAG_W-1:0]        s1_ac_tag;
+    wire [INDEX_W-1:0]      s1_index;
+    // wire [INDEX_W-1:0]      s1_ac_index;
     wire [WORD_OFF_W-1:0]   s1_word_off;
     wire [BYTE_OFF_W-1:0]   s1_byte_off;
 
@@ -100,8 +103,10 @@ module d_cache #(
     wire                    s2_we;
     wire [1:0]              s2_size;
     wire [DATA_W-1:0]       s2_wdata;
-    wire [TAG_W-1:0]        s2_tag, s2_snoop_tag;
-    wire [INDEX_W-1:0]      s2_index, s2_snoop_index;
+    wire [TAG_W-1:0]        s2_tag;
+    // wire [TAG_W-1:0]        s2_snoop_tag;
+    wire [INDEX_W-1:0]      s2_index;
+    // wire [INDEX_W-1:0]      s2_snoop_index;
     wire [WORD_OFF_W-1:0]   s2_word_off;
     wire [BYTE_OFF_W-1:0]   s2_byte_off;
     wire [1:0]              s2_cmd;
@@ -119,7 +124,7 @@ module d_cache #(
     wire                    cpu_hit;
     wire                    snoop_busy;
     wire                    ctrl_snoop_ready;
-    wire                    snoop_can_access_ram;
+    // wire                    snoop_can_access_ram;
     wire                    reg_snoop_stall;
     wire                    stall_controller;
     wire                    snoop_req_invalidate;
@@ -141,9 +146,10 @@ module d_cache #(
     
     // Controller Output Signals
     wire        tag_we;
+    wire        data_we;
     wire        refill_we;
-    wire [3:0]  burst_cnt;
-    wire [3:0]  burst_cnt_snoop;
+    // wire [3:0]  burst_cnt;
+    // wire [3:0]  burst_cnt_snoop;
 
     // Address Muxing
     wire [ADDR_W-1:0]   s1_mux_addr;
@@ -162,30 +168,27 @@ module d_cache #(
     assign victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
-    assign s1_mux_addr      = (i_snp_req_valid) ? i_snp_req_addr    : (cpu_addr | DATA_START);
-    assign o_req_addr       = (o_req_cmd[0]) ? victim_addr_full  : refill_addr_full;
+    assign s1_mux_addr      = (i_snp_req_valid)             ? i_snp_req_addr    : (cpu_addr | DATA_START);
+    assign o_req_addr       = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_full  : refill_addr_full;
 
     // Way Selection & MOESI Control
-    assign choosen_way      = (any_hit) ? way_hit : way_select;
+    assign choosen_way      = (any_hit)     ? way_hit       : way_select;
+    // assign tag_select       = (s2_is_snoop) ? s2_snoop_tag  : s2_tag;
+    assign way_select_final = (any_hit)     ? way_hit       : way_select;
     assign moesi_we         = main_moesi_we | snoop_moesi_we;
-    assign tag_select       = (s2_is_snoop) ? s2_snoop_tag : s2_tag;
-    assign way_select_final = (any_hit) ? way_hit : way_select;
 
     // Pipeline Stall
     assign pipeline_stall   = stall_controller | i_snp_req_valid; 
 
     // STAGE 2: HIT LOGIC
-    assign way_hit[0]       = (tag_read[0] == tag_select) & (moesi_current_state[0] != 3'd4);
-    assign way_hit[1]       = (tag_read[1] == tag_select) & (moesi_current_state[1] != 3'd4);
-    assign way_hit[2]       = (tag_read[2] == tag_select) & (moesi_current_state[2] != 3'd4);
-    assign way_hit[3]       = (tag_read[3] == tag_select) & (moesi_current_state[3] != 3'd4);
+    assign way_hit[0]       = (tag_read[0] == s2_tag) & (moesi_current_state[0] != 3'd4);
+    assign way_hit[1]       = (tag_read[1] == s2_tag) & (moesi_current_state[1] != 3'd4);
+    assign way_hit[2]       = (tag_read[2] == s2_tag) & (moesi_current_state[2] != 3'd4);
+    assign way_hit[3]       = (tag_read[3] == s2_tag) & (moesi_current_state[3] != 3'd4);
 
     assign any_hit          = |way_hit;
     assign o_snp_resp_hit   = any_hit & s2_is_snoop;
     assign cpu_hit          = any_hit & s2_req & ~s2_is_snoop;
-    
-    // Nối tín hiệu snoop xuống FSM và MOESI
-    assign snoop_busy       = 1'b0; // Không cần chặn stall, L1 xử lý snoop trong 1-2 cycle
     
     // ================================================================
     // 4) ALWAYS @(posedge clk) - SEQUENTIAL LOGIC
@@ -321,12 +324,12 @@ module d_cache #(
     ,   .NUM_SETS   (NUM_SETS)
     ) access_inst (
         .cpu_addr       (s1_mux_addr)
-    ,   .ac_addr        (i_snp_req_addr)
+    // ,   .ac_addr        (i_snp_req_addr)
 
     ,   .cpu_tag        (s1_tag)     
-    ,   .ac_tag         (s1_ac_tag)
+    // ,   .ac_tag         (s1_ac_tag)
     ,   .cpu_index      (s1_index)
-    ,   .ac_index       (s1_ac_index)
+    // ,   .ac_index       (s1_ac_index)
     ,   .cpu_word_off   (s1_word_off)
     ,   .cpu_byte_off   (s1_byte_off)
     );
@@ -382,6 +385,8 @@ module d_cache #(
         end
     endgenerate
 
+    wire test_data_We = data_we & way_hit[0];
+
     // ---- PIPELINE REGISTER (acc_cmp) ----
     acc_cmp #(
         .ADDR_W     (ADDR_W)
@@ -407,8 +412,8 @@ module d_cache #(
     ,   .snoop_stall    (1'b0)
     ,   .s1_is_snoop    (i_snp_req_valid)
     ,   .s1_cmd         (i_snp_req_cmd)
-    ,   .s1_snoop_tag   (s1_ac_tag)
-    ,   .s1_snoop_index (s1_ac_index)
+    // ,   .s1_snoop_tag   (s1_ac_tag)
+    // ,   .s1_snoop_index (s1_ac_index)
 
         // Inputs Atomic
     ,   .s1_lr          (cpu_lr)
@@ -428,8 +433,8 @@ module d_cache #(
     ,   .s2_byte_off    (s2_byte_off)
 
     ,   .s2_is_snoop    (s2_is_snoop)
-    ,   .s2_snoop_tag   (s2_snoop_tag)
-    ,   .s2_snoop_index (s2_snoop_index)
+    // ,   .s2_snoop_tag   (s2_snoop_tag)
+    // ,   .s2_snoop_index (s2_snoop_index)
 
         // Outputs Atomic
     ,   .s2_lr          (s2_atomic_lr)
@@ -532,10 +537,13 @@ module d_cache #(
     ,   .i_snp_req_addr         (i_snp_req_addr)
     ,   .i_dcache_ready         (ctrl_snoop_ready)
     ,   .i_snp_resp_valid       (s2_is_snoop)
+    ,   .i_snp_resp_hit         (o_snp_resp_hit)
 
     ,   .o_snp_req_ready        (o_snp_req_ready)
     ,   .snoop_req_invalidate   (snoop_req_invalidate)
     ,   .o_snp_resp_valid       (o_snp_resp_valid)
+    ,   .snoop_busy             (snoop_busy)
+    ,   .snoop_moesi_we         (snoop_moesi_we)
     );  
 
     // ---- AMO ALU ----

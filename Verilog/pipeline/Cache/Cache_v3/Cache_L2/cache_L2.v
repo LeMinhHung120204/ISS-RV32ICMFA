@@ -95,7 +95,7 @@ module cache_L2 #(
     wire [WORD_OFF_W-1:0]   s2_word_off;
     wire [BYTE_OFF_W-1:0]   s2_byte_off;
     wire                    s2_req;
-    wire [2:0]              s2_cmd;
+    wire [1:0]              s2_cmd;
     
     // Memory Arrays Output
     wire [TAG_W-1:0]    tag_read    [0:NUM_WAYS-1];

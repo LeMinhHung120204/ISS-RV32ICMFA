@@ -26,7 +26,8 @@ module dual_core #(
 )(
     input clk
 ,   input rst_n
-,   input test_stall
+,   input c0_stall
+,   input c1_stall
 
     // ==========================================
     // AXI MASTER INTERFACE (Giao tiếp với Memory)
@@ -152,7 +153,7 @@ module dual_core #(
     ) core_0 (
         .clk                    (clk)
     ,   .rst_n                  (rst_n)
-    ,   .test_stall             (test_stall)
+    ,   .test_stall             (c0_stall)
 
         // I-Cache
     ,   .i_ic_rdata_valid       (c0_ic_rdata_valid)
@@ -208,7 +209,7 @@ module dual_core #(
     ) core_1 (
         .clk                    (clk)
     ,   .rst_n                  (rst_n)
-    ,   .test_stall             (test_stall)
+    ,   .test_stall             (c1_stall)
 
         // I-Cache
     ,   .i_ic_req_ready         (c1_ic_req_ready)

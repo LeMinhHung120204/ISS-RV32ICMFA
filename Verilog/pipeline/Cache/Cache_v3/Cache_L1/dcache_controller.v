@@ -172,6 +172,11 @@ module dcache_controller #(
                 o_req_cmd   = CMD_WRITE_BACK;
                 if (i_req_ready) 
                     next_state = WB_WAIT;
+                else if (snoop_busy) begin
+                    o_req_valid = 1'b0;
+                    o_req_wb    = 1'b0;
+                    next_state  = TAG_CHECK;
+                end
             end
 
             WB_WAIT: begin
@@ -190,6 +195,11 @@ module dcache_controller #(
                 
                 if (i_req_ready) 
                     next_state = BUS_WAIT;
+                else if (snoop_busy) begin
+                    // Có snoop ưu tiên cao hơn -> Bỏ dở việc xin bus, lùi về TAG_CHECK
+                    o_req_valid = 1'b0; 
+                    next_state  = TAG_CHECK;
+                end
             end
 
             BUS_WAIT: begin

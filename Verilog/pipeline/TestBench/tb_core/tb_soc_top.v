@@ -172,7 +172,8 @@ module tb_soc_top;
         .rst_n          (ARESETn),
         
         // Gộp stall của TB vào test_stall của dual_core
-        .test_stall     (c0_stall | c1_stall),
+        .c0_stall       (c0_stall),
+        .c1_stall       (c1_stall),
 
         // AW Channel
         .iAWREADY       (m_axi_awready),
@@ -305,6 +306,7 @@ module tb_soc_top;
         c0_stall    = 0;
         
         #1500;
+        // #2000;
         c1_stall    = 0;
     end
 
