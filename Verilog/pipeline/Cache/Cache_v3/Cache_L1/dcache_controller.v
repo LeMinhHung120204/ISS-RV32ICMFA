@@ -56,6 +56,7 @@ module dcache_controller #(
     localparam BUS_WAIT     = 4'd4;     // Đợi Bus Arbiter / Snoop Filter trả data
     localparam UPDATE       = 4'd5;
     localparam AMO_EXEC     = 4'd6;     // Cycle thực hiện tính AMO và Ghi Data
+    localparam WAIT_RAM     = 4'd7;
 
     // MOESI States
     localparam STATE_M = 3'd0, STATE_O = 3'd1, STATE_E = 3'd2, STATE_S = 3'd3, STATE_I = 3'd4;
@@ -166,39 +167,80 @@ module dcache_controller #(
                 end
             end
 
+            // WB_SEND: begin
+            //     o_req_valid = 1'b1;
+            //     o_req_wb    = 1'b1;
+            //     o_req_cmd   = CMD_WRITE_BACK;
+            //     if (i_req_ready) 
+            //         next_state = WB_WAIT;
+            //     else if (snoop_busy) begin
+            //         o_req_valid = 1'b0;
+            //         o_req_wb    = 1'b0;
+            //         next_state  = TAG_CHECK;
+            //     end
+            // end
+
+            // WB_WAIT: begin
+            //     if (i_resp_valid) 
+            //         next_state = BUS_REQ; // Writeback xong, quay lại lấy Block mới
+            // end
+
+            // BUS_REQ: begin
+            //     o_req_valid = 1'b1;
+            //     if (is_write && hit) 
+            //         o_req_cmd = CMD_UPGRADE;
+            //     else if (is_write && !hit) 
+            //         o_req_cmd = CMD_READ_UNIQUE;
+            //     else 
+            //         o_req_cmd = CMD_READ_SHARED;
+                
+            //     if (i_req_ready) 
+            //         next_state = BUS_WAIT;
+            //     else if (snoop_busy) begin
+            //         // Có snoop ưu tiên cao hơn -> Bỏ dở việc xin bus, lùi về TAG_CHECK
+            //         o_req_valid = 1'b0; 
+            //         next_state  = TAG_CHECK;
+            //     end
+            // end
+
             WB_SEND: begin
-                o_req_valid = 1'b1;
-                o_req_wb    = 1'b1;
-                o_req_cmd   = CMD_WRITE_BACK;
-                if (i_req_ready) 
-                    next_state = WB_WAIT;
-                else if (snoop_busy) begin
+                o_req_cmd = CMD_WRITE_BACK;
+                if (snoop_busy) begin
                     o_req_valid = 1'b0;
                     o_req_wb    = 1'b0;
-                    next_state  = TAG_CHECK;
+                    next_state  = TAG_CHECK; // Abort
+                end else begin
+                    o_req_valid = 1'b1;
+                    o_req_wb    = 1'b1;
+                    if (i_req_ready) begin
+                        next_state = WB_WAIT; // Sang state mới nếu arbiter accept
+                    end
                 end
             end
 
             WB_WAIT: begin
                 if (i_resp_valid) 
-                    next_state = BUS_REQ; // Writeback xong, quay lại lấy Block mới
+                    next_state = BUS_REQ;
             end
 
             BUS_REQ: begin
-                o_req_valid = 1'b1;
                 if (is_write && hit) 
                     o_req_cmd = CMD_UPGRADE;
                 else if (is_write && !hit) 
                     o_req_cmd = CMD_READ_UNIQUE;
                 else 
                     o_req_cmd = CMD_READ_SHARED;
-                
-                if (i_req_ready) 
-                    next_state = BUS_WAIT;
-                else if (snoop_busy) begin
+
+                if (snoop_busy) begin
                     // Có snoop ưu tiên cao hơn -> Bỏ dở việc xin bus, lùi về TAG_CHECK
-                    o_req_valid = 1'b0; 
+                    o_req_valid = 1'b0;
                     next_state  = TAG_CHECK;
+                end 
+                else begin
+                    o_req_valid = 1'b1;
+                    if (i_req_ready) begin
+                        next_state = BUS_WAIT;
+                    end
                 end
             end
 
@@ -218,13 +260,17 @@ module dcache_controller #(
                 if (i_atomic_amo) 
                     next_state = AMO_EXEC;
                 else 
-                    next_state = TAG_CHECK;
+                    next_state = WAIT_RAM;
             end
 
             AMO_EXEC: begin
                 data_we  = 1'b1;
                 moesi_we = 1'b1; // State M
                 stall    = 1'b0;
+                next_state = WAIT_RAM;
+            end
+
+            WAIT_RAM: begin
                 next_state = TAG_CHECK;
             end
 

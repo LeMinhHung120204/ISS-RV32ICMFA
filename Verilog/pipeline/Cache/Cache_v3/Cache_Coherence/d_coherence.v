@@ -209,7 +209,7 @@ module d_coherence #(
 
             SNOOP_ISSUE: begin
                 // Bắn snoop sang Core đối diện
-                if (current_grant == 1'b0) begin
+                if (last_grant == 1'b0) begin
                     o_dc1_snp_req_valid = 1'b1;
                     if (i_dc1_snp_req_ready) 
                         next_state = SNOOP_WAIT;
@@ -223,13 +223,13 @@ module d_coherence #(
 
             SNOOP_WAIT: begin
                 // Đợi Core đối diện trả lời Snoop
-                if (current_grant == 1'b0 && i_dc1_snp_resp_valid) begin
+                if (last_grant == 1'b0 && i_dc1_snp_resp_valid) begin
                     if (i_dc1_snp_resp_hit && req_cmd_buf != CMD_UPGRADE) 
                         next_state = RESP_FWD; // Cache-to-Cache Hit!
                     else 
                         next_state = L2_REQ;   // Miss hoặc là lệnh Upgrade
                 end 
-                else if (current_grant == 1'b1 && i_dc0_snp_resp_valid) begin
+                else if (last_grant == 1'b1 && i_dc0_snp_resp_valid) begin
                     if (i_dc0_snp_resp_hit && req_cmd_buf != CMD_UPGRADE) 
                         next_state = RESP_FWD; 
                     else 
@@ -258,7 +258,7 @@ module d_coherence #(
 
             RESP_FWD: begin
                 // Trả Data & Cờ MOESI về cho Core yêu cầu
-                if (current_grant == 1'b0) begin
+                if (last_grant == 1'b0) begin
                     o_dc0_resp_valid        = 1'b1;
                     o_dc0_resp_is_shared    = c2c_hit_buf; // Nếu hit từ Core 1 -> Chuyển sang S/O
                     // o_dc0_resp_is_dirty     = 1'b0;        // Setup tùy policy MOESI
