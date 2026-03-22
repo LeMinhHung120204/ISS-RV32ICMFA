@@ -213,7 +213,8 @@ module d_coherence #(
                     o_dc1_snp_req_valid = 1'b1;
                     if (i_dc1_snp_req_ready) 
                         next_state = SNOOP_WAIT;
-                end else begin
+                end 
+                else begin
                     o_dc0_snp_req_valid = 1'b1;
                     if (i_dc0_snp_req_ready) 
                         next_state = SNOOP_WAIT;
