@@ -56,7 +56,7 @@ module dcache_controller #(
     localparam BUS_WAIT     = 4'd4;     // Đợi Bus Arbiter / Snoop Filter trả data
     localparam UPDATE       = 4'd5;
     localparam AMO_EXEC     = 4'd6;     // Cycle thực hiện tính AMO và Ghi Data
-    localparam WAIT_RAM     = 4'd7;
+    // localparam WAIT_RAM     = 4'd7;
 
     // MOESI States
     localparam STATE_M = 3'd0, STATE_O = 3'd1, STATE_E = 3'd2, STATE_S = 3'd3, STATE_I = 3'd4;
@@ -260,19 +260,19 @@ module dcache_controller #(
                 if (i_atomic_amo) 
                     next_state = AMO_EXEC;
                 else 
-                    next_state = WAIT_RAM;
+                    next_state = TAG_CHECK;
             end
 
             AMO_EXEC: begin
                 data_we  = 1'b1;
                 moesi_we = 1'b1; // State M
                 stall    = 1'b0;
-                next_state = WAIT_RAM;
-            end
-
-            WAIT_RAM: begin
                 next_state = TAG_CHECK;
             end
+
+            // WAIT_RAM: begin
+            //     next_state = TAG_CHECK;
+            // end
 
             default : begin
                 next_state = TAG_CHECK;
