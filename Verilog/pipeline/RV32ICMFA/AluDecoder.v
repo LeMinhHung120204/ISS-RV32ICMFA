@@ -1,20 +1,20 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
 module AluDecoder(
-    input       [1:0]   ALUOp
+    input       [2:0]   ALUOp
 ,   input       [2:0]   funct3
 ,   input               funct7_5, op_5
 ,   output reg  [3:0]   ALUControl
 );
     always @(*) begin
         case(ALUOp)
-            2'b00: begin
+            3'b000: begin
                 ALUControl = 4'b0000;    // (add) intruction lw, sw
             end 
-            2'b01: begin
+            3'b001: begin
                 ALUControl = 4'b1000;    // (sub) intruction beq 
             end 
-            2'b10: begin
+            3'b010: begin
                 case(funct3)
                     3'b00: begin
                         case({op_5, funct7_5})
@@ -53,8 +53,14 @@ module AluDecoder(
                     end 
                 endcase
             end
+            3'b011: begin
+                ALUControl = 4'b0111;   // (lui) intruction lui
+            end
+            3'b100: begin
+                ALUControl = 4'b1011;   // (auipc) instruction auipc
+            end
             default: begin
-                ALUControl = 4'b000;
+                ALUControl = 4'b0000;
             end
         endcase
     end 

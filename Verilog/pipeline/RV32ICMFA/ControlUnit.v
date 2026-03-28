@@ -23,7 +23,7 @@ module ControlUnit(
 ,   output          lr
 ,   output          sc
 );
-    wire [1:0]  ALUOp;
+    wire [2:0]  ALUOp;
     wire        AtomicOp;
     MainDecoder maindecoder_inst(
         .op                 (op),

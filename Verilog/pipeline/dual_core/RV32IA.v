@@ -444,13 +444,15 @@ module RV32IA #(
     // EXECUTE STAGE (EX) - ALU & Forwarding
     // ================================================================
     ALU alu_inst(
-        .ALUControl (E_ALUControl),
-        .in1        (E_SrcA),
-        .in2        (E_SrcB),
+        .ALUControl (E_ALUControl)
+    ,   .in1        (E_SrcA)
+    ,   .in2        (E_SrcB)
+    ,   .PC         (E_PC)
+    ,   .E_ImmExt   (E_ImmExt)
 
-        .result     (E_ALUResult),
-        .zero       (E_Zero),
-        .signed_less(E_signed_less)
+    ,   .result     (E_ALUResult)
+    ,   .zero       (E_Zero)
+    ,   .signed_less(E_signed_less)
     );
 
     mux2_1 Mux_PCadd(
@@ -497,7 +499,7 @@ module RV32IA #(
 
         .E_ALUResult    (E_ALUResult),
         .E_WriteData    (E_WriteData),
-        .E_ImmExt       (E_ImmExt),
+        // .E_ImmExt       (E_ImmExt),
         .E_PCPlus4      (E_PCPlus4),
         .E_PCTarget     (E_PCTarget),
         .E_rd           (E_rd),
@@ -514,7 +516,7 @@ module RV32IA #(
 
         .M_ALUResult    (M_ALUResult),
         .M_WriteData    (M_WriteData),
-        .M_ImmExt       (M_ImmExt),
+        // .M_ImmExt       (M_ImmExt),
         .M_PCPlus4      (M_PCPlus4),
         .M_PCTarget     (M_PCTarget),
         .M_rd           (M_rd),
@@ -564,14 +566,14 @@ module RV32IA #(
         .EN             (dcache_stall | test_stall),
 
         .M_Result       (M_ALUResult),
-        .M_ImmExt       (M_ImmExt),
+        // .M_ImmExt       (M_ImmExt),
         .M_ResPC        (M_ResPC),
         .M_rd           (M_rd),
         .M_RegWrite     (M_RegWrite),
         .M_ResultSrc    (M_ResultSrc),
 
         .C_Result       (C_Result),
-        .C_ImmExt       (C_ImmExt),
+        // .C_ImmExt       (C_ImmExt),
         .C_ResPC        (C_ResPC),
         .C_rd           (C_rd),
         .C_RegWrite     (C_RegWrite),
@@ -581,13 +583,13 @@ module RV32IA #(
     // ================================================================
     // CACHE STAGE (C) - Cache Response & Result Selection
     // ================================================================
-    // ResultSrc: 00=ALU, 01=Memory, 10=PC+4, 11=Immediate
+    // ResultSrc: 00=ALU, 01=Memory, 10=PC+4
     assign C_ReadData   = data_rdata;
     mux4_1 mux_C_Result (
         .in0    (C_Result),
         .in1    (C_ReadData),
         .in2    (C_ResPC),
-        .in3    (C_ImmExt),
+        .in3    (32'd0),
         .sel    (C_ResultSrc[1:0]),
         .res    (C_mux_result)
     );

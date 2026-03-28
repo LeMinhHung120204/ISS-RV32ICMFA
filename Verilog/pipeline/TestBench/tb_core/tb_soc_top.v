@@ -302,11 +302,11 @@ module tb_soc_top;
     end
 
     initial begin
-        c1_stall    = 1;
+        c1_stall    = 0;
         c0_stall    = 0;
         
-        #1000;
-        c1_stall    = 0;
+        // #1000;
+        // c1_stall    = 0;
     end
 
     // -------------------------------------------------------------------------
