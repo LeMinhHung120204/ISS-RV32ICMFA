@@ -198,31 +198,31 @@ module RV32IA #(
     BPU #(
         .W_ADDR(WIDTH_ADDR)
     ) BPU_inst (
-        .clk            (clk),
-        .rst_n          (rst_n),
+        .clk            (clk)
+    ,   .rst_n          (rst_n)
 
         // IF state
-        .F_PC           (F_PC),
-        .predict_taken  (F_Predict_Taken), 
-        .target_pc      (F_Predict_Target),
-        .F_GHSR         (F_GHSR),
+    ,   .F_PC           (F_PC)
+    ,   .predict_taken  (F_Predict_Taken)
+    ,   .target_pc      (F_Predict_Target)
+    ,   .F_GHSR         (F_GHSR)
 
         // EX state
-        .E_PC           (E_PC),
-        .E_PCTarget     (E_PCTarget), 
-        .E_Branch       (E_Branch),
-        .E_Jump         (E_Jump),
-        .taken          (E_PCSrc),
-        .E_GHSR         (E_GHSR)
+    ,   .E_PC           (E_PC)
+    ,   .E_PCTarget     (E_PCTarget)
+    ,   .E_Branch       (E_Branch)
+    ,   .E_Jump         (E_Jump)
+    ,   .taken          (E_PCSrc)
+    ,   .E_GHSR         (E_GHSR)
     );
 
     BranchDecoder BranchDecoder_inst(
-        .E_Jump         (E_Jump),
-        .E_Zero         (E_Zero),
-        .E_Branch       (E_Branch),
-        .E_signed_less  (E_signed_less),
-        .funct3         (E_funct3),
-        .E_PCSrc        (E_PCSrc)
+        .E_Jump         (E_Jump)
+    ,   .E_Zero         (E_Zero)
+    ,   .E_Branch       (E_Branch)
+    ,   .E_signed_less  (E_signed_less)
+    ,   .funct3         (E_funct3)
+    ,   .E_PCSrc        (E_PCSrc)
     );
 
     // ================================================================
@@ -231,53 +231,53 @@ module RV32IA #(
     assign icache_flush = fetch_pipe_Flush;
 
     HazardUnit HazardUnit_inst(
-        .D_Rs1          (A1),
-        .D_Rs2          (A2),
-        .E_Rs1          (E_rs1),
-        .E_Rs2          (E_rs2),
-        .E_rd           (E_rd),
-        .icache_stall   (icache_stall),
-        .dcache_stall   (dcache_stall),
-        .E_MulDivStall  (1'b0),
-        .E_FPUStall     (1'b0),
+        .D_Rs1          (A1)
+    ,   .D_Rs2          (A2)
+    ,   .E_Rs1          (E_rs1)
+    ,   .E_Rs2          (E_rs2)
+    ,   .E_rd           (E_rd)
+    ,   .icache_stall   (icache_stall)
+    ,   .dcache_stall   (dcache_stall)
+    ,   .E_MulDivStall  (1'b0)
+    ,   .E_FPUStall     (1'b0)
         
-        .E_ResultSrc    (E_ResultSrc),
-        .E_RegSrc1      (1'b0),
-        .E_RegSrc2      (1'b0),
-        .E_Mispredict   (E_Mispredict),
-        .M_RegWrite     (M_RegWrite),
-        .M_FRegWrite    (1'b0),
-        .C_RegWrite     (C_RegWrite),
-        .C_FRegWrite    (1'b0),
-        .M_Rd           (M_rd),
-        .C_Rd           (C_rd),
-        .W_Rd           (W_rd),
-        .W_RegWrite     (W_RegWrite),
-        .W_FRegWrite    (1'b0),
+    ,   .E_ResultSrc    (E_ResultSrc)
+    ,   .E_RegSrc1      (1'b0)
+    ,   .E_RegSrc2      (1'b0)
+    ,   .E_Mispredict   (E_Mispredict)
+    ,   .M_RegWrite     (M_RegWrite)
+    ,   .M_FRegWrite    (1'b0)
+    ,   .C_RegWrite     (C_RegWrite)
+    ,   .C_FRegWrite    (1'b0)
+    ,   .M_Rd           (M_rd)
+    ,   .C_Rd           (C_rd)
+    ,   .W_Rd           (W_rd)
+    ,   .W_RegWrite     (W_RegWrite)
+    ,   .W_FRegWrite    (1'b0)
         
-        .F_Stall            (F_Stall),
-        .D_Stall            (D_Stall),
-        .E_Stall            (E_Stall),
-        .M_Stall            (M_Stall),
-        .fetch_pipe_Flush   (fetch_pipe_Flush),
-        .D_Flush            (D_Flush),
-        .E_Flush            (E_Flush),
-        .ForwardAE          (ForwardAE),
-        .ForwardBE          (ForwardBE)
+    ,   .F_Stall            (F_Stall)
+    ,   .D_Stall            (D_Stall)
+    ,   .E_Stall            (E_Stall)
+    ,   .M_Stall            (M_Stall)
+    ,   .fetch_pipe_Flush   (fetch_pipe_Flush)
+    ,   .D_Flush            (D_Flush)
+    ,   .E_Flush            (E_Flush)
+    ,   .ForwardAE          (ForwardAE)
+    ,   .ForwardBE          (ForwardBE)
     );
 
     // ================================================================
     // FETCH STAGE (S1) - PC Register
     // ================================================================
     PC #(
-        .WIDTH      (WIDTH_ADDR), 
-        .START_PC   (START_PC)
+        .WIDTH      (WIDTH_ADDR)
+    ,   .START_PC   (START_PC)
     ) PC_inst(    
-        .clk    (clk),
-        .rst_n  (rst_n),
-        .EN     (F_Stall | test_stall),    // Khi stall hoac test_stall thi khong cap nhat PC
-        .PCNext (PCNext),
-        .PC     (F_PC)
+        .clk    (clk)
+    ,   .rst_n  (rst_n)
+    ,   .EN     (F_Stall | test_stall)    // Khi stall hoac test_stall thi khong cap nhat PC
+    ,   .PCNext (PCNext)
+    ,   .PC     (F_PC)
     );
 
     // ================================================================
@@ -291,41 +291,41 @@ module RV32IA #(
     // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
     // ================================================================
     fetch_pipe fetch_pipe_register (
-        .clk    (clk),
-        .rst_n  (rst_n),
-        .EN     (F_Stall | test_stall),
-        .Flush  (fetch_pipe_Flush),
+        .clk    (clk)
+    ,   .rst_n  (rst_n)
+    ,   .EN     (F_Stall | test_stall)
+    ,   .Flush  (fetch_pipe_Flush)
 
-        .s1_Predict_Taken   (F_Predict_Taken),
-        .s1_GHSR            (F_GHSR),
-        .s1_PC              (F_PC),
-        .s1_PCPlus4         (F_PCPlus4),
+    ,   .s1_Predict_Taken   (F_Predict_Taken)
+    ,   .s1_GHSR            (F_GHSR)
+    ,   .s1_PC              (F_PC)
+    ,   .s1_PCPlus4         (F_PCPlus4)
 
-        .s2_Predict_Taken   (s2_Predict_Taken),
-        .s2_GHSR            (s2_GHSR         ),
-        .s2_PC              (s2_PC           ),
-        .s2_PCPlus4         (s2_PCPlus4      )
+    ,   .s2_Predict_Taken   (s2_Predict_Taken)
+    ,   .s2_GHSR            (s2_GHSR         )
+    ,   .s2_PC              (s2_PC           )
+    ,   .s2_PCPlus4         (s2_PCPlus4      )
     );
 
     // ================================================================
     // PIPELINE REGISTER: S2 -> ID (IF_ID)
     // ================================================================
     IF_ID IF_ID_register(
-        .clk                (clk),
-        .rst_n              (rst_n),
-        .EN                 (D_Stall | test_stall),
-        .D_Flush            (D_Flush),
-        .F_RD               (F_RD),
-        .F_PC               (s2_PC),
-        .F_PCPlus4          (s2_PCPlus4),
-        .F_GHSR             (s2_GHSR),
-        .F_Predict_Taken    (s2_Predict_Taken),
+        .clk                (clk)
+    ,   .rst_n              (rst_n)
+    ,   .EN                 (D_Stall | test_stall)
+    ,   .D_Flush            (D_Flush)
+    ,   .F_RD               (F_RD)
+    ,   .F_PC               (s2_PC)
+    ,   .F_PCPlus4          (s2_PCPlus4)
+    ,   .F_GHSR             (s2_GHSR)
+    ,   .F_Predict_Taken    (s2_Predict_Taken)
 
-        .D_Instr            (D_Instr),
-        .D_PC               (D_PC),
-        .D_PCPlus4          (D_PCPlus4),
-        .D_GHSR             (D_GHSR),
-        .D_Predict_Taken    (D_Predict_Taken)
+    ,   .D_Instr            (D_Instr)
+    ,   .D_PC               (D_PC)
+    ,   .D_PCPlus4          (D_PCPlus4)
+    ,   .D_GHSR             (D_GHSR)
+    ,   .D_Predict_Taken    (D_Predict_Taken)
     );
 
     // ================================================================
@@ -336,108 +336,109 @@ module RV32IA #(
     assign WD3  = D_Instr[11:7];    // rd
     
     ControlUnit ControlUnit_ins(
-        .op                 (D_Instr[6:0]),
-        .funct3             (D_Instr[14:12]),
-        .funct7             (D_Instr[31:25]),
-        .funct5             (D_Instr[31:27]),
-        .ResultSrc          (D_ResultSrc),
-        .MemWrite           (D_MemWrite),
-        .ALUControl         (D_ALUControl),
-        .ALUSrc             (D_ALUSrc),
-        .ImmSrc             (D_ImmSrc),
-        .RegWrite           (D_RegWrite),
-        .Branch             (D_Branch),
-        .Jump               (D_Jump),
-        .StoreSrc           (D_StoreSrc),
-        .addr_addend_sel    (D_addr_addend_sel),
-        .ResPCSel           (D_ResPCSel),
-        .data_req           (D_data_req),
-        .amo                (D_amo),
-        .amo_op             (D_amo_op),
-        .lr                 (D_lr),
-        .sc                 (D_sc)
+        .op                 (D_Instr[6:0])
+    ,   .funct7             (D_Instr[31:25])
+    ,   .funct5             (D_Instr[31:27])
+    ,   .funct3             (D_Instr[14:12])
+
+    ,   .ResultSrc          (D_ResultSrc)
+    ,   .MemWrite           (D_MemWrite)
+    ,   .ALUControl         (D_ALUControl)
+    ,   .ALUSrc             (D_ALUSrc)
+    ,   .ImmSrc             (D_ImmSrc)
+    ,   .RegWrite           (D_RegWrite)
+    ,   .Branch             (D_Branch)
+    ,   .Jump               (D_Jump)
+    ,   .StoreSrc           (D_StoreSrc)
+    ,   .addr_addend_sel    (D_addr_addend_sel)
+    ,   .ResPCSel           (D_ResPCSel)
+    ,   .data_req           (D_data_req)
+    ,   .amo                (D_amo)
+    ,   .amo_op             (D_amo_op)
+    ,   .lr                 (D_lr)
+    ,   .sc                 (D_sc)
     );
 
     RegFile register_file(
-        .clk    (clk),
-        .rst_n  (rst_n),
-        .we     (W_RegWrite),
-        .rs1    (A1),
-        .rs2    (A2),
-        .rd     (W_rd),
-        .wd     (W_mux_result),
-        .rd1    (RDX1),
-        .rd2    (RDX2)
+        .clk    (clk)
+    ,   .rst_n  (rst_n)
+    ,   .we     (W_RegWrite)
+    ,   .rs1    (A1)
+    ,   .rs2    (A2)
+    ,   .rd     (W_rd)
+    ,   .wd     (W_mux_result)
+    ,   .rd1    (RDX1)
+    ,   .rd2    (RDX2)
     );
 
     Extend extend_inst(
-        .ImmSrc (D_ImmSrc),
-        .Instr  (D_Instr[31:0]),
-        .ImmExt (D_ImmExt)
+        .ImmSrc (D_ImmSrc)
+    ,   .Instr  (D_Instr[31:0])
+    ,   .ImmExt (D_ImmExt)
     );
 
     // ================================================================
     // PIPELINE REGISTER: ID -> EX (ID_EX)
     // ================================================================
     ID_EX ID_EX_register(
-        .clk                (clk),
-        .rst_n              (rst_n),
-        .E_Flush            (E_Flush),
-        .EN                 (E_Stall | test_stall),
+        .clk                (clk)
+    ,   .rst_n              (rst_n)
+    ,   .E_Flush            (E_Flush)
+    ,   .EN                 (E_Stall | test_stall)
 
-        .D_RD1              (RDX1),
-        .D_RD2              (RDX2),
-        .D_Rs1              (A1),
-        .D_Rs2              (A2),
-        .D_rd               (WD3),
-        .D_ImmExt           (D_ImmExt),
-        .D_PC               (D_PC),
-        .D_PCPlus4          (D_PCPlus4),
-        .D_RegWrite         (D_RegWrite),
-        .D_MemWrite         (D_MemWrite),
-        .D_Jump             (D_Jump),
-        .D_Branch           (D_Branch),
-        .D_ALUSrc           (D_ALUSrc),
-        .D_ResultSrc        (D_ResultSrc),
-        .D_funct3           (D_Instr[14:12]),
-        .D_GHSR             (D_GHSR),
-        .D_StoreSrc         (D_StoreSrc),
-        .D_ALUControl       (D_ALUControl),
-        .D_addr_addend_sel  (D_addr_addend_sel),
-        .D_ResPCSel         (D_ResPCSel),
-        .D_Predict_Taken    (D_Predict_Taken),    
-        .D_data_req         (D_data_req),  
-        .D_amo              (D_amo),
-        .D_amo_op           (D_amo_op),
-        .D_lr               (D_lr),
-        .D_sc               (D_sc),
+    ,   .D_RD1              (RDX1)
+    ,   .D_RD2              (RDX2)
+    ,   .D_Rs1              (A1)
+    ,   .D_Rs2              (A2)
+    ,   .D_rd               (WD3)
+    ,   .D_ImmExt           (D_ImmExt)
+    ,   .D_PC               (D_PC)
+    ,   .D_PCPlus4          (D_PCPlus4)
+    ,   .D_RegWrite         (D_RegWrite)
+    ,   .D_MemWrite         (D_MemWrite)
+    ,   .D_Jump             (D_Jump)
+    ,   .D_Branch           (D_Branch)
+    ,   .D_ALUSrc           (D_ALUSrc)
+    ,   .D_ResultSrc        (D_ResultSrc)
+    ,   .D_funct3           (D_Instr[14:12])
+    ,   .D_GHSR             (D_GHSR)
+    ,   .D_StoreSrc         (D_StoreSrc)
+    ,   .D_ALUControl       (D_ALUControl)
+    ,   .D_addr_addend_sel  (D_addr_addend_sel)
+    ,   .D_ResPCSel         (D_ResPCSel)
+    ,   .D_Predict_Taken    (D_Predict_Taken)
+    ,   .D_data_req         (D_data_req)
+    ,   .D_amo              (D_amo)
+    ,   .D_amo_op           (D_amo_op)
+    ,   .D_lr               (D_lr)
+    ,   .D_sc               (D_sc)
 
-        .E_RD1              (E_RD1),
-        .E_RD2              (E_RD2),
-        .E_Rs1              (E_rs1),
-        .E_Rs2              (E_rs2),
-        .E_rd               (E_rd),
-        .E_ImmExt           (E_ImmExt),
-        .E_PC               (E_PC),
-        .E_PCPlus4          (E_PCPlus4),
-        .E_RegWrite         (E_RegWrite),
-        .E_MemWrite         (E_MemWrite),
-        .E_Jump             (E_Jump),
-        .E_Branch           (E_Branch),
-        .E_ALUSrc           (E_ALUSrc),
-        .E_ResultSrc        (E_ResultSrc),
-        .E_funct3           (E_funct3),
-        .E_GHSR             (E_GHSR),
-        .E_StoreSrc         (E_StoreSrc),
-        .E_ALUControl       (E_ALUControl),
-        .E_addr_addend_sel  (E_addr_addend_sel),
-        .E_ResPCSel         (E_ResPCSel),
-        .E_Predict_Taken    (E_Predict_Taken),
-        .E_data_req         (E_data_req),
-        .E_amo              (E_amo),
-        .E_amo_op           (E_amo_op),
-        .E_lr               (E_lr),
-        .E_sc               (E_sc)
+    ,   .E_RD1              (E_RD1)
+    ,   .E_RD2              (E_RD2)
+    ,   .E_Rs1              (E_rs1)
+    ,   .E_Rs2              (E_rs2)
+    ,   .E_rd               (E_rd)
+    ,   .E_ImmExt           (E_ImmExt)
+    ,   .E_PC               (E_PC)
+    ,   .E_PCPlus4          (E_PCPlus4)
+    ,   .E_RegWrite         (E_RegWrite)
+    ,   .E_MemWrite         (E_MemWrite)
+    ,   .E_Jump             (E_Jump)
+    ,   .E_Branch           (E_Branch)
+    ,   .E_ALUSrc           (E_ALUSrc)
+    ,   .E_ResultSrc        (E_ResultSrc)
+    ,   .E_funct3           (E_funct3)
+    ,   .E_GHSR             (E_GHSR)
+    ,   .E_StoreSrc         (E_StoreSrc)
+    ,   .E_ALUControl       (E_ALUControl)
+    ,   .E_addr_addend_sel  (E_addr_addend_sel)
+    ,   .E_ResPCSel         (E_ResPCSel)
+    ,   .E_Predict_Taken    (E_Predict_Taken)
+    ,   .E_data_req         (E_data_req)
+    ,   .E_amo              (E_amo)
+    ,   .E_amo_op           (E_amo_op)
+    ,   .E_lr               (E_lr)
+    ,   .E_sc               (E_sc)
     );
 
     // ================================================================
@@ -456,35 +457,35 @@ module RV32IA #(
     );
 
     mux2_1 Mux_PCadd(
-        .in0    (E_PC),
-        .in1    (E_RD1),
-        .sel    (E_addr_addend_sel),
-        .res    (E_PCtmp)
+        .in0    (E_PC)
+    ,   .in1    (E_RD1)
+    ,   .sel    (E_addr_addend_sel)
+    ,   .res    (E_PCtmp)
     );
 
     mux4_1 mux_ForwardAE (
-        .in0    (E_RD1),
-        .in1    (M_ALUResult),
-        .in2    (C_mux_result),
-        .in3    (W_mux_result),
-        .sel    (ForwardAE),
-        .res    (E_SrcA)
+        .in0    (E_RD1)
+    ,   .in1    (M_ALUResult)
+    ,   .in2    (C_mux_result)
+    ,   .in3    (W_mux_result)
+    ,   .sel    (ForwardAE)
+    ,   .res    (E_SrcA)
     );
 
     mux4_1 mux_ForwardBE (
-        .in0    (E_RD2),
-        .in1    (M_ALUResult),
-        .in2    (C_mux_result),
-        .in3    (W_mux_result),
-        .sel    (ForwardBE),
-        .res    (E_WriteData)
+        .in0    (E_RD2)
+    ,   .in1    (M_ALUResult)
+    ,   .in2    (C_mux_result)
+    ,   .in3    (W_mux_result)
+    ,   .sel    (ForwardBE)
+    ,   .res    (E_WriteData)
     );
 
     mux2_1 mux_E_ALUSrc (
-        .in0    (E_WriteData),
-        .in1    (E_ImmExt),
-        .sel    (E_ALUSrc),
-        .res    (E_SrcB)
+        .in0    (E_WriteData)
+    ,   .in1    (E_ImmExt)
+    ,   .sel    (E_ALUSrc)
+    ,   .res    (E_SrcB)
     );
 
     assign E_PCTarget   = E_ImmExt + E_PCtmp;  // Branch/Jump target address
@@ -493,43 +494,41 @@ module RV32IA #(
     // PIPELINE REGISTER: EX -> MEM (EX_MEM)
     // ================================================================
     EX_MEM EX_MEM_register(
-        .clk    (clk),
-        .rst_n  (rst_n),
-        .EN     (M_Stall | test_stall),
+        .clk    (clk)
+    ,   .rst_n  (rst_n)
+    ,   .EN     (M_Stall | test_stall)
 
-        .E_ALUResult    (E_ALUResult),
-        .E_WriteData    (E_WriteData),
-        // .E_ImmExt       (E_ImmExt),
-        .E_PCPlus4      (E_PCPlus4),
-        .E_PCTarget     (E_PCTarget),
-        .E_rd           (E_rd),
-        .E_RegWrite     (E_RegWrite),
-        .E_MemWrite     (E_MemWrite),
-        .E_ResultSrc    (E_ResultSrc),
-        .E_StoreSrc     (E_StoreSrc),
-        .E_ResPCSel     (E_ResPCSel),
-        .E_data_req     (E_data_req),
-        .E_amo          (E_amo),
-        .E_amo_op       (E_amo_op),
-        .E_lr           (E_lr),
-        .E_sc           (E_sc),
+    ,   .E_ALUResult    (E_ALUResult)
+    ,   .E_WriteData    (E_WriteData)
+    ,   .E_PCPlus4      (E_PCPlus4)
+    ,   .E_PCTarget     (E_PCTarget)
+    ,   .E_rd           (E_rd)
+    ,   .E_RegWrite     (E_RegWrite)
+    ,   .E_MemWrite     (E_MemWrite)
+    ,   .E_ResultSrc    (E_ResultSrc)
+    ,   .E_StoreSrc     (E_StoreSrc)
+    ,   .E_ResPCSel     (E_ResPCSel)
+    ,   .E_data_req     (E_data_req)
+    ,   .E_amo          (E_amo)
+    ,   .E_amo_op       (E_amo_op)
+    ,   .E_lr           (E_lr)
+    ,   .E_sc           (E_sc)
 
-        .M_ALUResult    (M_ALUResult),
-        .M_WriteData    (M_WriteData),
-        // .M_ImmExt       (M_ImmExt),
-        .M_PCPlus4      (M_PCPlus4),
-        .M_PCTarget     (M_PCTarget),
-        .M_rd           (M_rd),
-        .M_RegWrite     (M_RegWrite),
-        .M_MemWrite     (M_MemWrite),
-        .M_ResultSrc    (M_ResultSrc),
-        .M_StoreSrc     (M_StoreSrc),
-        .M_ResPCSel     (M_ResPCSel),
-        .M_data_req     (M_data_req),
-        .M_amo          (M_amo),
-        .M_amo_op       (M_amo_op),
-        .M_lr           (M_lr),
-        .M_sc           (M_sc)
+    ,   .M_ALUResult    (M_ALUResult)
+    ,   .M_WriteData    (M_WriteData)
+    ,   .M_PCPlus4      (M_PCPlus4)
+    ,   .M_PCTarget     (M_PCTarget)
+    ,   .M_rd           (M_rd)
+    ,   .M_RegWrite     (M_RegWrite)
+    ,   .M_MemWrite     (M_MemWrite)
+    ,   .M_ResultSrc    (M_ResultSrc)
+    ,   .M_StoreSrc     (M_StoreSrc)
+    ,   .M_ResPCSel     (M_ResPCSel)
+    ,   .M_data_req     (M_data_req)
+    ,   .M_amo          (M_amo)
+    ,   .M_amo_op       (M_amo_op)
+    ,   .M_lr           (M_lr)
+    ,   .M_sc           (M_sc)
     );
 
     // ================================================================
@@ -551,33 +550,31 @@ module RV32IA #(
     // PC RESULT MUX - For JALR/JAL
     // ================================================================
     mux2_1 mux_ResPC(
-        .in0    (M_PCTarget),
-        .in1    (M_PCPlus4),
-        .sel    (M_ResPCSel),
-        .res    (M_ResPC)
+        .in0    (M_PCTarget)
+    ,   .in1    (M_PCPlus4)
+    ,   .sel    (M_ResPCSel)
+    ,   .res    (M_ResPC)
     );
 
     // ================================================================
     // PIPELINE REGISTER: MEM -> CACHE (MEM_CACHE)
     // ================================================================
     MEM_CACHE MEM_CACHE_register(
-        .clk            (clk),
-        .rst_n          (rst_n),
-        .EN             (dcache_stall | test_stall),
+        .clk            (clk)
+    ,   .rst_n          (rst_n)
+    ,   .EN             (dcache_stall | test_stall)
 
-        .M_Result       (M_ALUResult),
-        // .M_ImmExt       (M_ImmExt),
-        .M_ResPC        (M_ResPC),
-        .M_rd           (M_rd),
-        .M_RegWrite     (M_RegWrite),
-        .M_ResultSrc    (M_ResultSrc),
+    ,   .M_Result       (M_ALUResult)
+    ,   .M_ResPC        (M_ResPC)
+    ,   .M_rd           (M_rd)
+    ,   .M_RegWrite     (M_RegWrite)
+    ,   .M_ResultSrc    (M_ResultSrc)
 
-        .C_Result       (C_Result),
-        // .C_ImmExt       (C_ImmExt),
-        .C_ResPC        (C_ResPC),
-        .C_rd           (C_rd),
-        .C_RegWrite     (C_RegWrite),
-        .C_ResultSrc    (C_ResultSrc)
+    ,   .C_Result       (C_Result)
+    ,   .C_ResPC        (C_ResPC)
+    ,   .C_rd           (C_rd)
+    ,   .C_RegWrite     (C_RegWrite)
+    ,   .C_ResultSrc    (C_ResultSrc)
     );
 
     // ================================================================
@@ -586,29 +583,29 @@ module RV32IA #(
     // ResultSrc: 00=ALU, 01=Memory, 10=PC+4
     assign C_ReadData   = data_rdata;
     mux4_1 mux_C_Result (
-        .in0    (C_Result),
-        .in1    (C_ReadData),
-        .in2    (C_ResPC),
-        .in3    (32'd0),
-        .sel    (C_ResultSrc[1:0]),
-        .res    (C_mux_result)
+        .in0    (C_Result)
+    ,   .in1    (C_ReadData)
+    ,   .in2    (C_ResPC)
+    ,   .in3    (32'd0)
+    ,   .sel    (C_ResultSrc[1:0])
+    ,   .res    (C_mux_result)
     );
 
     // ================================================================
     // PIPELINE REGISTER: CACHE -> WRITEBACK (MEM_WB)
     // ================================================================
     MEM_WB MEM_WB_register(
-        .clk            (clk),
-        .rst_n          (rst_n),
-        .EN             (dcache_stall | test_stall),
-        .M_rd           (C_rd),
-        .M_RegWrite     (C_RegWrite),
-        .M_ResultSrc    (C_ResultSrc),
-        .C_mux_result   (C_mux_result),
+        .clk            (clk)
+    ,   .rst_n          (rst_n)
+    ,   .EN             (dcache_stall | test_stall)
+    ,   .M_rd           (C_rd)
+    ,   .M_RegWrite     (C_RegWrite)
+    ,   .M_ResultSrc    (C_ResultSrc)
+    ,   .C_mux_result   (C_mux_result)
 
-        .W_rd           (W_rd),
-        .W_RegWrite     (W_RegWrite),
-        .W_ResultSrc    (W_ResultSrc),
-        .W_mux_result   (W_mux_result)
+    ,   .W_rd           (W_rd)
+    ,   .W_RegWrite     (W_RegWrite)
+    ,   .W_ResultSrc    (W_ResultSrc)
+    ,   .W_mux_result   (W_mux_result)
     );
 endmodule
