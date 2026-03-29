@@ -63,9 +63,10 @@ module dcache_controller #(
     // Bus Commands
     localparam CMD_READ_SHARED = 2'b00, CMD_WRITE_BACK = 2'b01, CMD_UPGRADE = 2'b10, CMD_READ_UNIQUE = 2'b11;
 
-    reg [3:0] state, next_state;
-    reg res_valid;
-    reg [31:0] res_addr;
+    reg [3:0]   state, next_state;
+    reg         res_valid;
+    reg [31:0]  res_addr;
+
     wire is_write = cpu_we || i_atomic_sc || i_atomic_amo;
     wire res_hit  = res_valid && (res_addr == cpu_addr);
 
@@ -94,17 +95,22 @@ module dcache_controller #(
     end
 
     always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) o_sc_success <= 1'b1;
+        if (~rst_n) 
+            o_sc_success <= 1'b1;
         else if (i_atomic_sc && state == TAG_CHECK && cpu_req) begin
             // Trả Fail (1) luôn nếu khóa Lock đã mất
-            if (!res_valid || !res_hit) o_sc_success <= 1'b1;
-            else o_sc_success <= 1'b0; // Success
+            if (!res_valid || !res_hit) 
+                o_sc_success <= 1'b1;
+            else 
+                o_sc_success <= 1'b0; // Success
         end
     end
 
     always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) state <= TAG_CHECK;
-        else state <= next_state;
+        if (~rst_n) 
+            state <= TAG_CHECK;
+        else 
+            state <= next_state;
     end
 
     // ================================================================
@@ -167,42 +173,6 @@ module dcache_controller #(
                 end
             end
 
-            // WB_SEND: begin
-            //     o_req_valid = 1'b1;
-            //     o_req_wb    = 1'b1;
-            //     o_req_cmd   = CMD_WRITE_BACK;
-            //     if (i_req_ready) 
-            //         next_state = WB_WAIT;
-            //     else if (snoop_busy) begin
-            //         o_req_valid = 1'b0;
-            //         o_req_wb    = 1'b0;
-            //         next_state  = TAG_CHECK;
-            //     end
-            // end
-
-            // WB_WAIT: begin
-            //     if (i_resp_valid) 
-            //         next_state = BUS_REQ; // Writeback xong, quay lại lấy Block mới
-            // end
-
-            // BUS_REQ: begin
-            //     o_req_valid = 1'b1;
-            //     if (is_write && hit) 
-            //         o_req_cmd = CMD_UPGRADE;
-            //     else if (is_write && !hit) 
-            //         o_req_cmd = CMD_READ_UNIQUE;
-            //     else 
-            //         o_req_cmd = CMD_READ_SHARED;
-                
-            //     if (i_req_ready) 
-            //         next_state = BUS_WAIT;
-            //     else if (snoop_busy) begin
-            //         // Có snoop ưu tiên cao hơn -> Bỏ dở việc xin bus, lùi về TAG_CHECK
-            //         o_req_valid = 1'b0; 
-            //         next_state  = TAG_CHECK;
-            //     end
-            // end
-
             WB_SEND: begin
                 o_req_cmd = CMD_WRITE_BACK;
                 if (snoop_busy) begin
@@ -220,8 +190,9 @@ module dcache_controller #(
             end
 
             WB_WAIT: begin
+                o_resp_ready    = 1'b1;
                 if (i_resp_valid) 
-                    next_state = BUS_REQ;
+                    next_state  = BUS_REQ;
             end
 
             BUS_REQ: begin
@@ -265,10 +236,10 @@ module dcache_controller #(
             end
 
             AMO_EXEC: begin
-                data_we  = 1'b1;
-                moesi_we = 1'b1; // State M
+                data_we     = 1'b1;
+                moesi_we    = 1'b1; // State M
                 // stall    = 1'b0;
-                next_state = WAIT_RAM;
+                next_state  = WAIT_RAM;
             end
 
             WAIT_RAM: begin

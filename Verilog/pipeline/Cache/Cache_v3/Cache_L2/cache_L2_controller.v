@@ -194,12 +194,18 @@ module cache_L2_controller #(
 
             B_WAIT: begin
                 oBREADY = 1'b1;
-                if (iBVALID) begin
-                    if (i_l1_req_rw == 1'b1) 
-                        next_state = UPDATE_WM;
-                    else                     
-                        next_state = AR_REQ;
-                end
+                // if (iBVALID) begin
+                //     if (i_l1_req_rw == 1'b1) 
+                //         next_state = UPDATE_WM;
+                //     else                     
+                //         next_state = AR_REQ;
+                // end
+                
+                // hien tai chua ho tro tra Bresponse
+                if (i_l1_req_rw == 1'b1) 
+                    next_state = UPDATE_WM;
+                else                     
+                    next_state = AR_REQ;
             end
 
             AR_REQ: begin

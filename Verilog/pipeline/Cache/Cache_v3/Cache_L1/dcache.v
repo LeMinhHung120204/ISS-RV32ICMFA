@@ -166,12 +166,13 @@ module d_cache #(
     // ================================================================
     // Address Muxing & Generation
     assign s2_full_addr     = {s2_tag, s2_index, s2_word_off, s2_byte_off};
-    assign victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    assign refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    
     assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
 
     assign s1_mux_addr      = (i_snp_req_valid)             ? i_snp_req_addr    : (cpu_addr | DATA_START);
     assign o_req_addr       = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_full  : refill_addr_full;
+    assign victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
     // Way Selection & MOESI Control
     assign choosen_way      = (any_hit)     ? way_hit       : way_select;
