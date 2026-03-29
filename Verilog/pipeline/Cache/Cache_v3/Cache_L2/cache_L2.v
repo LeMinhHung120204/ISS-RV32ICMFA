@@ -117,7 +117,7 @@ module cache_L2 #(
     // wire                    pipeline_stall;
     wire                    refill_src;
     wire [3:0]              burst_cnt;
-
+    wire [INDEX_W-1:0]      mem_read_index;
     // ================================================================
     // COMBINATORIAL LOGIC (Assign Statements)
     // ================================================================
@@ -127,16 +127,16 @@ module cache_L2 #(
     assign any_hit          = |way_hit;
     
     // AXI Address Assignments
-    assign oAWADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    assign oARADDR  = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    
+    assign oAWADDR          = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign oARADDR          = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
+
     // Hit Logic
     assign way_hit[0]       = (tag_read[0] == s2_tag) & current_valid[0];
     assign way_hit[1]       = (tag_read[1] == s2_tag) & current_valid[1];
     assign way_hit[2]       = (tag_read[2] == s2_tag) & current_valid[2];
     assign way_hit[3]       = (tag_read[3] == s2_tag) & current_valid[3];
     assign way_write_enable = any_hit ? way_hit : way_select;
-
     // ================================================================
     // SYNCHRONOUS LOGIC (always @(posedge clk))
     // ================================================================
@@ -266,8 +266,7 @@ module cache_L2 #(
             ,   .rst_n                  (rst_n)
 
             ,   .tag_we                 (tag_we & way_write_enable[i])
-                // .read_index             (read_index_src ? s1_index : s2_index),   
-            ,   .read_index             (s1_index)
+            ,   .read_index             (mem_read_index)
             ,   .write_index            (s2_index)
             ,   .din_tag                (s2_tag)        
             ,   .dout_tag               (tag_read[i])
@@ -284,8 +283,7 @@ module cache_L2 #(
             ) u_data_mem (
                 .clk            (clk)
             ,   .rst_n          (rst_n)
-                // .read_index     (read_index_src ? s1_index : s2_index),  
-            ,   .read_index     (s1_index)
+            ,   .read_index     (mem_read_index)
             ,   .dout           (data_read[i])
                 
                 // Ghi nguyen dong cache

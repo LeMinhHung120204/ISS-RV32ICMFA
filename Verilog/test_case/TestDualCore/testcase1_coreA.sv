@@ -1,7 +1,7 @@
 .text
 base_addr_1:
-    addi  x1, x0, 0x10       # x1 = 0x10 (16)
-    slli  x1, x1, 8          # x1 = 0x1000 (Địa chỉ Base ghi mảng đầu tiên)
+    addi  x1, x0, 0x110      # x1 = 0x110
+    slli  x1, x1, 8          # x1 = 0x11000 (Đã nằm trong Shared Data)
     addi  x2, x0, 0          # x2 = 0 (Biến đếm vòng lặp i = 0)
     addi  x3, x0, 16         # x3 = 16 (Giới hạn vòng lặp)
 
@@ -13,8 +13,8 @@ store_loop1:                 # Vòng lặp lưu 16 Word vào từ địa chỉ 0
     andi  x5, x5, -16        # x5 = x5 & 0xFFFFFFF0 (Xóa 4 bit cuối bằng 0)
     or    x4, x5, x2         # x4 = x5 | i (Ghép biến đếm i vào 4 bit cuối để tạo data)
     slli  x5, x2, 2          # x5 = i * 4 (Tính offset cho địa chỉ bộ nhớ, Ghi đè x5)
-    add   x6, x1, x5         # x6 = 0x1000 + i*4 (Tính địa chỉ thực tế cần ghi)
-    sw    x4, 0(x6)          # Mem[0x1000 + i*4] = x4 (Ghi dữ liệu vào D-Cache/Memory)
+    add   x6, x1, x5         # x6 = 0x11000 + i*4 (Tính địa chỉ thực tế cần ghi)
+    sw    x4, 0(x6)          # Mem[0x11000 + i*4] = x4 (Ghi dữ liệu vào D-Cache/Memory)
     addi  x2, x2, 1          # i = i + 1
     jal   x0, store_loop1    # Lặp lại store_loop1
 
@@ -22,6 +22,11 @@ base_addr_2:
     addi  x2, x0, 0          # x2 = 0 (Reset biến đếm i = 0)
     addi  x3, x0, 16         # x3 = 16 (Giới hạn vòng lặp)
     addi  x12, x0, -1        # x12 = 0xFFFFFFFF (Khởi tạo toàn 1 để chuẩn bị cho phép AND)
+    # Thêm các dòng này để reset thanh ghi tích lũy
+    addi  x11, x0, 0
+    addi  x13, x0, 0
+    addi  x14, x0, 0
+    addi  x15, x0, 0
 
 load_loop_2:                 # Vòng lặp đọc lại 16 giá trị từ 0x1000 để test Read Hit
     beq   x2, x3, base_addr_3 # Nếu i == 16 thì thoát sang base_addr_3
@@ -41,39 +46,44 @@ load_loop_2:                 # Vòng lặp đọc lại 16 giá trị từ 0x100
     jal   x0, load_loop_2    # Lặp lại load_loop_2
 
 base_addr_3:                 # Test làm đầy Way 1 của Set 0 (Địa chỉ 0x1400)
-    addi  x1, x0, 0x14       # x1 = 0x14
-    slli  x1, x1, 8          # x1 = 0x1400 
+    addi  x1, x0, 0x114
+    slli  x1, x1, 8          # x1 = 0x11400
     lui   x5, 0x12345        # x5 = 0x12345000
     ori   x5, x5, 0x678      # x5 = 0x12345678
     sw    x5, 0(x1)          # Mem[0x1400] = 0x12345678 
 
 base_addr_4:                 # Test làm đầy Way 2 của Set 0 (Địa chỉ 0x1800)
-    addi  x1, x0, 0x18       # x1 = 0x18
-    slli  x1, x1, 8          # x1 = 0x1800 
+    addi  x1, x0, 0x118
+    slli  x1, x1, 8          # x1 = 0x11800
     lui   x5, 0xCAFEB        # x5 = 0xCAFEB000
     ori   x5, x5, 0x0BE      # x5 = 0xCAFEB0BE
     sw    x5, 0(x1)          # Mem[0x1800] = 0xCAFEB0BE
 
 base_addr_5:                 # Test làm đầy Way 3 của Set 0 (Địa chỉ 0x1C00)
-    addi  x1, x0, 0x1C       # x1 = 0x1C
-    slli  x1, x1, 8          # x1 = 0x1C00
+    addi  x1, x0, 0x11C
+    slli  x1, x1, 8          # x1 = 0x11C00
     lui   x5, 0x13579        # x5 = 0x13579000
     ori   x5, x5, 0x0E0      # x5 = 0x135790E0
     sw    x5, 0(x1)          # Mem[0x1C00] = 0x135790E0
 
 base_addr_6:                 # Test Write-back, PLRUt (Đẩy Block 0x1000 ra khỏi Cache)
-    addi  x1, x0, 0x20       # x1 = 0x20
-    slli  x1, x1, 8          # x1 = 0x2000
+    addi  x1, x0, 0x120
+    slli  x1, x1, 8          # x1 = 0x12000
     lui   x5, 0x2468A        # x5 = 0x2468A000
     ori   x5, x5, 0x0CE      # x5 = 0x2468A0CE
     sw    x5, 0(x1)          # Mem[0x2000] = 0x2468A0CE 
 
 base_addr_7:
-    addi  x1, x0, 0x10       # x1 = 0x10
-    slli  x1, x1, 8          # x1 = 0x1000 (Quay lại test Read Miss/Fetch Mem Block 0x1000)
+    addi  x1, x0, 0x110      # x1 = 0x110
+    slli  x1, x1, 8          # x1 = 0x11000 (Đã nằm trong Shared Data)
     addi  x2, x0, 0          # x2 = 0
     addi  x3, x0, 16         # x3 = 16
     addi  x17, x0, -1        # x17 = 0xFFFFFFFF (Chuẩn bị thanh ghi để AND)
+    # Thêm các dòng này để reset thanh ghi tích lũy
+    addi  x16, x0, 0
+    addi  x18, x0, 0
+    addi  x19, x0, 0
+    addi  x20, x0, 0
 
 load_loop_7:                 # Lặp lại việc đọc 16 giá trị từ 0x1000 giống hệt load_loop_2
     beq   x2, x3, quick_check

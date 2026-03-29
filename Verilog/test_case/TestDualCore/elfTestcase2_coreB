@@ -4,7 +4,7 @@ file.elf:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 :
-   0:	02400093          	li	ra,36
+   0:	12400093          	li	ra,292
    4:	00809093          	slli	ra,ra,0x8
    8:	00000113          	li	sp,0
    c:	01000193          	li	gp,16
@@ -26,82 +26,91 @@ Disassembly of section .text:
   3c:	00000113          	li	sp,0
   40:	01000193          	li	gp,16
   44:	fff00b13          	li	s6,-1
+  48:	00000a93          	li	s5,0
+  4c:	00000b93          	li	s7,0
+  50:	00000c13          	li	s8,0
+  54:	00000c93          	li	s9,0
 
-0000000000000048 :
-  48:	02310e63          	beq	sp,gp,84 
-  4c:	00211213          	slli	tp,sp,0x2
-  50:	004082b3          	add	t0,ra,tp
-  54:	0002a303          	lw	t1,0(t0)
-  58:	00029383          	lh	t2,0(t0)
-  5c:	0002d403          	lhu	s0,0(t0)
-  60:	00028483          	lb	s1,0(t0)
-  64:	0002c503          	lbu	a0,0(t0)
-  68:	006aeab3          	or	s5,s5,t1
-  6c:	007b7b33          	and	s6,s6,t2
-  70:	008bcbb3          	xor	s7,s7,s0
-  74:	009c0c33          	add	s8,s8,s1
-  78:	00ac8cb3          	add	s9,s9,a0
-  7c:	00110113          	addi	sp,sp,1
-  80:	fc9ff06f          	j	48 
+0000000000000058 :
+  58:	02310e63          	beq	sp,gp,94 
+  5c:	00211213          	slli	tp,sp,0x2
+  60:	004082b3          	add	t0,ra,tp
+  64:	0002a303          	lw	t1,0(t0)
+  68:	00029383          	lh	t2,0(t0)
+  6c:	0002d403          	lhu	s0,0(t0)
+  70:	00028483          	lb	s1,0(t0)
+  74:	0002c503          	lbu	a0,0(t0)
+  78:	006aeab3          	or	s5,s5,t1
+  7c:	007b7b33          	and	s6,s6,t2
+  80:	008bcbb3          	xor	s7,s7,s0
+  84:	009c0c33          	add	s8,s8,s1
+  88:	00ac8cb3          	add	s9,s9,a0
+  8c:	00110113          	addi	sp,sp,1
+  90:	fc9ff06f          	j	58 
 
-0000000000000084 :
-  84:	02800093          	li	ra,40
-  88:	00809093          	slli	ra,ra,0x8
-  8c:	123452b7          	lui	t0,0x12345
-  90:	6782e293          	ori	t0,t0,1656
-  94:	0050a023          	sw	t0,0(ra)
+0000000000000094 :
+  94:	12800093          	li	ra,296
+  98:	00809093          	slli	ra,ra,0x8
+  9c:	123452b7          	lui	t0,0x12345
+  a0:	6782e293          	ori	t0,t0,1656
+  a4:	0050a023          	sw	t0,0(ra)
 
-0000000000000098 :
-  98:	02c00093          	li	ra,44
-  9c:	00809093          	slli	ra,ra,0x8
-  a0:	cafeb2b7          	lui	t0,0xcafeb
-  a4:	0be2e293          	ori	t0,t0,190
-  a8:	0050a023          	sw	t0,0(ra)
+00000000000000a8 :
+  a8:	12c00093          	li	ra,300
+  ac:	00809093          	slli	ra,ra,0x8
+  b0:	cafeb2b7          	lui	t0,0xcafeb
+  b4:	0be2e293          	ori	t0,t0,190
+  b8:	0050a023          	sw	t0,0(ra)
 
-00000000000000ac :
-  ac:	00c00093          	li	ra,12
-  b0:	00809093          	slli	ra,ra,0x8
-  b4:	135792b7          	lui	t0,0x13579
-  b8:	0e02e293          	ori	t0,t0,224
-  bc:	0050a023          	sw	t0,0(ra)
+00000000000000bc :
+  bc:	10c00093          	li	ra,268
+  c0:	00809093          	slli	ra,ra,0x8
+  c4:	135792b7          	lui	t0,0x13579
+  c8:	0e02e293          	ori	t0,t0,224
+  cc:	0050a023          	sw	t0,0(ra)
 
-00000000000000c0 :
-  c0:	0c400093          	li	ra,196
-  c4:	00409093          	slli	ra,ra,0x4
-  c8:	2468a2b7          	lui	t0,0x2468a
-  cc:	0ce2e293          	ori	t0,t0,206
-  d0:	0050a023          	sw	t0,0(ra)
-
-00000000000000d4 :
-  d4:	02400093          	li	ra,36
-  d8:	00809093          	slli	ra,ra,0x8
-  dc:	00000113          	li	sp,0
-  e0:	01000193          	li	gp,16
-  e4:	fff00d93          	li	s11,-1
+00000000000000d0 :
+  d0:	10c00093          	li	ra,268
+  d4:	00809093          	slli	ra,ra,0x8
+  d8:	04008093          	addi	ra,ra,64
+  dc:	2468a2b7          	lui	t0,0x2468a
+  e0:	0ce2e293          	ori	t0,t0,206
+  e4:	0050a023          	sw	t0,0(ra)
 
 00000000000000e8 :
-  e8:	02310e63          	beq	sp,gp,124 
-  ec:	00211213          	slli	tp,sp,0x2
-  f0:	004082b3          	add	t0,ra,tp
-  f4:	0002a303          	lw	t1,0(t0) # 2468a000 <_sstack+0x24679600>
-  f8:	00029383          	lh	t2,0(t0)
-  fc:	0002d403          	lhu	s0,0(t0)
- 100:	00028483          	lb	s1,0(t0)
- 104:	0002c503          	lbu	a0,0(t0)
- 108:	006d6d33          	or	s10,s10,t1
- 10c:	007dfdb3          	and	s11,s11,t2
- 110:	008e4e33          	xor	t3,t3,s0
- 114:	009e8eb3          	add	t4,t4,s1
- 118:	00af0f33          	add	t5,t5,a0
- 11c:	00110113          	addi	sp,sp,1
- 120:	fc9ff06f          	j	e8 
+  e8:	02400093          	li	ra,36
+  ec:	00809093          	slli	ra,ra,0x8
+  f0:	00000113          	li	sp,0
+  f4:	01000193          	li	gp,16
+  f8:	fff00d93          	li	s11,-1
+  fc:	00000d13          	li	s10,0
+ 100:	00000e13          	li	t3,0
+ 104:	00000e93          	li	t4,0
+ 108:	00000f13          	li	t5,0
 
-0000000000000124 :
- 124:	01aac5b3          	xor	a1,s5,s10
- 128:	01bb4633          	xor	a2,s6,s11
- 12c:	01cbc6b3          	xor	a3,s7,t3
- 130:	01dc4733          	xor	a4,s8,t4
- 134:	01ecc7b3          	xor	a5,s9,t5
+000000000000010c :
+ 10c:	02310e63          	beq	sp,gp,148 
+ 110:	00211213          	slli	tp,sp,0x2
+ 114:	004082b3          	add	t0,ra,tp
+ 118:	0002a303          	lw	t1,0(t0) # 2468a000 <_sstack+0x24679600>
+ 11c:	00029383          	lh	t2,0(t0)
+ 120:	0002d403          	lhu	s0,0(t0)
+ 124:	00028483          	lb	s1,0(t0)
+ 128:	0002c503          	lbu	a0,0(t0)
+ 12c:	006d6d33          	or	s10,s10,t1
+ 130:	007dfdb3          	and	s11,s11,t2
+ 134:	008e4e33          	xor	t3,t3,s0
+ 138:	009e8eb3          	add	t4,t4,s1
+ 13c:	00af0f33          	add	t5,t5,a0
+ 140:	00110113          	addi	sp,sp,1
+ 144:	fc9ff06f          	j	10c 
+
+0000000000000148 :
+ 148:	01aac5b3          	xor	a1,s5,s10
+ 14c:	01bb4633          	xor	a2,s6,s11
+ 150:	01cbc6b3          	xor	a3,s7,t3
+ 154:	01dc4733          	xor	a4,s8,t4
+ 158:	01ecc7b3          	xor	a5,s9,t5
 
 Disassembly of section .heap:
 

@@ -84,13 +84,32 @@ module HazardUnit #(
     wire lw_Stall;
     assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
 
+    // assign M_Stall          = dcache_stall ;
+    // assign E_Stall          = dcache_stall | E_MulDivStall | E_FPUStall;
+    // assign D_Stall          = dcache_stall | lw_Stall | E_Stall;
+    // assign F_Stall          = dcache_stall | lw_Stall | E_Stall | icache_stall;
+    
+    // // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
+    // assign E_Flush          = lw_Stall | E_Mispredict;
+    // // assign E_Flush          = lw_Stall;
+    // assign D_Flush          = E_Mispredict;
+    // assign fetch_pipe_Flush = E_Mispredict;
+
+    // 1. D-Cache stalls lock the backend (M, E, D)
     assign M_Stall          = dcache_stall ;
     assign E_Stall          = dcache_stall | E_MulDivStall | E_FPUStall;
     assign D_Stall          = dcache_stall | lw_Stall | E_Stall;
-    assign F_Stall          = dcache_stall | lw_Stall | E_Stall | icache_stall;
+
+    // 2. F_Stall logic: Mispredict OVERRIDES icache_stall and lw_Stall
+    // Nếu EX bị kẹt (E_Stall=1), F_Stall vẫn phải bật để đợi.
+    // Nếu EX không kẹt, E_Mispredict sẽ ép F_Stall xuống 0 để PC lọt qua và cập nhật E_Correct_PC.
+    assign F_Stall          = E_Stall | ((icache_stall | lw_Stall) & ~E_Mispredict);
+
+    // 3. Flush logic: MUST be masked by Stall!
+    // Không bao giờ được flush một tầng đang bị kẹt để bảo toàn state.
+    assign E_Flush          = (lw_Stall | E_Mispredict) & ~E_Stall;
+    assign D_Flush          = E_Mispredict & ~D_Stall;
     
-    // flush khi nhanh duoc lay hoac khi lenh lw duoc thuc thi tao load hazard
-    assign E_Flush          = lw_Stall | E_Mispredict;
-    assign D_Flush          = E_Mispredict;
-    assign fetch_pipe_Flush = E_Mispredict;
+    // fetch_pipe_Flush cũng được dùng làm icache_flush, nên nó chỉ kích hoạt khi F không bị dcache bắt stall.
+    assign fetch_pipe_Flush = E_Mispredict & ~F_Stall;
 endmodule

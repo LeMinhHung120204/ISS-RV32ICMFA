@@ -136,6 +136,7 @@ module dual_core #(
     wire [LINE_W-1:0]   l2_req_wdata;
     wire                l2_resp_valid, l2_resp_ready;
     wire [LINE_W-1:0]   l2_resp_rdata;
+    wire                pipeline_stall; // Dùng để stall cả 2 core khi L2 cache đang xử lý request
 
 
     // ================================================================
@@ -356,6 +357,7 @@ module dual_core #(
     ,   .o_l1_resp_valid        (l2_resp_valid)
     ,   .i_l1_resp_ready        (l2_resp_ready)
     ,   .o_l1_resp_rdata        (l2_resp_rdata)
+    ,   .pipeline_stall         (pipeline_stall)
 
         // --- Giao tiếp với AXI Bus Memory (Đẩy ra Port của Dual_Core) ---
     ,   .iAWREADY               (iAWREADY)

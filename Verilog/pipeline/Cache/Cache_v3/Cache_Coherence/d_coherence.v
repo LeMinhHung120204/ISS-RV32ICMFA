@@ -241,11 +241,16 @@ module d_coherence #(
                 o_l2_d_req_valid    = 1'b1;
                 o_l2_d_req_rw       = (req_cmd_buf == CMD_WRITE_BACK); // 1 = Write L2
 
+                // if (i_l2_d_req_ready) begin
+                //     if (req_cmd_buf == CMD_WRITE_BACK || req_cmd_buf == CMD_UPGRADE)
+                //         next_state  = RESP_FWD; // Ghi/Upgrade xong không cần đợi RDATA
+                //     else
+                //         next_state  = L2_WAIT;
+                // end
                 if (i_l2_d_req_ready) begin
-                    if (req_cmd_buf == CMD_WRITE_BACK || req_cmd_buf == CMD_UPGRADE)
-                        next_state  = RESP_FWD; // Ghi/Upgrade xong không cần đợi RDATA
-                    else
-                        next_state  = L2_WAIT;
+                    // BẮT BUỘC MỌI LỆNH (Read/WriteBack/Upgrade) ĐỀU PHẢI ĐỢI L2
+                    // Để hoàn thành Handshake (Valid/Ready) và giải phóng main_arbiter
+                    next_state  = L2_WAIT;
                 end
             end
 

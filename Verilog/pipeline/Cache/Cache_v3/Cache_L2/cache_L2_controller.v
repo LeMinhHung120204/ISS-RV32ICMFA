@@ -242,7 +242,7 @@ module cache_L2_controller #(
             WAIT_RAM: begin
                 // Chờ SRAM hoàn thành việc ghi dữ liệu mới vào cache line (có thể cần vài chu kỳ)
                 // Trong thời gian này, không chấp nhận request mới từ L1 và không trả response về L1
-                // stall = 1'b1; 
+                stall = 1'b1; 
                 next_state = TAG_CHECK;
             end
 

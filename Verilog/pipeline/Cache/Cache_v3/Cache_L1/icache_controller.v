@@ -20,7 +20,7 @@ module icache_controller #(
 ,   parameter ADDR_W    = 32
 )(
     input               clk, rst_n
-
+,   input               flush
     // Cache <-> CPU
 ,   input               cpu_req
 ,   input               hit               
@@ -83,8 +83,11 @@ module icache_controller #(
         // 2. State-specific logic
         case(state)
             TAG_CHECK: begin
+                if (flush) begin
+                    next_state = TAG_CHECK; // <--- CÓ FLUSH THÌ HỦY MISS, CHỜ LỆNH MỚI
+                end
                 // On miss, initiate refill from L2
-                if (cpu_req) begin
+                else if (cpu_req) begin
                     if (hit) begin
                         next_state = TAG_CHECK;     // Hit: serve immediately
                     end 
@@ -95,11 +98,16 @@ module icache_controller #(
             end
 
             ALLOC_REQ: begin
-                o_mem_req_valid = 1'b1;             // Output: Request refill from L2
-                
-                if (i_mem_req_ready) begin
-                    next_state = ALLOC_WAIT;        // Next State
+                if (flush) begin
+                    next_state      = TAG_CHECK; // <--- HỦY REQUEST NẾU L2 CHƯA KỊP NHẬN
+                    o_mem_req_valid = 1'b0;
                 end 
+                else begin
+                    o_mem_req_valid = 1'b1;
+                    if (i_mem_req_ready) begin
+                        next_state = ALLOC_WAIT;
+                    end 
+                end
             end
             
             ALLOC_WAIT: begin

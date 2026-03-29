@@ -125,13 +125,14 @@ module d_cache #(
     wire                    snoop_busy;
     wire                    ctrl_snoop_ready;
     // wire                    snoop_can_access_ram;
-    wire                    reg_snoop_stall;
+    // wire                    reg_snoop_stall;
     wire                    stall_controller;
     wire                    snoop_req_invalidate;
 
     // Memory Arrays Output
     wire [TAG_W-1:0]    tag_read    [0:NUM_WAYS-1];
     wire [LINE_W-1:0]   data_read   [0:NUM_WAYS-1];
+    wire [INDEX_W-1:0]  mem_read_index;
     
     // MOESI & Hit Logic
     wire [3:0]  way_hit;
@@ -167,6 +168,7 @@ module d_cache #(
     assign s2_full_addr     = {s2_tag, s2_index, s2_word_off, s2_byte_off};
     assign victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
 
     assign s1_mux_addr      = (i_snp_req_valid)             ? i_snp_req_addr    : (cpu_addr | DATA_START);
     assign o_req_addr       = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_full  : refill_addr_full;
@@ -348,8 +350,8 @@ module d_cache #(
 
             ,   .tag_we                 (tag_we & way_select[i])
             ,   .moesi_we               (moesi_we & choosen_way[i])
-                // .read_index             (read_index_src ? s1_index : s2_index),   
-            ,   .read_index             (s1_index)
+            // ,   .read_index             (s1_index)
+            ,   .read_index             (mem_read_index)
             ,   .write_index            (s2_index)
             ,   .din_tag                (s2_tag)
             ,   .dout_tag               (tag_read[i])
@@ -368,8 +370,8 @@ module d_cache #(
             ) u_data_mem (
                 .clk            (clk)
             ,   .rst_n          (rst_n)
-                // .read_index     (read_index_src ? s1_index : s2_index),  
-            ,   .read_index     (s1_index)
+            // ,   .read_index     (s1_index)
+            ,   .read_index     (mem_read_index)
             ,   .dout           (data_read[i])
                 
                 // Ghi nguyen dong cache

@@ -1,7 +1,7 @@
 .text
 base_addr_1:
-    addi  x1, x0, 0x24       # x1 = 0x24 (36)
-    slli  x1, x1, 8          # x1 = 0x2400 (Địa chỉ Base ghi mảng đầu tiên của CPU B)
+    addi  x1, x0, 0x124      # x1 = 0x124
+    slli  x1, x1, 8          # x1 = 0x12400 (Vùng Shared Data dành cho Core B)
     addi  x2, x0, 0          # x2 = 0 (Biến đếm vòng lặp i = 0)
     addi  x3, x0, 16         # x3 = 16 (Giới hạn vòng lặp)
 
@@ -22,6 +22,11 @@ base_addr_2:
     addi  x2, x0, 0          # x2 = 0 (Reset biến đếm i = 0)
     addi  x3, x0, 16         # x3 = 16 (Giới hạn vòng lặp)
     addi  x22, x0, -1        # x22 = 0xFFFFFFFF (Khởi tạo toàn 1 để chuẩn bị cho phép AND)
+    # THÊM ĐỂ RESET:
+    addi  x21, x0, 0
+    addi  x23, x0, 0
+    addi  x24, x0, 0
+    addi  x25, x0, 0
 
 load_loop_2:                 # Vòng lặp đọc lại 16 giá trị từ 0x2400 để test Read Hit
     beq   x2, x3, base_addr_3 # Nếu i == 16 thì thoát sang base_addr_3
@@ -41,29 +46,30 @@ load_loop_2:                 # Vòng lặp đọc lại 16 giá trị từ 0x240
     jal   x0, load_loop_2    # Lặp lại load_loop_2
 
 base_addr_3:                 # Ghi vào 0x2800 (Có thể để làm đầy Way Cache)
-    addi  x1, x0, 0x28       # x1 = 0x28
-    slli  x1, x1, 8          # x1 = 0x2800
+    addi  x1, x0, 0x128      # x1 = 0x128
+    slli  x1, x1, 8          # x1 = 0x12800
     lui   x5, 0x12345        # x5 = 0x12345000
     ori   x5, x5, 0x678      # x5 = 0x12345678
     sw    x5, 0(x1)          # Mem[0x2800] = 0x12345678
 
 base_addr_4:                 # Ghi vào 0x2C00
-    addi  x1, x0, 0x2c       # x1 = 0x2C
-    slli  x1, x1, 8          # x1 = 0x2C00
+    addi  x1, x0, 0x12C      # x1 = 0x12C
+    slli  x1, x1, 8          # x1 = 0x12C00
     lui   x5, 0xCAFEB        # x5 = 0xCAFEB000
     ori   x5, x5, 0x0BE      # x5 = 0xCAFEB0BE
     sw    x5, 0(x1)          # Mem[0x2C00] = 0xCAFEB0BE
 
 base_addr_5:                 # Ghi vào 0x0C00
-    addi  x1, x0, 0xc        # x1 = 0x0C
-    slli  x1, x1, 8          # x1 = 0x0C00
+    addi  x1, x0, 0x10C      # x1 = 0x10C
+    slli  x1, x1, 8          # x1 = 0x10C00
     lui   x5, 0x13579        # x5 = 0x13579000
     ori   x5, x5, 0x0E0      # x5 = 0x135790E0
     sw    x5, 0(x1)          # Mem[0x0C00] = 0x135790E0
 
 base_addr_6:                 # Ghi vào 0x0C40 (Test truy cập Set 1 theo mô tả)
-    addi  x1, x0, 0xc4       # x1 = 0xC4
-    slli  x1, x1, 4          # x1 = 0x0C40 (LƯU Ý: Ở đây là dịch 4 bit, khác với các đoạn trên dịch 8)
+    addi  x1, x0, 0x10C      # x1 = 0x10C
+    slli  x1, x1, 8          # x1 = 0x10C00
+    addi  x1, x1, 0x40       # x1 = 0x10C00 + 0x40 = 0x10C40
     lui   x5, 0x2468A        # x5 = 0x2468A000
     ori   x5, x5, 0x0CE      # x5 = 0x2468A0CE
     sw    x5, 0(x1)          # Mem[0x0C40] = 0x2468A0CE
@@ -74,6 +80,11 @@ base_addr_7:
     addi  x2, x0, 0          # x2 = 0
     addi  x3, x0, 16         # x3 = 16
     addi  x27, x0, -1        # x27 = 0xFFFFFFFF (Chuẩn bị thanh ghi để AND)
+    # THÊM ĐỂ RESET:
+    addi  x26, x0, 0
+    addi  x28, x0, 0
+    addi  x29, x0, 0
+    addi  x30, x0, 0
 
 load_loop_7:                 # Lặp lại việc đọc 16 giá trị từ 0x2400 giống load_loop_2
     beq   x2, x3, quick_check

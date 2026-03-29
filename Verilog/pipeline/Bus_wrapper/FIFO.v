@@ -31,13 +31,24 @@ module FIFO #(
                 for (i = 0; i < DEPTH; i = i + 1) begin
                     mem[i] <= 0;
                 end
-            end else begin
+            end 
+            // else begin
+            //     if (push && !full) begin
+            //         mem[wptr]   <= din;
+            //         wptr        <= wptr + 1;
+            //     end
+            //     if (pop && !empty) begin
+            //         // dout <= mem[rptr];
+            //         rptr <= rptr + 1;
+            //     end
+            // end
+            else begin
                 if (push && !full) begin
-                    mem[wptr] <= din;
-                    wptr <= wptr + 1;
+                    // CHỈ SỬ DỤNG CÁC BIT ĐỊA CHỈ: [ADDR_W-1:0]
+                    mem[wptr[ADDR_W-1:0]]   <= din;
+                    wptr                    <= wptr + 1;
                 end
                 if (pop && !empty) begin
-                    // dout <= mem[rptr];
                     rptr <= rptr + 1;
                 end
             end

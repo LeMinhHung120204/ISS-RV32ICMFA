@@ -239,6 +239,7 @@ module icache #(
     ) icache_controller (
         .clk                (clk)
     ,   .rst_n              (rst_n)
+    ,   .flush              (icache_flush)
         
     ,   .cpu_req            (s2_req)
     ,   .hit                (cpu_hit)
