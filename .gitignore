@@ -34,3 +34,15 @@
 xsim.dir/
 **/sim_1/behav/xsim/
 RV32/RV32.sim/
+
+# --- Spike / RISC-V build artifacts ---
+Verilog/spike/elf/
+Verilog/spike/hex/
+Verilog/spike/build/
+
+*.elf
+*.hex
+*.bin
+*.o
+*.map
+*.dis
