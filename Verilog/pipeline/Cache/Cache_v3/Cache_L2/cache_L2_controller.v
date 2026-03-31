@@ -141,7 +141,7 @@ module cache_L2_controller #(
         tag_we          = 1'b0;
         refill_we       = 1'b0;
         refill_src      = 1'b0;
-        stall           = 1'b0;
+        stall           = 1'b1;
         
         oAWVALID        = 1'b0;
         oWVALID         = 1'b0;
@@ -154,15 +154,16 @@ module cache_L2_controller #(
             TAG_CHECK: begin
                 if (s2_req_valid) begin
                     if (hit) begin
+                        stall           = 1'b0;
+                        o_l1_resp_valid = 1'b1;
                         if (i_l1_req_rw == 1'b1) begin
                             // WRITE HIT: Chấp nhận request để nạp data từ L1 vào refill_buffer
                             o_l1_req_ready  = 1'b1;
-                            next_state      = REFILL_EXEC;
+                            refill_we       = 1'b1;
                         end 
                         else begin
                             // READ HIT: Bypass trả luôn
                             o_l1_req_ready  = 1'b1;
-                            o_l1_resp_valid = 1'b1;
                         end
                     end 
                     else begin
@@ -170,6 +171,7 @@ module cache_L2_controller #(
                         if (is_valid && victim_dirty) begin
                             next_state = AW_REQ;
                         end 
+                        // Victim clean / Invalid
                         else begin
                             if (i_l1_req_rw == 1'b1) 
                                 next_state = UPDATE_WM;
@@ -177,6 +179,9 @@ module cache_L2_controller #(
                                 next_state = AR_REQ;
                         end
                     end
+                end
+                else begin
+                    stall = 1'b0;
                 end
             end
 
@@ -239,17 +244,12 @@ module cache_L2_controller #(
                 tag_we          = 1'b1;
                 refill_we       = 1'b1;
                 refill_src      = i_l1_req_rw; 
-                
-                // Trả valid cho Arbiter biết L2 đã giải quyết xong
-                o_l1_resp_valid = 1'b1; 
-                
                 next_state      = WAIT_RAM;
             end
 
             WAIT_RAM: begin
                 // Chờ SRAM hoàn thành việc ghi dữ liệu mới vào cache line (có thể cần vài chu kỳ)
-                // Trong thời gian này, không chấp nhận request mới từ L1 và không trả response về L1
-                stall = 1'b1; 
+                // Trong thời gian này, không chấp nhận request mới từ L1 và không trả response về L1 
                 next_state = TAG_CHECK;
             end
 

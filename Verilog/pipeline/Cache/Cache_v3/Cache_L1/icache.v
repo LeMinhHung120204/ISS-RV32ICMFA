@@ -72,6 +72,7 @@ module icache #(
     wire [TAG_W-1:0]        tag_read    [0:NUM_WAYS-1];
     wire [LINE_W-1:0]       data_read   [0:NUM_WAYS-1];
     wire [NUM_WAYS-1:0]     current_valid;
+    // wire [INDEX_W-1:0]      mem_read_index;
 
     // Controller Signals
     wire                    tag_we, refill_we;
@@ -101,9 +102,11 @@ module icache #(
     // ================================================================
     // DERIVED SIGNALS
     assign o_l2_req_addr    = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
-    assign pipeline_stall   = (s2_req & ~cpu_hit) | stall_controller;
+    assign pipeline_stall   = stall_controller;
     assign cpu_hit          = (|way_hit) & s2_req;
     assign data_rdata       = word_select;
+
+    assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
 
     // STAGE 2: HIT LOGIC
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
@@ -155,7 +158,7 @@ module icache #(
 
                 // Port read
             ,   .read_index     (s1_index)
-            // ,   .read_index     (read_index_src ? s1_index : s2_index)
+            // ,   .read_index     (mem_read_index)
             ,   .dout_tag       (tag_read[i])
             ,   .valid          (current_valid[i])
 
@@ -176,7 +179,7 @@ module icache #(
 
                 // Port read
             ,   .read_index     (s1_index)
-            // ,   .read_index     (read_index_src ? s1_index : s2_index)
+            // ,   .read_index     (mem_read_index)
             ,   .dout           (data_read[i])
 
                  // refill
@@ -204,7 +207,7 @@ module icache #(
         .clk            (clk)
     ,   .rst_n          (rst_n)
     ,   .stall          (pipeline_stall | dcache_stall)
-    ,   .flush          (icache_flush)
+    ,   .flush          (1'b0)
 
         // Inputs
     ,   .s1_req         (cpu_req)
@@ -243,7 +246,7 @@ module icache #(
     //     .clk        (clk)
     // ,   .rst_n      (rst_n)
     // ,   .we         (cpu_hit)
-    // ,   .read_addr  (s1_index)          // Cấp s1_index (Stage 1)
+    // ,   .read_addr  (mem_read_index)    // Cấp s1_index (Stage 1)
     // ,   .write_addr (s2_index)          // Ghi bằng s2_index (Stage 2)
     // ,   .plru_in    (s2_tree_in)
     // ,   .plru_out   (s2_tree_out)       // Tín hiệu này đã bị delay 1 clock, dùng thẳng cho Stage 2
@@ -264,7 +267,7 @@ module icache #(
     ) icache_controller (
         .clk                (clk)
     ,   .rst_n              (rst_n)
-    ,   .flush              (icache_flush)
+    ,   .flush              (1'b0)
         
     ,   .cpu_req            (s2_req)
     ,   .hit                (cpu_hit)

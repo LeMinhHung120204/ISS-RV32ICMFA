@@ -126,7 +126,7 @@ module cache_L2 #(
     // ================================================================
     assign current_dirty    = dirty_array[s2_index];
     assign current_valid    = valid_array[s2_index];
-    assign pipeline_stall   = (s2_req & ~any_hit) | stall_contoller;
+    assign pipeline_stall   = stall_contoller;
     assign any_hit          = |way_hit;
     
     // AXI Address Assignments

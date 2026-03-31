@@ -84,6 +84,7 @@ module cache_coherence #(
     // PORT L2 CACHE (Shared)
     // ==========================================
 ,   input                   i_l2_req_ready
+,   input                   L2_pipeline_stall
 ,   output                  o_l2_req_valid
 ,   output  [ADDR_W-1:0]    o_l2_req_addr
 ,   output                  o_l2_req_rw      // 0: Read, 1: Write
@@ -239,6 +240,7 @@ module cache_coherence #(
     ,   .o_l2_d_resp_rdata      (w_l2_d_resp_rdata)
 
         // Giao tiếp trực tiếp với L2 Cache
+    ,   .L2_pipeline_stall      (L2_pipeline_stall)
     ,   .o_l2_req_valid         (o_l2_req_valid)
     ,   .i_l2_req_ready         (i_l2_req_ready)
     ,   .o_l2_req_addr          (o_l2_req_addr)

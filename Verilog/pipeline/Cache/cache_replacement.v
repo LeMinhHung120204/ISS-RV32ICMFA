@@ -80,10 +80,10 @@ endmodule
 // module cache_replacement #(
 //     parameter N_WAYS    = 4
 // )(
-//     input   [N_WAYS-2:0]    tree_out    // Nối từ s2_tree_out của dcache
+//     input   [N_WAYS-1:1]    tree_out    // Nối từ s2_tree_out của dcache
 // ,   input   [N_WAYS-1:0]    way_hit
 // ,   output  [N_WAYS-1:0]    way_select
-// ,   output  [N_WAYS-2:0]    tree_in     // Nối về s2_tree_in của dcache
+// ,   output  [N_WAYS-1:1]    tree_in     // Nối về s2_tree_in của dcache
 // );
 
 //     assign way_select[0] = (~tree_out[1]) & (~tree_out[2]);

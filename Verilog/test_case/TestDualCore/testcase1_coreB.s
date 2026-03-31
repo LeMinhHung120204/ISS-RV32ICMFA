@@ -1,4 +1,9 @@
-.text
+    .section .text.init
+    .globl _start
+_start:
+    j base_addr_1
+
+    .text
 base_addr_1:
     addi  x1, x0, 0x124      # x1 = 0x124
     slli  x1, x1, 8          # x1 = 0x12400 (Vùng Shared Data dành cho Core B)
