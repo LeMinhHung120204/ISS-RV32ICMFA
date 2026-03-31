@@ -16,8 +16,8 @@ module dual_core #(
 
     // Cache Configuration
 ,   parameter NUM_WAYS      = 4                 // Cache associativity
-,   parameter NUM_SETS      = 16                // L1 cache sets
-,   parameter NUM_SETS_L2   = 32                // L2 cache sets
+,   parameter NUM_SETS      = 8                 // L1 cache sets
+,   parameter NUM_SETS_L2   = 8                 // L2 cache sets
 ,   parameter WORD_OFF_W    = 4                 // Word offset (16 words/line)
 ,   parameter BYTE_OFF_W    = 2                 // Byte offset (4 bytes/word)
 ,   parameter DATA_W        = 32                // Data width

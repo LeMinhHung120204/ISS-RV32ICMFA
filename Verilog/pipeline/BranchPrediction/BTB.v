@@ -145,7 +145,7 @@ module BTB #(
     end
 
     // ================================================================
-    // PLRU REPLACEMENT - Select victim way on miss
+    // PLRU REPLACEMENT - ASYNCHRONOUS PIM FOR BTB
     // ================================================================
     cache_replacement #(
         .N_WAYS(4), 
@@ -159,4 +159,31 @@ module BTB #(
         .way_select (plru_victim_way)
     );
 
+    // wire [2:0]  current_tree;
+    // wire [2:0]  next_tree;
+    // reg [2:0]   btb_plru_mem [0:7];
+
+    // integer i;
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (~rst_n) begin
+    //         for (i = 0; i < 8; i = i + 1) begin
+    //             btb_plru_mem[i] <= 3'd0;
+    //         end
+    //     end 
+    //     else if (update_en) begin
+    //         btb_plru_mem[e_index] <= next_tree;
+    //     end
+    // end
+
+    // assign current_tree = btb_plru_mem[e_index];
+
+    // cache_replacement #( 
+    //     .N_WAYS(4)
+    // ) BTB_replacement_policy (
+    //     .tree_out   (current_tree)
+    // ,   .way_hit    (final_target_way)
+    // ,   .way_select (plru_victim_way)
+    // ,   .tree_in    (next_tree)
+    // );
+    
 endmodule

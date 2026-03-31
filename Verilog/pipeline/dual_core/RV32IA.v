@@ -450,6 +450,7 @@ module RV32IA #(
     ,   .in2        (E_SrcB)
     ,   .PC         (E_PC)
     ,   .E_ImmExt   (E_ImmExt)
+    ,   .E_PCPlus4  (E_PCPlus4)
 
     ,   .result     (E_ALUResult)
     ,   .zero       (E_Zero)
@@ -500,14 +501,14 @@ module RV32IA #(
 
     ,   .E_ALUResult    (E_ALUResult)
     ,   .E_WriteData    (E_WriteData)
-    ,   .E_PCPlus4      (E_PCPlus4)
-    ,   .E_PCTarget     (E_PCTarget)
+    // ,   .E_PCPlus4      (E_PCPlus4)
+    // ,   .E_PCTarget     (E_PCTarget)
     ,   .E_rd           (E_rd)
     ,   .E_RegWrite     (E_RegWrite)
     ,   .E_MemWrite     (E_MemWrite)
     ,   .E_ResultSrc    (E_ResultSrc)
     ,   .E_StoreSrc     (E_StoreSrc)
-    ,   .E_ResPCSel     (E_ResPCSel)
+    // ,   .E_ResPCSel     (E_ResPCSel)
     ,   .E_data_req     (E_data_req)
     ,   .E_amo          (E_amo)
     ,   .E_amo_op       (E_amo_op)
@@ -516,14 +517,14 @@ module RV32IA #(
 
     ,   .M_ALUResult    (M_ALUResult)
     ,   .M_WriteData    (M_WriteData)
-    ,   .M_PCPlus4      (M_PCPlus4)
-    ,   .M_PCTarget     (M_PCTarget)
+    // ,   .M_PCPlus4      (M_PCPlus4)
+    // ,   .M_PCTarget     (M_PCTarget)
     ,   .M_rd           (M_rd)
     ,   .M_RegWrite     (M_RegWrite)
     ,   .M_MemWrite     (M_MemWrite)
     ,   .M_ResultSrc    (M_ResultSrc)
     ,   .M_StoreSrc     (M_StoreSrc)
-    ,   .M_ResPCSel     (M_ResPCSel)
+    // ,   .M_ResPCSel     (M_ResPCSel)
     ,   .M_data_req     (M_data_req)
     ,   .M_amo          (M_amo)
     ,   .M_amo_op       (M_amo_op)
@@ -547,16 +548,6 @@ module RV32IA #(
     assign cpu_amo_op   = M_amo_op;     // AMO type
 
     // ================================================================
-    // PC RESULT MUX - For JALR/JAL
-    // ================================================================
-    mux2_1 mux_ResPC(
-        .in0    (M_PCTarget)
-    ,   .in1    (M_PCPlus4)
-    ,   .sel    (M_ResPCSel)
-    ,   .res    (M_ResPC)
-    );
-
-    // ================================================================
     // PIPELINE REGISTER: MEM -> CACHE (MEM_CACHE)
     // ================================================================
     MEM_CACHE MEM_CACHE_register(
@@ -565,13 +556,11 @@ module RV32IA #(
     ,   .EN             (dcache_stall | test_stall)
 
     ,   .M_Result       (M_ALUResult)
-    ,   .M_ResPC        (M_ResPC)
     ,   .M_rd           (M_rd)
     ,   .M_RegWrite     (M_RegWrite)
     ,   .M_ResultSrc    (M_ResultSrc)
 
     ,   .C_Result       (C_Result)
-    ,   .C_ResPC        (C_ResPC)
     ,   .C_rd           (C_rd)
     ,   .C_RegWrite     (C_RegWrite)
     ,   .C_ResultSrc    (C_ResultSrc)
@@ -582,12 +571,11 @@ module RV32IA #(
     // ================================================================
     // ResultSrc: 00=ALU, 01=Memory, 10=PC+4
     assign C_ReadData   = data_rdata;
-    mux4_1 mux_C_Result (
+
+    mux2_1 mux_C_Result (
         .in0    (C_Result)
     ,   .in1    (C_ReadData)
-    ,   .in2    (C_ResPC)
-    ,   .in3    (32'd0)
-    ,   .sel    (C_ResultSrc[1:0])
+    ,   .sel    (C_ResultSrc[0])
     ,   .res    (C_mux_result)
     );
 

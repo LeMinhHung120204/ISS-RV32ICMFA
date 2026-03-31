@@ -5,8 +5,9 @@ module cache_L2_controller #(
 ,   parameter DATA_W        = 32
 ,   parameter STRB_W        = DATA_W/8
 
-,   parameter LINE_W        = (1 << WORD_OFF_W) * DATA_W // Cache line width in bits
 ,   parameter WORD_OFF_W    = 2 // 2 cho 128-bit (4 words), 4 cho 512-bit (16 words)
+,   parameter LINE_W        = (1 << WORD_OFF_W) * DATA_W // Cache line width in bits
+
 )(
     input                           clk
 ,   input                           rst_n

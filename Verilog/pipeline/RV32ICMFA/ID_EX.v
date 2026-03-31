@@ -17,21 +17,22 @@ module ID_EX #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 32
 )(
-    input   clk
-,   input   rst_n
-,   input   E_Flush
-,   input   EN
-,   input   D_RegWrite
-,   input   D_MemWrite
-,   input   D_Jump
-,   input   D_Branch
-,   input   D_ALUSrc
-,   input   D_addr_addend_sel
-,   input   D_ResPCSel
-,   input   D_RegSrc1
-,   input   D_RegSrc2
-,   input   D_Predict_Taken
-,   input   D_data_req
+    input                       clk
+,   input                       rst_n
+,   input                       E_Flush
+,   input                       EN
+
+,   input                       D_RegWrite
+,   input                       D_MemWrite
+,   input                       D_Jump
+,   input                       D_Branch
+,   input                       D_ALUSrc
+,   input                       D_addr_addend_sel
+,   input                       D_ResPCSel
+,   input                       D_RegSrc1
+,   input                       D_RegSrc2
+,   input                       D_Predict_Taken
+,   input                       D_data_req
 ,   input   [DATA_WIDTH - 1:0]  D_RD1
 ,   input   [DATA_WIDTH - 1:0]  D_RD2
 ,   input   [DATA_WIDTH - 1:0]  D_ImmExt

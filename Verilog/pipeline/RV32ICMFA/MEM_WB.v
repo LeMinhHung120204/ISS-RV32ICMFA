@@ -17,15 +17,15 @@ module MEM_WB #(
     input                       clk, rst_n
 ,   input                       EN
 ,   input                       M_RegWrite 
-,   input                       M_FRegWrite 
-,   input                       M_MDU_FPUEn 
+// ,   input                       M_FRegWrite 
+// ,   input                       M_MDU_FPUEn 
 ,   input [DATA_WIDTH - 1:0]    C_mux_result
 ,   input [4:0]                 M_rd
 ,   input [2:0]                 M_ResultSrc
     
 ,   output reg                      W_RegWrite 
-,   output reg                      W_FRegWrite 
-,   output reg                      W_MDU_FPUEn 
+// ,   output reg                      W_FRegWrite 
+// ,   output reg                      W_MDU_FPUEn 
 ,   output reg [DATA_WIDTH - 1:0]   W_mux_result
 ,   output reg [4:0]                W_rd
 ,   output reg [2:0]                W_ResultSrc
@@ -34,19 +34,19 @@ module MEM_WB #(
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             W_mux_result    <= 32'd0;
-            W_rd        <= 5'd0;
-            W_ResultSrc <= 3'b0;
-            W_RegWrite  <= 1'b0;
-            W_FRegWrite <= 1'b0;
-            W_MDU_FPUEn <= 1'b0;
+            W_rd            <= 5'd0;
+            W_ResultSrc     <= 3'b0;
+            W_RegWrite      <= 1'b0;
+            // W_FRegWrite <= 1'b0;
+            // W_MDU_FPUEn <= 1'b0;
         end 
         else if (!EN) begin
             W_mux_result    <= C_mux_result;
-            W_rd        <= M_rd       ;
-            W_ResultSrc <= M_ResultSrc;
-            W_RegWrite  <= M_RegWrite ;
-            W_FRegWrite <= M_FRegWrite;
-            W_MDU_FPUEn <= M_MDU_FPUEn;
+            W_rd            <= M_rd       ;
+            W_ResultSrc     <= M_ResultSrc;
+            W_RegWrite      <= M_RegWrite ;
+            // W_FRegWrite <= M_FRegWrite;
+            // W_MDU_FPUEn <= M_MDU_FPUEn;
         end 
     end 
 endmodule

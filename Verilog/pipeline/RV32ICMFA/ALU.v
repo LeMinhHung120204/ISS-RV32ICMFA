@@ -8,6 +8,8 @@ module ALU #(
 ,   input       [DATA_WIDTH - 1:0]  in2
 ,   input       [DATA_WIDTH - 1:0]  PC
 ,   input       [DATA_WIDTH - 1:0]  E_ImmExt
+,   input       [DATA_WIDTH - 1:0]  E_PCPlus4
+
 ,   output reg  [DATA_WIDTH - 1:0]  result
 ,   output reg                      zero
 ,   output                          signed_less
@@ -35,6 +37,7 @@ module ALU #(
             4'b1001: result = {31'b0,signed_less};  // slt
             4'b1010: result = {31'b0,signed_less};  // sltu
             4'b1011: result = PC + E_ImmExt;        // auipc
+            4'b1100: result = E_PCPlus4;            // jal / jalr
             default: result = 32'b0;                // Mac dinh la 0
         endcase
         zero = (result == 32'b0);

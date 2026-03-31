@@ -80,6 +80,7 @@ module d_cache #(
     reg [LINE_W-1:0]        refill_buffer;      // Buffer for memory refill data
 
     // Data Output & Selection
+    // reg [ADDR_W-1:0]        o_req_addr_reg;
     reg [DATA_W-1:0]        word_select;
     reg [DATA_W-1:0]        raw_rdata;
     reg                     raw_en;
@@ -161,6 +162,9 @@ module d_cache #(
     wire [ADDR_W-1:0]       victim_addr_full;
     wire [ADDR_W-1:0]       refill_addr_full;
 
+    wire [2:0] s2_tree_out; // Data của PLRU đã sẵn sàng ở Stage 2
+    wire [2:0] s2_tree_in;  // Data tính toán xong chờ ghi lại
+
     // ================================================================
     // 3) ASSIGN - DERIVED SIGNALS
     // ================================================================
@@ -170,7 +174,7 @@ module d_cache #(
     assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
 
     assign s1_mux_addr      = (i_snp_req_valid)             ? i_snp_req_addr    : (cpu_addr | DATA_START);
-    assign o_req_addr       = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_full  : refill_addr_full;
+    // assign o_req_addr       = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_full  : refill_addr_full;
     assign victim_addr_full = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign refill_addr_full = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
 
@@ -229,6 +233,43 @@ module d_cache #(
     end
 
     // ================================================================
+    // PIPELINE REGISTER FOR OUTBOUND REQUESTS (GIẢM DELAY)
+    // ================================================================
+    reg [ADDR_W-1:0]    victim_addr_reg;
+    reg [ADDR_W-1:0]    refill_addr_reg;
+    reg [LINE_W-1:0]    victim_data_reg;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            victim_addr_reg <= {ADDR_W{1'b0}};
+            refill_addr_reg <= {ADDR_W{1'b0}};
+            victim_data_reg <= {LINE_W{1'b0}};
+        end 
+        else begin
+            // Latch liên tục. Khi Cache Miss, pipeline_stall = 1 sẽ giữ s2_index và s2_tag đứng yên,
+            // nên dữ liệu trong các thanh ghi này cực kỳ ổn định để FSM đẩy ra bus.
+            victim_addr_reg <= victim_addr_full;
+            refill_addr_reg <= refill_addr_full;
+
+            // Đệm luôn cả Data để gửi WriteBack (WB)
+            case(way_select)
+                4'b0001: victim_data_reg    <= data_read[0];
+                4'b0010: victim_data_reg    <= data_read[1];
+                4'b0100: victim_data_reg    <= data_read[2];
+                4'b1000: victim_data_reg    <= data_read[3];
+                default: victim_data_reg    <= {LINE_W{1'b0}};
+            endcase
+        end
+    end
+
+    // Gán giá trị đã được chốt (Registered) ra port giao tiếp thay vì mạch tổ hợp
+    assign o_req_addr = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_reg : refill_addr_reg;
+
+    always @(*) begin
+        o_req_data = victim_data_reg;
+    end
+
+    // ================================================================
     // 5) ALWAYS @(*) - COMBINATIONAL LOGIC
     // ================================================================
     // MOESI State Selection Mux
@@ -254,15 +295,15 @@ module d_cache #(
     end
 
     // Data Mux cho WriteBack
-    always @(*) begin
-        case(way_select)
-            4'b0001: o_req_data = data_read[0];
-            4'b0010: o_req_data = data_read[1];
-            4'b0100: o_req_data = data_read[2];
-            4'b1000: o_req_data = data_read[3];
-            default: o_req_data = 32'd0;
-        endcase
-    end
+    // always @(*) begin
+    //     case(way_select)
+    //         4'b0001: o_req_data = data_read[0];
+    //         4'b0010: o_req_data = data_read[1];
+    //         4'b0100: o_req_data = data_read[2];
+    //         4'b1000: o_req_data = data_read[3];
+    //         default: o_req_data = 32'd0;
+    //     endcase
+    // end
 
     // DATA OUTPUT MUX - Word Select
     always @(*) begin
@@ -447,6 +488,29 @@ module d_cache #(
     );
 
     // ---- REPLACEMENT POLICY ----
+
+    // PIM #(
+    //     .ADDR_WIDTH(INDEX_W)
+    // ,   .DATA_WIDTH(3)
+    // ) Policy_info_Memory (
+    //     .clk        (clk)
+    // ,   .rst_n      (rst_n)
+    // ,   .we         (any_hit)
+    // ,   .read_addr  (s1_index)          // Cấp s1_index (Stage 1)
+    // ,   .write_addr (s2_index)          // Ghi bằng s2_index (Stage 2)
+    // ,   .plru_in    (s2_tree_in)
+    // ,   .plru_out   (s2_tree_out)       // Tín hiệu này đã bị delay 1 clock, dùng thẳng cho Stage 2
+    // );
+
+    // cache_replacement #( 
+    // .N_WAYS(NUM_WAYS)
+    // ) u_replacement (
+    //     .tree_out   (s2_tree_out)   // Lấy thẳng data từ PIM
+    // ,   .way_hit    (way_hit)
+    // ,   .way_select (way_select)
+    // ,   .tree_in    (s2_tree_in)    // Vòng ngược lại port plru_in của PIM
+    // );
+
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS)
     ,   .N_LINES    (NUM_SETS) 
