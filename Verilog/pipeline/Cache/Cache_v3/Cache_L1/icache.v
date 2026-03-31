@@ -81,6 +81,9 @@ module icache #(
     wire                    read_index_src;
     wire                    stall_controller;
 
+    wire [2:0] s2_tree_out; // Data của PLRU đã sẵn sàng ở Stage 2
+    wire [2:0] s2_tree_in;  // Data tính toán xong chờ ghi lại
+
     // ================================================================
     // REFILL BUFFER LOGIC (always @(posedge clk))
     // ================================================================
@@ -232,6 +235,28 @@ module icache #(
     ,   .addr       (s2_index)
     ,   .way_select (way_select)
     );
+
+    // PIM #(
+    //     .ADDR_WIDTH(INDEX_W)
+    // ,   .DATA_WIDTH(3)
+    // ) Policy_info_Memory (
+    //     .clk        (clk)
+    // ,   .rst_n      (rst_n)
+    // ,   .we         (cpu_hit)
+    // ,   .read_addr  (s1_index)          // Cấp s1_index (Stage 1)
+    // ,   .write_addr (s2_index)          // Ghi bằng s2_index (Stage 2)
+    // ,   .plru_in    (s2_tree_in)
+    // ,   .plru_out   (s2_tree_out)       // Tín hiệu này đã bị delay 1 clock, dùng thẳng cho Stage 2
+    // );
+
+    // cache_replacement #( 
+    // .N_WAYS(NUM_WAYS)
+    // ) u_replacement (
+    //     .tree_out   (s2_tree_out)   // Lấy thẳng data từ PIM
+    // ,   .way_hit    (way_hit)
+    // ,   .way_select (way_select)
+    // ,   .tree_in    (s2_tree_in)    // Vòng ngược lại port plru_in của PIM
+    // );
 
     icache_controller #(
         .DATA_W     (DATA_W)

@@ -74,3 +74,42 @@ module cache_replacement #(
 	 wire [N_WAYS_W-1:0]	way_select_bin = node_id[2][1:0];
     assign way_select = ({{(N_WAYS-1){1'b0}}, 1'b1} << way_select_bin);
 endmodule
+
+
+// `timescale 1ns/1ps
+// module cache_replacement #(
+//     parameter N_WAYS    = 4
+// )(
+//     input   [N_WAYS-2:0]    tree_out    // Nối từ s2_tree_out của dcache
+// ,   input   [N_WAYS-1:0]    way_hit
+// ,   output  [N_WAYS-1:0]    way_select
+// ,   output  [N_WAYS-2:0]    tree_in     // Nối về s2_tree_in của dcache
+// );
+
+//     assign way_select[0] = (~tree_out[1]) & (~tree_out[2]);
+//     assign way_select[1] = (~tree_out[1]) & ( tree_out[2]);
+//     assign way_select[2] = ( tree_out[1]) & (~tree_out[3]);
+//     assign way_select[3] = ( tree_out[1]) & ( tree_out[3]);
+
+//     plru plru_update1(
+//         .prev_bit   (tree_out[1])
+//     ,   .left_hit   (|way_hit[1:0])
+//     ,   .right_hit  (|way_hit[3:2])
+//     ,   .plru_bit   (tree_in[1])
+//     );
+
+//     plru plru_update2(
+//         .prev_bit   (tree_out[2])
+//     ,   .left_hit   (way_hit[0])
+//     ,   .right_hit  (way_hit[1])
+//     ,   .plru_bit   (tree_in[2])
+//     );
+
+//     plru plru_update3(
+//         .prev_bit   (tree_out[3])
+//     ,   .left_hit   (way_hit[2])
+//     ,   .right_hit  (way_hit[3])
+//     ,   .plru_bit   (tree_in[3])
+//     );
+
+// endmodule
