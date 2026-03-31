@@ -37,9 +37,9 @@ module AluDecoder(
                     end 
                     3'b101: begin
                         case({op_5, funct7_5})
-                            2'b10, 2'b00:      ALUControl = 4'b0010;    // ShiftRightLogical srl/srli
-                            2'b11, 2'b01:      ALUControl = 4'b0011;    // ShiftRightArith sra/srai
-                            default:    ALUControl = 4'b0000;
+                            2'b10, 2'b00:   ALUControl = 4'b0010;    // ShiftRightLogical srl/srli
+                            2'b11, 2'b01:   ALUControl = 4'b0011;    // ShiftRightArith sra/srai
+                            default:        ALUControl = 4'b0000;
                         endcase
                     end 
                     3'b110: begin
@@ -58,6 +58,9 @@ module AluDecoder(
             end
             3'b100: begin
                 ALUControl = 4'b1011;   // (auipc) instruction auipc
+            end
+            3'b101: begin
+                ALUControl = 4'b1100;   // jal/ jalr
             end
             default: begin
                 ALUControl = 4'b0000;

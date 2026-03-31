@@ -205,7 +205,7 @@ module tb_soc_top;
 
         // R Channel
         .iRDATA         (m_axi_rdata),
-        .iRRESP         (m_axi_rresp[1:0]), // Lấy 2 bit dưới vì mem trả về 4 bit
+        .iRRESP         (m_axi_rresp[1:0]), // Lấy 2 bit dưới vì mem trả v�? 4 bit
         .iRLAST         (m_axi_rlast),
         .iRVALID        (m_axi_rvalid),
         .oRREADY        (m_axi_rready)
@@ -296,7 +296,7 @@ module tb_soc_top;
 
         $display("[SCENARIO] Both cores starting...");
 
-        #10500; 
+        #16500; 
         $display("Simulation Finished.");
         $finish;
     end
