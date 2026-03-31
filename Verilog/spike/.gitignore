@@ -1,0 +1,8 @@
+# build artifacts
+build/
+elf/
+hex/
+*.log
+*.bin
+*.elf
+*.map
