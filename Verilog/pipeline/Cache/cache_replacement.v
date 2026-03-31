@@ -6,11 +6,13 @@ module cache_replacement #(
     parameter N_WAYS_W  = $clog2(N_WAYS),
     parameter N_LINES_W = $clog2(N_LINES)
 )(
-    input                   clk, rst_n, we
+    input                   clk
+,   input                   rst_n
+,   input                   we
 ,   input   [N_WAYS-1:0]    way_hit
-,   input   [N_LINES_W-1:0] addr
+,   input   [N_LINES_W-1:0] read_addr
+,   input   [N_LINES_W-1:0] write_addr
 ,   output  [N_WAYS-1:0]    way_select
-    // output  [N_WAYS_W-1:0]  way_select_bin
 );
 
     wire [N_WAYS-1:1] tree_in, tree_out;
@@ -36,80 +38,42 @@ module cache_replacement #(
 
     // Nut 1 (root): trai {0,1}, phai {2,3}
     plru plru_update1(
-        .prev_bit   (tree_out[1]),
-        .left_hit   (|way_hit[1:0]),
-        .right_hit  (|way_hit[3:2]),
-        .plru_bit   (tree_in[1])
+        .prev_bit   (tree_out[1])
+    ,   .left_hit   (|way_hit[1:0])
+    ,   .right_hit  (|way_hit[3:2])
+    ,   .plru_bit   (tree_in[1])
     );
 
     // Nút 2 (con trái root): left={way0}, right={way1}
     plru plru_update2(
-        .prev_bit   (tree_out[2]),
-        .left_hit   (way_hit[0]),
-        .right_hit  (way_hit[1]),
-        .plru_bit   (tree_in[2])
+        .prev_bit   (tree_out[2])
+    ,   .left_hit   (way_hit[0])
+    ,   .right_hit  (way_hit[1])
+    ,   .plru_bit   (tree_in[2])
     );
 
     // Nút 3 (con phải root): left={way2}, right={way3}
     plru plru_update3(
-        .prev_bit   (tree_out[3]),
-        .left_hit   (way_hit[2]),
-        .right_hit  (way_hit[3]),
-        .plru_bit   (tree_in[3])
+        .prev_bit   (tree_out[3])
+    ,   .left_hit   (way_hit[2])
+    ,   .right_hit  (way_hit[3])
+    ,   .plru_bit   (tree_in[3])
     );
 
     PIM #(
         .ADDR_WIDTH(N_LINES_W),
         .DATA_WIDTH(N_WAYS-1)
     ) Policy_info_Memory (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .we         (we),
-        .addr       (addr),
-        .plru_in    (tree_in),
-        .plru_out   (tree_out)
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .we         (we)
+    ,   .read_addr  (read_addr)
+    ,   .write_addr (write_addr)
+    ,   .plru_in    (tree_in)
+    ,   .plru_out   (tree_out)
     );
 
     //wire [N_WAYS_W-1:0]	way_select_bin = node_id[N_WAYS_W] - N_WAYS;
 	 wire [N_WAYS_W-1:0]	way_select_bin = node_id[2][1:0];
     assign way_select = ({{(N_WAYS-1){1'b0}}, 1'b1} << way_select_bin);
 endmodule
-
-
-// `timescale 1ns/1ps
-// module cache_replacement #(
-//     parameter N_WAYS    = 4
-// )(
-//     input   [N_WAYS-1:1]    tree_out    // Nối từ s2_tree_out của dcache
-// ,   input   [N_WAYS-1:0]    way_hit
-// ,   output  [N_WAYS-1:0]    way_select
-// ,   output  [N_WAYS-1:1]    tree_in     // Nối về s2_tree_in của dcache
-// );
-
-//     assign way_select[0] = (~tree_out[1]) & (~tree_out[2]);
-//     assign way_select[1] = (~tree_out[1]) & ( tree_out[2]);
-//     assign way_select[2] = ( tree_out[1]) & (~tree_out[3]);
-//     assign way_select[3] = ( tree_out[1]) & ( tree_out[3]);
-
-//     plru plru_update1(
-//         .prev_bit   (tree_out[1])
-//     ,   .left_hit   (|way_hit[1:0])
-//     ,   .right_hit  (|way_hit[3:2])
-//     ,   .plru_bit   (tree_in[1])
-//     );
-
-//     plru plru_update2(
-//         .prev_bit   (tree_out[2])
-//     ,   .left_hit   (way_hit[0])
-//     ,   .right_hit  (way_hit[1])
-//     ,   .plru_bit   (tree_in[2])
-//     );
-
-//     plru plru_update3(
-//         .prev_bit   (tree_out[3])
-//     ,   .left_hit   (way_hit[2])
-//     ,   .right_hit  (way_hit[3])
-//     ,   .plru_bit   (tree_in[3])
-//     );
-
-// endmodule

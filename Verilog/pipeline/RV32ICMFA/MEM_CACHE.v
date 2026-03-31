@@ -28,6 +28,7 @@ module MEM_CACHE #(
 // ,   input [ADDR_WIDTH - 1:0]    M_ResPC
 ,   input [4:0]                 M_rd
 ,   input [2:0]                 M_ResultSrc
+,   input [2:0]                 M_funct3
     
 ,   output reg                      C_RegWrite 
 // ,   output reg                      C_FRegWrite 
@@ -38,6 +39,7 @@ module MEM_CACHE #(
 // ,   output reg [ADDR_WIDTH - 1:0]   C_ResPC
 ,   output reg [4:0]                C_rd
 ,   output reg [2:0]                C_ResultSrc
+,   output reg [2:0]                C_funct3
     
 );
     always @(posedge clk or negedge rst_n) begin
@@ -48,6 +50,7 @@ module MEM_CACHE #(
             // C_ResPC     <= 32'd0;
             C_rd        <= 5'd0;
             C_ResultSrc <= 3'b0;
+            C_funct3    <= 3'd0;
             C_RegWrite  <= 1'b0;
             // C_FRegWrite <= 1'b0;
             // C_MDU_FPUEn <= 1'b0;
@@ -58,6 +61,7 @@ module MEM_CACHE #(
             // C_ImmExt    <= M_ImmExt   ;
             // C_ResPC     <= M_ResPC    ;
             C_rd        <= M_rd       ;
+            C_funct3    <= M_funct3;
             C_ResultSrc <= M_ResultSrc;
             C_RegWrite  <= M_RegWrite ;
             // C_FRegWrite <= M_FRegWrite;

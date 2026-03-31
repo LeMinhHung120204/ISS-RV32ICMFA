@@ -26,11 +26,13 @@ module EX_MEM #(
 ,   input   [DATA_WIDTH - 1:0]  E_ALUResult 
 ,   input   [DATA_WIDTH - 1:0]  E_WriteData
 ,   input   [DATA_WIDTH - 1:0]  E_ImmExt
+
 // ,   input   [ADDR_WIDTH - 1:0]  E_PCPlus4
 // ,   input   [ADDR_WIDTH - 1:0]  E_PCTarget
 ,   input   [4:0]               E_rd
 ,   input   [2:0]               E_ResultSrc 
 ,   input   [2:0]               E_StoreSrc
+,   input   [2:0]               E_funct3
 ,   input                       E_amo
 ,   input   [2:0]               E_amo_op
 ,   input                       E_lr
@@ -45,11 +47,12 @@ module EX_MEM #(
 ,   output reg [DATA_WIDTH - 1:0]   M_ImmExt
 // ,   output reg [ADDR_WIDTH - 1:0]   M_PCPlus4
 // ,   output reg [ADDR_WIDTH - 1:0]   M_PCTarget
-,   output reg [4:0]                M_rd
-,   output reg [2:0]                M_ResultSrc
-,   output reg [2:0]                M_StoreSrc
+,   output reg  [4:0]               M_rd
+,   output reg  [2:0]               M_ResultSrc
+,   output reg  [2:0]               M_StoreSrc
+,   output reg  [2:0]               M_funct3
 ,   output reg                      M_amo
-,   output reg [2:0]                M_amo_op
+,   output reg  [2:0]               M_amo_op
 ,   output reg                      M_lr
 ,   output reg                      M_sc
 );
@@ -63,12 +66,14 @@ module EX_MEM #(
             M_rd        <= 5'd0;
             M_ResultSrc <= 3'd0;
             M_StoreSrc  <= 3'd0;
+            M_amo_op    <= 3'd0;
+            M_funct3    <= 3'd0;
             M_RegWrite  <= 1'd0;
             M_MemWrite  <= 1'd0;
             // M_ResPCSel  <= 1'd0;
             M_data_req  <= 1'b0;
             M_amo       <= 1'b0;
-            M_amo_op    <= 3'd0;
+            
             M_lr        <= 1'b0;
             M_sc        <= 1'b0;
         end 
@@ -84,6 +89,7 @@ module EX_MEM #(
             M_RegWrite  <= E_RegWrite ;
             M_MemWrite  <= E_MemWrite ;
             // M_ResPCSel  <= E_ResPCSel ;
+            M_funct3    <= E_funct3;
             M_data_req  <= E_data_req ;
             M_amo       <= E_amo      ;
             M_amo_op    <= E_amo_op   ;

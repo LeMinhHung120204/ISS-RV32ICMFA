@@ -145,45 +145,50 @@ module BTB #(
     end
 
     // ================================================================
-    // PLRU REPLACEMENT - ASYNCHRONOUS PIM FOR BTB
+    // PLRU REPLACEMENT - ASYNCHRONOUS (Chỉ dùng riêng cho BTB)
     // ================================================================
-    cache_replacement #(
-        .N_WAYS(4), 
-        .N_LINES(8)
-    ) BTB_replacement_policy (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .we         (update_en),      
-        .addr       (e_index),        
-        .way_hit    (final_target_way),
-        .way_select (plru_victim_way)
+    
+    reg [3:1]   btb_plru_mem [0:7];
+    wire [3:1]  current_tree = btb_plru_mem[e_index];
+    wire [3:1]  next_tree;
+
+    // 1. Mạch tính toán Victim Way ngay lập tức (Combinational)
+    wire [2:0] node_id_1    = current_tree[1] ? 3'd3 : 3'd2;
+    wire [1:0] victim_bin   = current_tree[node_id_1] ? {node_id_1[0], 1'b1} : {node_id_1[0], 1'b0};
+    assign plru_victim_way  = 4'b0001 << victim_bin;
+
+    // 2. Tính trạng thái cây PLRU tiếp theo (Combinational)
+    plru plru_update1 (
+        .prev_bit   (current_tree[1])
+    ,   .left_hit   (|final_target_way[1:0])
+    ,   .right_hit  (|final_target_way[3:2])
+    ,   .plru_bit   (next_tree[1])
+    );
+    
+    plru plru_update2 (
+        .prev_bit   (current_tree[2])
+    ,   .left_hit   (final_target_way[0])
+    ,   .right_hit  (final_target_way[1])
+    ,   .plru_bit   (next_tree[2])
+    );
+    
+    plru plru_update3 (
+        .prev_bit   (current_tree[3])
+    ,   .left_hit   (final_target_way[2])
+    ,   .right_hit  (final_target_way[3])
+    ,   .plru_bit   (next_tree[3])
     );
 
-    // wire [2:0]  current_tree;
-    // wire [2:0]  next_tree;
-    // reg [2:0]   btb_plru_mem [0:7];
-
-    // integer i;
-    // always @(posedge clk or negedge rst_n) begin
-    //     if (~rst_n) begin
-    //         for (i = 0; i < 8; i = i + 1) begin
-    //             btb_plru_mem[i] <= 3'd0;
-    //         end
-    //     end 
-    //     else if (update_en) begin
-    //         btb_plru_mem[e_index] <= next_tree;
-    //     end
-    // end
-
-    // assign current_tree = btb_plru_mem[e_index];
-
-    // cache_replacement #( 
-    //     .N_WAYS(4)
-    // ) BTB_replacement_policy (
-    //     .tree_out   (current_tree)
-    // ,   .way_hit    (final_target_way)
-    // ,   .way_select (plru_victim_way)
-    // ,   .tree_in    (next_tree)
-    // );
-    
+    // 3. Ghi lại trạng thái mới
+    integer i;
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            for (i = 0; i < 8; i = i + 1) begin
+                btb_plru_mem[i] <= 3'd0;
+            end
+        end 
+        else if (update_en) begin
+            btb_plru_mem[e_index] <= next_tree;
+        end
+    end
 endmodule

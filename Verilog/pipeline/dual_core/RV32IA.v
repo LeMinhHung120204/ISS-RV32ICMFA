@@ -140,6 +140,7 @@ module RV32IA #(
     wire [4:0]              M_rd;
     wire                    M_RegWrite, M_MemWrite, M_ResPCSel;
     wire [2:0]              M_ResultSrc, M_StoreSrc;
+    wire [2:0]              M_funct3;
     wire                    M_data_req;
     wire                    M_Stall;
     // Atomic signals (pipelined)
@@ -155,6 +156,10 @@ module RV32IA #(
     wire [4:0]              C_rd;
     wire                    C_RegWrite;
     wire [2:0]              C_ResultSrc;
+    wire [2:0]              C_funct3;
+    wire [1:0]              C_byte_off;
+    
+    reg  [31:0]             aligned_load_data;
 
     // ================================================================
     // WRITEBACK STAGE (WB) - Write Result to Register File
@@ -509,6 +514,7 @@ module RV32IA #(
     ,   .E_ResultSrc    (E_ResultSrc)
     ,   .E_StoreSrc     (E_StoreSrc)
     // ,   .E_ResPCSel     (E_ResPCSel)
+    ,   .E_funct3       (E_funct3)
     ,   .E_data_req     (E_data_req)
     ,   .E_amo          (E_amo)
     ,   .E_amo_op       (E_amo_op)
@@ -525,6 +531,7 @@ module RV32IA #(
     ,   .M_ResultSrc    (M_ResultSrc)
     ,   .M_StoreSrc     (M_StoreSrc)
     // ,   .M_ResPCSel     (M_ResPCSel)
+    ,   .M_funct3       (M_funct3)
     ,   .M_data_req     (M_data_req)
     ,   .M_amo          (M_amo)
     ,   .M_amo_op       (M_amo_op)
@@ -559,19 +566,58 @@ module RV32IA #(
     ,   .M_rd           (M_rd)
     ,   .M_RegWrite     (M_RegWrite)
     ,   .M_ResultSrc    (M_ResultSrc)
+    ,   .M_funct3       (M_funct3)
 
     ,   .C_Result       (C_Result)
     ,   .C_rd           (C_rd)
     ,   .C_RegWrite     (C_RegWrite)
     ,   .C_ResultSrc    (C_ResultSrc)
+    ,   .C_funct3       (C_funct3)
     );
 
     // ================================================================
     // CACHE STAGE (C) - Cache Response & Result Selection
     // ================================================================
-    // ResultSrc: 00=ALU, 01=Memory, 10=PC+4
-    assign C_ReadData   = data_rdata;
+    // ResultSrc: 00=ALU, 01=Memory
+    assign C_byte_off   = C_Result[1:0];
 
+    always @(*) begin
+        case (C_funct3)
+            3'b000: begin // LB (Load Byte - Sign Extend)
+                case (C_byte_off)
+                    2'b00: aligned_load_data = {{24{data_rdata[7]}},  data_rdata[7:0]};
+                    2'b01: aligned_load_data = {{24{data_rdata[15]}}, data_rdata[15:8]};
+                    2'b10: aligned_load_data = {{24{data_rdata[23]}}, data_rdata[23:16]};
+                    2'b11: aligned_load_data = {{24{data_rdata[31]}}, data_rdata[31:24]};
+                endcase
+            end
+            3'b100: begin // LBU (Load Byte Unsigned - Zero Extend)
+                case (C_byte_off)
+                    2'b00: aligned_load_data = {24'd0, data_rdata[7:0]};
+                    2'b01: aligned_load_data = {24'd0, data_rdata[15:8]};
+                    2'b10: aligned_load_data = {24'd0, data_rdata[23:16]};
+                    2'b11: aligned_load_data = {24'd0, data_rdata[31:24]};
+                endcase
+            end
+            3'b001: begin // LH (Load Halfword - Sign Extend)
+                case (C_byte_off[1])
+                    1'b0: aligned_load_data = {{16{data_rdata[15]}}, data_rdata[15:0]};
+                    1'b1: aligned_load_data = {{16{data_rdata[31]}}, data_rdata[31:16]};
+                endcase
+            end
+            3'b101: begin // LHU (Load Halfword Unsigned - Zero Extend)
+                case (C_byte_off[1])
+                    1'b0: aligned_load_data = {16'd0, data_rdata[15:0]};
+                    1'b1: aligned_load_data = {16'd0, data_rdata[31:16]};
+                endcase
+            end
+            3'b010:  aligned_load_data = data_rdata; // LW (Load Word)
+            default: aligned_load_data = data_rdata;
+        endcase
+    end
+
+    assign C_ReadData   = aligned_load_data;
+    
     mux2_1 mux_C_Result (
         .in0    (C_Result)
     ,   .in1    (C_ReadData)

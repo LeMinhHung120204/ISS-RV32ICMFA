@@ -246,12 +246,8 @@ module d_cache #(
             victim_data_reg <= {LINE_W{1'b0}};
         end 
         else begin
-            // Latch liên tục. Khi Cache Miss, pipeline_stall = 1 sẽ giữ s2_index và s2_tag đứng yên,
-            // nên dữ liệu trong các thanh ghi này cực kỳ ổn định để FSM đẩy ra bus.
             victim_addr_reg <= victim_addr_full;
             refill_addr_reg <= refill_addr_full;
-
-            // Đệm luôn cả Data để gửi WriteBack (WB)
             case(way_select)
                 4'b0001: victim_data_reg    <= data_read[0];
                 4'b0010: victim_data_reg    <= data_read[1];
@@ -317,33 +313,41 @@ module d_cache #(
     end 
 
     // DATA OUTPUT MUX - data_rdata (Size/Byte selection)
+    // always @(*) begin
+    //     if (sc_done) begin
+    //         data_rdata = {31'd0, o_sc_success};
+    //     end 
+    //     else if (raw_en) begin
+    //         data_rdata = raw_rdata;
+    //     end 
+    //     else begin
+    //         case(s2_size)
+    //             2'b00: data_rdata = word_select; // Word
+    //             2'b01: begin // Byte
+    //                 case(s2_byte_off)
+    //                     2'b00: data_rdata = {24'd0, word_select[7:0]};
+    //                     2'b01: data_rdata = {24'd0, word_select[15:8]};
+    //                     2'b10: data_rdata = {24'd0, word_select[23:16]};
+    //                     2'b11: data_rdata = {24'd0, word_select[31:24]};
+    //                 endcase
+    //             end 
+    //             2'b10: begin // Half
+    //                 case(s2_byte_off[1])
+    //                     1'b0: data_rdata = {16'd0, word_select[15:0]};
+    //                     1'b1: data_rdata = {16'd0, word_select[31:16]};
+    //                 endcase
+    //             end
+    //             default: data_rdata = word_select;
+    //         endcase
+    //     end
+    // end
     always @(*) begin
-        if (sc_done) begin
-            data_rdata = {31'd0, o_sc_success};
-        end 
-        else if (raw_en) begin
-            data_rdata = raw_rdata;
-        end 
-        else begin
-            case(s2_size)
-                2'b00: data_rdata = word_select; // Word
-                2'b01: begin // Byte
-                    case(s2_byte_off)
-                        2'b00: data_rdata = {24'd0, word_select[7:0]};
-                        2'b01: data_rdata = {24'd0, word_select[15:8]};
-                        2'b10: data_rdata = {24'd0, word_select[23:16]};
-                        2'b11: data_rdata = {24'd0, word_select[31:24]};
-                    endcase
-                end 
-                2'b10: begin // Half
-                    case(s2_byte_off[1])
-                        1'b0: data_rdata = {16'd0, word_select[15:0]};
-                        1'b1: data_rdata = {16'd0, word_select[31:16]};
-                    endcase
-                end
-                default: data_rdata = word_select;
-            endcase
-        end
+        case ({sc_done, raw_en})
+            2'b10, 2'b11:   data_rdata  = {31'd0, o_sc_success}; 
+            2'b01:          data_rdata  = raw_rdata;
+            2'b00:          data_rdata  = word_select;
+            default:        data_rdata  = word_select;
+        endcase
     end
 
     // Mux o_snp_resp_data Data (Snoop Response Data)
@@ -489,28 +493,6 @@ module d_cache #(
 
     // ---- REPLACEMENT POLICY ----
 
-    // PIM #(
-    //     .ADDR_WIDTH(INDEX_W)
-    // ,   .DATA_WIDTH(3)
-    // ) Policy_info_Memory (
-    //     .clk        (clk)
-    // ,   .rst_n      (rst_n)
-    // ,   .we         (any_hit)
-    // ,   .read_addr  (s1_index)          // Cấp s1_index (Stage 1)
-    // ,   .write_addr (s2_index)          // Ghi bằng s2_index (Stage 2)
-    // ,   .plru_in    (s2_tree_in)
-    // ,   .plru_out   (s2_tree_out)       // Tín hiệu này đã bị delay 1 clock, dùng thẳng cho Stage 2
-    // );
-
-    // cache_replacement #( 
-    // .N_WAYS(NUM_WAYS)
-    // ) u_replacement (
-    //     .tree_out   (s2_tree_out)   // Lấy thẳng data từ PIM
-    // ,   .way_hit    (way_hit)
-    // ,   .way_select (way_select)
-    // ,   .tree_in    (s2_tree_in)    // Vòng ngược lại port plru_in của PIM
-    // );
-
     cache_replacement #( 
         .N_WAYS     (NUM_WAYS)
     ,   .N_LINES    (NUM_SETS) 
@@ -519,7 +501,8 @@ module d_cache #(
     ,   .rst_n      (rst_n)
     ,   .we         (any_hit)
     ,   .way_hit    (way_hit)
-    ,   .addr       (s2_index)
+    ,   .read_addr  (s1_index)
+    ,   .write_addr (s2_index)
     ,   .way_select (way_select)
     );
 
