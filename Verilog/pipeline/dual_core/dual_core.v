@@ -24,10 +24,10 @@ module dual_core #(
 ,   parameter STRB_W        = DATA_W/8          // Write strobe width
 ,   parameter LINE_W        = (1 << WORD_OFF_W) * 32 // Line width
 )(
-    input clk
-,   input rst_n
-,   input c0_stall
-,   input c1_stall
+    input ACLK
+,   input ARESETn
+// ,   input c0_stall
+// ,   input c1_stall
 
     // ==========================================
     // AXI MASTER INTERFACE (Giao tiếp với Memory)
@@ -69,7 +69,7 @@ module dual_core #(
 );
 
     // ================================================================
-    // WIRES KHAI BÁO (INTERNAL SIGNALS)
+    // WIRES KHAI B�?O (INTERNAL SIGNALS)
     // ================================================================
     
     // --- CORE 0 WIRES ---
@@ -152,9 +152,9 @@ module dual_core #(
     ,   .WORD_OFF_W     (WORD_OFF_W)
     ,   .BYTE_OFF_W     (BYTE_OFF_W)
     ) core_0 (
-        .clk                    (clk)
-    ,   .rst_n                  (rst_n)
-    ,   .test_stall             (c0_stall)
+        .clk                    (ACLK)
+    ,   .rst_n                  (ARESETn)
+    // ,   .test_stall             (c0_stall)
 
         // I-Cache
     ,   .i_ic_rdata_valid       (c0_ic_rdata_valid)
@@ -189,7 +189,7 @@ module dual_core #(
 
     ,   .o_snp_req_ready        (c0_snp_req_ready)
     
-        // Snoop Response (trả lời Core 1)
+        // Snoop Response (trả l�?i Core 1)
     ,   .o_snp_resp_valid       (c0_snp_resp_valid)
     ,   .o_snp_resp_hit         (c0_snp_resp_hit)
     ,   .o_snp_resp_data        (c0_snp_resp_data)
@@ -208,9 +208,9 @@ module dual_core #(
     ,   .WORD_OFF_W     (WORD_OFF_W)
     ,   .BYTE_OFF_W     (BYTE_OFF_W)
     ) core_1 (
-        .clk                    (clk)
-    ,   .rst_n                  (rst_n)
-    ,   .test_stall             (c1_stall)
+        .clk                    (ACLK)
+    ,   .rst_n                  (ARESETn)
+    // ,   .test_stall             (c1_stall)
 
         // I-Cache
     ,   .i_ic_req_ready         (c1_ic_req_ready)
@@ -244,7 +244,7 @@ module dual_core #(
 
     ,   .o_snp_req_ready        (c1_snp_req_ready)
     
-        // Snoop Response (trả lời Core 0)
+        // Snoop Response (trả l�?i Core 0)
     ,   .o_snp_resp_valid       (c1_snp_resp_valid)
     ,   .o_snp_resp_hit         (c1_snp_resp_hit)
     ,   .o_snp_resp_data        (c1_snp_resp_data)
@@ -257,8 +257,8 @@ module dual_core #(
         .ADDR_W(32)
     ,   .LINE_W(LINE_W)
     ) u_coherence (
-        .clk                    (clk)
-    ,   .rst_n                  (rst_n)
+        .clk                    (ACLK)
+    ,   .rst_n                  (ARESETn)
 
         // --- Core 0 ---
     ,   .i_ic0_rdata_ready      (c0_ic_rdata_ready)
@@ -345,8 +345,8 @@ module dual_core #(
     ,   .WORD_OFF_W     (WORD_OFF_W)
     ,   .BYTE_OFF_W     (BYTE_OFF_W)
     ) u_cache_L2 (
-        .clk                    (clk)
-    ,   .rst_n                  (rst_n)
+        .clk                    (ACLK)
+    ,   .rst_n                  (ARESETn)
 
         // --- Giao tiếp với Coherence Interconnect ---
     ,   .o_l1_req_ready         (l2_req_ready)
@@ -360,7 +360,7 @@ module dual_core #(
     ,   .o_l1_resp_rdata        (l2_resp_rdata)
     ,   .pipeline_stall         (L2_pipeline_stall)
 
-        // --- Giao tiếp với AXI Bus Memory (Đẩy ra Port của Dual_Core) ---
+        // --- Giao tiếp với AXI Bus Memory (�?ẩy ra Port của Dual_Core) ---
     ,   .iAWREADY               (iAWREADY)
     ,   .oAWADDR                (oAWADDR)
     ,   .oAWLEN                 (oAWLEN)

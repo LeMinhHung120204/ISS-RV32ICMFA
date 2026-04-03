@@ -25,7 +25,7 @@ module EX_MEM #(
 ,   input                       E_data_req
 ,   input   [DATA_WIDTH - 1:0]  E_ALUResult 
 ,   input   [DATA_WIDTH - 1:0]  E_WriteData
-,   input   [DATA_WIDTH - 1:0]  E_ImmExt
+// ,   input   [DATA_WIDTH - 1:0]  E_ImmExt
 
 // ,   input   [ADDR_WIDTH - 1:0]  E_PCPlus4
 // ,   input   [ADDR_WIDTH - 1:0]  E_PCTarget
@@ -44,7 +44,7 @@ module EX_MEM #(
 ,   output reg  M_data_req
 ,   output reg [DATA_WIDTH - 1:0]   M_ALUResult
 ,   output reg [DATA_WIDTH - 1:0]   M_WriteData
-,   output reg [DATA_WIDTH - 1:0]   M_ImmExt
+// ,   output reg [DATA_WIDTH - 1:0]   M_ImmExt
 // ,   output reg [ADDR_WIDTH - 1:0]   M_PCPlus4
 // ,   output reg [ADDR_WIDTH - 1:0]   M_PCTarget
 ,   output reg  [4:0]               M_rd
@@ -60,7 +60,7 @@ module EX_MEM #(
         if (~rst_n) begin
             M_ALUResult <= 32'd0;
             M_WriteData <= 32'd0;
-            M_ImmExt    <= 32'd0;
+            // M_ImmExt    <= 32'd0;
             // M_PCPlus4   <= 32'd0;
             // M_PCTarget  <= 32'd0;
             M_rd        <= 5'd0;
@@ -80,7 +80,7 @@ module EX_MEM #(
         else if (~EN) begin
             M_ALUResult <= E_ALUResult;
             M_WriteData <= E_WriteData;
-            M_ImmExt    <= E_ImmExt   ;
+            // M_ImmExt    <= E_ImmExt   ;
             // M_PCPlus4   <= E_PCPlus4  ;
             // M_PCTarget  <= E_PCTarget ;
             M_rd        <= E_rd       ;

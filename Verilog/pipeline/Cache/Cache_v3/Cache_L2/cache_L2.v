@@ -314,7 +314,7 @@ module cache_L2 #(
         .clk        (clk)
     ,   .rst_n      (rst_n)
     ,   .stall      (pipeline_stall)
-    ,   .flush      (1'b0)
+    // ,   .flush      (1'b0)
 
         // Stage 1 Inputs (Mapped from L1 interface)
     ,   .s1_req         (i_l1_req_valid)  

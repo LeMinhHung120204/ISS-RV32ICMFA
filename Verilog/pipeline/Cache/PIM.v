@@ -18,7 +18,7 @@ module PIM #(   // Policy info Memory
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-        
+            plru_out    <= {DATA_WIDTH{1'b0}};
             for(i = 0 ; i < DEPTH; i = i + 1) begin
                 pim[i]  <= 3'd0;
             end 

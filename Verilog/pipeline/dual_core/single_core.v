@@ -21,7 +21,7 @@ module single_core #(
 )(
     input clk
 ,   input rst_n
-,   input test_stall // Bổ sung cổng này để truyền vào RV32IA
+// ,   input test_stall // Bổ sung cổng này để truyền vào RV32IA
 
     // ==========================================
     // GIAO TIẾP I-CACHE VỚI COHERENCE INTERCONNECT
@@ -87,7 +87,7 @@ module single_core #(
     ) u_RV32IA (
         .clk            (clk)
     ,   .rst_n          (rst_n)
-    ,   .test_stall     (test_stall)
+    // ,   .test_stall     (test_stall)
 
         // D-Cache
     ,   .data_rdata     (data_rdata)

@@ -207,7 +207,7 @@ module icache #(
         .clk            (clk)
     ,   .rst_n          (rst_n)
     ,   .stall          (pipeline_stall | dcache_stall)
-    ,   .flush          (1'b0)
+    // ,   .flush          (1'b0)
 
         // Inputs
     ,   .s1_req         (cpu_req)

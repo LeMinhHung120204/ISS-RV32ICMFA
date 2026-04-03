@@ -32,7 +32,7 @@ module RV32IA #(
 )(
     input   clk
 ,   input   rst_n
-,   input   test_stall
+// ,   input   test_stall
 
     // cpu <-> dcache
 ,   input   [WIDTH_DATA-1:0]    data_rdata
@@ -57,7 +57,7 @@ module RV32IA #(
 ,   output                      icache_flush
 ,   output  [WIDTH_ADDR - 1:0]  icache_addr
 
-,   output  [WIDTH_DATA - 1:0]  W_Result_output
+// ,   output  [WIDTH_DATA - 1:0]  W_Result_output
 );
 
     // ================================================================
@@ -135,7 +135,7 @@ module RV32IA #(
     // ================================================================
     // MEMORY STAGE (MEM) - Data Cache Request
     // ================================================================
-    wire [WIDTH_DATA-1:0]   M_ALUResult, M_WriteData, M_ImmExt;
+    wire [WIDTH_DATA-1:0]   M_ALUResult, M_WriteData;
     wire [WIDTH_ADDR-1:0]   M_PCPlus4, M_PCTarget, M_ResPC;
     wire [4:0]              M_rd;
     wire                    M_RegWrite, M_MemWrite, M_ResPCSel;
@@ -168,10 +168,8 @@ module RV32IA #(
     wire [4:0]              W_rd;               // Destination register
     wire                    W_RegWrite;         // Write enable
     wire [2:0]              W_ResultSrc;
-    
 
-    assign W_Result_output  = W_mux_result;
-    
+    // assign W_Result_output  = W_mux_result;
 
     // ================================================================
     // BRANCH PREDICTION UNIT
@@ -280,7 +278,7 @@ module RV32IA #(
     ) PC_inst(    
         .clk    (clk)
     ,   .rst_n  (rst_n)
-    ,   .EN     (F_Stall | test_stall)    // Khi stall hoac test_stall thi khong cap nhat PC
+    ,   .EN     (F_Stall)
     ,   .PCNext (PCNext)
     ,   .PC     (F_PC)
     );
@@ -298,7 +296,7 @@ module RV32IA #(
     fetch_pipe fetch_pipe_register (
         .clk    (clk)
     ,   .rst_n  (rst_n)
-    ,   .EN     (F_Stall | test_stall)
+    ,   .EN     (F_Stall)
     ,   .Flush  (fetch_pipe_Flush)
 
     ,   .s1_Predict_Taken   (F_Predict_Taken)
@@ -318,7 +316,7 @@ module RV32IA #(
     IF_ID IF_ID_register(
         .clk                (clk)
     ,   .rst_n              (rst_n)
-    ,   .EN                 (D_Stall | test_stall)
+    ,   .EN                 (D_Stall)
     ,   .D_Flush            (D_Flush)
     ,   .F_RD               (F_RD)
     ,   .F_PC               (s2_PC)
@@ -389,7 +387,7 @@ module RV32IA #(
         .clk                (clk)
     ,   .rst_n              (rst_n)
     ,   .E_Flush            (E_Flush)
-    ,   .EN                 (E_Stall | test_stall)
+    ,   .EN                 (E_Stall)
 
     ,   .D_RD1              (RDX1)
     ,   .D_RD2              (RDX2)
@@ -502,7 +500,7 @@ module RV32IA #(
     EX_MEM EX_MEM_register(
         .clk    (clk)
     ,   .rst_n  (rst_n)
-    ,   .EN     (M_Stall | test_stall)
+    ,   .EN     (M_Stall)
 
     ,   .E_ALUResult    (E_ALUResult)
     ,   .E_WriteData    (E_WriteData)
@@ -560,7 +558,7 @@ module RV32IA #(
     MEM_CACHE MEM_CACHE_register(
         .clk            (clk)
     ,   .rst_n          (rst_n)
-    ,   .EN             (dcache_stall | test_stall)
+    ,   .EN             (dcache_stall)
 
     ,   .M_Result       (M_ALUResult)
     ,   .M_rd           (M_rd)
@@ -631,7 +629,7 @@ module RV32IA #(
     MEM_WB MEM_WB_register(
         .clk            (clk)
     ,   .rst_n          (rst_n)
-    ,   .EN             (dcache_stall | test_stall)
+    // ,   .EN             (dcache_stall)
     ,   .M_rd           (C_rd)
     ,   .M_RegWrite     (C_RegWrite)
     ,   .M_ResultSrc    (C_ResultSrc)

@@ -168,12 +168,12 @@ module tb_soc_top;
         .CODE_B_START   (CODE_B_START),
         .DATA_START     (DATA_START)
     ) u_soc_top (
-        .clk            (ACLK),
-        .rst_n          (ARESETn),
+        .ACLK            (ACLK),
+        .ARESETn          (ARESETn),
         
         // Gộp stall của TB vào test_stall của dual_core
-        .c0_stall       (c0_stall),
-        .c1_stall       (c1_stall),
+//        .c0_stall       (c0_stall),
+//        .c1_stall       (c1_stall),
 
         // AW Channel
         .iAWREADY       (m_axi_awready),

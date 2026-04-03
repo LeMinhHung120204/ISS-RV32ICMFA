@@ -29,8 +29,8 @@ module ID_EX #(
 ,   input                       D_ALUSrc
 ,   input                       D_addr_addend_sel
 ,   input                       D_ResPCSel
-,   input                       D_RegSrc1
-,   input                       D_RegSrc2
+// ,   input                       D_RegSrc1
+// ,   input                       D_RegSrc2
 ,   input                       D_Predict_Taken
 ,   input                       D_data_req
 ,   input   [DATA_WIDTH - 1:0]  D_RD1
@@ -59,8 +59,8 @@ module ID_EX #(
 ,   output reg  E_ALUSrc
 ,   output reg  E_addr_addend_sel
 ,   output reg  E_ResPCSel
-,   output reg  E_RegSrc1 
-,   output reg  E_RegSrc2
+// ,   output reg  E_RegSrc1 
+// ,   output reg  E_RegSrc2
 ,   output reg  E_Predict_Taken
 ,   output reg  E_data_req
 ,   output reg  [DATA_WIDTH - 1:0]  E_RD1
@@ -104,8 +104,8 @@ module ID_EX #(
             E_ALUSrc            <= 1'd0;
             E_addr_addend_sel   <= 1'd0;
             E_ResPCSel          <= 1'd0;
-            E_RegSrc1           <= 1'd0;
-            E_RegSrc2           <= 1'd0;
+            // E_RegSrc1           <= 1'd0;
+            // E_RegSrc2           <= 1'd0;
             E_Predict_Taken     <= 1'b0;
             E_data_req          <= 1'b0;
 
@@ -136,8 +136,8 @@ module ID_EX #(
                 E_ALUSrc            <= 1'd0;
                 E_addr_addend_sel   <= 1'd0;
                 E_ResPCSel          <= 1'd0;
-                E_RegSrc1           <= 1'd0;
-                E_RegSrc2           <= 1'd0;
+                // E_RegSrc1           <= 1'd0;
+                // E_RegSrc2           <= 1'd0;
                 E_Predict_Taken     <= 1'b0;
                 E_data_req          <= 1'b0;
 
@@ -168,8 +168,8 @@ module ID_EX #(
                     E_ALUSrc            <= D_ALUSrc          ;
                     E_addr_addend_sel   <= D_addr_addend_sel ;
                     E_ResPCSel          <= D_ResPCSel        ;
-                    E_RegSrc1           <= D_RegSrc1         ;
-                    E_RegSrc2           <= D_RegSrc2         ;
+                    // E_RegSrc1           <= D_RegSrc1         ;
+                    // E_RegSrc2           <= D_RegSrc2         ;
                     E_Predict_Taken     <= D_Predict_Taken   ;
                     E_data_req          <= D_data_req;
 

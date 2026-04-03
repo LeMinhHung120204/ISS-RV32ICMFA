@@ -25,7 +25,7 @@ module acc_cmp #(
     input                       clk
 ,   input                       rst_n
 ,   input                       stall
-,   input                       flush
+// ,   input                       flush
 ,   input                       s1_req
 ,   input                       s1_we      
 ,   input   [1:0]               s1_cmd
@@ -36,10 +36,10 @@ module acc_cmp #(
 ,   input   [WORD_OFF_W-1:0]    s1_word_off
 ,   input   [BYTE_OFF_W-1:0]    s1_byte_off
 
-,   input                       snoop_stall
+// ,   input                       snoop_stall
 ,   input                       s1_is_snoop
-,   input   [TAG_W-1:0]         s1_snoop_tag
-,   input   [INDEX_W-1:0]       s1_snoop_index
+// ,   input   [TAG_W-1:0]         s1_snoop_tag
+// ,   input   [INDEX_W-1:0]       s1_snoop_index
 
 ,   input                       s1_lr
 ,   input                       s1_sc
@@ -57,8 +57,8 @@ module acc_cmp #(
 ,   output reg [BYTE_OFF_W-1:0] s2_byte_off
 
 ,   output reg                      s2_is_snoop
-,   output reg [TAG_W-1:0]          s2_snoop_tag
-,   output reg [INDEX_W-1:0]        s2_snoop_index
+// ,   output reg [TAG_W-1:0]          s2_snoop_tag
+// ,   output reg [INDEX_W-1:0]        s2_snoop_index
 
 ,   output reg                      s2_lr
 ,   output reg                      s2_sc
@@ -78,8 +78,8 @@ module acc_cmp #(
             s2_byte_off     <= {BYTE_OFF_W{1'b0}};
 
             s2_is_snoop     <= 1'b0;
-            s2_snoop_tag    <= {TAG_W{1'b0}};
-            s2_snoop_index  <= {INDEX_W{1'b0}};
+            // s2_snoop_tag    <= {TAG_W{1'b0}};
+            // s2_snoop_index  <= {INDEX_W{1'b0}};
 
             s2_lr        <= 1'b0;
             s2_sc        <= 1'b0;
@@ -87,50 +87,22 @@ module acc_cmp #(
             s2_amo_op    <= 3'b000;
         end
         else begin
-            if (~snoop_stall) begin
-                s2_is_snoop     <= s1_is_snoop;       
-                s2_snoop_tag    <= s1_snoop_tag;
-                s2_snoop_index  <= s1_snoop_index;
+            s2_is_snoop     <= s1_is_snoop;    
+            if (~stall) begin
+                s2_req          <= s1_req;
+                s2_we           <= s1_we;
+                s2_size         <= s1_size;
+                s2_cmd          <= s1_cmd;
+                s2_wdata        <= s1_wdata;
+                s2_tag          <= s1_tag;
+                s2_index        <= s1_index;
+                s2_word_off     <= s1_word_off;
+                s2_byte_off     <= s1_byte_off;     
 
-                // s2_atomic_lr        <= s1_atomic_lr;
-                // s2_atomic_sc        <= s1_atomic_sc;
-                // s2_atomic_amo       <= s1_atomic_amo;
-                // s2_atomic_amo_op    <= s1_atomic_amo_op;
-            end 
-
-            if (flush) begin
-                s2_req          <= 1'b0;
-                s2_we           <= 1'b0;
-                s2_size         <= 2'b00;
-                s2_cmd          <= 2'b00;
-                s2_wdata        <= {DATA_W{1'b0}};
-                s2_tag          <= {TAG_W{1'b0}};
-                s2_index        <= {INDEX_W{1'b0}};
-                s2_word_off     <= {WORD_OFF_W{1'b0}};
-                s2_byte_off     <= {BYTE_OFF_W{1'b0}};
-
-                s2_lr        <= 1'b0;
-                s2_sc        <= 1'b0;
-                s2_amo       <= 1'b0;
-                s2_amo_op    <= 3'b000;
-            end 
-            else begin 
-                if (~stall) begin
-                    s2_req          <= s1_req;
-                    s2_we           <= s1_we;
-                    s2_size         <= s1_size;
-                    s2_cmd          <= s1_cmd;
-                    s2_wdata        <= s1_wdata;
-                    s2_tag          <= s1_tag;
-                    s2_index        <= s1_index;
-                    s2_word_off     <= s1_word_off;
-                    s2_byte_off     <= s1_byte_off;     
-
-                    s2_lr        <= s1_lr;
-                    s2_sc        <= s1_sc;
-                    s2_amo       <= s1_amo;
-                    s2_amo_op    <= s1_amo_op;
-                end
+                s2_lr        <= s1_lr;
+                s2_sc        <= s1_sc;
+                s2_amo       <= s1_amo;
+                s2_amo_op    <= s1_amo_op;
             end
         end
 

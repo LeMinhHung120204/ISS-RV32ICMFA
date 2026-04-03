@@ -444,7 +444,7 @@ module d_cache #(
         .clk        (clk)
     ,   .rst_n      (rst_n)
     ,   .stall      (pipeline_stall)
-    ,   .flush      (1'b0)
+    // ,   .flush      (1'b0)
 
         // Stage 1 Inputs (Mapped from L1 interface)
     ,   .s1_req         (cpu_req)
@@ -457,7 +457,7 @@ module d_cache #(
     ,   .s1_byte_off    (s1_byte_off)
 
     // ,   .snoop_stall    (reg_snoop_stall)   // chua co logic nay, tạm để 0
-    ,   .snoop_stall    (1'b0)
+    // ,   .snoop_stall    (1'b0)
     ,   .s1_is_snoop    (i_snp_req_valid)
     ,   .s1_cmd         (i_snp_req_cmd)
     // ,   .s1_snoop_tag   (s1_ac_tag)

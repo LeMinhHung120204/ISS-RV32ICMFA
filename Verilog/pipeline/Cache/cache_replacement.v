@@ -38,7 +38,9 @@ module cache_replacement #(
 
     // Nut 1 (root): trai {0,1}, phai {2,3}
     plru plru_update1(
-        .prev_bit   (tree_out[1])
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .prev_bit   (tree_out[1])
     ,   .left_hit   (|way_hit[1:0])
     ,   .right_hit  (|way_hit[3:2])
     ,   .plru_bit   (tree_in[1])
@@ -46,7 +48,9 @@ module cache_replacement #(
 
     // Nút 2 (con trái root): left={way0}, right={way1}
     plru plru_update2(
-        .prev_bit   (tree_out[2])
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .prev_bit   (tree_out[2])
     ,   .left_hit   (way_hit[0])
     ,   .right_hit  (way_hit[1])
     ,   .plru_bit   (tree_in[2])
@@ -54,7 +58,9 @@ module cache_replacement #(
 
     // Nút 3 (con phải root): left={way2}, right={way3}
     plru plru_update3(
-        .prev_bit   (tree_out[3])
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .prev_bit   (tree_out[3])
     ,   .left_hit   (way_hit[2])
     ,   .right_hit  (way_hit[3])
     ,   .plru_bit   (tree_in[3])
@@ -73,7 +79,6 @@ module cache_replacement #(
     ,   .plru_out   (tree_out)
     );
 
-    //wire [N_WAYS_W-1:0]	way_select_bin = node_id[N_WAYS_W] - N_WAYS;
-	 wire [N_WAYS_W-1:0]	way_select_bin = node_id[2][1:0];
-    assign way_select = ({{(N_WAYS-1){1'b0}}, 1'b1} << way_select_bin);
+	wire [N_WAYS_W-1:0]	way_select_bin  = node_id[2][1:0];
+    assign              way_select      = ({{(N_WAYS-1){1'b0}}, 1'b1} << way_select_bin);
 endmodule

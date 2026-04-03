@@ -15,7 +15,7 @@ module MEM_WB #(
     parameter ADDR_WIDTH = 32
 )(
     input                       clk, rst_n
-,   input                       EN
+// ,   input                       EN
 ,   input                       M_RegWrite 
 // ,   input                       M_FRegWrite 
 // ,   input                       M_MDU_FPUEn 
@@ -40,7 +40,8 @@ module MEM_WB #(
             // W_FRegWrite <= 1'b0;
             // W_MDU_FPUEn <= 1'b0;
         end 
-        else if (!EN) begin
+        // else if (!EN) begin
+        else begin
             W_mux_result    <= C_mux_result;
             W_rd            <= M_rd       ;
             W_ResultSrc     <= M_ResultSrc;
