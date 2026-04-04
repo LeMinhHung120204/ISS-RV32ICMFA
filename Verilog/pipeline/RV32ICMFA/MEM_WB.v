@@ -19,7 +19,7 @@ module MEM_WB #(
 ,   input                       M_RegWrite 
 // ,   input                       M_FRegWrite 
 // ,   input                       M_MDU_FPUEn 
-,   input [DATA_WIDTH - 1:0]    C_mux_result
+,   input [DATA_WIDTH - 1:0]    M_mux_result
 ,   input [4:0]                 M_rd
 ,   input [2:0]                 M_ResultSrc
     
@@ -42,7 +42,7 @@ module MEM_WB #(
         end 
         // else if (!EN) begin
         else begin
-            W_mux_result    <= C_mux_result;
+            W_mux_result    <= M_mux_result;
             W_rd            <= M_rd       ;
             W_ResultSrc     <= M_ResultSrc;
             W_RegWrite      <= M_RegWrite ;

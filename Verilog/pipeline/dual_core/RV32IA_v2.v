@@ -24,7 +24,7 @@
 //   - AMO* (Atomic Memory Op): cpu_amo + cpu_amo_op
 //
 // ============================================================================
-module RV32IA #(
+module RV32IA_v2 #(
     parameter WIDTH_DATA    = 32,
     parameter WIDTH_ADDR    = 32,
     parameter START_PC      = 32'd0
@@ -57,7 +57,6 @@ module RV32IA #(
 ,   output                      icache_flush
 ,   output  [WIDTH_ADDR - 1:0]  icache_addr
 
-// ,   output  [WIDTH_DATA - 1:0]  W_Result_output
 );
 
     // ================================================================
@@ -113,7 +112,9 @@ module RV32IA #(
     wire [WIDTH_DATA-1:0]   E_ImmExt, E_ALUResult;      // Immediate & ALU output
     wire [WIDTH_ADDR-1:0]   E_PC, E_PCPlus4, E_PCtmp, E_PCTarget;  // PC & branch target
     wire [4:0]              E_rs1, E_rs2, E_rd;         // Register addresses
-    wire [WIDTH_DATA-1:0]   E_SrcA, E_SrcB, E_WriteData; // ALU operands & store data
+    reg  [WIDTH_DATA-1:0]   E_SrcA;
+    wire [WIDTH_DATA-1:0]   E_SrcB; 
+    reg  [WIDTH_DATA-1:0]   E_WriteData; // ALU operands & store data
     // Control signals
     wire                    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel;
     wire [3:0]              E_ALUControl;
@@ -135,30 +136,17 @@ module RV32IA #(
     // ================================================================
     // MEMORY STAGE (MEM) - Data Cache Request
     // ================================================================
-    wire [WIDTH_DATA-1:0]   M_ALUResult, M_WriteData;
-    wire [WIDTH_ADDR-1:0]   M_PCPlus4, M_PCTarget, M_ResPC;
+    wire [WIDTH_DATA-1:0]   M_ALUResult;
+    wire [WIDTH_DATA-1:0]   M_mux_result; 
+    wire [WIDTH_DATA-1:0]   M_ReadData;
     wire [4:0]              M_rd;
-    wire                    M_RegWrite, M_MemWrite, M_ResPCSel;
-    wire [2:0]              M_ResultSrc, M_StoreSrc;
+    wire [2:0]              M_ResultSrc;
     wire [2:0]              M_funct3;
-    wire                    M_data_req;
+    wire [1:0]              M_byte_off;
+    wire                    M_RegWrite;
+    wire                    M_MemWrite;
     wire                    M_Stall;
-    // Atomic signals (pipelined)
-    wire                    M_amo;
-    wire    [2:0]           M_amo_op;
-    wire                    M_lr, M_sc;
-
-    // ================================================================
-    // CACHE STAGE (C) - Wait for Cache Response
-    // ================================================================
-    wire [WIDTH_DATA-1:0]   C_Result, C_ImmExt, C_mux_result, C_ReadData;
-    wire [WIDTH_ADDR-1:0]   C_ResPC;
-    wire [4:0]              C_rd;
-    wire                    C_RegWrite;
-    wire [2:0]              C_ResultSrc;
-    wire [2:0]              C_funct3;
-    wire [1:0]              C_byte_off;
-    
+    // // Atomic signals (pipelined)
     reg  [31:0]             aligned_load_data;
 
     // ================================================================
@@ -168,8 +156,6 @@ module RV32IA #(
     wire [4:0]              W_rd;               // Destination register
     wire                    W_RegWrite;         // Write enable
     wire [2:0]              W_ResultSrc;
-
-    // assign W_Result_output  = W_mux_result;
 
     // ================================================================
     // BRANCH PREDICTION UNIT
@@ -233,7 +219,7 @@ module RV32IA #(
     // ================================================================
     assign icache_flush = fetch_pipe_Flush;
 
-    HazardUnit HazardUnit_inst(
+    HazardUnit_v2 HazardUnit_inst(
         .D_Rs1          (A1)
     ,   .D_Rs2          (A2)
     ,   .E_Rs1          (E_rs1)
@@ -245,9 +231,9 @@ module RV32IA #(
     ,   .E_ResultSrc    (E_ResultSrc)
     ,   .E_Mispredict   (E_Mispredict)
     ,   .M_RegWrite     (M_RegWrite)
-    ,   .C_RegWrite     (C_RegWrite)
+    // ,   .C_RegWrite     (1'b0)
     ,   .M_Rd           (M_rd)
-    ,   .C_Rd           (C_rd)
+    // ,   .C_Rd           (5'd0)
     ,   .W_Rd           (W_rd)
     ,   .W_RegWrite     (W_RegWrite)
         
@@ -460,23 +446,21 @@ module RV32IA #(
     ,   .res    (E_PCtmp)
     );
 
-    mux4_1 mux_ForwardAE (
-        .in0    (E_RD1)
-    ,   .in1    (M_ALUResult)
-    ,   .in2    (C_mux_result)
-    ,   .in3    (W_mux_result)
-    ,   .sel    (ForwardAE)
-    ,   .res    (E_SrcA)
-    );
+    always @(*) begin
+        case(ForwardAE)
+            2'b00:      E_SrcA  = E_RD1;
+            2'b01:      E_SrcA  = M_ALUResult;
+            2'b10:      E_SrcA  = W_mux_result;
+            default:    E_SrcA  = E_RD1; 
+        endcase
 
-    mux4_1 mux_ForwardBE (
-        .in0    (E_RD2)
-    ,   .in1    (M_ALUResult)
-    ,   .in2    (C_mux_result)
-    ,   .in3    (W_mux_result)
-    ,   .sel    (ForwardBE)
-    ,   .res    (E_WriteData)
-    );
+        case(ForwardBE)
+            2'b00:      E_WriteData = E_RD2;
+            2'b01:      E_WriteData = M_ALUResult;
+            2'b10:      E_WriteData = W_mux_result;
+            default:    E_WriteData = E_RD2; 
+        endcase
+    end
 
     mux2_1 mux_E_ALUSrc (
         .in0    (E_WriteData)
@@ -488,6 +472,21 @@ module RV32IA #(
     assign E_PCTarget   = E_ImmExt + E_PCtmp;  // Branch/Jump target address
 
     // ================================================================
+    // MEMORY STAGE (MEM) - D-Cache Interface
+    // ================================================================
+    assign data_wr      = E_MemWrite;
+    assign data_size    = E_StoreSrc;   // lb/sb=00, lh/sh=01, lw/sw=10
+    assign data_addr    = E_ALUResult; // For AMO/SC/LR, use address from register; otherwise use ALU result
+    assign data_wdata   = E_WriteData;
+    assign data_req     = E_data_req;
+
+    // Atomic instruction signals to D-Cache
+    assign cpu_lr       = E_lr;         // Load-Reserved
+    assign cpu_sc       = E_sc;         // Store-Conditional
+    assign cpu_amo      = E_amo;        // Atomic operation
+    assign cpu_amo_op   = E_amo_op;     // AMO type
+
+    // ================================================================
     // PIPELINE REGISTER: EX -> MEM (EX_MEM)
     // ================================================================
     EX_MEM EX_MEM_register(
@@ -497,85 +496,29 @@ module RV32IA #(
 
     ,   .E_ALUResult    (E_ALUResult)
     ,   .E_WriteData    (E_WriteData)
-    // ,   .E_PCPlus4      (E_PCPlus4)
-    // ,   .E_PCTarget     (E_PCTarget)
     ,   .E_rd           (E_rd)
     ,   .E_RegWrite     (E_RegWrite)
     ,   .E_MemWrite     (E_MemWrite)
     ,   .E_ResultSrc    (E_ResultSrc)
-    ,   .E_StoreSrc     (E_StoreSrc)
-    // ,   .E_ResPCSel     (E_ResPCSel)
     ,   .E_funct3       (E_funct3)
-    ,   .E_data_req     (E_data_req)
-    ,   .E_amo          (E_amo)
-    ,   .E_amo_op       (E_amo_op)
-    ,   .E_lr           (E_lr)
-    ,   .E_sc           (E_sc)
 
     ,   .M_ALUResult    (M_ALUResult)
-    ,   .M_WriteData    (M_WriteData)
-    // ,   .M_PCPlus4      (M_PCPlus4)
-    // ,   .M_PCTarget     (M_PCTarget)
     ,   .M_rd           (M_rd)
     ,   .M_RegWrite     (M_RegWrite)
     ,   .M_MemWrite     (M_MemWrite)
     ,   .M_ResultSrc    (M_ResultSrc)
-    ,   .M_StoreSrc     (M_StoreSrc)
-    // ,   .M_ResPCSel     (M_ResPCSel)
     ,   .M_funct3       (M_funct3)
-    ,   .M_data_req     (M_data_req)
-    ,   .M_amo          (M_amo)
-    ,   .M_amo_op       (M_amo_op)
-    ,   .M_lr           (M_lr)
-    ,   .M_sc           (M_sc)
     );
-
-    // ================================================================
-    // MEMORY STAGE (MEM) - D-Cache Interface
-    // ================================================================
-    assign data_wr      = M_MemWrite;
-    assign data_size    = M_StoreSrc;   // lb/sb=00, lh/sh=01, lw/sw=10
-    assign data_addr    = M_ALUResult; // For AMO/SC/LR, use address from register; otherwise use ALU result
-    assign data_wdata   = M_WriteData;
-    assign data_req     = M_data_req;
-
-    // Atomic instruction signals to D-Cache
-    assign cpu_lr       = M_lr;         // Load-Reserved
-    assign cpu_sc       = M_sc;         // Store-Conditional
-    assign cpu_amo      = M_amo;        // Atomic operation
-    assign cpu_amo_op   = M_amo_op;     // AMO type
 
     // ================================================================
     // PIPELINE REGISTER: MEM -> CACHE (MEM_CACHE)
     // ================================================================
-    MEM_CACHE MEM_CACHE_register(
-        .clk            (clk)
-    ,   .rst_n          (rst_n)
-    ,   .EN             (dcache_stall)
-
-    ,   .M_Result       (M_ALUResult)
-    ,   .M_rd           (M_rd)
-    ,   .M_RegWrite     (M_RegWrite)
-    ,   .M_ResultSrc    (M_ResultSrc)
-    ,   .M_funct3       (M_funct3)
-
-    ,   .C_Result       (C_Result)
-    ,   .C_rd           (C_rd)
-    ,   .C_RegWrite     (C_RegWrite)
-    ,   .C_ResultSrc    (C_ResultSrc)
-    ,   .C_funct3       (C_funct3)
-    );
-
-    // ================================================================
-    // CACHE STAGE (C) - Cache Response & Result Selection
-    // ================================================================
-    // ResultSrc: 00=ALU, 01=Memory
-    assign C_byte_off   = C_Result[1:0];
+    assign M_byte_off   = M_ALUResult[1:0];
 
     always @(*) begin
-        case (C_funct3)
+        case (M_funct3)
             3'b000: begin // LB (Load Byte - Sign Extend)
-                case (C_byte_off)
+                case (M_byte_off)
                     2'b00: aligned_load_data = {{24{data_rdata[7]}},  data_rdata[7:0]};
                     2'b01: aligned_load_data = {{24{data_rdata[15]}}, data_rdata[15:8]};
                     2'b10: aligned_load_data = {{24{data_rdata[23]}}, data_rdata[23:16]};
@@ -583,7 +526,7 @@ module RV32IA #(
                 endcase
             end
             3'b100: begin // LBU (Load Byte Unsigned - Zero Extend)
-                case (C_byte_off)
+                case (M_byte_off)
                     2'b00: aligned_load_data = {24'd0, data_rdata[7:0]};
                     2'b01: aligned_load_data = {24'd0, data_rdata[15:8]};
                     2'b10: aligned_load_data = {24'd0, data_rdata[23:16]};
@@ -591,13 +534,13 @@ module RV32IA #(
                 endcase
             end
             3'b001: begin // LH (Load Halfword - Sign Extend)
-                case (C_byte_off[1])
+                case (M_byte_off[1])
                     1'b0: aligned_load_data = {{16{data_rdata[15]}}, data_rdata[15:0]};
                     1'b1: aligned_load_data = {{16{data_rdata[31]}}, data_rdata[31:16]};
                 endcase
             end
             3'b101: begin // LHU (Load Halfword Unsigned - Zero Extend)
-                case (C_byte_off[1])
+                case (M_byte_off[1])
                     1'b0: aligned_load_data = {16'd0, data_rdata[15:0]};
                     1'b1: aligned_load_data = {16'd0, data_rdata[31:16]};
                 endcase
@@ -607,13 +550,13 @@ module RV32IA #(
         endcase
     end
 
-    assign C_ReadData   = aligned_load_data;
+    assign M_ReadData   = aligned_load_data;
     
-    mux2_1 mux_C_Result (
-        .in0    (C_Result)
-    ,   .in1    (C_ReadData)
-    ,   .sel    (C_ResultSrc[0])
-    ,   .res    (C_mux_result)
+    mux2_1 mux_M_Result (
+        .in0    (M_ALUResult)
+    ,   .in1    (M_ReadData)
+    ,   .sel    (M_ResultSrc[0])
+    ,   .res    (M_mux_result)
     );
 
     // ================================================================
@@ -622,11 +565,10 @@ module RV32IA #(
     MEM_WB MEM_WB_register(
         .clk            (clk)
     ,   .rst_n          (rst_n)
-    // ,   .EN             (dcache_stall)
-    ,   .M_rd           (C_rd)
-    ,   .M_RegWrite     (C_RegWrite)
-    ,   .M_ResultSrc    (C_ResultSrc)
-    ,   .M_mux_result   (C_mux_result)
+    ,   .M_rd           (M_rd)
+    ,   .M_RegWrite     (M_RegWrite)
+    ,   .M_ResultSrc    (M_ResultSrc)
+    ,   .M_mux_result   (M_mux_result)
 
     ,   .W_rd           (W_rd)
     ,   .W_RegWrite     (W_RegWrite)
