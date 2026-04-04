@@ -28,17 +28,15 @@ module access #(
     parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
 )(
     input   [ADDR_W-1:0]        cpu_addr
-,   input   [ADDR_W-1:0]        ac_addr
-,   input   [ADDR_W-1:0]        dcache_req_moesi_addr
+// ,   input   [ADDR_W-1:0]        ac_addr
 
 ,   output  [TAG_W-1:0]         cpu_tag
 ,   output  [INDEX_W-1:0]       cpu_index
 ,   output  [WORD_OFF_W-1:0]    cpu_word_off
 ,   output  [BYTE_OFF_W-1:0]    cpu_byte_off
 
-,   output  [TAG_W-1:0]         ac_tag
-,   output  [INDEX_W-1:0]       ac_index
-,   output  [INDEX_W-1:0]       dcache_req_moesi_index
+// ,   output  [TAG_W-1:0]         ac_tag
+// ,   output  [INDEX_W-1:0]       ac_index
 );
     // ================================================================
     // LOCAL PARAMETERS - Address Field Boundaries
@@ -63,11 +61,6 @@ module access #(
     // ================================================================
     // SNOOP ADDRESS DECODE
     // ================================================================
-    assign ac_tag                   = ac_addr   [TAG_MSB:TAG_LSB];
-    assign ac_index                 = ac_addr   [IDX_MSB:IDX_LSB];
-    
-    // ================================================================
-    // MOESI INDEX (for L1<->L2 coherence)
-    // ================================================================
-    assign dcache_req_moesi_index   = dcache_req_moesi_addr[IDX_MSB:IDX_LSB];
+    // assign ac_tag                   = ac_addr   [TAG_MSB:TAG_LSB];
+    // assign ac_index                 = ac_addr   [IDX_MSB:IDX_LSB];
 endmodule

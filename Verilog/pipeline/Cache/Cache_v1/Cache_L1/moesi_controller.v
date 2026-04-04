@@ -1,24 +1,9 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
-// ============================================================================
-// MOESI State Controller - Cache Coherence State Machine
-// ============================================================================
-//
-// Implements the MOESI cache coherence protocol state transitions.
-// Handles state changes from CPU requests, bus snoops, and refill operations.
-//
-// State Transitions:
-//   CPU Read Miss:  I -> E (if unique) or S (if shared)
-//   CPU Write Miss: I -> M (if unique) or via Upgrade
-//   CPU Write Hit:  S/E/O -> M
-//   Snoop Read:     M/E -> O/S (downgrade, share data)
-//   Snoop Write:    Any -> I (invalidate)
-//
-// ============================================================================
 module moesi_controller(
     input   [2:0]   current_state
 ,   input           is_shared_response
-,   input           is_dirty_response
+// ,   input           is_dirty_response
 ,   input           refill_we
 
     // Request from CPU 
@@ -27,10 +12,9 @@ module moesi_controller(
 ,   input           cpu_rw         // 1: Write, 0: Read
 
     // Request from Bus (Snoop)
-,   input           bus_snoop_valid
+,   input           snoop_valid
 ,   input           snoop_hit      
-,   input           bus_rw      
-,   input           l1_dirty   
+,   input           snoop_req_invalidate      
 
     // Outputs
 ,   output              is_dirty       
@@ -67,8 +51,8 @@ module moesi_controller(
         // SNOOP REQUEST HANDLING (Highest Priority)
         // ========================
         // External core wants access to this cache line
-        if (bus_snoop_valid && snoop_hit) begin
-            if (bus_rw) begin   // Bus Write (CleanInvalid/MakeInvalid)
+        if (snoop_valid && snoop_hit) begin
+            if (snoop_req_invalidate) begin   // Bus Write (CleanInvalid/MakeInvalid)
                 // Other core wants exclusive access -> Invalidate our copy
                 next_state = STATE_I; 
             end
@@ -76,14 +60,7 @@ module moesi_controller(
                 // Other core wants to read -> Downgrade to shared
                 case (current_state)
                     STATE_M, STATE_O:   next_state = STATE_O; // Keep ownership of dirty data
-                    STATE_E: begin            
-                        if (l1_dirty) begin 
-                            next_state = STATE_O; // L1 modified -> Owned (dirty shared)
-                        end 
-                        else begin
-                            next_state = STATE_S; // L1 clean -> Shared
-                        end 
-                    end 
+                    STATE_E:            next_state = STATE_S; // Đang E (Clean-Exclusive) bị đọc -> S (Clean-Shared)
                     STATE_S:            next_state = STATE_S; // Already shared
                     default:            next_state = STATE_I;
                 endcase
@@ -95,19 +72,16 @@ module moesi_controller(
         // ========================
         // Data received from memory or peer cache
         else if (refill_we) begin
-            if (is_dirty_response) begin
-                // Received dirty data from peer cache (cache-to-cache transfer)
-                if (is_shared_response) 
-                    next_state = STATE_O; // Dirty + Shared -> Owned (share dirty line)
-                else 
-                    next_state = STATE_M; // Dirty + Unique -> Modified (got exclusive dirty)
+            if (cpu_rw) begin 
+                // Refill cho Write Miss (Read-for-Ownership)
+                next_state = STATE_M; 
             end
             else begin
-                // Received clean data from memory or peer cache
+                // Refill cho Read Miss
                 if (is_shared_response) 
-                    next_state = STATE_S; // Clean + Shared -> Shared
-                else      
-                    next_state = STATE_E; // Clean + Unique -> Exclusive (only copy)
+                    next_state = STATE_S; // Nếu được share từ cache khác (bất kể O/M/S/E)
+                else 
+                    next_state = STATE_E; // Cấp phát độc quyền từ Memory/L2
             end
         end
 
