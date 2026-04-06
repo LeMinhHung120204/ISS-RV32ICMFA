@@ -12,11 +12,11 @@ module BTB #(
     parameter W_ADDR = 32
 )(
     input                   clk, rst_n
-,   input [W_ADDR-1:0]      F_PC
+,   input [W_ADDR-1:1]      F_PC
 ,   output reg [W_ADDR-1:0] pc_prediction
 ,   output                  hit
 
-,   input [W_ADDR-1:0]      E_PC           
+,   input [W_ADDR-1:1]      E_PC           
 ,   input [W_ADDR-1:0]      branch_target  
 ,   input                   E_Branch       
 ,   input                   E_Jump          
@@ -159,21 +159,27 @@ module BTB #(
 
     // 2. Tính trạng thái cây PLRU tiếp theo (Combinational)
     plru plru_update1 (
-        .prev_bit   (current_tree[1])
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .prev_bit   (current_tree[1])
     ,   .left_hit   (|final_target_way[1:0])
     ,   .right_hit  (|final_target_way[3:2])
     ,   .plru_bit   (next_tree[1])
     );
     
     plru plru_update2 (
-        .prev_bit   (current_tree[2])
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .prev_bit   (current_tree[2])
     ,   .left_hit   (final_target_way[0])
     ,   .right_hit  (final_target_way[1])
     ,   .plru_bit   (next_tree[2])
     );
     
     plru plru_update3 (
-        .prev_bit   (current_tree[3])
+        .clk        (clk)
+    ,   .rst_n      (rst_n)
+    ,   .prev_bit   (current_tree[3])
     ,   .left_hit   (final_target_way[2])
     ,   .right_hit  (final_target_way[3])
     ,   .plru_bit   (next_tree[3])

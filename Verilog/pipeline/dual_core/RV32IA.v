@@ -205,13 +205,13 @@ module RV32IA #(
     ,   .rst_n          (rst_n)
 
         // IF state
-    ,   .F_PC           (F_PC)
+    ,   .F_PC           (F_PC[WIDTH_ADDR-1:1])
     ,   .predict_taken  (F_Predict_Taken)
     ,   .target_pc      (F_Predict_Target)
     ,   .F_GHSR         (F_GHSR)
 
         // EX state
-    ,   .E_PC           (E_PC)
+    ,   .E_PC           (E_PC[WIDTH_ADDR-1:1])
     ,   .E_PCTarget     (E_PCTarget)
     ,   .E_Branch       (E_Branch)
     ,   .E_Jump         (E_Jump)
@@ -369,7 +369,7 @@ module RV32IA #(
 
     Extend extend_inst(
         .ImmSrc (D_ImmSrc)
-    ,   .Instr  (D_Instr[31:0])
+    ,   .Instr  (D_Instr[31:7])
     ,   .ImmExt (D_ImmExt)
     );
 

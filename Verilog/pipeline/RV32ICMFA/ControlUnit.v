@@ -28,7 +28,6 @@ module ControlUnit(
     MainDecoder maindecoder_inst(
         .op                 (op),
         .funct3             (funct3),
-        .funct7             (funct7),
         .Branch             (Branch),
         .ResultSrc          (ResultSrc),
         .MemWrite           (MemWrite),

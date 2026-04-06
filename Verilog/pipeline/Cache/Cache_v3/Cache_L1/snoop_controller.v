@@ -6,7 +6,7 @@ module snoop_controller #(
 )(
     input               i_snp_req_valid
 ,   input [1:0]         i_snp_req_cmd
-,   input [ADDR_W-1:0]  i_snp_req_addr
+// ,   input [ADDR_W-1:0]  i_snp_req_addr
 ,   input               i_dcache_ready
 
     // Các tín hiệu ở Pipeline Stage 2

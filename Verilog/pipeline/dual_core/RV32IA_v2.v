@@ -83,7 +83,7 @@ module RV32IA_v2 #(
     wire [2:0]              s2_GHSR;            // GHSR from S1 (pipelined)
     wire [WIDTH_ADDR-1:0]   s2_PC, s2_PCPlus4;  // PC values (pipelined)
     wire                    fetch_pipe_Flush;   // Flush fetch pipeline on mispredict
-
+    reg                     s2_ignore_instr;
     // ================================================================
     // DECODE STAGE (ID) - Instruction Decode & Register Read
     // ================================================================
@@ -123,7 +123,7 @@ module RV32IA_v2 #(
     wire                    E_Predict_Taken;            // Prediction from earlier stages
     wire [2:0]              E_GHSR;
     wire                    E_Mispredict;               // Branch misprediction detected
-    wire [31:0]             E_Correct_PC;               // Correct PC on mispredict
+    // wire [31:0]             E_Correct_PC;               // Correct PC on mispredict
     wire                    E_data_req;
     wire                    E_Stall, E_Flush;
     wire [1:0]              ForwardAE, ForwardBE;       // Forwarding mux selects
@@ -165,19 +165,19 @@ module RV32IA_v2 #(
     //   2. Predicted taken branch
     //   3. Sequential (PC+4)
     // ================================================================
+    wire [1:0] pc_sel;
     assign F_PCPlus4    = F_PC + 32'd4;
     assign E_Mispredict = (E_PCSrc != E_Predict_Taken);  // Compare actual vs predicted
-    assign E_Correct_PC = E_PCSrc ? E_PCTarget : E_PCPlus4;  // Correct PC on mispredict
     
-
+    assign pc_sel[1]    = E_Mispredict;
+    assign pc_sel[0]    = E_Mispredict ? E_PCSrc : F_Predict_Taken;
+    
     always @(*) begin
-        case ({E_Mispredict, F_Predict_Taken})
-            // TH1: Mispredict = 1. uu tien sua sai
-            2'b10, 2'b11: PCNext = E_Correct_PC; 
-            
-            // TH2: Mispredict = 0, Predict_Taken = 1.
-            2'b01:        PCNext = F_Predict_Target;
-            default:      PCNext = F_PCPlus4;
+        case (pc_sel)
+            2'b11: PCNext   = E_PCTarget;         // Đoán sai & Thực tế LÀ CÓ NHẢY
+            2'b10: PCNext   = E_PCPlus4;          // Đoán sai & Thực tế LÀ KHÔNG NHẢY
+            2'b01: PCNext   = F_Predict_Target;   // Đang ổn & BPU đoán sẽ nhảy
+            2'b00: PCNext   = F_PCPlus4;          // Đang ổn & BPU đoán không nhảy
         endcase
     end
 
@@ -191,13 +191,13 @@ module RV32IA_v2 #(
     ,   .rst_n          (rst_n)
 
         // IF state
-    ,   .F_PC           (F_PC)
+    ,   .F_PC           (F_PC[WIDTH_ADDR-1:1])
     ,   .predict_taken  (F_Predict_Taken)
     ,   .target_pc      (F_Predict_Target)
     ,   .F_GHSR         (F_GHSR)
 
         // EX state
-    ,   .E_PC           (E_PC)
+    ,   .E_PC           (E_PC[WIDTH_ADDR-1:1])
     ,   .E_PCTarget     (E_PCTarget)
     ,   .E_Branch       (E_Branch)
     ,   .E_Jump         (E_Jump)
@@ -267,8 +267,23 @@ module RV32IA_v2 #(
     // ================================================================
     assign icache_addr = F_PC;          // S1 -> Cache
     assign icache_req  = rst_n;         // Always request when not reset
-    assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
+    // assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
 
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            s2_ignore_instr <= 1'b0;
+        end 
+        else if (F_Stall) begin
+            s2_ignore_instr <= s2_ignore_instr;
+        end 
+        else begin
+            // Nếu vừa có tín hiệu flush fetch_pipe, chu kỳ sau phải bỏ qua lệnh từ cache
+            s2_ignore_instr <= fetch_pipe_Flush;
+        end
+    end
+
+    // Thay thế dòng `assign F_RD = imem_instr;` cũ bằng MUX sau:
+    assign F_RD = s2_ignore_instr ? 32'h00000013 : imem_instr;
     // ================================================================
     // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
     // ================================================================
@@ -355,7 +370,7 @@ module RV32IA_v2 #(
 
     Extend extend_inst(
         .ImmSrc (D_ImmSrc)
-    ,   .Instr  (D_Instr[31:0])
+    ,   .Instr  (D_Instr[31:7])
     ,   .ImmExt (D_ImmExt)
     );
 
@@ -495,7 +510,7 @@ module RV32IA_v2 #(
     ,   .EN     (M_Stall)
 
     ,   .E_ALUResult    (E_ALUResult)
-    ,   .E_WriteData    (E_WriteData)
+    // ,   .E_WriteData    (E_WriteData)
     ,   .E_rd           (E_rd)
     ,   .E_RegWrite     (E_RegWrite)
     ,   .E_MemWrite     (E_MemWrite)

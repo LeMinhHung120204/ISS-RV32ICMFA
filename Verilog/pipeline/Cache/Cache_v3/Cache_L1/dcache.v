@@ -484,7 +484,10 @@ module d_cache #(
     );
 
     // ---- MAIN L1 CONTROLLER ----
-    dcache_controller u_controller (
+    dcache_controller #(
+        .WORD_OFF_W (WORD_OFF_W)
+    ,   .BYTE_OFF_W (BYTE_OFF_W)
+    ) u_controller (
         .clk        (clk)
     ,   .rst_n      (rst_n)
 
@@ -508,7 +511,7 @@ module d_cache #(
 
         // Snoop interface info
     ,   .i_snoop_invalidate     (snoop_req_invalidate)
-    ,   .i_snoop_addr           (i_snp_req_addr)
+    ,   .i_snoop_addr           (i_snp_req_addr[ADDR_W-1:WORD_OFF_W + BYTE_OFF_W])
     ,   .snoop_busy             (snoop_busy)
     ,   .o_resp_ready           (o_resp_ready)
         
@@ -560,7 +563,7 @@ module d_cache #(
     ) u_snoop_ctrl (
         .i_snp_req_valid        (i_snp_req_valid)
     ,   .i_snp_req_cmd          (i_snp_req_cmd)
-    ,   .i_snp_req_addr         (i_snp_req_addr)
+    // ,   .i_snp_req_addr         (i_snp_req_addr)
     ,   .i_dcache_ready         (ctrl_snoop_ready)
     ,   .i_snp_resp_valid       (s2_is_snoop)
     ,   .i_snp_resp_hit         (o_snp_resp_hit)

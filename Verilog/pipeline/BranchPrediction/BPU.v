@@ -11,8 +11,8 @@ module BPU #(
     parameter W_ADDR = 32
 )(
     input               clk, rst_n
-,   input [W_ADDR-1:0]  F_PC                 
-,   input [W_ADDR-1:0]  E_PC           
+,   input [W_ADDR-1:1]  F_PC                 
+,   input [W_ADDR-1:1]  E_PC           
 ,   input [W_ADDR-1:0]  E_PCTarget  
 ,   input               E_Branch        
 ,   input               E_Jump          

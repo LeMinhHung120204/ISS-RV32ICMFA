@@ -2,7 +2,7 @@
 // from Lee Min Hunz with luv
 module Extend(
     input       [2:0]   ImmSrc
-,   input       [31:0]  Instr
+,   input       [31:7]  Instr
 ,   output reg  [31:0]  ImmExt
 );
     always@(*) begin

@@ -15,9 +15,6 @@ module tag_mem #(
 ,   input   [TAG_W-1:0]     din_tag
 ,   input   [2:0]           moesi_next_state
 
-    // L1 request
-,   input   [INDEX_W-1:0]   L1_read_index
-
 ,   output reg  [TAG_W-1:0] dout_tag
 ,   output reg              valid
 ,   output reg  [2:0]       moesi_current_state
@@ -61,15 +58,6 @@ module tag_mem #(
             valid <= valid_array[read_index];
         end 
     end 
-
-    // always @(posedge clk or negedge rst_n) begin
-    //     if (~rst_n) begin
-    //         valid <= 1'b0;
-    //     end 
-    //     else begin 
-    //         valid <= valid_array[read_index];
-    //     end 
-    // end 
     
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin

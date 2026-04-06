@@ -5,13 +5,15 @@ module dcache_controller #(
     parameter DATA_W        = 32
 ,   parameter ADDR_W        = 32
 ,   parameter STRB_W        = (DATA_W/8)
+,   parameter WORD_OFF_W    = 4
+,   parameter BYTE_OFF_W    = 2
 )(
     input           clk, rst_n
 
     // Cache <-> CPU
-,   input               cpu_req
-,   input               cpu_we
-,   input   [31:0]      cpu_addr 
+,   input                   cpu_req
+,   input                   cpu_we
+,   input   [ADDR_W - 1:0]  cpu_addr 
 
     // Atomic Interface
 ,   input                   i_atomic_lr      // Load-Reserved
@@ -28,7 +30,7 @@ module dcache_controller #(
 
     // Snoop invalidation
 ,   input                   i_snoop_invalidate
-,   input   [31:0]          i_snoop_addr 
+,   input   [ADDR_W - 1 : WORD_OFF_W + BYTE_OFF_W]          i_snoop_addr 
 ,   input                   snoop_busy
 ,   output  reg             o_resp_ready
 
