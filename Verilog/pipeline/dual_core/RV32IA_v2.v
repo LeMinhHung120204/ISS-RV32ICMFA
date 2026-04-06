@@ -277,12 +277,10 @@ module RV32IA_v2 #(
             s2_ignore_instr <= s2_ignore_instr;
         end 
         else begin
-            // Nếu vừa có tín hiệu flush fetch_pipe, chu kỳ sau phải bỏ qua lệnh từ cache
             s2_ignore_instr <= fetch_pipe_Flush;
         end
     end
 
-    // Thay thế dòng `assign F_RD = imem_instr;` cũ bằng MUX sau:
     assign F_RD = s2_ignore_instr ? 32'h00000013 : imem_instr;
     // ================================================================
     // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
