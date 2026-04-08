@@ -90,6 +90,7 @@ module RV32IA_v2 #(
     wire [WIDTH_DATA-1:0]   D_Instr, D_ImmExt;          // Instruction & sign-extended immediate
     wire [WIDTH_ADDR-1:0]   D_PC, D_PCPlus4;            // PC values
     wire [WIDTH_DATA-1:0]   RDX1, RDX2;                 // Register file read data
+    wire [WIDTH_DATA-1:0]   D_Instr_Safe;
     wire [4:0]              A1, A2, WD3;                // Register addresses (rs1, rs2, rd)
     // Control signals from decoder
     wire                    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_addr_addend_sel, D_ResPCSel;
@@ -99,6 +100,7 @@ module RV32IA_v2 #(
     wire [2:0]              D_GHSR;
     wire                    D_data_req;                 // Data memory request
     wire                    D_Stall, D_Flush;           // Hazard control
+    // wire                    D_ignore_instr;
 
     // Atomic Instructions (RV32A Extension)
     wire            D_amo;          // Atomic Memory Operation
@@ -231,9 +233,7 @@ module RV32IA_v2 #(
     ,   .E_ResultSrc    (E_ResultSrc)
     ,   .E_Mispredict   (E_Mispredict)
     ,   .M_RegWrite     (M_RegWrite)
-    // ,   .C_RegWrite     (1'b0)
     ,   .M_Rd           (M_rd)
-    // ,   .C_Rd           (5'd0)
     ,   .W_Rd           (W_rd)
     ,   .W_RegWrite     (W_RegWrite)
         
@@ -267,7 +267,7 @@ module RV32IA_v2 #(
     // ================================================================
     assign icache_addr = F_PC;          // S1 -> Cache
     assign icache_req  = rst_n;         // Always request when not reset
-    // assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
+    assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -281,7 +281,7 @@ module RV32IA_v2 #(
         end
     end
 
-    assign F_RD = s2_ignore_instr ? 32'h00000013 : imem_instr;
+    // assign F_RD = s2_ignore_instr ? 32'h00000013 : imem_instr;
     // ================================================================
     // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
     // ================================================================
@@ -305,27 +305,36 @@ module RV32IA_v2 #(
     // ================================================================
     // PIPELINE REGISTER: S2 -> ID (IF_ID)
     // ================================================================
+    wire D_Flush_actual = D_Flush | s2_ignore_instr;
     IF_ID IF_ID_register(
         .clk                (clk)
     ,   .rst_n              (rst_n)
     ,   .EN                 (D_Stall)
-    ,   .D_Flush            (D_Flush)
+    // ,   .D_Flush            (D_Flush)
+    ,   .D_Flush            (D_Flush_actual)
     ,   .F_RD               (F_RD)
     ,   .F_PC               (s2_PC)
     ,   .F_PCPlus4          (s2_PCPlus4)
     ,   .F_GHSR             (s2_GHSR)
     ,   .F_Predict_Taken    (s2_Predict_Taken)
+    // ,   .s2_ignore_instr    (s2_ignore_instr)
 
     ,   .D_Instr            (D_Instr)
     ,   .D_PC               (D_PC)
     ,   .D_PCPlus4          (D_PCPlus4)
     ,   .D_GHSR             (D_GHSR)
     ,   .D_Predict_Taken    (D_Predict_Taken)
+    // ,   .D_ignore_instr     (D_ignore_instr)
     );
 
     // ================================================================
     // DECODE STAGE (ID) - Control Unit & Register File
     // ================================================================
+    // assign D_Instr_Safe = D_ignore_instr ? 32'h00000013 : D_Instr;
+    // assign A1           = D_Instr_Safe[19:15];   // rs1
+    // assign A2           = D_Instr_Safe[24:20];   // rs2  
+    // assign WD3          = D_Instr_Safe[11:7];    // rd
+
     assign A1   = D_Instr[19:15];   // rs1
     assign A2   = D_Instr[24:20];   // rs2  
     assign WD3  = D_Instr[11:7];    // rd
@@ -335,6 +344,10 @@ module RV32IA_v2 #(
     ,   .funct7             (D_Instr[31:25])
     ,   .funct5             (D_Instr[31:27])
     ,   .funct3             (D_Instr[14:12])
+    //     .op                 (D_Instr_Safe[6:0])
+    // ,   .funct7             (D_Instr_Safe[31:25])
+    // ,   .funct5             (D_Instr_Safe[31:27])
+    // ,   .funct3             (D_Instr_Safe[14:12])
 
     ,   .ResultSrc          (D_ResultSrc)
     ,   .MemWrite           (D_MemWrite)
