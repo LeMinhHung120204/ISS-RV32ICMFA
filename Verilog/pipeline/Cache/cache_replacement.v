@@ -71,7 +71,7 @@ module cache_replacement #(
         .DATA_WIDTH(N_WAYS-1)
     ) Policy_info_Memory (
         .clk        (clk)
-    ,   .rst_n      (rst_n)
+    // ,   .rst_n      (rst_n)
     ,   .we         (we)
     ,   .read_addr  (read_addr)
     ,   .write_addr (write_addr)

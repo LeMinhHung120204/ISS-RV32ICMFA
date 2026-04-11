@@ -221,7 +221,7 @@ module DataMem_wrapper #(
         .RESET_VALUE    (RESET_VALUE)
     ) u_DataMem (
         .clk        (ACLK),
-        .rst_n      (ARESETn),
+        // .rst_n      (ARESETn),
         
         // Port A: Write
         .we         (core_write_en),

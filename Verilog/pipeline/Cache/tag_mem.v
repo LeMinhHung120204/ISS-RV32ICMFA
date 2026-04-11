@@ -5,7 +5,8 @@ module tag_mem #(
     parameter TAG_W         = 24,
     parameter INDEX_W       = $clog2(NUM_SETS)
 )(
-    input                   clk, rst_n 
+    input                   clk
+// ,   input                   rst_n 
 ,   input                   tag_we
 ,   input                   moesi_we
 ,   input                   valid_we

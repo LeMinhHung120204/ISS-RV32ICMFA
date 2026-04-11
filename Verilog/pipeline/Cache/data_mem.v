@@ -8,7 +8,8 @@ module data_mem #(
     parameter CACHE_DATA_W  = (1<<WORD_OFF_W) * 32,
     parameter STRB_W        = (DATA_W/8)
 )(
-    input                           clk, rst_n 
+    input                           clk
+// ,   input                           rst_n 
 ,   input   [INDEX_W-1:0]           read_index
 ,   input   [INDEX_W-1:0]           write_index
 

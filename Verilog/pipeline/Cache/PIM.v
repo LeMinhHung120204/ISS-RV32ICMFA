@@ -5,7 +5,7 @@ module PIM #(   // Policy info Memory
     parameter DATA_WIDTH = 3
 )(
     input       clk
-,   input       rst_n
+// ,   input       rst_n
 ,   input                           we
 ,   input       [ADDR_WIDTH-1:0]    read_addr
 ,   input       [ADDR_WIDTH-1:0]    write_addr

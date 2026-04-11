@@ -375,7 +375,7 @@ module d_cache #(
             ,   .TAG_W(TAG_W) 
             ) u_tag_mem (
                 .clk                    (clk)
-            ,   .rst_n                  (rst_n)
+            // ,   .rst_n                  (rst_n)
 
             ,   .tag_we                 (tag_we & way_select[i])
             ,   .moesi_we               (moesi_we & choosen_way[i])
@@ -398,7 +398,7 @@ module d_cache #(
             ,   .NUM_SETS   (NUM_SETS) 
             ) u_data_mem (
                 .clk            (clk)
-            ,   .rst_n          (rst_n)
+            // ,   .rst_n          (rst_n)
             // ,   .read_index     (s1_index)
             ,   .read_index     (mem_read_index)
             ,   .dout           (data_read[i])

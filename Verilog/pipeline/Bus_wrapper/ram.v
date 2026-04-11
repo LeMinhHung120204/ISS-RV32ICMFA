@@ -6,7 +6,7 @@ module ram #(
     parameter RESET_VALUE   = 32'h0000_0000
 )(
     input               clk 
-,   input               rst_n
+// ,   input               rst_n
 ,   input               we
 ,   input               re
 ,   input  [ADDR_W-1:0] w_addr
@@ -26,7 +26,7 @@ module ram #(
         end
     end
 
-    always @(posedge clk or negedge rst_n) begin
+    always @(posedge clk) begin
         if (we) begin
             mem[w_addr] <= w_data; 
         end 

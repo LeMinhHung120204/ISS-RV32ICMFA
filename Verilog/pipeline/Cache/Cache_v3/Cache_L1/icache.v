@@ -153,7 +153,7 @@ module icache #(
             ,   .TAG_W      (TAG_W)
             ) u_tag_mem (
                 .clk            (clk)
-            ,   .rst_n          (rst_n)
+            // ,   .rst_n          (rst_n)
 
                 // Port read
             ,   .read_index     (s1_index)
@@ -173,7 +173,7 @@ module icache #(
             ,   .NUM_SETS   (NUM_SETS)
             ) u_data_mem (
                 .clk            (clk)
-            ,   .rst_n          (rst_n)
+            // ,   .rst_n          (rst_n)
 
                 // Port read
             ,   .read_index     (s1_index)
