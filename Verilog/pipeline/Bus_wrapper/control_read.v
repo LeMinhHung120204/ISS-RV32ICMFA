@@ -16,14 +16,14 @@ module control_read #(
 ,   input                               arvalid
 ,   output reg                          arready
 ,   input       [1:0]                   arburst
-,   input       [2:0]                   arsize
+// ,   input       [2:0]                   arsize
 ,   input       [7:0]                   arlen
 ,   input       [DATA_W-1:0]            araddr
     
     // R Channel 
 ,   input                               fifo_r_push_able
-,   input                               fifo_r_pop_able
-,   input                               rvalid_from_mem
+// ,   input                               fifo_r_pop_able
+// ,   input                               rvalid_from_mem
 ,   output reg                          last_data_from_mem
 
     // Memory Interface
@@ -42,12 +42,13 @@ module control_read #(
     // REG DECLARATIONS
     // ================================================================
     reg                 state, next_state;
-    reg [7:0]           count_addr, read_count;     // Address counter, read beat counter
+    reg [7:0]           count_addr;
+    // Reg [7:0]           read_count;                 // Address counter, read beat counter
     reg [DATA_W-1:0]    reg_addr;                   // Current address (word-aligned)
 
     // Latched burst parameters
     reg [1:0]       reg_arburst;    // Burst type
-    reg [2:0]       reg_arsize;     // Beat size
+    // reg [2:0]       reg_arsize;     // Beat size
     reg [7:0]       reg_arlen;      // Burst length - 1
 
     // ================================================================
@@ -73,7 +74,7 @@ module control_read #(
             reg_addr    <= {DATA_W{1'b0}};
             count_addr  <= 8'd0;
             reg_arburst <= 2'b00;
-            reg_arsize  <= 3'b00;
+            // reg_arsize  <= 3'b00;
             reg_arlen   <= 8'd0;
         end 
         else begin
@@ -84,7 +85,7 @@ module control_read #(
                     if (arvalid && arready) begin
                         reg_addr    <= araddr >> 2; // dang de address / 4 de doc file hex
                         reg_arburst <= arburst;
-                        reg_arsize  <= arsize;
+                        // reg_arsize  <= arsize;
                         reg_arlen   <= arlen;
                     end
                 end
@@ -115,21 +116,21 @@ module control_read #(
     // ================================================================
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            read_count <= 8'd0;
+            // read_count <= 8'd0;
             last_data_from_mem <= 1'b0;
         end 
         else begin
             if (state == READ)
                 last_data_from_mem <= (count_addr == reg_arlen);
 
-            if (fifo_r_pop_able) begin
-                if (read_count < reg_arlen) begin
-                    read_count <= read_count + 1'b1;
-                end
-                else begin
-                    read_count <= 8'd0;
-                end
-            end
+            // if (fifo_r_pop_able) begin
+            //     if (read_count < reg_arlen) begin
+            //         read_count <= read_count + 1'b1;
+            //     end
+            //     else begin
+            //         read_count <= 8'd0;
+            //     end
+            // end
         end
     end
 

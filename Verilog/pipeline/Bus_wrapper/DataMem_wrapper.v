@@ -98,8 +98,8 @@ module DataMem_wrapper #(
     // AW FIFO
     wire [DATA_W-1:0] fifo_awaddr  = fifo_aw_dout[FF_AW_W-1 -: DATA_W];
     wire [ID_W-1:0]   fifo_awid    = fifo_aw_dout[FF_AW_W-1 - DATA_W -: ID_W];
-    wire [7:0]        fifo_awlen   = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W -: 8];
-    wire [2:0]        fifo_awsize  = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W - 8 -: 3];
+    // wire [7:0]        fifo_awlen   = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W -: 8];
+    // wire [2:0]        fifo_awsize  = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W - 8 -: 3];
     wire [1:0]        fifo_awburst = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W - 8 - 3 -: 2];
 
     // W FIFO
@@ -176,8 +176,8 @@ module DataMem_wrapper #(
         .awvalid    (~fifo_aw_empty), // bao valid khi fifo co data
         .awready    (control_awready),
         .awburst    (fifo_awburst),
-        .awsize     (fifo_awsize),
-        .awlen      (fifo_awlen),
+        // .awsize     (fifo_awsize),
+        // .awlen      (fifo_awlen),
         .awaddr     (fifo_awaddr),
 
         // W Channel 
@@ -200,18 +200,18 @@ module DataMem_wrapper #(
         .arvalid    (~fifo_ar_empty),
         .arready    (control_arready),
         .arburst    (fifo_arburst),
-        .arsize     (fifo_arsize),
+        // .arsize     (fifo_arsize),
         .arlen      (fifo_arlen),
         .araddr     (fifo_araddr),
 
         .fifo_r_push_able   (~fifo_r_full),     // Can push to R_FIFO
-        .fifo_r_pop_able    (~fifo_r_empty),    // Can pop from R_FIFO
+        // .fifo_r_pop_able    (~fifo_r_empty),    // Can pop from R_FIFO
         
         // Memory Interface
         .fifo_ar_full       (fifo_ar_full),
         .r_addr             (cnt_addr_read),
         .read_en            (core_read_en),
-        .rvalid_from_mem    (rvalid_from_mem),
+        // .rvalid_from_mem    (rvalid_from_mem),
         .last_data_from_mem (last_data_from_mem)
     );
 

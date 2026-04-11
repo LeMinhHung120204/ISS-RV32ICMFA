@@ -14,8 +14,8 @@ module control_write #(
     // AW Channel
 ,   input                       awvalid
 ,   input       [1:0]           awburst
-,   input       [2:0]           awsize
-,   input       [7:0]           awlen      // hien tai chua su dung tai su dung wlast de ket thuc burst
+// ,   input       [2:0]           awsize
+// ,   input       [7:0]           awlen      // hien tai chua su dung tai su dung wlast de ket thuc burst
 ,   input       [DATA_W-1:0]    awaddr
 ,   output reg                  awready
 
@@ -41,7 +41,7 @@ module control_write #(
     reg             state, next_state;
     reg [DATA_W-1:0]    reg_addr;       // Current write address
     reg [1:0]           reg_awburst;    // Burst type
-    reg [2:0]           reg_awsize;     // Beat size
+    // reg [2:0]           reg_awsize;     // Beat size
 
     // ================================================================
     // AWREADY - Accept new request when idle
@@ -70,7 +70,7 @@ module control_write #(
         if (~rst_n) begin
             reg_addr    <= {DATA_W{1'b0}};
             reg_awburst <= 2'b00;
-            reg_awsize  <= 3'b00;
+            // reg_awsize  <= 3'b00;
         end 
         else begin
             case(state)
@@ -78,7 +78,7 @@ module control_write #(
                     if (awvalid && awready) begin
                         reg_addr    <= awaddr;
                         reg_awburst <= awburst;
-                        reg_awsize  <= awsize;
+                        // reg_awsize  <= awsize;
                     end
                 end
 
