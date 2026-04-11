@@ -16,26 +16,40 @@ module PIM #(   // Policy info Memory
     reg [DATA_WIDTH-1:0] pim [0:DEPTH-1];
     
     integer i;
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            plru_out    <= {DATA_WIDTH{1'b0}};
-            for(i = 0 ; i < DEPTH; i = i + 1) begin
-                pim[i]  <= 3'd0;
-            end 
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (~rst_n) begin
+    //         plru_out    <= {DATA_WIDTH{1'b0}};
+    //         for(i = 0 ; i < DEPTH; i = i + 1) begin
+    //             pim[i]  <= 3'd0;
+    //         end 
+    //     end 
+    //     else begin
+    //         if (we) begin
+    //             pim[write_addr]  <= plru_in;
+    //         end 
+
+    //         // Forwarding nội bộ (Bypass) để chống Data Hazard
+    //         if (we && (read_addr == write_addr)) begin
+    //             plru_out <= plru_in; 
+    //         end 
+    //         else begin
+    //             plru_out <= pim[read_addr];
+    //         end
+    //     end 
+    // end 
+
+    always @(posedge clk) begin
+        if (we) begin
+            pim[write_addr]  <= plru_in;
+        end 
+        // Forwarding nội bộ (Bypass) để chống Data Hazard
+        if (we && (read_addr == write_addr)) begin
+            plru_out <= plru_in; 
         end 
         else begin
-            if (we) begin
-                pim[write_addr]  <= plru_in;
-            end 
-
-            // Forwarding nội bộ (Bypass) để chống Data Hazard
-            if (we && (read_addr == write_addr)) begin
-                plru_out <= plru_in; 
-            end 
-            else begin
-                plru_out <= pim[read_addr];
-            end
-        end 
+            plru_out <= pim[read_addr];
+        end
+        
     end 
 
     // assign plru_out = pim[addr];

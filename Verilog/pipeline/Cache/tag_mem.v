@@ -26,51 +26,78 @@ module tag_mem #(
     reg [2:0]       state_moesi [0:NUM_SETS-1];
 
     integer i;
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            for (i = 0; i < NUM_SETS; i = i + 1) begin
-                tag_mem[i] <= {TAG_W{1'b0}};
-            end
-            dout_tag <= {TAG_W{1'b0}};
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (~rst_n) begin
+    //         for (i = 0; i < NUM_SETS; i = i + 1) begin
+    //             tag_mem[i] <= {TAG_W{1'b0}};
+    //         end
+    //         dout_tag <= {TAG_W{1'b0}};
+    //     end 
+    //     else begin
+    //         if (tag_we) begin
+    //             tag_mem[write_index] <= din_tag;
+    //         end 
+    //         dout_tag <= tag_mem[read_index];
+    //     end 
+    // end 
+
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (~rst_n) begin
+    //         for(i = 0; i < NUM_SETS; i = i + 1) begin 
+    //             valid_array[i] <= 1'b0;
+    //         end
+    //         valid <= 1'b0;
+    //     end 
+    //     else begin
+    //         if (valid_we) begin
+    //             valid_array[write_index] <= 1'b1;
+    //         end 
+    //         else if (invalid) begin
+    //             valid_array[write_index] <= 1'b0;
+    //         end 
+    //         valid <= valid_array[read_index];
+    //     end 
+    // end 
+    
+    // always @(posedge clk or negedge rst_n) begin
+    //     if (~rst_n) begin
+    //         for (i = 0; i < NUM_SETS; i = i + 1) begin
+    //             state_moesi[i] <= STATE_I;
+    //         end
+    //         moesi_current_state     <= STATE_I;
+    //     end 
+    //     else begin
+    //         if (moesi_we) begin
+    //             state_moesi[write_index] <= moesi_next_state;
+    //         end
+    //         moesi_current_state     <= state_moesi[read_index];
+    //     end
+    // end
+
+    always @(posedge clk) begin
+        if (tag_we) begin
+            tag_mem[write_index] <= din_tag;
         end 
-        else begin
-            if (tag_we) begin
-                tag_mem[write_index] <= din_tag;
-            end 
-            dout_tag <= tag_mem[read_index];
-        end 
+        dout_tag <= tag_mem[read_index];
+         
     end 
 
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            for(i = 0; i < NUM_SETS; i = i + 1) begin 
-                valid_array[i] <= 1'b0;
-            end
-            valid <= 1'b0;
+    always @(posedge clk) begin
+        if (valid_we) begin
+            valid_array[write_index] <= 1'b1;
         end 
-        else begin
-            if (valid_we) begin
-                valid_array[write_index] <= 1'b1;
-            end 
-            else if (invalid) begin
-                valid_array[write_index] <= 1'b0;
-            end 
-            valid <= valid_array[read_index];
+        else if (invalid) begin
+            valid_array[write_index] <= 1'b0;
         end 
+        valid <= valid_array[read_index];
+        
     end 
     
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            for (i = 0; i < NUM_SETS; i = i + 1) begin
-                state_moesi[i] <= STATE_I;
-            end
-            moesi_current_state     <= STATE_I;
-        end 
-        else begin
-            if (moesi_we) begin
-                state_moesi[write_index] <= moesi_next_state;
-            end
-            moesi_current_state     <= state_moesi[read_index];
+    always @(posedge clk) begin
+        if (moesi_we) begin
+            state_moesi[write_index] <= moesi_next_state;
         end
+        moesi_current_state     <= state_moesi[read_index];
+    
     end
 endmodule
