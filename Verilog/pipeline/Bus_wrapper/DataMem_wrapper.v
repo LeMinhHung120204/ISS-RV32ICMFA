@@ -143,7 +143,7 @@ module DataMem_wrapper #(
     // ================================================================
     // WRITE PATH - AW/W -> RAM -> B
     // ================================================================
-    assign fifo_w_pop       = core_write_en; 
+    assign fifo_w_pop       = core_write_en & ctrl_w_ready; 
     wire write_burst_done   = core_write_en && fifo_wlast;
 
     // Push B response when burst completes

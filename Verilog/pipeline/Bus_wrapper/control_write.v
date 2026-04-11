@@ -111,6 +111,18 @@ module control_write #(
         end
     end
 
+    // AWREADY/WREADY logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            wready <= 1'b0;
+        end
+        else begin
+            if (state == WRITE) 
+                wready <= 1'b1;
+            else
+                wready <= 1'b0;
+        end
+    end
     // ================================================================
     // FSM - IDLE waits for AW, WRITE receives data until WLAST
     // ================================================================
