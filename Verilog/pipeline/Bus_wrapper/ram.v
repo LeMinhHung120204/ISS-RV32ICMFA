@@ -19,30 +19,25 @@ module ram #(
     reg [DATA_W-1:0] OutMem;
 
     integer i;
+
     initial begin
-        for(i = 0; i < (1 << ADDR_W); i = i + 1) begin
+        for (i = 0; i < (1 << ADDR_W); i = i + 1) begin
             mem[i] = RESET_VALUE;
         end
     end
 
     always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-            OutMem  <= RESET_VALUE;
-            valid   <= 1'b0;
-        end
+        if (we) begin
+            mem[w_addr] <= w_data; 
+        end 
+        
+        if (re) begin
+            OutMem  <= mem[r_addr];
+            valid   <= 1'b1;
+        end 
         else begin
-            if (we) begin
-                mem[w_addr] <= w_data; 
-            end 
-            
-            if (re) begin
-                OutMem <= mem[r_addr];
-                valid  <= 1'b1;
-            end 
-            else begin
-                valid <= 1'b0;
-            end 
-        end
+            valid   <= 1'b0;
+        end 
     end
 
     assign r_data = OutMem;

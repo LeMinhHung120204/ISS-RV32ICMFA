@@ -73,31 +73,38 @@ module tag_mem #(
     //         moesi_current_state     <= state_moesi[read_index];
     //     end
     // end
+    initial begin
+        for (i = 0; i < NUM_SETS; i = i + 1) begin
+            tag_mem[i]      = {TAG_W{1'b0}};
+            valid_array[i]  = 1'b0;      // Đảm bảo ban đầu luôn là Cache Miss
+            state_moesi[i]  = STATE_I;    // Khởi tạo là 3'd4 [cite: 34]
+        end
+    end
 
     always @(posedge clk) begin
         if (tag_we) begin
-            tag_mem[write_index] <= din_tag;
+            tag_mem[write_index]    <= din_tag;
         end 
-        dout_tag <= tag_mem[read_index];
+        dout_tag                    <= tag_mem[read_index];
          
     end 
 
     always @(posedge clk) begin
         if (valid_we) begin
-            valid_array[write_index] <= 1'b1;
+            valid_array[write_index]    <= 1'b1;
         end 
         else if (invalid) begin
-            valid_array[write_index] <= 1'b0;
+            valid_array[write_index]    <= 1'b0;
         end 
-        valid <= valid_array[read_index];
+        valid                           <= valid_array[read_index];
         
     end 
     
     always @(posedge clk) begin
         if (moesi_we) begin
-            state_moesi[write_index] <= moesi_next_state;
+            state_moesi[write_index]    <= moesi_next_state;
         end
-        moesi_current_state     <= state_moesi[read_index];
+        moesi_current_state             <= state_moesi[read_index];
     
     end
 endmodule

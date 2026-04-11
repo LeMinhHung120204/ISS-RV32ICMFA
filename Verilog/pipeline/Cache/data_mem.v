@@ -54,6 +54,12 @@ module data_mem #(
     //     end
     // end
 
+    initial begin
+        for (i = 0; i < NUM_SETS; i = i + 1) begin
+            data_mem[i] = {CACHE_DATA_W{1'b0}};
+        end
+    end
+
     always @(posedge clk) begin
         if (refill_we) begin
             data_mem[write_index] <= refill_din;

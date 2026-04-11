@@ -37,6 +37,11 @@ module PIM #(   // Policy info Memory
     //         end
     //     end 
     // end 
+    initial begin
+    for (i = 0; i < DEPTH; i = i + 1) begin
+            pim[i] = {DATA_WIDTH{1'b0}};
+        end
+    end
 
     always @(posedge clk) begin
         if (we) begin
@@ -49,7 +54,6 @@ module PIM #(   // Policy info Memory
         else begin
             plru_out <= pim[read_addr];
         end
-        
     end 
 
     // assign plru_out = pim[addr];
