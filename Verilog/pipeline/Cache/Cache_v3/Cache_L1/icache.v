@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "define.vh"
 // from Lee Min Hunz with luv
 // ============================================================================
 // ICache - L1 Instruction Cache (Read-Only)
@@ -7,15 +8,15 @@
 // 2-stage pipeline: S1 (address decode) -> S2 (tag compare + data read)
 // ============================================================================
 module icache #(
-    parameter ADDR_W        = 32
-,   parameter DATA_W        = 32
-,   parameter NUM_WAYS      = 4
-,   parameter NUM_SETS      = 16
+    parameter ADDR_W        = `ADDR_W
+,   parameter DATA_W        = `DATA_W
+,   parameter NUM_WAYS      = `NUM_WAYS
+,   parameter NUM_SETS      = `NUM_SETS
     
     // Derived parameters
 ,   parameter INDEX_W       = $clog2(NUM_SETS)
-,   parameter WORD_OFF_W    = 4
-,   parameter BYTE_OFF_W    = 2
+,   parameter WORD_OFF_W    = `WORD_OFF_W
+,   parameter BYTE_OFF_W    = `BYTE_OFF_W
 ,   parameter TAG_W         = ADDR_W - INDEX_W - WORD_OFF_W - BYTE_OFF_W
 ,   parameter LINE_W        = (1 << WORD_OFF_W) * 32
 )(

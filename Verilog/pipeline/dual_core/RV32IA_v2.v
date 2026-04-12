@@ -28,7 +28,7 @@
 module RV32IA_v2 #(
     parameter WIDTH_DATA    = `DATA_W,
     parameter WIDTH_ADDR    = `ADDR_W,
-    parameter START_PC      = 32'd0
+    parameter START_PC      = `CODE_A_START
     // parameter END_PC        = 32'd1024
 )(
     input   clk

@@ -1,21 +1,22 @@
 `timescale 1ns / 1ps
+`include "define.vh"
 // from Lee Min Hunz with luv
 
 module single_core #(
-    parameter ADDR_W        = 32                        // Address width
-,   parameter DATA_W        = 32                        // Data width
+    parameter ADDR_W        = `ADDR_W                   // Address width
+,   parameter DATA_W        = `DATA_W                   // Data width
 
     // Memory Map Configuration
-,   parameter CODE_START    = 32'h0000_0000             // Instruction base address
-,   parameter DATA_START    = 32'h0000_4000             // Data base address
+,   parameter CODE_START    = `CODE_A_START             // Instruction base address
+,   parameter DATA_START    = `DATA_START               // Data base address
 
     // Cache Configuration
-,   parameter NUM_WAYS      = 4                         // Cache associativity
-,   parameter NUM_SETS      = 16                        // L1 cache sets
+,   parameter NUM_WAYS      = `NUM_WAYS                 // Cache associativity
+,   parameter NUM_SETS      = `NUM_SETS                 // L1 cache sets
 ,   parameter INDEX_W       = $clog2(NUM_SETS)          // Index width
-,   parameter NUM_SETS_L2   = 32                        // L2 cache sets
-,   parameter WORD_OFF_W    = 4                         // Word offset (16 words/line)
-,   parameter BYTE_OFF_W    = 2                         // Byte offset (4 bytes/word)
+,   parameter NUM_SETS_L2   = `NUM_SETS_L2              // L2 cache sets
+,   parameter WORD_OFF_W    = `WORD_OFF_W               // Word offset (16 words/line)
+,   parameter BYTE_OFF_W    = `BYTE_OFF_W               // Byte offset (4 bytes/word)
 ,   parameter LINE_W        = (1 << WORD_OFF_W) * 32    // Cache line width
 ,   parameter STRB_W        = DATA_W/8                  // Write strobe width
 )(

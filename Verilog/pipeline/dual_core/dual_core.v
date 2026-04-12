@@ -1,28 +1,29 @@
 `timescale 1ns/1ps
+`include "define.vh"
 // from Lee Min Hunz with luv
 
 module dual_core #(
     // Core Configuration
-    parameter MEM_BASE      = 32'hC000_0000     // Memory base address
+    parameter MEM_BASE      = `MEM_BASE     // Memory base address
 
     // Core A Instruction Memory
-,   parameter CODE_A_START  = 32'hC000_0000     // Core A instruction base
+,   parameter CODE_A_START  = `CODE_A_START     // Core A instruction base
 
     // Core B Instruction Memory
-,   parameter CODE_B_START  = 32'hC000_4000     // Core B instruction base
+,   parameter CODE_B_START  = `CODE_B_START     // Core B instruction base
 
     // Shared Data Memory
-,   parameter DATA_START    = 32'hC001_0000     // Shared data base
+,   parameter DATA_START    = `DATA_START     // Shared data base
 
     // Cache Configuration
-,   parameter NUM_WAYS      = 4                 // Cache associativity
-,   parameter NUM_SETS      = 16                 // L1 cache sets
-,   parameter NUM_SETS_L2   = 16                 // L2 cache sets
-,   parameter WORD_OFF_W    = 4                 // Word offset (16 words/line)
-,   parameter BYTE_OFF_W    = 2                 // Byte offset (4 bytes/word)
-,   parameter DATA_W        = 32                // Data width
-,   parameter STRB_W        = DATA_W/8          // Write strobe width
-,   parameter LINE_W        = (1 << WORD_OFF_W) * 32 // Line width
+,   parameter NUM_WAYS      = `NUM_WAYS                 // Cache associativity
+,   parameter NUM_SETS      = `NUM_SETS                 // L1 cache sets
+,   parameter NUM_SETS_L2   = `NUM_SETS_L2              // L2 cache sets
+,   parameter WORD_OFF_W    = `WORD_OFF_W               // Word offset (16 words/line)
+,   parameter BYTE_OFF_W    = `BYTE_OFF_W               // Byte offset (4 bytes/word)
+,   parameter DATA_W        = `DATA_W                   // Data width
+,   parameter STRB_W        = DATA_W/8                  // Write strobe width
+,   parameter LINE_W        = (1 << WORD_OFF_W) * 32    // Line width
 )(
     input ACLK
 ,   input ARESETn
@@ -190,7 +191,7 @@ module dual_core #(
 
     ,   .o_snp_req_ready        (c0_snp_req_ready)
     
-        // Snoop Response (trả l�?i Core 1)
+        // Snoop Response (tra loi Core 1)
     ,   .o_snp_resp_valid       (c0_snp_resp_valid)
     ,   .o_snp_resp_hit         (c0_snp_resp_hit)
     ,   .o_snp_resp_data        (c0_snp_resp_data)
@@ -245,7 +246,7 @@ module dual_core #(
 
     ,   .o_snp_req_ready        (c1_snp_req_ready)
     
-        // Snoop Response (trả l�?i Core 0)
+        // Snoop Response (tra loi Core 0)
     ,   .o_snp_resp_valid       (c1_snp_resp_valid)
     ,   .o_snp_resp_hit         (c1_snp_resp_hit)
     ,   .o_snp_resp_data        (c1_snp_resp_data)

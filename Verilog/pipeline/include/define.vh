@@ -1,2 +1,18 @@
-`define DATA_W 32
-`define ADDR_W 32
+`ifndef DEFINES_VH
+`define DEFINES_VH
+
+`define DATA_W          32
+`define ADDR_W          32
+
+`define MEM_BASE        32'hC000_0000
+`define CODE_A_START    32'hC000_0000
+`define CODE_B_START    32'hC000_4000
+`define DATA_START      32'hC001_0000
+
+`define NUM_WAYS        4
+`define NUM_SETS        16
+`define NUM_SETS_L2     16
+`define WORD_OFF_W      4
+`define BYTE_OFF_W      2
+
+`endif // DEFINES_VH
