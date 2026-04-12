@@ -11,8 +11,8 @@ module BPU #(
     parameter W_ADDR = 32
 )(
     input               clk, rst_n
-,   input [W_ADDR-1:1]  F_PC                 
-,   input [W_ADDR-1:1]  E_PC           
+,   input [W_ADDR-1:2]  F_PC                 
+,   input [W_ADDR-1:2]  E_PC           
 ,   input [W_ADDR-1:0]  E_PCTarget  
 ,   input               E_Branch        
 ,   input               E_Jump          
@@ -39,8 +39,8 @@ module BPU #(
     ) Branch_Target_Buffer (
         .clk            (clk),
         .rst_n          (rst_n),
-        .F_PC           (F_PC),
-        .E_PC           (E_PC),            
+        .F_PC           (F_PC[W_ADDR-1:2]),
+        .E_PC           (E_PC[W_ADDR-1:2]),            
         .branch_target  (E_PCTarget),
         .E_Branch       (E_Branch),    
         .E_Jump         (E_Jump),

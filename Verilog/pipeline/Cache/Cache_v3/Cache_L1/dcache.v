@@ -386,6 +386,10 @@ module d_cache #(
             ,   .dout_tag               (tag_read[i])
             ,   .moesi_next_state       (moesi_next_state)
             ,   .moesi_current_state    (moesi_current_state[i])
+
+            // not use
+            ,   .valid_we               ()
+            ,   .valid                  ()
             );
         end
     endgenerate
@@ -562,7 +566,8 @@ module d_cache #(
         .ADDR_W(ADDR_W)
     ) u_snoop_ctrl (
         .i_snp_req_valid        (i_snp_req_valid)
-    ,   .i_snp_req_cmd          (i_snp_req_cmd)
+    // ,   .i_snp_req_cmd          (i_snp_req_cmd)
+    ,   .i_snp_req_cmd_0        (i_snp_req_cmd[0])
     // ,   .i_snp_req_addr         (i_snp_req_addr)
     ,   .i_dcache_ready         (ctrl_snoop_ready)
     ,   .i_snp_resp_valid       (s2_is_snoop)

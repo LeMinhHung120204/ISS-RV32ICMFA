@@ -92,7 +92,7 @@ module cache_coherence #(
 
 ,   input                   i_l2_resp_valid
 ,   input   [LINE_W-1:0]    i_l2_resp_rdata
-,   output                  o_l2_resp_ready
+// ,   output                  o_l2_resp_ready
 );
 
     // ================================================================
@@ -247,7 +247,7 @@ module cache_coherence #(
     ,   .o_l2_req_rw            (o_l2_req_rw)
     ,   .o_l2_req_wdata         (o_l2_req_wdata)
     ,   .i_l2_resp_valid        (i_l2_resp_valid)
-    ,   .o_l2_resp_ready        (o_l2_resp_ready)
+    // ,   .o_l2_resp_ready        (o_l2_resp_ready)
     ,   .i_l2_resp_rdata        (i_l2_resp_rdata)
     );
 

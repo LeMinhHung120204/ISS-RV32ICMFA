@@ -26,7 +26,7 @@ module cache_L2 #(
 ,   input                       i_l1_req_rw     // 0: Read, 1: Write
 ,   input   [LINE_W-1:0]        i_l1_req_wdata
 
-,   input                       i_l1_resp_ready
+// ,   input                       i_l1_resp_ready
 ,   output                      o_l1_resp_valid
 ,   output reg  [LINE_W-1:0]    o_l1_resp_rdata
 ,   output                      pipeline_stall
@@ -266,6 +266,12 @@ module cache_L2 #(
             ,   .write_index            (s2_index)
             ,   .din_tag                (s2_tag)        
             ,   .dout_tag               (tag_read[i])
+
+            ,   .valid_we               ()
+            ,   .valid                  ()
+            ,   .moesi_we               ()
+            ,   .moesi_next_state       ()
+            ,   .moesi_current_state    ()
             );
         end
     endgenerate
@@ -311,8 +317,7 @@ module cache_L2 #(
 
         // Stage 1 Inputs (Mapped from L1 interface)
     ,   .s1_req         (i_l1_req_valid)  
-    ,   .s1_cmd         ({1'b0, i_l1_req_rw})
-    ,   .s1_wdata       ({DATA_W{1'b0}})
+    ,   .s1_cmd         ({1'b0, i_l1_req_rw})    
     ,   .s1_tag         (s1_tag)   
     ,   .s1_index       (s1_index) 
     ,   .s1_word_off    (s1_word_off)
@@ -325,6 +330,25 @@ module cache_L2 #(
     ,   .s2_index       (s2_index)
     ,   .s2_word_off    (s2_word_off)
     ,   .s2_byte_off    (s2_byte_off)
+
+    // not use
+    ,   .s1_we          ()
+    ,   .s1_size        ()
+    ,   .s1_is_snoop    ()
+    ,   .s1_lr          ()
+    ,   .s1_sc          ()
+    ,   .s1_amo         ()
+    ,   .s1_amo_op      ()
+    ,   .s1_wdata       ()
+
+    ,   .s2_we          ()
+    ,   .s2_size        ()
+    ,   .s2_is_snoop    ()
+    ,   .s2_lr          ()
+    ,   .s2_sc          ()
+    ,   .s2_amo         ()
+    ,   .s2_amo_op      ()
+    ,   .s2_wdata       ()
     );
 
     // ================================================================

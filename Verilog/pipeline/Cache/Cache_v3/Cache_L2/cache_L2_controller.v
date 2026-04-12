@@ -51,7 +51,7 @@ module cache_L2_controller #(
       
     // B channel
 ,   input                           iBVALID
-,   input       [1:0]               iBRESP
+,   input       [1:0]               iBRESP      // hien tai chua dung
 ,   output  reg                     oBREADY
 
     // AR channel
@@ -108,7 +108,7 @@ module cache_L2_controller #(
                 else        
                     burst_cnt <= burst_cnt + 1'b1;
             end
-            else if (state == R_WAIT && iRVALID && oRREADY) begin
+            else if (state == R_WAIT && iRVALID && oRREADY) begin   // TODO: xu ly lai logic RRESP 
                 if (iRLAST) 
                     burst_cnt <= {WORD_OFF_W{1'b0}};
                 else        
@@ -200,18 +200,18 @@ module cache_L2_controller #(
 
             B_WAIT: begin
                 oBREADY = 1'b1;
-                // if (iBVALID) begin
-                //     if (i_l1_req_rw == 1'b1) 
-                //         next_state = UPDATE_WM;
-                //     else                     
-                //         next_state = AR_REQ;
-                // end
+                if (iBVALID && iBRESP == 2'b00) begin
+                    if (i_l1_req_rw == 1'b1) 
+                        next_state = UPDATE_WM;
+                    else                     
+                        next_state = AR_REQ;
+                end
                 
                 // hien tai chua ho tro tra Bresponse
-                if (i_l1_req_rw == 1'b1) 
-                    next_state = UPDATE_WM;
-                else                     
-                    next_state = AR_REQ;
+                // if (i_l1_req_rw == 1'b1) 
+                //     next_state = UPDATE_WM;
+                // else                     
+                //     next_state = AR_REQ;
             end
 
             AR_REQ: begin
@@ -226,7 +226,7 @@ module cache_L2_controller #(
 
             R_WAIT: begin
                 oRREADY = 1'b1;
-                if (iRVALID && iRLAST) begin
+                if (iRVALID && iRLAST && iRRESP == 2'b00) begin // TODO: chua xu ly dung vi moi transfer la RRESP khac nhau
                     // Đã hứng trọn gói burst cuối cùng vào buffer
                     next_state = REFILL_EXEC;
                 end

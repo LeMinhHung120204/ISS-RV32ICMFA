@@ -23,7 +23,7 @@ module icache #(
 
     // cache <-> CPU
 ,   input                   cpu_req
-,   input                   icache_flush
+// ,   input                   icache_flush
 ,   input   [ADDR_W-1:0]    cpu_addr
 ,   output  [DATA_W-1:0]    data_rdata
 ,   output                  pipeline_stall
@@ -165,6 +165,11 @@ module icache #(
             ,   .valid_we       (refill_we & way_select[i])
             ,   .write_index    (s2_index)
             ,   .din_tag        (s2_tag)  
+
+            // not use
+            ,   .moesi_we               ()
+            ,   .moesi_next_state       ()
+            ,   .moesi_current_state    ()
             );
 
             // Data RAM (Read Only cho CPU)
@@ -218,6 +223,27 @@ module icache #(
     ,   .s2_index       (s2_index)
     ,   .s2_word_off    (s2_word_off)
     ,   .s2_byte_off    (s2_byte_off)
+
+    // not use
+    ,   .s1_we          ()
+    ,   .s1_cmd         ()
+    ,   .s1_size        ()
+    ,   .s1_wdata       ()
+    ,   .s1_is_snoop    ()
+    ,   .s1_lr          ()
+    ,   .s1_sc          ()
+    ,   .s1_amo         ()
+    ,   .s1_amo_op      ()
+
+    ,   .s2_we          ()
+    ,   .s2_cmd         ()
+    ,   .s2_size        ()
+    ,   .s2_wdata       ()
+    ,   .s2_is_snoop    ()
+    ,   .s2_lr          ()
+    ,   .s2_sc          ()
+    ,   .s2_amo         ()
+    ,   .s2_amo_op      ()
     );
 
     // ================================================================

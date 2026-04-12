@@ -37,7 +37,7 @@ module main_l2_arbiter #(
 
 ,   input                   i_l2_resp_valid
 ,   input   [LINE_W-1:0]    i_l2_resp_rdata
-,   output  reg             o_l2_resp_ready
+// ,   output  reg             o_l2_resp_ready
 );
 
     // ================================================================
@@ -100,7 +100,7 @@ module main_l2_arbiter #(
         o_l2_i_req_ready    = 1'b0;
         o_l2_d_resp_valid   = 1'b0;
         o_l2_i_rdata_valid  = 1'b0;
-        o_l2_resp_ready     = 1'b0;
+        // o_l2_resp_ready     = 1'b0;
 
         case (state)
             IDLE: begin
@@ -123,7 +123,7 @@ module main_l2_arbiter #(
             end
 
             WAIT_RESP_D: begin
-                o_l2_resp_ready = i_l2_d_resp_ready;
+                // o_l2_resp_ready = i_l2_d_resp_ready;
                 if (i_l2_resp_valid) begin
                     o_l2_d_resp_valid = 1'b1;
                     if (i_l2_d_resp_ready) 
@@ -138,7 +138,7 @@ module main_l2_arbiter #(
             end
 
             WAIT_RESP_I: begin
-                o_l2_resp_ready = i_l2_i_rdata_ready;
+                // o_l2_resp_ready = i_l2_i_rdata_ready;
                 if (i_l2_resp_valid) begin
                     o_l2_i_rdata_valid = 1'b1;
                     if (i_l2_i_rdata_ready) 

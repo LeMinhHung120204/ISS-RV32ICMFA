@@ -134,7 +134,8 @@ module dual_core #(
     wire                l2_req_rw;
     wire [31:0]         l2_req_addr;
     wire [LINE_W-1:0]   l2_req_wdata;
-    wire                l2_resp_valid, l2_resp_ready;
+    wire                l2_resp_valid;
+    // wire                l2_resp_ready;
     wire [LINE_W-1:0]   l2_resp_rdata;
     wire                L2_pipeline_stall; // Dùng để stall cả 2 core khi L2 cache đang xử lý request
 
@@ -330,7 +331,7 @@ module dual_core #(
 
     ,   .i_l2_resp_valid        (l2_resp_valid)
     ,   .i_l2_resp_rdata        (l2_resp_rdata)
-    ,   .o_l2_resp_ready        (l2_resp_ready)
+    // ,   .o_l2_resp_ready        (l2_resp_ready)
     );
 
     // ================================================================
@@ -356,11 +357,11 @@ module dual_core #(
     ,   .i_l1_req_wdata         (l2_req_wdata)
 
     ,   .o_l1_resp_valid        (l2_resp_valid)
-    ,   .i_l1_resp_ready        (l2_resp_ready)
+    // ,   .i_l1_resp_ready        (l2_resp_ready)
     ,   .o_l1_resp_rdata        (l2_resp_rdata)
     ,   .pipeline_stall         (L2_pipeline_stall)
 
-        // --- Giao tiếp với AXI Bus Memory (�?ẩy ra Port của Dual_Core) ---
+        // --- Giao tiếp với AXI Bus Memory (day ra Port của Dual_Core) ---
     ,   .iAWREADY               (iAWREADY)
     ,   .oAWADDR                (oAWADDR)
     ,   .oAWLEN                 (oAWLEN)

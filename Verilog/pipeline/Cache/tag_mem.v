@@ -10,7 +10,7 @@ module tag_mem #(
 ,   input                   tag_we
 ,   input                   moesi_we
 ,   input                   valid_we
-,   input                   invalid
+// ,   input                   invalid
 ,   input   [INDEX_W-1:0]   read_index
 ,   input   [INDEX_W-1:0]   write_index
 ,   input   [TAG_W-1:0]     din_tag
@@ -94,9 +94,9 @@ module tag_mem #(
         if (valid_we) begin
             valid_array[write_index]    <= 1'b1;
         end 
-        else if (invalid) begin
-            valid_array[write_index]    <= 1'b0;
-        end 
+        // else if (invalid) begin
+        //     valid_array[write_index]    <= 1'b0;
+        // end 
         valid                           <= valid_array[read_index];
         
     end 

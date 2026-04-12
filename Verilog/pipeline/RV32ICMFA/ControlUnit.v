@@ -2,7 +2,8 @@
 // from Lee Min Hunz with luv
 module ControlUnit(
     input   [6:0]   op
-,   input   [6:0]   funct7
+// ,   input   [6:0]   funct7
+,   input           funct7_5    
 ,   input   [4:0]   funct5
 ,   input   [2:0]   funct3
     
@@ -46,7 +47,8 @@ module ControlUnit(
     AluDecoder aludecoder_inst(
         .ALUOp      (ALUOp),
         .funct3     (funct3),
-        .funct7_5   (funct7[5]),
+        // .funct7_5   (funct7[5]),
+        .funct7_5   (funct7_5),
         .op_5       (op[5]),
         .ALUControl (ALUControl)
     );

@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "define.vh"
 // from Lee Min Hunz with luv
 // ============================================================================
 // RV32IA - RISC-V 32-bit Integer + Atomic Extension CPU Core
@@ -25,8 +26,8 @@
 //
 // ============================================================================
 module RV32IA_v2 #(
-    parameter WIDTH_DATA    = 32,
-    parameter WIDTH_ADDR    = 32,
+    parameter WIDTH_DATA    = `DATA_W,
+    parameter WIDTH_ADDR    = `ADDR_W,
     parameter START_PC      = 32'd0
     // parameter END_PC        = 32'd1024
 )(
@@ -54,7 +55,7 @@ module RV32IA_v2 #(
 ,   input   [WIDTH_DATA - 1:0]  imem_instr
 
 ,   output                      icache_req
-,   output                      icache_flush
+// ,   output                      icache_flush
 ,   output  [WIDTH_ADDR - 1:0]  icache_addr
 
 );
@@ -193,13 +194,13 @@ module RV32IA_v2 #(
     ,   .rst_n          (rst_n)
 
         // IF state
-    ,   .F_PC           (F_PC[WIDTH_ADDR-1:1])
+    ,   .F_PC           (F_PC[WIDTH_ADDR-1:2])
     ,   .predict_taken  (F_Predict_Taken)
     ,   .target_pc      (F_Predict_Target)
     ,   .F_GHSR         (F_GHSR)
 
         // EX state
-    ,   .E_PC           (E_PC[WIDTH_ADDR-1:1])
+    ,   .E_PC           (E_PC[WIDTH_ADDR-1:2])
     ,   .E_PCTarget     (E_PCTarget)
     ,   .E_Branch       (E_Branch)
     ,   .E_Jump         (E_Jump)
@@ -219,7 +220,7 @@ module RV32IA_v2 #(
     // ================================================================
     // HAZARD UNIT - Stall, Flush, and Forwarding Control
     // ================================================================
-    assign icache_flush = fetch_pipe_Flush;
+    // assign icache_flush = fetch_pipe_Flush;
 
     HazardUnit_v2 HazardUnit_inst(
         .D_Rs1          (A1)
@@ -341,7 +342,8 @@ module RV32IA_v2 #(
     
     ControlUnit ControlUnit_ins(
         .op                 (D_Instr[6:0])
-    ,   .funct7             (D_Instr[31:25])
+    // ,   .funct7             (D_Instr[31:25])
+    ,   .funct7_5           (D_Instr[30])
     ,   .funct5             (D_Instr[31:27])
     ,   .funct3             (D_Instr[14:12])
     //     .op                 (D_Instr_Safe[6:0])
