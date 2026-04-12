@@ -76,7 +76,7 @@ module control_write #(
             case(state)
                 IDLE: begin
                     if (awvalid && awready) begin
-                        reg_addr    <= awaddr;
+                        reg_addr    <= awaddr >> 2;
                         reg_awburst <= awburst;
                         // reg_awsize  <= awsize;
                     end

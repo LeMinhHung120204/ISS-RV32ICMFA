@@ -10,7 +10,7 @@ module PIM #(   // Policy info Memory
 ,   input       [ADDR_WIDTH-1:0]    read_addr
 ,   input       [ADDR_WIDTH-1:0]    write_addr
 ,   input       [DATA_WIDTH-1:0]    plru_in
-,   output reg  [DATA_WIDTH-1:0]    plru_out
+,   output      [DATA_WIDTH-1:0]    plru_out
 );
     localparam DEPTH = 1 << ADDR_WIDTH;
     reg [DATA_WIDTH-1:0] pim [0:DEPTH-1];
@@ -48,13 +48,13 @@ module PIM #(   // Policy info Memory
             pim[write_addr]  <= plru_in;
         end 
         // Forwarding nội bộ (Bypass) để chống Data Hazard
-        if (we && (read_addr == write_addr)) begin
-            plru_out <= plru_in; 
-        end 
-        else begin
-            plru_out <= pim[read_addr];
-        end
+        // if (we && (read_addr == write_addr)) begin
+        //     plru_out <= plru_in; 
+        // end 
+        // else begin
+        //     plru_out <= pim[read_addr];
+        // end
     end 
 
-    // assign plru_out = pim[addr];
+    assign plru_out = pim[read_addr];
 endmodule

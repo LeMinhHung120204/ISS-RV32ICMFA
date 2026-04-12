@@ -423,6 +423,9 @@ module RV32IA_v2 #(
     ,   .D_lr               (D_lr)
     ,   .D_sc               (D_sc)
 
+    ,   .E_SrcA_fix         (E_SrcA)      // Giá trị sau Mux Forwarding A
+    ,   .E_SrcB_fix         (E_WriteData) // Giá trị sau Mux Forwarding B
+
     ,   .E_RD1              (E_RD1)
     ,   .E_RD2              (E_RD2)
     ,   .E_Rs1              (E_rs1)

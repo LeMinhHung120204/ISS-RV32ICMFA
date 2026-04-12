@@ -1,10 +1,12 @@
 `timescale 1ns/1ps
 
 module tb_soc_top;
-    parameter HEX_FILE = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt"; 
-    parameter HEX_A = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.txt";
-    parameter HEX_B = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.txt";
-    parameter LOG_PATH = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/core_a_registers.log";
+    parameter HEX_FILE          = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt"; 
+    parameter HEX_A             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.txt";
+    parameter HEX_B             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.txt";
+
+    parameter LOG_PATH          = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/core_a_registers.log";
+    parameter FINAL_LOG_PATH    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/final_registers.log";
     // -------------------------------------------------------------------------
     // 1. Parameters & Signals
     // -------------------------------------------------------------------------
@@ -284,10 +286,12 @@ module tb_soc_top;
     // end
 
     // --- Khai báo biến (Đặt ở đầu module hoặc trước các block initial/always) ---
+    integer final_reg_log;
     integer reg_log;
     integer r_idx;
     integer k;
 
+    reg [31:0] prev_regs [0:31];
     // --- Khởi tạo file log ---
     initial begin
         reg_log = $fopen(LOG_PATH, "w");
@@ -296,14 +300,23 @@ module tb_soc_top;
             $finish;
         end
     end
-    reg [31:0] prev_regs [0:31];
     
     initial begin
         for (k = 0; k < 32; k = k + 1) begin
             prev_regs[k] = 32'd0; 
         end
     end
-    
+
+    initial begin
+        reg_log         = $fopen(LOG_PATH, "w");
+        final_reg_log   = $fopen(FINAL_LOG_PATH, "w"); // Mở file log cuối cùng
+        
+        if (reg_log == 0 || final_reg_log == 0) begin
+            $display("ERROR: Khong the mo file log!");
+            $finish;
+        end
+    end
+
     // --- Ghi dữ liệu mỗi chu kỳ ---
     always @(posedge ACLK) begin
         if (ARESETn) begin
@@ -312,7 +325,7 @@ module tb_soc_top;
                 // Kiểm tra xem giá trị hiện tại có khác với giá trị chu kỳ trước không
                 if (u_soc_top.core_0.u_RV32IA.register_file.register[r_idx] !== prev_regs[r_idx]) begin
                     
-                    $fdisplay(reg_log, "[Time: %t] Reg x%02d changed: %h -> %h", 
+                    $fdisplay(reg_log, "[Time: %t] x%02d: %h -> %h", 
                         $time, 
                         r_idx, 
                         prev_regs[r_idx], // Giá trị cũ
@@ -350,9 +363,23 @@ module tb_soc_top;
 
         $display("[SCENARIO] Both cores starting...");
 
-        // #26000; 
-        #5500
+        #15000; 
+        // #5500
         $display("Simulation Finished.");
+        $display("Writing final register values to log...");
+        $fdisplay(final_reg_log, "--- FINAL REGISTER VALUES AT %t ---", $time);
+        $fdisplay(final_reg_log, "---------------------------------------");
+        
+        for (i = 0; i < 32; i = i + 1) begin
+            $fdisplay(final_reg_log, "x%02d: %h", i, u_soc_top.core_0.u_RV32IA.register_file.register[i]);
+        end
+        
+        $fdisplay(final_reg_log, "---------------------------------------");
+        
+        $display("Simulation Finished.");
+
+        $fclose(reg_log);
+        $fclose(final_reg_log);
         $fclose(reg_log);
         $finish;
     end

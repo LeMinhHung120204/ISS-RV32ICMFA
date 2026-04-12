@@ -116,8 +116,9 @@ module cache_L2 #(
     wire [3:0]              burst_cnt;
     wire [INDEX_W-1:0]      mem_read_index;
 
-    wire [2:0] s2_tree_out; // Data của PLRU đã sẵn sàng ở Stage 2
-    wire [2:0] s2_tree_in;  // Data tính toán xong chờ ghi lại
+    reg [TAG_W-1:0]         victim_tag;
+    // wire [2:0] s2_tree_out; // Data của PLRU đã sẵn sàng ở Stage 2
+    // wire [2:0] s2_tree_in;  // Data tính toán xong chờ ghi lại
     // ================================================================
     // COMBINATORIAL LOGIC (Assign Statements)
     // ================================================================
@@ -127,7 +128,9 @@ module cache_L2 #(
     assign any_hit          = |way_hit;
     
     // AXI Address Assignments
-    assign oAWADDR          = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    assign oAWADDR          = {victim_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    // assign oAWADDR          = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
+    
     assign oARADDR          = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
 
@@ -224,6 +227,17 @@ module cache_L2 #(
             4'b0100: oWDATA = data_read[2][burst_cnt*DATA_W +: DATA_W];
             4'b1000: oWDATA = data_read[3][burst_cnt*DATA_W +: DATA_W];
             default: oWDATA = {DATA_W{1'b0}};
+        endcase
+    end
+
+    // Victim Tag Selection
+    always @(*) begin
+        case(way_select)
+            4'b0001: victim_tag = tag_read[0];
+            4'b0010: victim_tag = tag_read[1];
+            4'b0100: victim_tag = tag_read[2];
+            4'b1000: victim_tag = tag_read[3];
+            default: victim_tag = {TAG_W{1'b0}};
         endcase
     end
 

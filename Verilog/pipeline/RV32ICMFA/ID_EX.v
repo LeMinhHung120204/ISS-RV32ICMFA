@@ -52,6 +52,10 @@ module ID_EX #(
 ,   input                       D_lr
 ,   input                       D_sc
 
+,   input   [DATA_WIDTH - 1:0]  E_SrcA_fix  // Giá trị Forwarding thực tế tại EX
+,   input   [DATA_WIDTH - 1:0]  E_SrcB_fix  // Giá trị Forwarding thực tế tại EX (cho rs2)
+
+
 ,   output reg  E_RegWrite
 ,   output reg  E_MemWrite
 ,   output reg  E_Jump
@@ -177,6 +181,10 @@ module ID_EX #(
                     E_amo_op            <= D_amo_op          ;
                     E_lr                <= D_lr              ;
                     E_sc                <= D_sc              ;
+                end 
+                else begin
+                    E_RD1 <= E_SrcA_fix;
+                    E_RD2 <= E_SrcB_fix;
                 end 
             end
         end
