@@ -2,6 +2,7 @@
 // from Lee Min Hunz with luv
 module moesi_controller(
     input   [2:0]   current_state
+,   input   [2:0]   victim_state
 ,   input           is_shared_response
 // ,   input           is_dirty_response
 ,   input           refill_we
@@ -17,10 +18,10 @@ module moesi_controller(
 ,   input           snoop_req_invalidate      
 
     // Outputs
-,   output              is_dirty       
-,   output              is_unique      
-,   output              is_owner       
-,   output              is_valid       
+,   output              victim_dirty       
+// ,   output              is_unique      
+// ,   output              is_owner       
+,   output              victim_valid       
 ,   output reg [2:0]    next_state
 );
 
@@ -37,10 +38,11 @@ module moesi_controller(
     // STATE DECODE LOGIC
     // ================================================================
     // Extract state properties for external use
-    assign is_dirty     = (current_state == STATE_M) | (current_state == STATE_O);  // Has dirty data
-    assign is_unique    = (current_state == STATE_M) | (current_state == STATE_E);  // Only copy
-    assign is_owner     = (current_state == STATE_M) | (current_state == STATE_O);  // Responsible for data
-    assign is_valid     = (current_state != STATE_I);                               // Has valid copy
+    assign victim_dirty = (victim_state == STATE_M) | (current_state == STATE_O);  // Has dirty data
+    assign victim_valid = (victim_state != STATE_I);                               // Has valid copy
+    // assign is_unique    = (current_state == STATE_M) | (current_state == STATE_E);  // Only copy
+    // assign is_owner     = (current_state == STATE_M) | (current_state == STATE_O);  // Responsible for data
+    
 
     // ================================================================
     // NEXT STATE LOGIC

@@ -69,14 +69,18 @@ module d_cache #(
 ,   output  reg [LINE_W-1:0]    o_snp_resp_data
 // ,   output                   snoop_req_invalidate
 );
+    // Bus Commands
     localparam CMD_READ_SHARED = 2'b00, CMD_WRITE_BACK = 2'b01, CMD_UPGRADE = 2'b10, CMD_READ_UNIQUE = 2'b11;
 
+    // MOESI States
+    localparam STATE_M = 3'd0, STATE_O = 3'd1, STATE_E = 3'd2, STATE_S = 3'd3, STATE_I = 3'd4;
     // ================================================================
     // 1) REG DECLARATIONS
     // ================================================================
     // MOESI State Selection
     reg [2:0]               moesi_selected_state;
-    
+    reg [2:0]               victim_moesi_state;
+
     // Data Buffers
     reg [LINE_W-1:0]        refill_buffer;      // Buffer for memory refill data
 
@@ -88,6 +92,8 @@ module d_cache #(
 
     // Victim Tag (for writeback address)
     reg [TAG_W-1:0]         victim_tag;
+    reg [ADDR_W-1:0]        victim_addr_reg;
+    reg [ADDR_W-1:0]        refill_addr_reg;
 
     // ================================================================
     // 2) WIRE DECLARATIONS
@@ -139,13 +145,16 @@ module d_cache #(
     // MOESI & Hit Logic
     wire [3:0]  way_hit;
     wire [3:0]  way_select;
-    wire [3:0]  way_select_final;
+    // wire [3:0]  way_select_final;
     wire [3:0]  choosen_way;
     wire        any_hit;
     wire [2:0]  moesi_current_state     [0:NUM_WAYS-1];
     wire [2:0]  moesi_next_state;
     wire        moesi_we, snoop_moesi_we, main_moesi_we;
-    wire        is_unique, is_dirty, is_owner, is_valid;
+    // wire        is_unique;
+    // wire        is_owner; 
+    wire        victim_dirty;
+    wire        victim_valid;
     
     // Controller Output Signals
     wire        tag_we;
@@ -182,21 +191,23 @@ module d_cache #(
     // Way Selection & MOESI Control
     assign choosen_way      = (any_hit)     ? way_hit       : way_select;
     // assign tag_select       = (s2_is_snoop) ? s2_snoop_tag  : s2_tag;
-    assign way_select_final = (any_hit)     ? way_hit       : way_select;
     assign moesi_we         = main_moesi_we | snoop_moesi_we;
 
     // Pipeline Stall
     assign pipeline_stall   = stall_controller | i_snp_req_valid; 
 
     // STAGE 2: HIT LOGIC
-    assign way_hit[0]       = (tag_read[0] == s2_tag) & (moesi_current_state[0] != 3'd4);
-    assign way_hit[1]       = (tag_read[1] == s2_tag) & (moesi_current_state[1] != 3'd4);
-    assign way_hit[2]       = (tag_read[2] == s2_tag) & (moesi_current_state[2] != 3'd4);
-    assign way_hit[3]       = (tag_read[3] == s2_tag) & (moesi_current_state[3] != 3'd4);
+    assign way_hit[0]       = (tag_read[0] == s2_tag) & (moesi_current_state[0] != STATE_I);
+    assign way_hit[1]       = (tag_read[1] == s2_tag) & (moesi_current_state[1] != STATE_I);
+    assign way_hit[2]       = (tag_read[2] == s2_tag) & (moesi_current_state[2] != STATE_I);
+    assign way_hit[3]       = (tag_read[3] == s2_tag) & (moesi_current_state[3] != STATE_I);
 
     assign any_hit          = |way_hit;
     assign o_snp_resp_hit   = any_hit & s2_is_snoop;
     assign cpu_hit          = any_hit & s2_req & ~s2_is_snoop;
+
+    // Gán giá trị đã được chốt (Registered) ra port giao tiếp thay vì mạch tổ hợp
+    assign o_req_addr       = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_reg : refill_addr_reg;
     
     // ================================================================
     // 4) ALWAYS @(posedge clk) - SEQUENTIAL LOGIC
@@ -205,16 +216,16 @@ module d_cache #(
     // when write hit and after that we read from the same address
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            raw_rdata <= {DATA_W{1'b0}};
+            raw_rdata   <= {DATA_W{1'b0}};
             raw_en      <= 1'b0;
         end 
         else begin
             if (s1_index == s2_index && s2_we && cpu_hit) begin
-                raw_rdata <= s2_wdata;
+                raw_rdata   <= s2_wdata;
                 raw_en      <= 1'b1;
             end
             else begin
-                raw_rdata <= {DATA_W{1'b0}};
+                raw_rdata   <= {DATA_W{1'b0}};
                 raw_en      <= 1'b0;
             end
         end
@@ -236,9 +247,6 @@ module d_cache #(
     // ================================================================
     // PIPELINE REGISTER FOR OUTBOUND REQUESTS (GIẢM DELAY)
     // ================================================================
-    reg [ADDR_W-1:0]    victim_addr_reg;
-    reg [ADDR_W-1:0]    refill_addr_reg;
-
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             victim_addr_reg <= {ADDR_W{1'b0}};
@@ -258,20 +266,27 @@ module d_cache #(
         end
     end
 
-    // Gán giá trị đã được chốt (Registered) ra port giao tiếp thay vì mạch tổ hợp
-    assign o_req_addr = (o_req_cmd == CMD_WRITE_BACK) ? victim_addr_reg : refill_addr_reg;
-
     // ================================================================
     // 5) ALWAYS @(*) - COMBINATIONAL LOGIC
     // ================================================================
     // MOESI State Selection Mux
     always @(*) begin
-        case (way_select_final)
+        case (way_hit)
             4'b0001: moesi_selected_state = moesi_current_state[0];
             4'b0010: moesi_selected_state = moesi_current_state[1];
             4'b0100: moesi_selected_state = moesi_current_state[2];
             4'b1000: moesi_selected_state = moesi_current_state[3];
             default: moesi_selected_state = 3'd4; 
+        endcase
+    end
+
+    always @(*) begin
+        case (way_select)
+            4'b0001: victim_moesi_state = moesi_current_state[0];
+            4'b0010: victim_moesi_state = moesi_current_state[1];
+            4'b0100: victim_moesi_state = moesi_current_state[2];
+            4'b1000: victim_moesi_state = moesi_current_state[3];
+            default: victim_moesi_state = 3'd4; 
         endcase
     end
 
@@ -510,8 +525,8 @@ module d_cache #(
 
         // Controller Status Data
     ,   .hit                    (any_hit)
-    ,   .victim_dirty           (is_dirty)
-    ,   .is_valid               (is_valid)
+    ,   .victim_dirty           (victim_dirty)
+    ,   .victim_valid           (victim_valid)
     ,   .current_moesi_state    (moesi_selected_state)
 
         // Snoop interface info
@@ -539,7 +554,8 @@ module d_cache #(
     // ---- MOESI CONTROLLER L1 ----
     moesi_controller u_moesi_ctrl (
         .current_state      (moesi_selected_state)
-        
+    ,   .victim_state       (victim_moesi_state)
+
     ,   .is_shared_response (i_resp_is_shared)
     ,   .refill_we          (refill_we)
 
@@ -550,15 +566,15 @@ module d_cache #(
 
         // Request từ Snoop Bus
     ,   .snoop_valid            (s2_is_snoop)
-    ,   .snoop_hit              (o_snp_resp_hit)
+    ,   .snoop_hit              (any_hit)
     ,   .snoop_req_invalidate   (snoop_req_invalidate)
 
         // Outputs Cập nhật FSM
-    ,   .is_dirty           (is_dirty)
-    ,   .is_unique          (is_unique)
-    ,   .is_owner           (is_owner)
-    ,   .is_valid           (is_valid)
-
+    ,   .victim_dirty       (victim_dirty)
+    ,   .victim_valid       (victim_valid)
+    // ,   .is_unique          (is_unique)
+    // ,   .is_owner           (is_owner)
+    
     ,   .next_state         (moesi_next_state)
     );
 
@@ -572,7 +588,7 @@ module d_cache #(
     // ,   .i_snp_req_addr         (i_snp_req_addr)
     ,   .i_dcache_ready         (ctrl_snoop_ready)
     ,   .i_snp_resp_valid       (s2_is_snoop)
-    ,   .i_snp_resp_hit         (o_snp_resp_hit)
+    ,   .i_snp_resp_hit         (any_hit)
 
     ,   .o_snp_req_ready        (o_snp_req_ready)
     ,   .snoop_req_invalidate   (snoop_req_invalidate)

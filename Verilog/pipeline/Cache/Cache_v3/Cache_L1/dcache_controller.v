@@ -25,7 +25,7 @@ module dcache_controller #(
     // Cache Control Status Inputs
 ,   input           hit           
 ,   input           victim_dirty  
-,   input           is_valid      
+,   input           victim_valid      
 ,   input   [2:0]   current_moesi_state
 
     // Snoop invalidation
@@ -79,13 +79,14 @@ module dcache_controller #(
         if (~rst_n) begin
             res_valid   <= 1'b0;
             res_addr    <= 32'b0;
-        end else begin
+        end 
+        else begin
             // Xóa res_valid nếu CPU khác ném snoop Invalidate trúng địa chỉ đang lock
             if (i_snoop_invalidate && (i_snoop_addr[31:6] == res_addr[31:6])) begin
                 res_valid   <= 1'b0; 
             end
             // Khi Load-Reserved được nạp thành công -> Cập nhật reservation
-            else if (i_atomic_lr && state == TAG_CHECK && hit && current_moesi_state != STATE_I) begin
+            else if (i_atomic_lr && state == TAG_CHECK && hit) begin
                 res_valid   <= 1'b1;
                 res_addr    <= cpu_addr;
             end
@@ -141,7 +142,7 @@ module dcache_controller #(
                     if (i_atomic_sc && cpu_req) 
                         sc_done = 1'b1;
                 end 
-                else if (hit && current_moesi_state != STATE_I) begin
+                else if (hit) begin
                     // Cache Hit! Check quyền GHI
                     if (is_write) begin
                         if (current_moesi_state == STATE_M || current_moesi_state == STATE_E) begin
@@ -168,7 +169,7 @@ module dcache_controller #(
                     end
                 end 
                 else begin // CACHE MISS
-                    if (is_valid && victim_dirty) 
+                    if (victim_valid && victim_dirty) 
                         next_state = WB_SEND;
                     else 
                         next_state = BUS_REQ;

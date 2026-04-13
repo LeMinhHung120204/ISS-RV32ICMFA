@@ -38,7 +38,6 @@ module plru(
                     plru_bit <= prev_bit;
                 end 
             endcase    
-        end
-        
+        end   
     end
 endmodule
