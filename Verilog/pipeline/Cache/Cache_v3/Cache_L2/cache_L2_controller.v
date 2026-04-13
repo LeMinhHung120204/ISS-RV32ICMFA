@@ -1,11 +1,12 @@
 `timescale 1ns/1ps
+`include "define.vh"
 
 module cache_L2_controller #(
-    parameter ADDR_W        = 32
-,   parameter DATA_W        = 32
+    parameter ADDR_W        = `ADDR_W
+,   parameter DATA_W        = `DATA_W
 ,   parameter STRB_W        = DATA_W/8
 
-,   parameter WORD_OFF_W    = 2 // 2 cho 128-bit (4 words), 4 cho 512-bit (16 words)
+,   parameter WORD_OFF_W    = `WORD_OFF_W
 ,   parameter LINE_W        = (1 << WORD_OFF_W) * DATA_W // Cache line width in bits
 
 )(
@@ -72,11 +73,11 @@ module cache_L2_controller #(
     // AXI CONSTANT ASSIGNMENTS
     // ================================================================
     assign oAWLEN       = (1 << WORD_OFF_W) - 1; 
-    assign oAWSIZE      = 3'b010; // 4 byte (32-bit)
-    assign oAWBURST     = 2'b01;  // INCR
+    assign oAWSIZE      = `oAWSIZE;
+    assign oAWBURST     = `oAWBURST;
     assign oARLEN       = (1 << WORD_OFF_W) - 1;
-    assign oARSIZE      = 3'b010; // 4 byte (32-bit)
-    assign oARBURST     = 2'b01;  // INCR
+    assign oARSIZE      = `oARSIZE;
+    assign oARBURST     = `oARBURST;
 
     // ================================================================
     // FSM STATES
@@ -206,12 +207,6 @@ module cache_L2_controller #(
                     else                     
                         next_state = AR_REQ;
                 end
-                
-                // hien tai chua ho tro tra Bresponse
-                // if (i_l1_req_rw == 1'b1) 
-                //     next_state = UPDATE_WM;
-                // else                     
-                //     next_state = AR_REQ;
             end
 
             AR_REQ: begin

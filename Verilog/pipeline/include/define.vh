@@ -15,4 +15,8 @@
 `define WORD_OFF_W      4
 `define BYTE_OFF_W      2
 
+`define oAWSIZE         3'b010  // 4 byte (32-bit)
+`define oAWBURST        2'b01
+`define oARSIZE         3'b010  // 4 byte (32-bit)
+`define oARBURST        2'b01   // INCR
 `endif // DEFINES_VH

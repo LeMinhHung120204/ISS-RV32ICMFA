@@ -273,7 +273,6 @@ module cache_L2 #(
             ,   .TAG_W      (TAG_W) 
             ) u_tag_mem (
                 .clk                    (clk)
-            // ,   .rst_n                  (rst_n)
 
             ,   .tag_we                 (tag_we & way_write_enable[i])
             ,   .read_index             (mem_read_index)
@@ -298,7 +297,6 @@ module cache_L2 #(
             ,   .NUM_SETS   (NUM_SETS) 
             ) u_data_mem (
                 .clk            (clk)
-            // ,   .rst_n          (rst_n)
             ,   .read_index     (mem_read_index)
             ,   .dout           (data_read[i])
                 
@@ -327,7 +325,6 @@ module cache_L2 #(
         .clk        (clk)
     ,   .rst_n      (rst_n)
     ,   .stall      (pipeline_stall)
-    // ,   .flush      (1'b0)
 
         // Stage 1 Inputs (Mapped from L1 interface)
     ,   .s1_req         (i_l1_req_valid)  
