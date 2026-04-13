@@ -191,10 +191,10 @@ module icache #(
             ,   .refill_din     (refill_buffer)
 
                 // not used
-            ,   .cpu_we         (1'b0)
-            ,   .cpu_din        ({DATA_W{1'b0}})
-            ,   .cpu_wstrb      (4'b0)  
-            ,   .cpu_offset     (4'd0)
+            ,   .cpu_we         ()
+            ,   .cpu_din        ()
+            ,   .cpu_wstrb      ()  
+            ,   .cpu_offset     ()
             );
         end
     endgenerate
@@ -269,7 +269,7 @@ module icache #(
     ) icache_controller (
         .clk                (clk)
     ,   .rst_n              (rst_n)
-    ,   .flush              (1'b0)
+    // ,   .flush              (1'b0)
         
     ,   .cpu_req            (s2_req)
     ,   .hit                (cpu_hit)

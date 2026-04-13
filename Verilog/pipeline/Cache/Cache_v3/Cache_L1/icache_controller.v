@@ -20,7 +20,7 @@ module icache_controller #(
 ,   parameter ADDR_W    = 32
 )(
     input               clk, rst_n
-,   input               flush
+// ,   input               flush
     // Cache <-> CPU
 ,   input               cpu_req
 ,   input               hit               
@@ -149,37 +149,60 @@ module icache_controller #(
 
         // 2. State-specific logic
         case(state)
+            // TAG_CHECK: begin
+            //     if (flush) begin
+            //         stall = 1'b0; // Có flush thì nhả stall để pipeline xả rác
+            //         next_state = TAG_CHECK;
+            //     end
+            //     else if (!cpu_req) begin
+            //         stall = 1'b0; // Không có yêu cầu đọc lệnh -> không cản pipeline
+            //     end
+            //     else begin // cpu_req == 1
+            //         if (hit) begin
+            //             stall = 1'b0; // Cache Hit -> nhả stall
+            //             next_state = TAG_CHECK;
+            //         end 
+            //         else begin
+            //             // Cache Miss -> stall giữ nguyên 1'b1 (từ default), nhảy state
+            //             next_state = ALLOC_REQ;
+            //         end
+            //     end
+            // end
+
+            // ALLOC_REQ: begin
+            //     if (flush) begin
+            //         next_state      = TAG_CHECK;
+            //         o_mem_req_valid = 1'b0;
+            //     end 
+            //     else begin
+            //         o_mem_req_valid = 1'b1;
+            //         if (i_mem_req_ready) begin
+            //             next_state = ALLOC_WAIT;
+            //         end 
+            //     end
+            // end
+
             TAG_CHECK: begin
-                if (flush) begin
-                    stall = 1'b0; // Có flush thì nhả stall để pipeline xả rác
-                    next_state = TAG_CHECK;
-                end
-                else if (!cpu_req) begin
-                    stall = 1'b0; // Không có yêu cầu đọc lệnh -> không cản pipeline
+                if (!cpu_req) begin
+                    stall           = 1'b0; // Không có yêu cầu đọc lệnh -> không cản pipeline
                 end
                 else begin // cpu_req == 1
                     if (hit) begin
-                        stall = 1'b0; // Cache Hit -> nhả stall
-                        next_state = TAG_CHECK;
+                        stall       = 1'b0; // Cache Hit -> nhả stall
+                        next_state  = TAG_CHECK;
                     end 
                     else begin
                         // Cache Miss -> stall giữ nguyên 1'b1 (từ default), nhảy state
-                        next_state = ALLOC_REQ;
+                        next_state  = ALLOC_REQ;
                     end
                 end
             end
 
             ALLOC_REQ: begin
-                if (flush) begin
-                    next_state      = TAG_CHECK;
-                    o_mem_req_valid = 1'b0;
+                o_mem_req_valid = 1'b1;
+                if (i_mem_req_ready) begin
+                    next_state = ALLOC_WAIT;
                 end 
-                else begin
-                    o_mem_req_valid = 1'b1;
-                    if (i_mem_req_ready) begin
-                        next_state = ALLOC_WAIT;
-                    end 
-                end
             end
             
             ALLOC_WAIT: begin
