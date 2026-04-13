@@ -1,0 +1,22 @@
+`ifndef DEFINES_VH
+`define DEFINES_VH
+
+`define DATA_W          32
+`define ADDR_W          32
+
+`define MEM_BASE        32'hC000_0000
+`define CODE_A_START    32'hC000_0000
+`define CODE_B_START    32'hC000_4000
+`define DATA_START      32'hC001_0000
+
+`define NUM_WAYS        4
+`define NUM_SETS        16
+`define NUM_SETS_L2     16
+`define WORD_OFF_W      4
+`define BYTE_OFF_W      2
+
+`define oAWSIZE         3'b010  // 4 byte (32-bit)
+`define oAWBURST        2'b01
+`define oARSIZE         3'b010  // 4 byte (32-bit)
+`define oARBURST        2'b01   // INCR
+`endif // DEFINES_VH
