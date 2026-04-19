@@ -25,7 +25,7 @@ _start:
     lui  t0, 0x55555
     addi t0, t0, 0x555
     add  t2, t0, t0
-    lui  t3, 0xaaaa a
+    lui  t3, 0xaaaaa
     addi t3, t3, -0x552
     bne  t2, t3, fail
 
@@ -101,7 +101,8 @@ auipc_test6:
     addi t0, x0, 0
     addi t1, t0, -2048
     lui  t2, 0xfffff
-    addi t2, t2, 2048
+    addi t2, t2, 2047
+    addi t2, t2, 1     # 2047 + 1 = 2048
     bne  t1, t2, fail
 
 pass:

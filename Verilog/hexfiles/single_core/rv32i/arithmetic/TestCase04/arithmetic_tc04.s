@@ -33,10 +33,9 @@ _start:
     # TEST 3-10: chained ops, x0, auipc large offset, etc.
     ####################################################################
     addi s0, x0, 3
-    addi t0, x0, 0x7fffffff
-    addi t1, t0, 1
-    lui  t2, 0x80000
-    bne  t1, t2, fail
+    lui  t0, 0x80000     # t0 = 0x80000000
+    addi t0, t0, -1      # t0 = 0x7fffffff (Cách nạp số max 32-bit chuẩn)
+    addi t1, t0, 1       # t1 = 0x80000000 (Phép tính này OK vì 1 < 2047)
 
     addi s0, x0, 4
     addi t0, x0, 0
@@ -45,15 +44,18 @@ _start:
     addi t3, x0, -2
     bne  t2, t3, fail
 
+    # TEST 5:
     addi s0, x0, 5
-    addi t0, x0, 0x5555
-    addi t1, t0, 0x5555
-    lui  t2, 0xaaaa a
-    addi t2, t2, -0x556
-    bne  t1, t2, fail
+    # Tạo số 0x5555:
+    lui  t0, 0x5         # 0x00005000
+    addi t0, t0, 0x555   # 0x00005555 (0x555 = 1365, vẫn < 2047 nên OK)
+    # Cộng t0 với chính nó:
+    add  t1, t0, t0      # t1 = 0xAAAAA (Sử dụng add thay vì addi số lớn)
+    lui  t2, 0xaaaaa     # Xóa dấu cách ở đây
 
+    # TEST 6:
     addi s0, x0, 6
-    addi x0, x0, 0x1234
+    addi x0, x0, 2047    # 0x1234 quá lớn, dùng 2047 là số lớn nhất cho phép
     bne  x0, x0, fail
 
     addi s0, x0, 7

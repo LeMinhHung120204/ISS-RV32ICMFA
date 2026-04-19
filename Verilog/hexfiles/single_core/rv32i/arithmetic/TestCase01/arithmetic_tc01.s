@@ -3,7 +3,7 @@
     .globl _start
     .option norvc
 
-_start:
+__start:
     ####################################################################
     # Arithmetic group test for RV32I - TEST CASE 01
     # Tested instructions: add, addi, sub, lui, auipc
@@ -130,7 +130,8 @@ _start:
     addi t0, x0, 0
     addi t1, t0, -2048
     lui  t2, 0xfffff
-    addi t2, t2, 2048
+    addi t2, t2, 2047
+    addi t2, t2, 1     # 2047 + 1 = 2048
     bne  t1, t2, fail
 
     ####################################################################

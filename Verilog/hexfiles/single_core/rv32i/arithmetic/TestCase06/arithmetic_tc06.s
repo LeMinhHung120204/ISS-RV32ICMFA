@@ -38,18 +38,33 @@ _start:
     addi t0, t0, 12
     bne  t0, t1, fail
 
+    # TEST 6:
     addi s0, x0, 6
-    addi t0, x0, 0x7fffffff
-    addi t1, t0, 0x7fffffff
+    # Nạp 0x7fffffff vào t0:
+    lui  t0, 0x80000
+    addi t0, t0, -1        # t0 = 0x7fffffff
+    
+    # Cộng t0 với chính nó:
+    add  t1, t0, t0        # t1 = 0xfffffffe
+    
     lui  t2, 0x7ffff
-    addi t2, t2, -2
+    addi t2, t2, -2        # t2 = 0x7ffff000 - 2 = 0x7fff effe (Hãy kiểm tra lại logic so sánh này)
+    # Lưu ý: 0x7fffffff + 0x7fffffff = 0xfffffffe. 
+    # Nếu muốn t2 khớp, bạn nên dùng:
+    # addi t2, x0, -2      # Vì 0xfffffffe chính là -2 trong hệ bù 2
     bne  t1, t2, fail
 
+    # TEST 7:
     addi s0, x0, 7
     addi t0, x0, -2048
-    addi t1, t0, -2048
-    lui  t2, 0xfffff
-    addi t2, t2, -4096
+    addi t1, t0, -2048     # t1 = -4096 (Cái này OK vì -2048 vẫn vừa 12-bit)
+    
+    lui  t2, 0xfffff       # t2 = 0xfffff000
+    # addi t2, t2, -4096   <-- LỖI Ở ĐÂY
+    # Sửa thành:
+    addi t2, t2, -2048
+    addi t2, t2, -2048     # Trừ 2 lần mỗi lần 2048
+    
     bne  t1, t2, fail
 
     addi s0, x0, 8
