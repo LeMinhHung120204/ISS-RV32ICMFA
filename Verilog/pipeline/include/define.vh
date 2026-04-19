@@ -11,7 +11,7 @@
 
 `define NUM_WAYS        4
 `define NUM_SETS        16
-`define NUM_SETS_L2     16
+`define NUM_SETS_L2     64
 `define WORD_OFF_W      4
 `define BYTE_OFF_W      2
 
