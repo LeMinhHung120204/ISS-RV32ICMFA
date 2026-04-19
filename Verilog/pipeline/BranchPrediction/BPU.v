@@ -1,34 +1,30 @@
-`timescale 1ns / 1ps
 // from Lee Min Hunz with luv
+`timescale 1ns / 1ps
 // ============================================================================
-// BPU - Branch Prediction Unit
-// ============================================================================
-// Combines BTB (Branch Target Buffer) and PHT (Pattern History Table)
-// to predict branch direction and target address.
-// Prediction: taken = BTB hit AND PHT predicts taken
+// BPU - Branch Prediction Unit (Updated for MEM-stage resolution)
 // ============================================================================
 module BPU #(
     parameter W_ADDR = 32
 )(
     input               clk, rst_n
+    // IF state (Fetch)
 ,   input [W_ADDR-1:2]  F_PC                 
-,   input [W_ADDR-1:2]  E_PC           
-,   input [W_ADDR-1:0]  E_PCTarget  
-,   input               E_Branch        
-,   input               E_Jump          
-,   input               taken   
-,   input [2:0]         E_GHSR          
-
 ,   output              predict_taken  
 ,   output [W_ADDR-1:0] target_pc      
 ,   output [2:0]        F_GHSR 
+
+    // MEM state (Resolution & Update)
+,   input [W_ADDR-1:2]  M_PC           
+,   input [W_ADDR-1:0]  M_PCTarget  
+,   input               M_Branch        
+,   input               M_Jump          
+,   input               M_PCSrc   
+,   input [2:0]         M_GHSR          
 );
-    // ================================================================
-    // INTERNAL SIGNALS
-    // ================================================================
-    wire                btb_hit;            // BTB found matching entry
-    wire                pht_predict_taken;  // PHT predicts branch taken
-    wire [W_ADDR-1:0]   btb_pred_addr;      // Predicted target from BTB
+
+    wire                btb_hit;
+    wire                pht_predict_taken;
+    wire [W_ADDR-1:0]   btb_pred_addr;
     
     // Final prediction: BTB must hit AND PHT must predict taken
     assign predict_taken    = btb_hit & pht_predict_taken;
@@ -37,30 +33,29 @@ module BPU #(
     BTB #(
         .W_ADDR(W_ADDR)
     ) Branch_Target_Buffer (
-        .clk            (clk),
-        .rst_n          (rst_n),
-        .F_PC           (F_PC[W_ADDR-1:2]),
-        .E_PC           (E_PC[W_ADDR-1:2]),            
-        .branch_target  (E_PCTarget),
-        .E_Branch       (E_Branch),    
-        .E_Jump         (E_Jump),
+        .clk            (clk)
+    ,   .rst_n          (rst_n)
+    ,   .F_PC           (F_PC[W_ADDR-1:2])
+    ,   .pc_prediction  (btb_pred_addr)
+    ,   .hit            (btb_hit)       
 
-        .pc_prediction  (btb_pred_addr),
-        .hit            (btb_hit)       
+    ,   .M_PC           (M_PC[W_ADDR-1:2])            
+    ,   .M_PCTarget     (M_PCTarget)
+    ,   .M_Branch       (M_Branch)    
+    ,   .M_Jump         (M_Jump)
     );
 
     PHT Pattern_History_Table (
-        .clk            (clk),
-        .rst_n          (rst_n),
-        .E_Branch       (E_Branch),    
-        .E_Jump         (E_Jump),      
-        .Taken          (taken),      
-        .E_PC           (E_PC[4:2]),
-        .E_GHSR         (E_GHSR),                  
-        .F_PC           (F_PC[4:2]),     
-          
-        .predict        (pht_predict_taken),
-        .GHSR_out       (F_GHSR)
-    );
+        .clk            (clk)
+    ,   .rst_n          (rst_n)
+    ,   .F_PC           (F_PC[4:2])     
+    ,   .predict        (pht_predict_taken)
+    ,   .GHSR_out       (F_GHSR)
 
+    ,   .M_Branch       (M_Branch)    
+    ,   .M_Jump         (M_Jump)      
+    ,   .M_PCSrc        (M_PCSrc)      
+    ,   .M_PC           (M_PC[4:2])
+    ,   .M_GHSR         (M_GHSR)                  
+    );
 endmodule

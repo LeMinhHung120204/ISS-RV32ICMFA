@@ -4,7 +4,8 @@
 module HazardUnit_v2 #(
     parameter DATA_WIDTH = 32
 )(
-    input       E_Mispredict
+    // input       E_Mispredict
+    input       M_Mispredict
 ,   input       M_RegWrite 
 ,   input       W_RegWrite 
     
@@ -30,6 +31,7 @@ module HazardUnit_v2 #(
 ,   output              D_Flush 
 ,   output              fetch_pipe_Flush
 ,   output              E_Flush
+,   output              M_Flush
 );
 
     // ================================================================
@@ -73,12 +75,20 @@ module HazardUnit_v2 #(
     assign D_Stall          = dcache_stall | lw_Stall | E_Stall;
 
     // 2. F_Stall logic: Mispredict có thể mở kẹt cho F_Stall nếu D-Cache không kẹt
-    assign F_Stall          = E_Stall | ((icache_stall | lw_Stall) & ~E_Mispredict);
+    // assign F_Stall          = E_Stall | ((icache_stall | lw_Stall) & ~E_Mispredict);
+    assign F_Stall = E_Stall | ((icache_stall | lw_Stall) & ~M_Mispredict);
 
     // 3. Flush logic: MUST be masked by Stall!
     // Không bao giờ được flush một tầng đang bị kẹt để bảo toàn state.
-    assign E_Flush          = (lw_Stall | E_Mispredict) & ~E_Stall;
-    assign D_Flush          = E_Mispredict & ~D_Stall;
-    assign fetch_pipe_Flush = E_Mispredict & ~F_Stall;
+    // assign E_Flush          = (lw_Stall | E_Mispredict) & ~E_Stall;
+    // assign D_Flush          = E_Mispredict & ~D_Stall;
+    // assign fetch_pipe_Flush = E_Mispredict & ~F_Stall;
+
+    assign E_Flush          = (lw_Stall | M_Mispredict) & ~E_Stall;
+    assign D_Flush          = M_Mispredict & ~D_Stall;
+
+    // M_Flush sẽ xóa thanh ghi EX_MEM khi phát hiện đoán sai
+    assign M_Flush          = M_Mispredict & ~M_Stall;
+    assign fetch_pipe_Flush = M_Mispredict & ~F_Stall;
 
 endmodule
