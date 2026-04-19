@@ -61,6 +61,10 @@ module single_core #(
 ,   output                  o_snp_resp_valid
 ,   output                  o_snp_resp_hit
 ,   output  [LINE_W-1:0]    o_snp_resp_data
+
+,   input   [4:0]           i_debug_reg_addr
+,   input                   i_debug_ren
+,   output  [DATA_W-1:0]    o_debug_reg_data
 );
 
     // ================================================================
@@ -113,6 +117,10 @@ module single_core #(
     // ,   .icache_flush   (icache_flush)
     ,   .icache_addr    (icache_addr)
     ,   .icache_stall   (icache_stall)
+
+    ,   .i_debug_reg_addr (i_debug_reg_addr)
+    ,   .i_debug_ren      (i_debug_ren)
+    ,   .o_debug_reg_data (o_debug_reg_data)
     );
 
     // ================================================================

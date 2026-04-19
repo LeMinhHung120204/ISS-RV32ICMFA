@@ -8,6 +8,10 @@ module RegFile(
 ,   input       [4:0]   rd       // write address
 ,   input       [31:0]  wd       // write data
 ,   output reg  [31:0]  rd1, rd2  // read data
+
+,   input       [4:0]  debug_addr
+,   input              debug_ren
+,   output reg  [31:0] debug_data
 );
     reg [31:0] register [31:0];
     always @(*) begin
@@ -24,4 +28,13 @@ module RegFile(
             register[rd] <= wd; 
         end
     end 
+
+    always @(*) begin
+        if (debug_ren) begin
+            debug_data = (debug_addr == 5'd0) ? 32'd0 : register[debug_addr];
+        end 
+        else begin
+            debug_data = 32'd0;
+        end
+    end
 endmodule 

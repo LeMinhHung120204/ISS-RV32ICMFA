@@ -58,6 +58,10 @@ module RV32IA_v2 #(
 // ,   output                      icache_flush
 ,   output  [WIDTH_ADDR - 1:0]  icache_addr
 
+    // Debug port
+,   input   [4:0]               i_debug_reg_addr
+,   input                       i_debug_ren
+,   output  [WIDTH_DATA-1:0]    o_debug_reg_data
 );
 
     // ================================================================
@@ -379,6 +383,10 @@ module RV32IA_v2 #(
     ,   .wd     (W_mux_result)
     ,   .rd1    (RDX1)
     ,   .rd2    (RDX2)
+
+    ,   .debug_addr (i_debug_reg_addr)
+    ,   .debug_ren  (i_debug_ren)
+    ,   .debug_data (o_debug_reg_data)
     );
 
     Extend extend_inst(
