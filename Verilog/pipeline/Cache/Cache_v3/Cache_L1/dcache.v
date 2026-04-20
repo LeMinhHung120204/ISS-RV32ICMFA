@@ -584,7 +584,7 @@ module d_cache #(
     ) u_snoop_ctrl (
         .i_snp_req_valid        (i_snp_req_valid)
     // ,   .i_snp_req_cmd          (i_snp_req_cmd)
-    ,   .i_snp_req_cmd_0        (i_snp_req_cmd[0])
+    ,   .i_snp_req_cmd_1        (i_snp_req_cmd[1])
     // ,   .i_snp_req_addr         (i_snp_req_addr)
     ,   .i_dcache_ready         (ctrl_snoop_ready)
     ,   .i_snp_resp_valid       (s2_is_snoop)
