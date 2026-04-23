@@ -19,4 +19,15 @@
 `define oAWBURST        2'b01
 `define oARSIZE         3'b010  // 4 byte (32-bit)
 `define oARBURST        2'b01   // INCR
+
+`define C_M00_AXI_TARGET_SLAVE_BASE_ADDR    32'h40000000
+`define C_M00_AXI_BURST_LEN                 16
+`define C_M00_AXI_ID_WIDTH	                1
+`define C_M00_AXI_ADDR_WIDTH	            32
+`define C_M00_AXI_DATA_WIDTH	            32
+`define C_M00_AXI_AWUSER_WIDTH	            0
+`define C_M00_AXI_ARUSER_WIDTH	            0
+`define C_M00_AXI_WUSER_WIDTH	            0
+`define C_M00_AXI_RUSER_WIDTH	            0
+`define C_M00_AXI_BUSER_WIDTH	            0
 `endif // DEFINES_VH

@@ -34,39 +34,39 @@ module dual_core #(
     // AXI 4 full MASTER INTERFACE (Giao tiep voi Memory)
     // ==========================================
     // AW Channel
-,   input                       iAWREADY
-,   output  [31:0]              oAWADDR
-,   output  [7:0]               oAWLEN
-,   output  [2:0]               oAWSIZE
-,   output  [1:0]               oAWBURST
-,   output                      oAWVALID
+,   input                       m00_axi_awready
+,   output  [31:0]              m00_axi_awaddr
+,   output  [7:0]               m00_axi_awlen
+,   output  [2:0]               m00_axi_awsize
+,   output  [1:0]               m00_axi_awburst
+,   output                      m00_axi_awvalid
 
     // W channel
-,   input                       iWREADY
-,   output  [DATA_W-1:0]        oWDATA
-,   output  [STRB_W-1:0]        oWSTRB
-,   output                      oWLAST
-,   output                      oWVALID
+,   input                       m00_axi_wready
+,   output  [DATA_W-1:0]        m00_axi_wdata
+,   output  [STRB_W-1:0]        m00_axi_wstrb
+,   output                      m00_axi_wlast
+,   output                      m00_axi_wvalid
       
     // B channel
-,   input   [1:0]               iBRESP
-,   input                       iBVALID
-,   output                      oBREADY
+,   input   [1:0]               m00_axi_bresp
+,   input                       m00_axi_bvalid
+,   output                      m00_axi_bready
 
     // AR channel
-,   input                       iARREADY
-,   output  [31:0]              oARADDR
-,   output  [7:0]               oARLEN
-,   output  [2:0]               oARSIZE
-,   output  [1:0]               oARBURST
-,   output                      oARVALID
+,   input                       m00_axi_arready
+,   output  [31:0]              m00_axi_araddr
+,   output  [7:0]               m00_axi_arlen
+,   output  [2:0]               m00_axi_arsize
+,   output  [1:0]               m00_axi_arburst
+,   output                      m00_axi_arvalid
 
     // R channel
-,   input   [DATA_W-1:0]        iRDATA
-,   input   [1:0]               iRRESP
-,   input                       iRLAST
-,   input                       iRVALID
-,   output                      oRREADY
+,   input   [DATA_W-1:0]        m00_axi_rdata
+,   input   [1:0]               m00_axi_rresp
+,   input                       m00_axi_rlast
+,   input                       m00_axi_rvalid
+,   output                      m00_axi_rready
 
     // ==========================================
     // AXI 4 lite SLAVE INTERFACE
@@ -413,35 +413,35 @@ module dual_core #(
     ,   .pipeline_stall         (L2_pipeline_stall)
 
         // --- Giao tiếp với AXI Bus Memory (day ra Port của Dual_Core) ---
-    ,   .iAWREADY               (iAWREADY)
-    ,   .oAWADDR                (oAWADDR)
-    ,   .oAWLEN                 (oAWLEN)
-    ,   .oAWSIZE                (oAWSIZE)
-    ,   .oAWBURST               (oAWBURST)
-    ,   .oAWVALID               (oAWVALID)
+    ,   .iAWREADY               (m00_axi_awready)
+    ,   .oAWADDR                (m00_axi_awaddr)
+    ,   .oAWLEN                 (m00_axi_awlen)
+    ,   .oAWSIZE                (m00_axi_awsize)
+    ,   .oAWBURST               (m00_axi_awburst)
+    ,   .oAWVALID               (m00_axi_awvalid)
 
-    ,   .iWREADY                (iWREADY)
-    ,   .oWDATA                 (oWDATA)
-    ,   .oWSTRB                 (oWSTRB)
-    ,   .oWLAST                 (oWLAST)
-    ,   .oWVALID                (oWVALID)
+    ,   .iWREADY                (m00_axi_wready)
+    ,   .oWDATA                 (m00_axi_wdata)
+    ,   .oWSTRB                 (m00_axi_wstrb)
+    ,   .oWLAST                 (m00_axi_wlast)
+    ,   .oWVALID                (m00_axi_wvalid)
 
-    ,   .iBRESP                 (iBRESP)
-    ,   .iBVALID                (iBVALID)
-    ,   .oBREADY                (oBREADY)
+    ,   .iBRESP                 (m00_axi_bresp)
+    ,   .iBVALID                (m00_axi_bvalid)
+    ,   .oBREADY                (m00_axi_bready)
 
-    ,   .iARREADY               (iARREADY)
-    ,   .oARADDR                (oARADDR)
-    ,   .oARLEN                 (oARLEN)
-    ,   .oARSIZE                (oARSIZE)
-    ,   .oARBURST               (oARBURST)
-    ,   .oARVALID               (oARVALID)
+    ,   .iARREADY               (m00_axi_arready)
+    ,   .oARADDR                (m00_axi_araddr)
+    ,   .oARLEN                 (m00_axi_arlen)
+    ,   .oARSIZE                (m00_axi_arsize)
+    ,   .oARBURST               (m00_axi_arburst)
+    ,   .oARVALID               (m00_axi_arvalid)
 
-    ,   .iRDATA                 (iRDATA)
-    ,   .iRRESP                 (iRRESP)
-    ,   .iRLAST                 (iRLAST)
-    ,   .iRVALID                (iRVALID)
-    ,   .oRREADY                (oRREADY)
+    ,   .iRDATA                 (m00_axi_rdata)
+    ,   .iRRESP                 (m00_axi_rresp)
+    ,   .iRLAST                 (m00_axi_rlast)
+    ,   .iRVALID                (m00_axi_rvalid)
+    ,   .oRREADY                (m00_axi_rready)
     );
 
     // ================================================================
