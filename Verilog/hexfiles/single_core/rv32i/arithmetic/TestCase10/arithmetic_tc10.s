@@ -1,4 +1,3 @@
-<FILE filename="arithmetic_tc10.s" size="5780 bytes">
     .section .text
     .globl _start
     .option norvc
@@ -12,26 +11,26 @@ _start:
     ####################################################################
     # TEST 1-10: full coverage of all special cases
     ####################################################################
-    addi s0, x0, 1
-    addi t0, x0, 0x55555555
+    li s0, 1
+    li t0, 0x55555555
     addi t1, t0, 0xaaaaaaaa
     bne  t1, x0, fail
 
-    addi s0, x0, 2
+    li s0, 2
     lui  t0, 0x80000
     addi t0, t0, -1
     addi t1, t0, 1
     lui  t2, 0x80000
     bne  t1, t2, fail
 
-    addi s0, x0, 3
-    addi t0, x0, -1
+    li s0, 3
+    li t0, -1
     addi t1, t0, 2047
     lui  t2, 0x1
     addi t2, t2, -2
     bne  t1, t2, fail
 
-    addi s0, x0, 4
+    li s0, 4
     auipc t0, 0xfffff
     auipc t1, 0
     lui  t2, 0xfffff
@@ -39,43 +38,43 @@ _start:
     addi t1, t1, -4
     bne  t0, t1, fail
 
-    addi s0, x0, 5
-    addi t0, x0, 0
+    li s0, 5
+    li t0, 0
     addi t1, t0, -2048
     addi t2, t1, 2048
     bne  t2, x0, fail
 
-    addi s0, x0, 6
-    addi t0, x0, 0x7fffffff
+    li s0, 6
+    li t0, 0x7fffffff
     sub  t1, t0, t0
     bne  t1, x0, fail
 
-    addi s0, x0, 7
-    addi x0, x0, 0xdeadbeef
+    li s0, 7
+    li x0, 0xdeadbeef
     bne  x0, x0, fail
 
-    addi s0, x0, 8
+    li s0, 8
     lui  t0, 0x12345
     addi t1, t0, 0x6789
     lui  t2, 0x12345
     addi t2, t2, 0x6789
     bne  t1, t2, fail
 
-    addi s0, x0, 9
-    addi t0, x0, 1
+    li s0, 9
+    li t0, 1
     addi t1, t0, 0x7fffffff
     lui  t2, 0x80000
     bne  t1, t2, fail
 
-    addi s0, x0, 10
-    addi t0, x0, -1
+    li s0, 10
+    li t0, -1
     addi t1, t0, -1
     addi t2, t1, -1
-    addi t3, x0, -3
+    li t3, -3
     bne  t2, t3, fail
 
 pass:
-    addi a0, x0, 1
+    li a0, 1
 pass_loop:
     jal x0, pass_loop
 
@@ -83,4 +82,3 @@ fail:
     add  a0, s0, x0
 fail_loop:
     jal x0, fail_loop
-</FILE>
