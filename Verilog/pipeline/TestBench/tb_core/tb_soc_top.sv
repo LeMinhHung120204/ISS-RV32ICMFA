@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
-
+`include "define.vh"
 module tb_soc_top;
+    // Default hex files (can be overridden with +HEX_A_FILE=... +HEX_B_FILE=...)
     parameter HEX_FILE          = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt"; 
     parameter HEX_A             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.txt";
     parameter HEX_B             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.txt";
@@ -10,27 +11,27 @@ module tb_soc_top;
     // -------------------------------------------------------------------------
     // 1. Parameters & Signals
     // -------------------------------------------------------------------------
-    parameter ADDR_W        = 32;
-    parameter DATA_W        = 32; // use 32-bit beats for TB
+    parameter ADDR_W        = `ADDR_W;
+    parameter DATA_W        = `DATA_W; // use 32-bit beats for TB
     parameter STRB_W        = DATA_W/8;
-    parameter RAM_ADDR_W    = 16;
+    parameter RAM_ADDR_W    = 3;
     parameter RESET_VALUE   = 32'h00000013; // nop
 
     // Cau hinh core
-    parameter MEM_BASE      = 32'h0000_0000;
+    parameter MEM_BASE      = `MEM_BASE;
 
     // --- VUNG CHO CORE A ---
-    parameter CODE_A_START  = 32'h0000_0000;
+    parameter CODE_A_START  = `CODE_A_START;
     parameter IDX_A_START   = CODE_A_START >> 2; // 0
     parameter IDX_A_END     = IDX_A_START + 4095;
 
     // --- VUNG CHO CORE B ---
-    parameter CODE_B_START  = 32'h0000_4000;
+    parameter CODE_B_START  = `CODE_B_START;
     parameter IDX_B_START   = CODE_B_START >> 2; // 4096
     parameter IDX_B_END     = IDX_B_START + 4095;
 
     // --- DATA: CHUNG (Shared Memory) ---
-    parameter DATA_START    = 32'h0001_0000;
+    parameter DATA_START    = `DATA_START;
 
     reg ACLK;
     reg ARESETn;
@@ -38,6 +39,13 @@ module tb_soc_top;
     reg c1_stall;
 
     integer i;
+    integer cycle_count;
+    integer idle_cycle_count;
+    integer last_axi_activity;
+    
+    // Test parameters
+    parameter integer MAX_CYCLES = 2000000;          // Max simulation cycles
+    parameter integer IDLE_CYCLES_THRESHOLD = 2000;  // Detect idle/done
 
     // // -------------------------------------------------------------------------
     // // External AXI4 Master Interface (from soc_top)
@@ -179,39 +187,39 @@ module tb_soc_top;
 //        .c1_stall       (c1_stall),
 
         // AW Channel
-        .iAWREADY       (m_axi_awready),
-        .oAWADDR        (m_axi_awaddr),
-        .oAWLEN         (m_axi_awlen),
-        .oAWSIZE        (m_axi_awsize),
-        .oAWBURST       (m_axi_awburst),
-        .oAWVALID       (m_axi_awvalid),
+        .m00_axi_awready       (m_axi_awready),
+        .m00_axi_awaddr        (m_axi_awaddr),
+        .m00_axi_awlen         (m_axi_awlen),
+        .m00_axi_awsize        (m_axi_awsize),
+        .m00_axi_awburst       (m_axi_awburst),
+        .m00_axi_awvalid       (m_axi_awvalid),
 
         // W Channel
-        .iWREADY        (m_axi_wready),
-        .oWDATA         (m_axi_wdata),
-        .oWSTRB         (m_axi_wstrb),
-        .oWLAST         (m_axi_wlast),
-        .oWVALID        (m_axi_wvalid),
+        .m00_axi_wready        (m_axi_wready),
+        .m00_axi_wdata         (m_axi_wdata),
+        .m00_axi_wstrb         (m_axi_wstrb),
+        .m00_axi_wlast         (m_axi_wlast),
+        .m00_axi_wvalid        (m_axi_wvalid),
 
         // B Channel
-        .iBRESP         (m_axi_bresp),
-        .iBVALID        (m_axi_bvalid),
-        .oBREADY        (m_axi_bready),
+        .m00_axi_bresp         (m_axi_bresp),
+        .m00_axi_bvalid        (m_axi_bvalid),
+        .m00_axi_bready        (m_axi_bready),
 
         // AR Channel
-        .iARREADY       (m_axi_arready),
-        .oARADDR        (m_axi_araddr),
-        .oARLEN         (m_axi_arlen),
-        .oARSIZE        (m_axi_arsize),
-        .oARBURST       (m_axi_arburst),
-        .oARVALID       (m_axi_arvalid),
+        .m00_axi_arready       (m_axi_arready),
+        .m00_axi_araddr        (m_axi_araddr),
+        .m00_axi_arlen         (m_axi_arlen),
+        .m00_axi_arsize        (m_axi_arsize),
+        .m00_axi_arburst       (m_axi_arburst),
+        .m00_axi_arvalid       (m_axi_arvalid),
 
         // R Channel
-        .iRDATA         (m_axi_rdata),
-        .iRRESP         (m_axi_rresp[1:0]), // Lấy 2 bit dưới vì mem trả v�? 4 bit
-        .iRLAST         (m_axi_rlast),
-        .iRVALID        (m_axi_rvalid),
-        .oRREADY        (m_axi_rready)
+        .m00_axi_rdata         (m_axi_rdata),
+        .m00_axi_rresp         (m_axi_rresp[1:0]), // Lấy 2 bit dưới vì mem trả v? 4 bit
+        .m00_axi_rlast         (m_axi_rlast),
+        .m00_axi_rvalid        (m_axi_rvalid),
+        .m00_axi_rready        (m_axi_rready)
     );
 
     // -------------------------------------------------------------------------
@@ -274,6 +282,52 @@ module tb_soc_top;
         forever #5 ACLK = ~ACLK;
     end
 
+    // =========================================================================
+    // CYCLE COUNTER & IDLE DETECTOR
+    // =========================================================================
+    always @(posedge ACLK) begin
+        if (!ARESETn) begin
+            cycle_count <= 0;
+            idle_cycle_count <= 0;
+            last_axi_activity <= 0;
+        end else begin
+            cycle_count <= cycle_count + 1;
+            
+            // Track AXI activity
+            if (m_axi_arvalid || m_axi_awvalid || m_axi_rvalid || m_axi_bvalid) begin
+                last_axi_activity <= cycle_count;
+                idle_cycle_count <= 0;
+            end else begin
+                idle_cycle_count <= idle_cycle_count + 1;
+            end
+            
+            // Timeout detection
+            if (cycle_count >= MAX_CYCLES) begin
+                $display("[TIMEOUT] Simulation exceeded %d cycles", MAX_CYCLES);
+                $display("RESULT: TIMEOUT");
+                $finish;
+            end
+            
+            // Idle detection (program done)
+            if (idle_cycle_count >= IDLE_CYCLES_THRESHOLD && cycle_count > 1000) begin
+                $display("[IDLE DETECTED] No AXI activity for %d cycles", IDLE_CYCLES_THRESHOLD);
+                $display("Total simulation cycles: %d", cycle_count);
+                $display("RESULT: DONE (IDLE)");
+                #100;  // Wait a bit for final logs to write
+                $finish;
+            end
+        end
+    end
+    
+    // =========================================================================
+    // ACTIVITY MONITOR (Optional - for debugging)
+    // =========================================================================
+    always @(posedge ACLK) begin
+        if (ARESETn && cycle_count % 5000 == 0 && cycle_count > 0) begin
+            $display("[%t] Cycle: %d | Idle: %d cycles", $time, cycle_count, idle_cycle_count);
+        end
+    end
+
     // integer r;
     // always @(posedge ACLK) begin
     //     if (ARESETn) begin
@@ -285,7 +339,7 @@ module tb_soc_top;
     //     end
     // end
 
-    // --- Khai báo biến (Đặt ở đầu module hoặc trước các block initial/always) ---
+    // --- Khai báo biến (�?ặt ở đầu module hoặc trước các block initial/always) ---
     integer final_reg_log;
     integer reg_log;
     integer r_idx;
@@ -340,6 +394,9 @@ module tb_soc_top;
     end
 
     initial begin
+        string hex_a_file;
+        string hex_b_file;
+        
         ARESETn     = 0;
         for (i = 0; i < (1 << RAM_ADDR_W); i = i + 1) begin
             u_unified_mem.u_DataMem.mem[i] = 32'h0;
@@ -348,24 +405,47 @@ module tb_soc_top;
         #100;
         ARESETn     = 1;
 
+        $display("========================================================");
+        $display("EMBENCH-IoT TEST RUNNER (DUAL CORE SOC)");
+        $display("========================================================");
+
+        // Get hex files from command line or use defaults
+        if (!$value$plusargs("HEX_A_FILE=%s", hex_a_file)) begin
+            hex_a_file = HEX_A;
+        end
+        
+        if (!$value$plusargs("HEX_B_FILE=%s", hex_b_file)) begin
+            hex_b_file = HEX_B;
+        end
+        
+        $display("Core A hex file: %s", hex_a_file);
+        $display("Core B hex file: %s", hex_b_file);
         $display("--------------------------------------------------");
-        $display("Loading Multi-Core Hex Files...");
 
-        // 2. Nap file cho Core A vào địa chỉ 0x0000
-        $readmemh(HEX_A, u_unified_mem.u_DataMem.mem, IDX_A_START, IDX_A_END);
+        // Load Core A program
+        if (hex_a_file != "") begin
+            $display("Loading Core A at 0x%h...", CODE_A_START);
+            $readmemh(hex_a_file, u_unified_mem.u_DataMem.mem, IDX_A_START, IDX_A_END);
+            $display("✓ Core A loaded successfully");
+        end else begin
+            $display("⚠ Core A hex file not provided");
+        end
 
-        // 3. Nap file cho Core B vào địa chỉ 0x8000
-        $readmemh(HEX_B, u_unified_mem.u_DataMem.mem, IDX_B_START, IDX_B_END);
+        // Load Core B program (if provided)
+        if (hex_b_file != "" && hex_b_file != hex_a_file) begin
+            $display("Loading Core B at 0x%h...", CODE_B_START);
+            $readmemh(hex_b_file, u_unified_mem.u_DataMem.mem, IDX_B_START, IDX_B_END);
+            $display("✓ Core B loaded successfully");
+        end else begin
+            $display("⚠ Core B disabled (same as Core A or not provided)");
+        end
 
-        $display("Core A loaded at 0x0000 (Index 0)");
-        $display("Core B loaded at 0x8000 (Index 8192)");
-        $display("--------------------------------------------------");
-
-        $display("[SCENARIO] Both cores starting...");
+        $display("========================================================");
+        $display("[SCENARIO] Cores starting...");
+        $display("========================================================");
 
         #15000; 
-        // #5500
-        $display("Simulation Finished.");
+        $display("\nSimulation Finished.");
         $display("Writing final register values to log...");
         $fdisplay(final_reg_log, "--- FINAL REGISTER VALUES AT %t ---", $time);
         $fdisplay(final_reg_log, "---------------------------------------");
@@ -380,7 +460,6 @@ module tb_soc_top;
 
         $fclose(reg_log);
         $fclose(final_reg_log);
-        $fclose(reg_log);
         $finish;
     end
 

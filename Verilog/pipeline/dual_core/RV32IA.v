@@ -95,7 +95,7 @@ module RV32IA #(
     wire [WIDTH_DATA-1:0]   D_Instr, D_ImmExt;          // Instruction & sign-extended immediate
     wire [WIDTH_ADDR-1:0]   D_PC, D_PCPlus4;            // PC values
     wire [WIDTH_DATA-1:0]   RDX1, RDX2;                 // Register file read data
-    wire [WIDTH_DATA-1:0]   D_Instr_Safe;
+    // wire [WIDTH_DATA-1:0]   D_Instr_Safe;
     wire [4:0]              A1, A2, WD3;                // Register addresses (rs1, rs2, rd)
     // Control signals from decoder
     wire                    D_RegWrite, D_MemWrite, D_Jump, D_Branch, D_ALUSrc, D_addr_addend_sel, D_ResPCSel;

@@ -81,6 +81,7 @@ module icache #(
     wire                    cpu_hit;
     wire                    read_index_src;
     wire                    stall_controller;
+    wire [INDEX_W-1:0]      mem_read_index;
 
     wire [2:0] s2_tree_out; // Data của PLRU đã sẵn sàng ở Stage 2
     wire [2:0] s2_tree_in;  // Data tính toán xong chờ ghi lại
@@ -105,6 +106,7 @@ module icache #(
     assign pipeline_stall   = stall_controller;
     assign cpu_hit          = (|way_hit) & s2_req;
     assign data_rdata       = word_select;
+    assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
 
     // STAGE 2: HIT LOGIC
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
@@ -157,7 +159,7 @@ module icache #(
             // ,   .rst_n          (rst_n)
 
                 // Port read
-            ,   .read_index     (s1_index)
+            ,   .read_index     (mem_read_index)
             ,   .dout_tag       (tag_read[i])
             ,   .valid          (current_valid[i])
 
@@ -182,7 +184,7 @@ module icache #(
             // ,   .rst_n          (rst_n)
 
                 // Port read
-            ,   .read_index     (s1_index)
+            ,   .read_index     (mem_read_index)
             ,   .dout           (data_read[i])
 
                  // refill
