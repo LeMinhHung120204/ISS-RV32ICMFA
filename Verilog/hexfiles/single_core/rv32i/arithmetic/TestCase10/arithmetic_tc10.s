@@ -1,81 +1,110 @@
-<FILE filename="arithmetic_tc10.s" size="5780 bytes">
-    .section .text
-    .globl _start
-    .option norvc
+.section .text
+.globl _start
+.option norvc
 
 _start:
     ####################################################################
     # Arithmetic group test for RV32I - TEST CASE 10 (FINAL)
-    # Comprehensive mix of all previous edge cases + new ones
+    # Comprehensive mix of all previous edge cases
     ####################################################################
 
     ####################################################################
-    # TEST 1-10: full coverage of all special cases
+    # TEST 1: add 0x55555555 + 0xAAAAAAAA = 0
     ####################################################################
-    addi s0, x0, 1
-    addi t0, x0, 0x55555555
-    addi t1, t0, 0xaaaaaaaa
-    bne  t1, x0, fail
+    li s0, 1
+    li t0, 0x55555555
+    li t1, 0xaaaaaaaa
+    add t2, t0, t1
+    bne t2, x0, fail
 
-    addi s0, x0, 2
-    lui  t0, 0x80000
+    ####################################################################
+    # TEST 2: add 0x7fffffff + 1 = 0x80000000 (wrap)
+    ####################################################################
+    li s0, 2
+    lui t0, 0x80000
     addi t0, t0, -1
-    addi t1, t0, 1
-    lui  t2, 0x80000
-    bne  t1, t2, fail
+    li t1, 1
+    add t2, t0, t1
+    lui t3, 0x80000
+    bne t2, t3, fail
 
-    addi s0, x0, 3
-    addi t0, x0, -1
+    ####################################################################
+    # TEST 3: addi -1 + 2047
+    ####################################################################
+    li s0, 3
+    li t0, -1
     addi t1, t0, 2047
-    lui  t2, 0x1
+    lui t2, 0x1
     addi t2, t2, -2
-    bne  t1, t2, fail
+    bne t1, t2, fail
 
-    addi s0, x0, 4
+    ####################################################################
+    # TEST 4: auipc with large negative offset
+    ####################################################################
+    li s0, 4
     auipc t0, 0xfffff
     auipc t1, 0
-    lui  t2, 0xfffff
-    add  t1, t1, t2
+    lui t2, 0xfffff
+    add t1, t1, t2
     addi t1, t1, -4
-    bne  t0, t1, fail
+    bne t0, t1, fail
 
-    addi s0, x0, 5
-    addi t0, x0, 0
+    ####################################################################
+    # TEST 5: addi -2048 + 2048 = 0
+    ####################################################################
+    li s0, 5
+    li t0, 0
     addi t1, t0, -2048
     addi t2, t1, 2048
-    bne  t2, x0, fail
+    bne t2, x0, fail
 
-    addi s0, x0, 6
-    addi t0, x0, 0x7fffffff
-    sub  t1, t0, t0
-    bne  t1, x0, fail
+    ####################################################################
+    # TEST 6: sub max - max = 0
+    ####################################################################
+    li s0, 6
+    li t0, 0x7fffffff
+    sub t1, t0, t0
+    bne t1, x0, fail
 
-    addi s0, x0, 7
-    addi x0, x0, 0xdeadbeef
-    bne  x0, x0, fail
+    ####################################################################
+    # TEST 7: x0 must remain zero
+    ####################################################################
+    li s0, 7
+    li t0, 0
+    bne x0, t0, fail
 
-    addi s0, x0, 8
-    lui  t0, 0x12345
+    ####################################################################
+    # TEST 8: lui + addi chained
+    ####################################################################
+    li s0, 8
+    lui t0, 0x12345
     addi t1, t0, 0x6789
-    lui  t2, 0x12345
+    lui t2, 0x12345
     addi t2, t2, 0x6789
-    bne  t1, t2, fail
+    bne t1, t2, fail
 
-    addi s0, x0, 9
-    addi t0, x0, 1
-    addi t1, t0, 0x7fffffff
-    lui  t2, 0x80000
-    bne  t1, t2, fail
+    ####################################################################
+    # TEST 9: add 1 + 0x7fffffff = 0x80000000
+    ####################################################################
+    li s0, 9
+    li t0, 1
+    li t1, 0x7fffffff
+    add t2, t0, t1
+    lui t3, 0x80000
+    bne t2, t3, fail
 
-    addi s0, x0, 10
-    addi t0, x0, -1
+    ####################################################################
+    # TEST 10: chained negative addi
+    ####################################################################
+    li s0, 10
+    li t0, -1
     addi t1, t0, -1
     addi t2, t1, -1
-    addi t3, x0, -3
-    bne  t2, t3, fail
+    li t3, -3
+    bne t2, t3, fail
 
 pass:
-    addi a0, x0, 1
+    li a0, 1
 pass_loop:
     jal x0, pass_loop
 
@@ -83,4 +112,3 @@ fail:
     add  a0, s0, x0
 fail_loop:
     jal x0, fail_loop
-</FILE>
