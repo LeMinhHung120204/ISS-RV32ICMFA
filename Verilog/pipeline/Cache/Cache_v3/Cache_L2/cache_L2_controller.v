@@ -199,9 +199,20 @@ module cache_L2_controller #(
                     next_state = B_WAIT;
             end
 
+            // B_WAIT: begin
+            //     oBREADY = 1'b1;
+            //     if (iBVALID && iBRESP == 2'b00) begin
+            //         if (i_l1_req_rw == 1'b1) 
+            //             next_state = UPDATE_WM;
+            //         else                     
+            //             next_state = AR_REQ;
+            //     end
+            // end
+
             B_WAIT: begin
                 oBREADY = 1'b1;
-                if (iBVALID && iBRESP == 2'b00) begin
+                // BỎ check iBRESP == 2'b00 để tránh treo nếu AXI Slave báo lỗi
+                if (iBVALID) begin 
                     if (i_l1_req_rw == 1'b1) 
                         next_state = UPDATE_WM;
                     else                     
@@ -219,9 +230,17 @@ module cache_L2_controller #(
                 end
             end
 
+            // R_WAIT: begin
+            //     oRREADY = 1'b1;
+            //     if (iRVALID && iRLAST && iRRESP == 2'b00) begin // TODO: chua xu ly dung vi moi transfer la RRESP khac nhau
+            //         // Đã hứng trọn gói burst cuối cùng vào buffer
+            //         next_state = REFILL_EXEC;
+            //     end
+            // end
             R_WAIT: begin
                 oRREADY = 1'b1;
-                if (iRVALID && iRLAST && iRRESP == 2'b00) begin // TODO: chua xu ly dung vi moi transfer la RRESP khac nhau
+                // BỎ check iRRESP == 2'b00. Chỉ cần đợi gói cuối cùng (RLAST)
+                if (iRVALID && iRLAST) begin 
                     // Đã hứng trọn gói burst cuối cùng vào buffer
                     next_state = REFILL_EXEC;
                 end

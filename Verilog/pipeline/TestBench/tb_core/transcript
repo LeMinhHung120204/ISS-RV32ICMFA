@@ -1,0 +1,5 @@
+# vsim +HEX_A_FILE=D:/embench-iot/mem/xgboost_memory.hex +HEX_B_FILE= -do {run -all; quit -force} -c work.tb_soc_top 
+# ** Error: (vsim-19) Failed to access library 'work' at "work".
+# 
+# No such file or directory. (errno = ENOENT)
+# Error loading design
