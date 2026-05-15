@@ -7,12 +7,17 @@
 // Supports burst read/write with flow control.
 // ============================================================================
 module DataMem_wrapper #(
-    parameter RAM_ADDR_W    = 8,
-    parameter ID_W          = 2,
-    parameter DATA_W        = 32,
-    parameter ADDR_W        = 32,
-    parameter RESET_VALUE   = 0,
-    parameter STRB_W        = DATA_W / 8
+    parameter DEPTH         = 256           // Number of RAM entries (must be power of 2)
+,   parameter RAM_ADDR_W    = $clog2(DEPTH) // Address width for RAM
+,   parameter ID_W          = 2
+,   parameter DATA_W        = 32
+,   parameter ADDR_W        = 32
+,   parameter RESET_VALUE   = 0
+,   parameter STRB_W        = DATA_W / 8
+,   parameter INIT_FILE_A   = ""
+,   parameter INIT_FILE_B   = ""
+,   parameter INIT_IDX_A    = 0
+,   parameter INIT_IDX_B    = 0
 )(
     input   ACLK
 ,   input   ARESETn
@@ -216,9 +221,13 @@ module DataMem_wrapper #(
     );
 
     ram #(
-        .ADDR_W         (RAM_ADDR_W),
-        .DATA_W         (DATA_W),
-        .RESET_VALUE    (RESET_VALUE)
+        .ADDR_W         (RAM_ADDR_W)
+    ,   .DATA_W         (DATA_W)
+    ,   .RESET_VALUE    (RESET_VALUE)
+    ,   .INIT_FILE_A    (INIT_FILE_A)
+    ,   .INIT_FILE_B    (INIT_FILE_B)
+    ,   .INIT_IDX_A     (INIT_IDX_A)
+    ,   .INIT_IDX_B     (INIT_IDX_B)
     ) u_DataMem (
         .clk        (ACLK),
         // .rst_n      (ARESETn),
@@ -240,7 +249,7 @@ module DataMem_wrapper #(
     // ================================================================
     FIFO #(
         .DATA_W (FF_AW_W), 
-        .DEPTH  (RAM_ADDR_W)
+        .DEPTH  (DEPTH)
     ) u_AW_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -254,7 +263,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_W_W), 
-        .DEPTH  (1 << RAM_ADDR_W)
+        .DEPTH  (DEPTH)
     ) u_W_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -268,7 +277,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_B_W), 
-        .DEPTH  (RAM_ADDR_W)
+        .DEPTH  (DEPTH)
     ) u_B_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -283,7 +292,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_AR_W), 
-        .DEPTH  (RAM_ADDR_W)
+        .DEPTH  (DEPTH)
     ) u_AR_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),
@@ -297,7 +306,7 @@ module DataMem_wrapper #(
 
     FIFO #(
         .DATA_W (FF_R_W), 
-        .DEPTH  (1 << RAM_ADDR_W)
+        .DEPTH  (DEPTH)
     ) u_R_FIFO (
         .clk    (ACLK), 
         .rst_n  (ARESETn),

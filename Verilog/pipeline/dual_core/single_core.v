@@ -82,6 +82,7 @@ module single_core #(
     wire                icache_req;
     // wire                icache_flush;
     wire                icache_stall;
+    wire                fetch_stall;
     // wire                w_snoop_req_invalidate; // Dây nội bộ (không ra ngoài core)
 
     // ================================================================
@@ -114,6 +115,7 @@ module single_core #(
         // I-Cache
     ,   .imem_instr     (imem_instr)
     ,   .icache_req     (icache_req)
+    ,   .fetch_stall    (fetch_stall)
     // ,   .icache_flush   (icache_flush)
     ,   .icache_addr    (icache_addr)
     ,   .icache_stall   (icache_stall)
@@ -140,6 +142,7 @@ module single_core #(
         // Core Interface
     ,   .cpu_req            (icache_req)
     ,   .cpu_addr           (icache_addr)
+    ,   .fetch_stall        (fetch_stall)
     // ,   .icache_flush       (icache_flush)
     ,   .dcache_stall       (dcache_stall)
     ,   .pipeline_stall     (icache_stall)

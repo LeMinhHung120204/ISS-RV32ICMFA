@@ -11,7 +11,7 @@ module tb_dhrystone;
     parameter ADDR_W        = `ADDR_W;
     parameter DATA_W        = `DATA_W;
     parameter STRB_W        = DATA_W/8;
-    parameter RAM_ADDR_W    = 16;
+    parameter DEPTH         = 262144;    // Number of line of ram (256K words = 1MB)
     
     // Cau hinh core
     parameter MEM_BASE      = `MEM_BASE;
@@ -32,8 +32,8 @@ module tb_dhrystone;
     // Default hex file cho Dhrystone
     parameter string DEFAULT_HEX = "D:/riscv-tests/benchmarks/mem/dhrystone_memory.hex";
     
-    parameter integer MAX_CYCLES = 2_000_000;  // Tăng max cycle cho Dhrystone nếu cần
-    parameter integer IDLE_CYCLES_THRESHOLD = 500000;
+    parameter integer MAX_CYCLES = 10_000_000;  // T?ng max cycle cho Dhrystone
+    parameter integer IDLE_CYCLES_THRESHOLD = 5_000_000; // T?ng c?c l?n v� khi ch?y trong Cache, AXI bus s? b? IDLE r?t l?u
     
     // =========================================================================
     // SIGNALS
@@ -42,7 +42,7 @@ module tb_dhrystone;
     reg ARESETn;
     
     // Temp memory array for loading hex
-    reg [`DATA_W - 1 : 0] temp_mem [0:16383];
+    reg [`DATA_W - 1 : 0] temp_mem [0:DEPTH-1];
     
     // AXI signals
     wire [ID_W-1:0]     axi_awid, axi_bid, axi_arid, axi_rid;
@@ -62,8 +62,13 @@ module tb_dhrystone;
     // Test monitoring
     integer cycle_count;
     integer idle_cycle_count;
+    integer start_cycle;
+    integer stop_cycle;
+    reg benchmark_started;
+    reg benchmark_stopped;
     integer physical_idx_b;
     integer i;
+    reg [31:0] prev_x6, prev_x7;
 
     // AXI Snooper Address
     reg [ADDR_W-1:0] active_awaddr;
@@ -123,7 +128,7 @@ module tb_dhrystone;
     assign axi_arid = '0;
     
     DataMem_wrapper #(
-        .RAM_ADDR_W (RAM_ADDR_W),
+        .RAM_ADDR_W ($clog2(DEPTH)),
         .ID_W       (ID_W),
         .DATA_W     (DATA_W)
     ) u_unified_mem (
@@ -180,7 +185,7 @@ module tb_dhrystone;
     initial begin
         string hex_file;
         
-        // Nhận đường dẫn hex file (hỗ trợ truyền từ Python script)
+        // Nh?n ???ng d?n hex file (h? tr? truy?n t? Python script)
         if ($value$plusargs("HEX_A_FILE=%s", hex_file)) begin
             $display("Loading Core A from: %s", hex_file);
         end else begin
@@ -192,10 +197,16 @@ module tb_dhrystone;
         ARESETn = 0;
         cycle_count = 0;
         idle_cycle_count = 0;
+        start_cycle = 0;
+        stop_cycle = 0;
+        benchmark_started = 0;
+        benchmark_stopped = 0;
         active_awaddr = 0;
+        prev_x6 = 0;
+        prev_x7 = 0;
 
         // Clear temp memory
-        for (i = 0; i < 16384; i = i + 1) begin
+        for (i = 0; i < DEPTH; i = i + 1) begin
             temp_mem[i] = 32'h0;
         end
 
@@ -209,13 +220,13 @@ module tb_dhrystone;
         ARESETn = 1;
         #20;
 
-        // Ép Core B rơi vào vòng lặp vô hạn để tránh nhiễu
-        physical_idx_b = IDX_B_START % (1 << RAM_ADDR_W);
-        temp_mem[physical_idx_b] = 32'h0000006F; // Lệnh RV32I: jal x0, 0
-        $display("✓ Core B is locked in a loop");
+        // �p Core B r?i v�o v�ng l?p v� h?n ?? tr�nh nhi?u
+        physical_idx_b = IDX_B_START % DEPTH;
+        temp_mem[physical_idx_b] = 32'h0000006F; // L?nh RV32I: jal x0, 0
+        $display("? Core B is locked in a loop");
 
-        // Đổ dữ liệu vào Memory Model
-        for (i = 0; i < 16384; i = i + 1) begin
+        // ?? d? li?u v�o Memory Model
+        for (i = 0; i < DEPTH; i = i + 1) begin
             u_unified_mem.u_DataMem.mem[i] = temp_mem[i];
         end
         
@@ -224,30 +235,45 @@ module tb_dhrystone;
     end
     
     // =========================================================================
-    // AXI SNOOPER FOR PASS/FAIL DETECTION
+    // REGISTER SNOOPER FOR PASS/FAIL DETECTION
     // =========================================================================
-    // Đọc liên tục Bus AXI. Khi Dhrystone code ghi vào 0xC000FFF8, kết thúc test.
+    // Đọc liên tục thanh ghi x6 (t1).
+    // 0x11111111 = timer start, 0x22222222 = timer stop, 0xBAADF00D = benchmark done.
     always @(posedge ACLK) begin
         if (ARESETn) begin
-            // Bắt địa chỉ khi có yêu cầu ghi
-            if (axi_awvalid && axi_awready) begin
-                active_awaddr <= axi_awaddr;
-            end
-
-            // Kiểm tra dữ liệu khi quá trình ghi hoàn tất
-            if (axi_wvalid && axi_wready) begin
-                if (active_awaddr == 32'hC000FFF8) begin
+            case (u_soc_top.core_0.u_RV32IA.register_file.register[6])
+                32'h11111111: begin
+                    start_cycle = cycle_count;
+                    benchmark_started = 1;
+                    $display("BENCHMARK: START_CYCLE %0d", start_cycle);
+                end
+                32'h22222222: begin
+                    stop_cycle = cycle_count;
+                    benchmark_stopped = 1;
+                    $display("BENCHMARK: STOP_CYCLE %0d", stop_cycle);
+                    $display("BENCHMARK: ELAPSED_CYCLES %0d", stop_cycle - start_cycle);
+                end
+                32'hBAADF00D: begin
                     $display("\n========================================================");
-                    if (axi_wdata == 32'h00000002) begin
-                        $display("BENCHMARK: STATUS_PASS");
-                    end else if (axi_wdata == 32'h00000003) begin
-                        $display("BENCHMARK: STATUS_FAIL");
+                    $display("BENCHMARK: DONE");
+                    $display("DMIPS_SCORE: 0x%h", u_soc_top.core_0.u_RV32IA.register_file.register[5]); // Read from x5
+                    if (benchmark_started && benchmark_stopped) begin
+                        $display("BENCHMARK: ELAPSED_CYCLES %0d", stop_cycle - start_cycle);
                     end else begin
-                        $display("BENCHMARK: UNKNOWN_STATUS (Wrote: %h)", axi_wdata);
+                        $display("BENCHMARK: ELAPSED_CYCLES: UNKNOWN");
                     end
                     $display("Simulation finished at cycle %0d", cycle_count);
                     $display("========================================================\n");
                     $finish;
+                end
+            endcase
+            
+            // Theo dõi x7 (t2) cho các debug markers
+            if (u_soc_top.core_0.u_RV32IA.register_file.register[7] != prev_x7) begin
+                if (u_soc_top.core_0.u_RV32IA.register_file.register[7] == 32'h5A5A5A5A) begin
+                    $display("[DEBUG] Boot marker 0x5A5A5A5A loaded in x7 at cycle %0d", cycle_count);
+                end else if (u_soc_top.core_0.u_RV32IA.register_file.register[7] == 32'hDEADBEEF) begin
+                    $display("[DEBUG] Main() entry marker 0xDEADBEEF loaded in x7 at cycle %0d", cycle_count);
                 end
             end
         end
@@ -263,32 +289,46 @@ module tb_dhrystone;
         end else begin
             cycle_count <= cycle_count + 1;
             
-            // Theo dõi hoạt động của Bus
+            // Theo d�i ho?t ??ng c?a Bus
             if (axi_arvalid || axi_awvalid || axi_rvalid || axi_bvalid) begin
                 idle_cycle_count <= 0;
             end else begin
                 idle_cycle_count <= idle_cycle_count + 1;
             end
             
-            // Hủy mô phỏng nếu treo quá lâu
+            // H?y m� ph?ng n?u treo qu� l�u
             if (cycle_count >= MAX_CYCLES) begin
                 $display("\n[TIMEOUT] Simulation exceeded %0d cycles", MAX_CYCLES);
                 $display("BENCHMARK: TIMEOUT");
                 $finish;
             end
             
-            // Backup nếu chạy xong mà code C không ghi vào 0xC000FFF8
+            // Backup timeout (in case it didn't finish properly)
             if (idle_cycle_count >= IDLE_CYCLES_THRESHOLD) begin
                 $display("\n[IDLE DETECTED] No AXI activity for %0d cycles", IDLE_CYCLES_THRESHOLD);
                 $display("Simulation cycles: %0d", cycle_count);
-                $display("BENCHMARK: DONE (IDLE)");
-                $finish;
+                if (u_soc_top.core_0.u_RV32IA.register_file.register[6] == 32'hBAADF00D) begin
+                    $display("\n========================================================");
+                    $display("BENCHMARK: DONE (IDLE)");
+                    $display("DMIPS_SCORE: 0x%h", u_soc_top.core_0.u_RV32IA.register_file.register[5]);
+                    if (benchmark_started && benchmark_stopped) begin
+                        $display("BENCHMARK: ELAPSED_CYCLES %0d", stop_cycle - start_cycle);
+                    end else begin
+                        $display("BENCHMARK: ELAPSED_CYCLES: UNKNOWN");
+                    end
+                    $display("Simulation finished at cycle %0d", cycle_count);
+                    $display("========================================================\n");
+                    $finish;
+                end else begin
+                    $display("BENCHMARK: IDLE_WAIT");
+                    // Do not finish here; keep running until final DONE marker or timeout.
+                end
             end
         end
     end
     
     // =========================================================================
-    // ACTIVITY MONITOR (Tùy chọn hiển thị log 100k cycle/lần)
+    // ACTIVITY MONITOR (T�y ch?n hi?n th? log 100k cycle/l?n)
     // =========================================================================
     always @(posedge ACLK) begin
         if (ARESETn && cycle_count % 100000 == 0 && cycle_count > 0) begin

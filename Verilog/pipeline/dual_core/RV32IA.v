@@ -54,6 +54,7 @@ module RV32IA #(
 ,   input                       icache_stall
 ,   input   [WIDTH_DATA - 1:0]  imem_instr
 
+,   output                      fetch_stall
 ,   output                      icache_req
 // ,   output                      icache_flush
 ,   output  [WIDTH_ADDR - 1:0]  icache_addr
@@ -298,6 +299,7 @@ module RV32IA #(
     // ================================================================
     assign icache_addr = F_PC;          // S1 -> Cache
     assign icache_req  = rst_n;         // Always request when not reset
+    assign fetch_stall = F_Stall;
     assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
 
     always @(posedge clk or negedge rst_n) begin

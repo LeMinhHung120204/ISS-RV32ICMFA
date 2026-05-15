@@ -4,8 +4,8 @@
 `define DATA_W          32
 `define ADDR_W          32
 
-`define MEM_BASE        32'hC000_0000
-`define CODE_A_START    32'hC000_0000
+// `define MEM_BASE        32'hC000_0000
+// `define CODE_A_START    32'hC000_0000
 // `define CODE_B_START    32'hC000_4000
 // `define DATA_START      32'hC000_8000
 // Danh cho embench benchmark test
@@ -13,10 +13,10 @@
 // `define DATA_START      32'hC000_C000   // Dịch tới vị trí 48KB (khớp với vùng ram trong link.ld)
 
 // Danh cho dhystone benchmark test
-// Dịch DATA_START tới vị trí 128KB (0x20000) để thoải mái cho Code và Stack nhỏ
-// Core B vẫn để ở xa để tránh dẫm chân
+`define MEM_BASE        32'h0000_0000
+`define CODE_A_START    32'h0000_0000
+`define CODE_B_START    32'h0008_C000
 `define DATA_START      32'hC002_0000   
-`define CODE_B_START    32'hC008_C000
 
 
 `define NUM_WAYS        4
@@ -40,4 +40,7 @@
 `define C_M00_AXI_WUSER_WIDTH	            0
 `define C_M00_AXI_RUSER_WIDTH	            0
 `define C_M00_AXI_BUSER_WIDTH	            0
+
+`define RAM_ADDR_W                          8
+`define RESET_VALUE                         32'h0000_0000
 `endif // DEFINES_VH

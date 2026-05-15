@@ -24,6 +24,7 @@ module icache #(
 
     // cache <-> CPU
 ,   input                   cpu_req
+,   input                   fetch_stall
 // ,   input                   icache_flush
 ,   input   [ADDR_W-1:0]    cpu_addr
 ,   output  [DATA_W-1:0]    data_rdata
@@ -104,9 +105,10 @@ module icache #(
     // DERIVED SIGNALS
     assign o_l2_req_addr    = {s2_tag, s2_index, {WORD_OFF_W{1'b0}}, {BYTE_OFF_W{1'b0}}};
     assign pipeline_stall   = stall_controller;
+    wire internal_stall     = stall_controller | fetch_stall | dcache_stall;
     assign cpu_hit          = (|way_hit) & s2_req;
     assign data_rdata       = word_select;
-    assign mem_read_index   = pipeline_stall ? s2_index : s1_index;
+    assign mem_read_index   = internal_stall ? s2_index : s1_index;
 
     // STAGE 2: HIT LOGIC
     assign way_hit[0] = (tag_read[0] == s2_tag) & current_valid[0];
@@ -211,7 +213,7 @@ module icache #(
     ) acc_cmp_inst (
         .clk            (clk)
     ,   .rst_n          (rst_n)
-    ,   .stall          (pipeline_stall | dcache_stall)
+    ,   .stall          (internal_stall)
 
         // Inputs
     ,   .s1_req         (cpu_req)

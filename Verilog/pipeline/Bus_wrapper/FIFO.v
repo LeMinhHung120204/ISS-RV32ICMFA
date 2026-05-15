@@ -60,4 +60,6 @@ module FIFO #(
         assign empty    = (wptr == rptr);
         // Combinational read output
         assign dout     = mem[rptr[ADDR_W-1:0]];
+        
+        wire [31:0] test = rptr[ADDR_W-1:0];
     endmodule 

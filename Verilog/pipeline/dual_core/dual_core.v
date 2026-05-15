@@ -60,6 +60,8 @@ module dual_core #(
 ,   output  [2:0]               m00_axi_arsize
 ,   output  [1:0]               m00_axi_arburst
 ,   output                      m00_axi_arvalid
+// ,   output  [2:0]               m00_axi_arprot
+// ,   output  [3:0]               m00_axi_arcache
 
     // R channel
 ,   input   [DATA_W-1:0]        m00_axi_rdata
@@ -182,7 +184,10 @@ module dual_core #(
     wire [LINE_W-1:0]   l2_resp_rdata;
     wire                L2_pipeline_stall; // Dùng để stall cả 2 core khi L2 cache đang xử lý request
 
-
+    // // 3'b000: Unprivileged, Secure, Data access
+    // assign m00_axi_arprot  = 3'b000;
+    // // 4'b0000: (Normal, Non-cacheable, Modifiable, Bufferable
+    // assign m00_axi_arcache = 4'b0011;
     // ================================================================
     // CORE 0 (Khởi tạo ở vị trí CODE_A_START)
     // ================================================================
