@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`include "define.vh"
 module vc707_soc #(
     // Core Configuration
     parameter MEM_BASE      = `MEM_BASE     // Memory base address
@@ -21,8 +23,9 @@ module vc707_soc #(
 ,   parameter STRB_W        = DATA_W/8                  // Write strobe width
 ,   parameter LINE_W        = (1 << WORD_OFF_W) * 32    // Line width
 
-,   parameter RAM_ADDR_W     = `RAM_ADDR_W               // Data memory address width
-,   parameter RESET_VALUE    = `RESET_VALUE              // Initial value for data memory
+,   parameter RAM_ADDR_W    = `RAM_ADDR_W               // Data memory address width
+,   parameter FF_DEPTH      = `FF_DEPTH                 // FIFO depth for AXI interface
+,   parameter RESET_VALUE   = `RESET_VALUE              // Initial value for data memory
 )(
     input ACLK
 ,   input ARESETn
@@ -63,8 +66,8 @@ module vc707_soc #(
     // ==========================================
     // AXI 4 full MASTER INTERFACE
     // ==========================================
-    wire [1:0]          m00_axi_awid = 2'b00;
-    wire [1:0]          m00_axi_arid = 2'b00;
+    // wire [1:0]          m00_axi_awid = 2'b00;
+    // wire [1:0]          m00_axi_arid = 2'b00;
     
     // aw
     wire [31:0]         m00_axi_awaddr;
@@ -179,7 +182,8 @@ module vc707_soc #(
 
     DataMem_wrapper #(
         .RAM_ADDR_W     (RAM_ADDR_W)
-    ,   .ID_W           (0)    // Unused
+    // ,   .ID_W           (0)    // Unused
+    ,   .FF_DEPTH       (FF_DEPTH)
     ,   .DATA_W         (DATA_W)
     ,   .RESET_VALUE    (RESET_VALUE)
     ,   .INIT_FILE_A    (INIT_FILE_A)
@@ -190,7 +194,7 @@ module vc707_soc #(
         .ACLK           (ACLK)
     ,   .ARESETn        (ARESETn)
 
-    ,   .i_axi_awid       (/* Unused */)
+    // ,   .i_axi_awid       (/* Unused */)
     ,   .i_axi_awaddr     (m00_axi_awaddr)
     ,   .i_axi_awlen      (m00_axi_awlen)
     ,   .i_axi_awsize     (m00_axi_awsize)
@@ -207,9 +211,9 @@ module vc707_soc #(
     ,   .o_axi_bresp      (m00_axi_bresp)
     ,   .o_axi_bvalid     (m00_axi_bvalid)
     ,   .i_axi_bready     (m00_axi_bready)
-    ,   .o_axi_bid        (/* Unused */)
+    // ,   .o_axi_bid        (/* Unused */)
 
-    ,   .i_axi_arid       (m00_axi_arid)
+    // ,   .i_axi_arid       (m00_axi_arid)
     ,   .i_axi_araddr     (m00_axi_araddr)
     ,   .i_axi_arlen      (m00_axi_arlen)
     ,   .i_axi_arsize     (m00_axi_arsize)
@@ -222,6 +226,6 @@ module vc707_soc #(
     ,   .o_axi_rlast      (m00_axi_rlast)
     ,   .o_axi_rvalid     (m00_axi_rvalid)
     ,   .i_axi_rready     (m00_axi_rready)
-    ,   .o_axi_rid        (/* Unused */)
+    // ,   .o_axi_rid        (/* Unused */)
     );
 endmodule 

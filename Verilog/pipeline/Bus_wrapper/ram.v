@@ -11,13 +11,13 @@ module ram #(
 )(
     input               clk 
 // ,   input               rst_n
-,   input               we
-,   input               re
-,   input  [ADDR_W-1:0] w_addr
-,   input  [ADDR_W-1:0] r_addr
-,   input  [DATA_W-1:0] w_data
-,   output [DATA_W-1:0] r_data
-,   output reg          valid
+,   input  [(DATA_W/8)-1:0] we
+,   input                   re
+,   input  [ADDR_W-1:0]     w_addr
+,   input  [ADDR_W-1:0]     r_addr
+,   input  [DATA_W-1:0]     w_data
+,   output [DATA_W-1:0]     r_data
+,   output reg              valid
 );
     reg [DATA_W-1:0] mem [0:(1 << ADDR_W) - 1];
     integer i;
@@ -41,16 +41,12 @@ module ram #(
 
     reg [DATA_W-1:0] OutMem;
 
-    initial begin
-        for (i = 0; i < (1 << ADDR_W); i = i + 1) begin
-            mem[i] = RESET_VALUE;
-        end
-    end
-
     always @(posedge clk) begin
-        if (we) begin
-            mem[w_addr] <= w_data; 
-        end 
+        for (i = 0; i < (DATA_W/8); i = i + 1) begin
+            if (we[i]) begin
+                mem[w_addr][(i*8) +: 8] <= w_data[(i*8) +: 8];
+            end
+        end
         
         if (re) begin
             OutMem  <= mem[r_addr];

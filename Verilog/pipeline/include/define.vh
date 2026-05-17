@@ -15,8 +15,8 @@
 // Danh cho dhystone benchmark test
 `define MEM_BASE        32'h0000_0000
 `define CODE_A_START    32'h0000_0000
-`define CODE_B_START    32'h0008_C000
-`define DATA_START      32'hC002_0000   
+`define CODE_B_START    32'h0000_C000
+`define DATA_START      32'h0001_0000   
 
 
 `define NUM_WAYS        4
@@ -41,6 +41,7 @@
 `define C_M00_AXI_RUSER_WIDTH	            0
 `define C_M00_AXI_BUSER_WIDTH	            0
 
-`define RAM_ADDR_W                          8
+`define RAM_ADDR_W                          17
+`define FF_DEPTH                            32
 `define RESET_VALUE                         32'h0000_0000
 `endif // DEFINES_VH
