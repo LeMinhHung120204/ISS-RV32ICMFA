@@ -31,6 +31,27 @@ module vc707_soc #(
 ,   input ARESETn
 
     // ==========================================
+    // NEW: AXI 4 Lite SLAVE CHO INIT RAM (Nối từ PS)
+    // ==========================================
+,   input   [31:0]              s01_axi_awaddr
+,   input                       s01_axi_awvalid
+,   output                      s01_axi_awready
+,   input   [31:0]              s01_axi_wdata
+,   input   [3:0]               s01_axi_wstrb
+,   input                       s01_axi_wvalid
+,   output                      s01_axi_wready
+,   output  [1:0]               s01_axi_bresp
+,   output                      s01_axi_bvalid
+,   input                       s01_axi_bready
+,   input   [31:0]              s01_axi_araddr
+,   input                       s01_axi_arvalid
+,   output                      s01_axi_arready
+,   output  [31:0]              s01_axi_rdata
+,   output  [1:0]               s01_axi_rresp
+,   output                      s01_axi_rvalid
+,   input                       s01_axi_rready
+
+    // ==========================================
     // AXI 4 lite SLAVE INTERFACE
     // ==========================================
 ,   input   [3:0]               s00_axi_awaddr
@@ -180,7 +201,7 @@ module vc707_soc #(
     );
 
 
-    DataMem_wrapper #(
+    DataMem_wrapper2 #(
         .RAM_ADDR_W     (RAM_ADDR_W)
     // ,   .ID_W           (0)    // Unused
     ,   .FF_DEPTH       (FF_DEPTH)
@@ -227,5 +248,24 @@ module vc707_soc #(
     ,   .o_axi_rvalid     (m00_axi_rvalid)
     ,   .i_axi_rready     (m00_axi_rready)
     // ,   .o_axi_rid        (/* Unused */)
+
+        // AXI 4 Lite SLAVE CHO INIT RAM
+    ,   .s_axi_lite_awaddr  (s01_axi_awaddr)
+    ,   .s_axi_lite_awvalid (s01_axi_awvalid)
+    ,   .s_axi_lite_awready (s01_axi_awready)
+    ,   .s_axi_lite_wdata   (s01_axi_wdata)
+    ,   .s_axi_lite_wstrb   (s01_axi_wstrb)
+    ,   .s_axi_lite_wvalid  (s01_axi_wvalid)
+    ,   .s_axi_lite_wready  (s01_axi_wready)
+    ,   .s_axi_lite_bresp   (s01_axi_bresp)
+    ,   .s_axi_lite_bvalid  (s01_axi_bvalid)
+    ,   .s_axi_lite_bready  (s01_axi_bready)
+    ,   .s_axi_lite_araddr  (s01_axi_araddr)
+    ,   .s_axi_lite_arvalid (s01_axi_arvalid)
+    ,   .s_axi_lite_arready (s01_axi_arready)
+    ,   .s_axi_lite_rdata   (s01_axi_rdata)
+    ,   .s_axi_lite_rresp   (s01_axi_rresp)
+    ,   .s_axi_lite_rvalid  (s01_axi_rvalid)
+    ,   .s_axi_lite_rready  (s01_axi_rready)
     );
 endmodule 
