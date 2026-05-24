@@ -74,6 +74,7 @@ module single_core #(
     wire [ADDR_W-1:0]   data_addr;
     wire [1:0]          data_size;
     wire                data_req, data_wr, dcache_stall;
+    wire                cpu_dcache_flush;
     wire                cpu_lr, cpu_sc, cpu_amo;
     wire [2:0]          cpu_amo_op;
 
@@ -105,6 +106,7 @@ module single_core #(
     ,   .data_addr      (data_addr)
     ,   .data_wdata     (data_wdata)
     ,   .dcache_stall   (dcache_stall)
+    ,   .o_dcache_flush (cpu_dcache_flush)
 
         // Atomics
     ,   .cpu_lr         (cpu_lr)
@@ -179,6 +181,7 @@ module single_core #(
     ,   .cpu_din                (data_wdata)
     ,   .cpu_size               (data_size)
     ,   .data_rdata             (data_rdata)
+    ,   .cpu_flush              (cpu_dcache_flush)
         
         // Atomics Interface
     ,   .cpu_lr                 (cpu_lr)

@@ -4,8 +4,8 @@
 module tb_soc_top;
     // Default hex files (can be overridden with +HEX_A_FILE=... +HEX_B_FILE=...)
     parameter HEX_FILE          = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/hexfile.txt";
-    parameter HEX_A             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.hex";
-    parameter HEX_B             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.hex";
+    parameter HEX_A             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.mem";
+    parameter HEX_B             = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.mem";
     parameter LOG_PATH          = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/core_a_registers.log";
     parameter FINAL_LOG_PATH    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/final_registers.log";
 

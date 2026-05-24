@@ -70,32 +70,32 @@ module dual_core #(
 ,   input                       m00_axi_rvalid
 ,   output                      m00_axi_rready
 
-    // ==========================================
-    // AXI 4 lite SLAVE INTERFACE
-    // ==========================================
-,   input   [3:0]               s00_axi_awaddr
-,   input   [2:0]               s00_axi_awprot
-,   input                       s00_axi_awvalid
-,   output                      s00_axi_awready
+//     // ==========================================
+//     // AXI 4 lite SLAVE INTERFACE
+//     // ==========================================
+// ,   input   [3:0]               s00_axi_awaddr
+// ,   input   [2:0]               s00_axi_awprot
+// ,   input                       s00_axi_awvalid
+// ,   output                      s00_axi_awready
 
-,   input   [31:0]              s00_axi_wdata
-,   input   [3:0]               s00_axi_wstrb
-,   input                       s00_axi_wvalid
-,   output                      s00_axi_wready
+// ,   input   [31:0]              s00_axi_wdata
+// ,   input   [3:0]               s00_axi_wstrb
+// ,   input                       s00_axi_wvalid
+// ,   output                      s00_axi_wready
 
-,   output  [1:0]               s00_axi_bresp
-,   output                      s00_axi_bvalid
-,   input                       s00_axi_bready
+// ,   output  [1:0]               s00_axi_bresp
+// ,   output                      s00_axi_bvalid
+// ,   input                       s00_axi_bready
 
-,   input   [3:0]               s00_axi_araddr
-,   input   [2:0]               s00_axi_arprot
-,   input                       s00_axi_arvalid
-,   output                      s00_axi_arready
+// ,   input   [3:0]               s00_axi_araddr
+// ,   input   [2:0]               s00_axi_arprot
+// ,   input                       s00_axi_arvalid
+// ,   output                      s00_axi_arready
 
-,   output  [31:0]              s00_axi_rdata
-,   output  [1:0]               s00_axi_rresp
-,   output                      s00_axi_rvalid
-,   input                       s00_axi_rready
+// ,   output  [31:0]              s00_axi_rdata
+// ,   output  [1:0]               s00_axi_rresp
+// ,   output                      s00_axi_rvalid
+// ,   input                       s00_axi_rready
 );
 
     // ================================================================
@@ -452,41 +452,41 @@ module dual_core #(
     // ================================================================
     // AXI LITE SLAVE MODULE (Xu ly Debug)
     // ================================================================
-    debug #( 
-        .C_S00_AXI_DATA_WIDTH   (32)
-    ,   .C_S00_AXI_ADDR_WIDTH   (4)
-    ) debug_axi_inst (
-        .o_debug_core_sel   (w_debug_core_sel)
-    ,   .o_debug_reg_addr   (w_debug_reg_addr)
-    ,   .o_debug_ren        (w_debug_ren)
-    ,   .i_debug_reg_data   (w_debug_reg_data)
+    // debug #( 
+    //     .C_S00_AXI_DATA_WIDTH   (32)
+    // ,   .C_S00_AXI_ADDR_WIDTH   (4)
+    // ) debug_axi_inst (
+    //     .o_debug_core_sel   (w_debug_core_sel)
+    // ,   .o_debug_reg_addr   (w_debug_reg_addr)
+    // ,   .o_debug_ren        (w_debug_ren)
+    // ,   .i_debug_reg_data   (w_debug_reg_data)
 
-    ,   .s00_axi_aclk       (ACLK)
-    ,   .s00_axi_aresetn    (ARESETn)
+    // ,   .s00_axi_aclk       (ACLK)
+    // ,   .s00_axi_aresetn    (ARESETn)
     
-    ,   .s00_axi_araddr     (s00_axi_araddr)
-    ,   .s00_axi_arprot     (s00_axi_arprot)
-    ,   .s00_axi_arvalid    (s00_axi_arvalid)
-    ,   .s00_axi_arready    (s00_axi_arready)
+    // ,   .s00_axi_araddr     (s00_axi_araddr)
+    // ,   .s00_axi_arprot     (s00_axi_arprot)
+    // ,   .s00_axi_arvalid    (s00_axi_arvalid)
+    // ,   .s00_axi_arready    (s00_axi_arready)
 
-    ,   .s00_axi_awaddr     (s00_axi_awaddr)
-    ,   .s00_axi_awprot     (s00_axi_awprot)
-    ,   .s00_axi_awvalid    (s00_axi_awvalid)
-    ,   .s00_axi_awready    (s00_axi_awready)
+    // ,   .s00_axi_awaddr     (s00_axi_awaddr)
+    // ,   .s00_axi_awprot     (s00_axi_awprot)
+    // ,   .s00_axi_awvalid    (s00_axi_awvalid)
+    // ,   .s00_axi_awready    (s00_axi_awready)
     
-    ,   .s00_axi_wdata      (s00_axi_wdata)
-    ,   .s00_axi_wstrb      (s00_axi_wstrb)
-    ,   .s00_axi_wvalid     (s00_axi_wvalid)
-    ,   .s00_axi_wready     (s00_axi_wready)
+    // ,   .s00_axi_wdata      (s00_axi_wdata)
+    // ,   .s00_axi_wstrb      (s00_axi_wstrb)
+    // ,   .s00_axi_wvalid     (s00_axi_wvalid)
+    // ,   .s00_axi_wready     (s00_axi_wready)
     
-    ,   .s00_axi_bresp      (s00_axi_bresp)
-    ,   .s00_axi_bvalid     (s00_axi_bvalid)
-    ,   .s00_axi_bready     (s00_axi_bready)
+    // ,   .s00_axi_bresp      (s00_axi_bresp)
+    // ,   .s00_axi_bvalid     (s00_axi_bvalid)
+    // ,   .s00_axi_bready     (s00_axi_bready)
 
-    ,   .s00_axi_rdata      (s00_axi_rdata)
-    ,   .s00_axi_rresp      (s00_axi_rresp)
-    ,   .s00_axi_rvalid     (s00_axi_rvalid)
-    ,   .s00_axi_rready     (s00_axi_rready)
-    );
+    // ,   .s00_axi_rdata      (s00_axi_rdata)
+    // ,   .s00_axi_rresp      (s00_axi_rresp)
+    // ,   .s00_axi_rvalid     (s00_axi_rvalid)
+    // ,   .s00_axi_rready     (s00_axi_rready)
+    // );
 
 endmodule

@@ -41,6 +41,7 @@ module PHT(
             2'b01: next_state = final_taken ? 2'b10 : 2'b00; // WNT
             2'b10: next_state = final_taken ? 2'b11 : 2'b01; // WT
             2'b11: next_state = final_taken ? 2'b11 : 2'b10; // ST
+            default: next_state = 2'b10; // prevent X latching
         endcase
     end
 

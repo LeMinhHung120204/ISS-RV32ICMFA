@@ -73,9 +73,9 @@ module HazardUnit #(
     // ================================================================
     // STALL & FLUSH LOGIC
     // ================================================================
-    // Stall when a load hazard
+    // Stall when a load or atomic hazard
     wire lw_Stall;
-    assign lw_Stall = ((E_ResultSrc == 3'd1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
+    assign lw_Stall = ((E_ResultSrc[0] == 1'b1) & ((D_Rs1 == E_rd) | (D_Rs2 == E_rd)));
 
     // assign M_Stall          = dcache_stall ;
     // assign E_Stall          = dcache_stall | E_MulDivStall | E_FPUStall;

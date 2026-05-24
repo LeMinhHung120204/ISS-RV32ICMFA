@@ -86,26 +86,32 @@ module tag_mem #(
         if (tag_we) begin
             tag_mem[write_index]    <= din_tag;
         end 
-        dout_tag                    <= tag_mem[read_index];
-         
+        if (tag_we && (write_index == read_index)) begin
+            dout_tag <= din_tag;
+        end else begin
+            dout_tag <= tag_mem[read_index];
+        end
     end 
 
     always @(posedge clk) begin
         if (valid_we) begin
             valid_array[write_index]    <= 1'b1;
         end 
-        // else if (invalid) begin
-        //     valid_array[write_index]    <= 1'b0;
-        // end 
-        valid                           <= valid_array[read_index];
-        
+        if (valid_we && (write_index == read_index)) begin
+            valid <= 1'b1;
+        end else begin
+            valid <= valid_array[read_index];
+        end
     end 
     
     always @(posedge clk) begin
         if (moesi_we) begin
             state_moesi[write_index]    <= moesi_next_state;
         end
-        moesi_current_state             <= state_moesi[read_index];
-    
+        if (moesi_we && (write_index == read_index)) begin
+            moesi_current_state <= moesi_next_state;
+        end else begin
+            moesi_current_state <= state_moesi[read_index];
+        end
     end
 endmodule

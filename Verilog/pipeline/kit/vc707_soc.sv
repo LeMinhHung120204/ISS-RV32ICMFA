@@ -31,7 +31,7 @@ module vc707_soc #(
 ,   input ARESETn
 
     // ==========================================
-    // NEW: AXI 4 Lite SLAVE CHO INIT RAM (Nối từ PS)
+    // AXI 4 Lite SLAVE CHO INIT RAM 
     // ==========================================
 ,   input   [31:0]              s01_axi_awaddr
 ,   input                       s01_axi_awvalid

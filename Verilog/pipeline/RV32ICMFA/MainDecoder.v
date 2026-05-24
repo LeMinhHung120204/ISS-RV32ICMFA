@@ -191,7 +191,7 @@ module MainDecoder(
             end
 
             7'b0101111: begin // ATOMIC: Atomic instructions (LR/SC/AMO)
-                data_req        = 1'b0;
+                data_req        = 1'b1;
                 addr_addend_sel = 1'b0;
                 ResPCSel        = 1'b0;
 

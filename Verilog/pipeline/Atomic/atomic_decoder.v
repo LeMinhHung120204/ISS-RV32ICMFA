@@ -36,19 +36,19 @@ module atomic_decoder (
                 lr      = 1'b0;
                 sc      = 1'b0;
             end 
-            6'b100100: begin //AMOAND
+            6'b101100: begin //AMOAND
                 amo     = 1'b1;
                 amo_op  = 3'b010; 
                 lr      = 1'b0;
                 sc      = 1'b0;
             end 
-            6'b100101: begin //AMOOR
+            6'b101000: begin //AMOOR
                 amo     = 1'b1;
                 amo_op  = 3'b011; 
                 lr      = 1'b0;
                 sc      = 1'b0;
             end 
-            6'b100110: begin //AMOXOR
+            6'b100100: begin //AMOXOR
                 amo     = 1'b1;
                 amo_op  = 3'b100; 
                 lr      = 1'b0;
