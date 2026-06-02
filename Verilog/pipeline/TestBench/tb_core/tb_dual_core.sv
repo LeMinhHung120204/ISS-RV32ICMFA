@@ -184,12 +184,18 @@ module tb_dual_core;
     integer i;
     integer f_log;
     integer f_alu_log;
+    integer f_reg_log;
     initial begin
         // --- MO FILE LOG ---
         f_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_results.log", "w");
         f_alu_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/alu_log.txt", "w");
+        f_reg_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/register_dump.txt", "w");
         if (f_log == 0) begin
             $display("LOI: Khong the tao file test_results.log!");
+            $finish;
+        end
+        if (f_reg_log == 0) begin
+            $display("LOI: Khong the tao file register_dump.txt!");
             $finish;
         end
 
@@ -256,6 +262,7 @@ module tb_dual_core;
         $fdisplay(f_log, "========================================================");
         $fclose(f_log);
         $fclose(f_alu_log);
+        $fclose(f_reg_log);
         $finish;
     end
 
@@ -266,6 +273,7 @@ module tb_dual_core;
         integer done_a, done_b;
         integer counter_a, counter_b;
         integer expected;
+        integer r;
         begin
             // Lay truc tiep du lieu tu Register File
             done_a    = u_soc_top.core_0.u_RV32IA.register_file.register[26];
@@ -299,6 +307,20 @@ module tb_dual_core;
                 $display("❌ FAILED AUTOCHECK: So vong lap cua 2 core khong dung.");
                 $fdisplay(fd, "[RESULT] ❌ FAILED AUTOCHECK: Loi bo dem (Core0_x11: %0d, Core1_x11: %0d).", counter_a, counter_b);
             end
+
+            // XUAT RA FILE LOG 32 THANH GHI
+            $fdisplay(f_reg_log, "========================================================");
+            $fdisplay(f_reg_log, "REGISTER DUMP FOR TEST (Time: %0t)", $time);
+            $fdisplay(f_reg_log, "========================================================");
+            $fdisplay(f_reg_log, " REG | CORE 0 VALUE (HEX) | CORE 1 VALUE (HEX) ");
+            $fdisplay(f_reg_log, "--------------------------------------------------");
+            for (r = 0; r < 32; r = r + 1) begin
+                $fdisplay(f_reg_log, " x%02d | 0x%08x         | 0x%08x         ", 
+                          r, 
+                          u_soc_top.core_0.u_RV32IA.register_file.register[r],
+                          u_soc_top.core_1.u_RV32IA.register_file.register[r]);
+            end
+            $fdisplay(f_reg_log, "\n");
         end
     endtask
 
