@@ -15,16 +15,15 @@ module ALU #(
 ,   output                          signed_less
 ,   output                          unsigned_less
 );
-    // wire [31:0] in2_mod = (ALUControl[3]) ? ~in2 : in2; 
-    // wire [31:0] add_out = ()in1 + in2_mod + ALUControl[3];
     wire [DATA_WIDTH - 1:0] sub = in1 - in2;
 
     // BLT, BGE, SLT
-    // assign signed_less      = (in1[31] == in2[31]) ? sub[31] : in1[31];
-    assign signed_less = $signed(in1) < $signed(in2);
+    // assign signed_less = $signed(in1) < $signed(in2);
+    assign signed_less   = (in1[31] == in2[31]) ? sub[31] : in1[31];
 
     // BLTU, BGEU, SLTU
-    assign unsigned_less = $unsigned(in1) < $unsigned(in2);
+    // assign unsigned_less = $unsigned(in1) < $unsigned(in2);
+    assign unsigned_less = (in1[31] == in2[31]) ? sub[31] : in2[31];
 
     wire [4:0] shamt        = in2[4:0];
 

@@ -4,14 +4,6 @@
 `define DATA_W          32
 `define ADDR_W          32
 
-// `define MEM_BASE        32'hC000_0000
-// `define CODE_A_START    32'hC000_0000
-// `define CODE_B_START    32'hC000_4000
-// `define DATA_START      32'hC000_8000
-// Danh cho embench benchmark test
-// `define CODE_B_START    32'hC008_C000   // Đẩy hẳn Core B ra sau vùng RAM 512KB để không bị dẫm chân
-// `define DATA_START      32'hC000_C000   // Dịch tới vị trí 48KB (khớp với vùng ram trong link.ld)
-
 // Danh cho dhystone benchmark test
 // `define MEM_BASE        32'h0000_0000
 // `define CODE_A_START    32'h0000_0000
