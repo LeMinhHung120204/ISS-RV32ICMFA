@@ -138,7 +138,7 @@ module MainDecoder(
                 MemWrite        = 1'b0;
                 ResultSrc       = 3'b000;
                 Branch          = 1'b0;
-                ALUOp           = 3'b000;
+                ALUOp           = 3'b101;
                 Jump            = 1'b1;
                 StoreSrc        = 3'b000;
                 AtomicOp        = 1'b0;
@@ -153,7 +153,7 @@ module MainDecoder(
                 MemWrite        = 1'b0;
                 ResultSrc       = 3'b000;
                 Branch          = 1'b0;
-                ALUOp           = 3'b000;
+                ALUOp           = 3'b101;
                 Jump            = 1'b1;
                 StoreSrc        = 3'b000;
                 AtomicOp        = 1'b0;

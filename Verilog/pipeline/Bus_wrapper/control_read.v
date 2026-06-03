@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "define.vh"
 // from Lee Min Hunz with luv
 // ============================================================================
 // Control Read - AXI Read Burst Controller
@@ -83,7 +84,7 @@ module control_read #(
                 IDLE: begin
                     count_addr <= 8'd0;
                     if (arvalid && arready) begin
-                        reg_addr    <= araddr >> 2; // dang de address / 4 de doc file hex
+                        reg_addr    <= (araddr - `MEM_BASE) >> 2; // Subtract MEM_BASE and shift to get word address
                         reg_arburst <= arburst;
                         // reg_arsize  <= arsize;
                         reg_arlen   <= arlen;

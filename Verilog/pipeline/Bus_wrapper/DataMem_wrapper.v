@@ -64,11 +64,11 @@ module DataMem_wrapper #(
     // ================================================================
     // FIFO WIDTH DEFINITIONS
     // ================================================================
-    localparam FF_AW_W = DATA_W + 8 + 3 + 2;     // AW: ADDR + ID + LEN + SIZE + BURST
-    localparam FF_W_W  = DATA_W + STRB_W + 1;    // W: DATA + STRB + LAST
-    localparam FF_B_W  = 2;                      // B: ID + RESP
-    localparam FF_AR_W = DATA_W + 8 + 3 + 2;     // AR: ADDR + ID + LEN + SIZE + BURST
-    localparam FF_R_W  = DATA_W + 2 + 1;         // R: DATA + ID + RESP + LAST
+    localparam FF_AW_W = ADDR_W + 8 + 3 + 2;     // AW: ADDR + ID + LEN + SIZE + BURST
+    localparam FF_W_W  = DATA_W + STRB_W + 1; // W:  DATA + STRB + LAST
+    localparam FF_B_W  = 2;                   // B:  ID + RESP
+    localparam FF_AR_W = ADDR_W + 8 + 3 + 2;     // AR: ADDR + ID + LEN + SIZE + BURST
+    localparam FF_R_W  = DATA_W + 2 + 1;      // R:  ID + DATA + RESP + LAST
 
     // ================================================================
     // FIFO SIGNALS
@@ -103,11 +103,11 @@ module DataMem_wrapper #(
     // UNPACK FIFOs
     // ================================================================
     // AW FIFO
-    wire [DATA_W-1:0] fifo_awaddr  = fifo_aw_dout[FF_AW_W-1 -: DATA_W];
-    // wire [ID_W-1:0]   fifo_awid    = fifo_aw_dout[FF_AW_W-1 - DATA_W -: ID_W];
-    // wire [7:0]        fifo_awlen   = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W -: 8];
-    // wire [2:0]        fifo_awsize  = fifo_aw_dout[FF_AW_W-1 - DATA_W - ID_W - 8 -: 3];
-    wire [1:0]        fifo_awburst = fifo_aw_dout[FF_AW_W-1 - DATA_W - 8 - 3 -: 2];
+    wire [ADDR_W-1:0] fifo_awaddr  = fifo_aw_dout[FF_AW_W-1 -: ADDR_W];
+    // wire [ID_W-1:0]   fifo_awid    = fifo_aw_dout[FF_AW_W-1 - ADDR_W -: ID_W];
+    // wire [7:0]        fifo_awlen   = fifo_aw_dout[FF_AW_W-1 - ADDR_W - ID_W -: 8];
+    // wire [2:0]        fifo_awsize  = fifo_aw_dout[FF_AW_W-1 - ADDR_W - ID_W - 8 -: 3];
+    wire [1:0]        fifo_awburst = fifo_aw_dout[FF_AW_W-1 - ADDR_W - 8 - 3 -: 2];
 
     // W FIFO
     wire [DATA_W-1:0] fifo_wdata   = fifo_w_dout[FF_W_W-1 -: DATA_W];
@@ -115,11 +115,11 @@ module DataMem_wrapper #(
     wire              fifo_wlast   = fifo_w_dout[0];
 
     // AR FIFO
-    wire [DATA_W-1:0] fifo_araddr  = fifo_ar_dout[FF_AR_W-1 -: DATA_W];
-    // wire [ID_W-1:0]   fifo_arid    = fifo_ar_dout[FF_AR_W-1 - DATA_W -: ID_W];      
-    wire [7:0]        fifo_arlen   = fifo_ar_dout[FF_AR_W-1 - DATA_W -: 8];
-    wire [2:0]        fifo_arsize  = fifo_ar_dout[FF_AR_W-1 - DATA_W - 8 -: 3];
-    wire [1:0]        fifo_arburst = fifo_ar_dout[FF_AR_W-1 - DATA_W - 8 - 3 -: 2];
+    wire [ADDR_W-1:0] fifo_araddr  = fifo_ar_dout[FF_AR_W-1 -: ADDR_W];
+    // wire [ID_W-1:0]   fifo_arid    = fifo_ar_dout[FF_AR_W-1 - ADDR_W -: ID_W];      
+    // wire [7:0]        fifo_arlen   = fifo_ar_dout[FF_AR_W-1 - ADDR_W - ID_W -: 8];
+    // wire [2:0]        fifo_arsize  = fifo_ar_dout[FF_AR_W-1 - ADDR_W - ID_W - 8 -: 3];
+    wire [1:0]        fifo_arburst = fifo_ar_dout[FF_AR_W-1 - ADDR_W - 8 - 3 -: 2];
     
     // ================================================================
     // CONTROL LOGIC
@@ -234,18 +234,21 @@ module DataMem_wrapper #(
     ) u_DataMem (
         .clk        (ACLK)
         // .rst_n      (ARESETn)
-        
         // Port A: Write
-        // .we         (core_write_en),
-    ,   .we         ({STRB_W{core_write_en}} & fifo_wstrb)
-    ,   .w_addr     (cnt_addr_write[RAM_ADDR_W-1:0])
-    ,   .w_data     (fifo_wdata)
+    ,   .we_a       ({STRB_W{core_write_en}} & fifo_wstrb)
+    ,   .wdata_a    (fifo_wdata)
+    ,   .addr_a     (cnt_addr_write[RAM_ADDR_W-1:0])
+    ,   .re_a       (1'b0)
+    ,   .rdata_a    ()
+    ,   .valid_a    ()
 
         // Port B: Read
-    ,   .re         (core_read_en)
-    ,   .r_addr     (cnt_addr_read[RAM_ADDR_W-1:0])
-    ,   .r_data     (ram_r_data)
-    ,   .valid      (rvalid_from_mem)
+    ,   .we_b       ({STRB_W{1'b0}})
+    ,   .wdata_b    ({DATA_W{1'b0}})
+    ,   .addr_b     (cnt_addr_read[RAM_ADDR_W-1:0])
+    ,   .re_b       (core_read_en)
+    ,   .rdata_b    (ram_r_data)
+    ,   .valid_b    (rvalid_from_mem)
     );
 
     // ================================================================

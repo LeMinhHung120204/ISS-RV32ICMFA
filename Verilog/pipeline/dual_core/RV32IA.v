@@ -126,6 +126,7 @@ module RV32IA #(
     reg  [WIDTH_DATA-1:0]   E_WriteData; // ALU operands & store data
     // Control signals
     wire                    E_signed_less, E_RegWrite, E_MemWrite, E_Jump, E_Branch, E_ALUSrc, E_Zero, E_PCSrc, E_addr_addend_sel, E_ResPCSel;
+    wire                    E_unsigned_less;
     wire [3:0]              E_ALUControl;
     wire [2:0]              E_ResultSrc, E_funct3, E_StoreSrc;
     // Branch prediction correction
@@ -159,7 +160,7 @@ module RV32IA #(
     // Atomic signals (pipelined)
     reg  [31:0]             aligned_load_data;
 
-    wire                    M_Predict_Taken;
+    // wire                    M_Predict_Taken;
     wire [WIDTH_ADDR-1:0]   M_PC;
     wire [WIDTH_ADDR-1:0]   M_PCPlus4;
     wire [WIDTH_ADDR-1:0]   M_PCTarget;
@@ -245,6 +246,7 @@ module RV32IA #(
     ,   .E_Zero         (E_Zero)
     ,   .E_Branch       (E_Branch)
     ,   .E_signed_less  (E_signed_less)
+    ,   .E_unsigned_less(E_unsigned_less)
     ,   .funct3         (E_funct3)
     ,   .E_PCSrc        (E_PCSrc)
     );
@@ -504,14 +506,16 @@ module RV32IA #(
     ,   .E_ImmExt   (E_ImmExt)
     ,   .E_PCPlus4  (E_PCPlus4)
 
-    ,   .result     (E_ALUResult)
-    ,   .zero       (E_Zero)
-    ,   .signed_less(E_signed_less)
+    ,   .result         (E_ALUResult)
+    ,   .zero           (E_Zero)
+    ,   .signed_less    (E_signed_less)
+    ,   .unsigned_less  (E_unsigned_less)
     );
 
     mux2_1 Mux_PCadd(
         .in0    (E_PC)
-    ,   .in1    (E_RD1)
+    // ,   .in1    (E_RD1)
+    ,   .in1    (E_SrcA)
     ,   .sel    (E_addr_addend_sel)
     ,   .res    (E_PCtmp)
     );
@@ -574,14 +578,14 @@ module RV32IA #(
     // ,   .E_MemWrite     (E_MemWrite)
     ,   .E_ResultSrc    (E_ResultSrc)
     ,   .E_funct3       (E_funct3)
-    ,   .E_Predict_Taken(E_Predict_Taken)
-    ,   .E_PC           (E_PC)
-    ,   .E_PCPlus4      (E_PCPlus4)
-    ,   .E_PCTarget     (E_PCTarget)
-    ,   .E_Branch       (E_Branch)
-    ,   .E_Jump         (E_Jump)
-    ,   .E_PCSrc        (E_PCSrc)
-    ,   .E_GHSR         (E_GHSR)
+    // ,   .E_Predict_Taken(E_Predict_Taken)
+    // ,   .E_PC           (E_PC)
+    // ,   .E_PCPlus4      (E_PCPlus4)
+    // ,   .E_PCTarget     (E_PCTarget)
+    // ,   .E_Branch       (E_Branch)
+    // ,   .E_Jump         (E_Jump)
+    // ,   .E_PCSrc        (E_PCSrc)
+    // ,   .E_GHSR         (E_GHSR)
 
     ,   .M_ALUResult    (M_ALUResult)
     ,   .M_rd           (M_rd)
@@ -589,14 +593,14 @@ module RV32IA #(
     // ,   .M_MemWrite     (M_MemWrite)
     ,   .M_ResultSrc    (M_ResultSrc)
     ,   .M_funct3       (M_funct3)
-    ,   .M_Predict_Taken(M_Predict_Taken)
-    ,   .M_PC           (M_PC)
-    ,   .M_PCPlus4      (M_PCPlus4)
-    ,   .M_PCTarget     (M_PCTarget)
-    ,   .M_Branch       (M_Branch)
-    ,   .M_Jump         (M_Jump)
-    ,   .M_PCSrc        (M_PCSrc)
-    ,   .M_GHSR         (M_GHSR)
+    // ,   .M_Predict_Taken(M_Predict_Taken)
+    // ,   .M_PC           (M_PC)
+    // ,   .M_PCPlus4      (M_PCPlus4)
+    // ,   .M_PCTarget     (M_PCTarget)
+    // ,   .M_Branch       (M_Branch)
+    // ,   .M_Jump         (M_Jump)
+    // ,   .M_PCSrc        (M_PCSrc)
+    // ,   .M_GHSR         (M_GHSR)
     );
 
     // ================================================================

@@ -180,21 +180,16 @@ module RV32IA_v2 #(
     // ================================================================
     // BRANCH PREDICTION UNIT & PC SELECTION
     // ================================================================
-    wire [1:0] pc_sel;
     assign F_PCPlus4    = F_PC + 32'd4;
     assign E_Mispredict = (E_PCSrc != E_Predict_Taken);
     
-    assign pc_sel[1]    = E_Mispredict;
-    assign pc_sel[0]    = E_Mispredict ? E_PCSrc : F_Predict_Taken;
+    // Late-arrival optimization for PCNext mux: E_PCTarget is placed at the final stage of the mux tree
+    wire [WIDTH_ADDR-1:0] F_PCNext_pred = F_Predict_Taken ? F_Predict_Target : F_PCPlus4;
     
     always @(*) begin
-        case (pc_sel)
-            2'b11: PCNext   = E_PCTarget;       // wrong predict & should jump
-            2'b10: PCNext   = E_PCPlus4;        // wrong predict & shouldn't jump
-            2'b01: PCNext   = F_Predict_Target; // correct predict
-            2'b00: PCNext   = F_PCPlus4;        // correct predict
-            default: PCNext = F_PCPlus4;        // prevent X latching
-        endcase
+        PCNext = (E_Mispredict && E_PCSrc) ? E_PCTarget :
+                 (E_Mispredict)            ? E_PCPlus4 :
+                                             F_PCNext_pred;
     end
 
     // ================================================================
@@ -509,12 +504,9 @@ module RV32IA_v2 #(
     ,   .signed_less(E_signed_less)
     );
 
-    mux2_1 Mux_PCadd(
-        .in0    (E_PC)
-    ,   .in1    (E_RD1)
-    ,   .sel    (E_addr_addend_sel)
-    ,   .res    (E_PCtmp)
-    );
+    // Path separation to optimize critical path: calculate both branch and JALR targets in parallel
+    wire [WIDTH_ADDR-1:0] E_PCTarget_pc  = E_PC + E_ImmExt;
+    wire [WIDTH_ADDR-1:0] E_PCTarget_reg = E_SrcA + E_ImmExt;
 
     always @(*) begin
         case(ForwardAE)
@@ -539,7 +531,7 @@ module RV32IA_v2 #(
     ,   .res    (E_SrcB)
     );
 
-    assign E_PCTarget   = E_ImmExt + E_PCtmp;  // Branch/Jump target address
+    assign E_PCTarget   = E_addr_addend_sel ? E_PCTarget_reg : E_PCTarget_pc;  // Branch/Jump target address
 
     // ================================================================
     // MEMORY STAGE (MEM) - D-Cache Interface

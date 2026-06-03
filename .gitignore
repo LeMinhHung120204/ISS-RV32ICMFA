@@ -46,3 +46,13 @@ Verilog/spike/build/
 *.o
 *.map
 *.dis
+*.log
+*.jou
+*.drawio.bkp
+compile_log.txt
+sim.log
+*.vcd
+*.vvp
+*.wdb
+*.pb
+*.dmp

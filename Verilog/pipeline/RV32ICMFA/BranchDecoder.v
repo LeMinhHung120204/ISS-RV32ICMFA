@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
 module BranchDecoder(
-    input E_Jump, E_Zero, E_Branch, E_signed_less
+    input E_Jump, E_Zero, E_Branch, E_signed_less, E_unsigned_less
 ,   input [2:0] funct3
 ,   output E_PCSrc
 );
@@ -14,14 +14,20 @@ module BranchDecoder(
             3'b001: begin   // bne
                 E_con = ~E_Zero;
             end 
-            3'b100, 3'b110: begin       // blt, bltu,
+            3'b100: begin   // blt 
                 E_con = E_signed_less;
             end 
-            3'b101, 3'b111: begin
-                E_con = ~E_signed_less; // bge, begu
+            3'b101: begin   // bge 
+                E_con = ~E_signed_less;
+            end 
+            3'b110: begin   // bltu 
+                E_con = E_unsigned_less;
+            end
+            3'b111: begin   // bgeu 
+                E_con = ~E_unsigned_less;
             end 
             default: begin
-                E_con = E_Zero;
+                E_con = 1'b0;
             end 
         endcase
     end

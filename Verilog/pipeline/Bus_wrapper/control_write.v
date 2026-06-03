@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "define.vh"
 // from Lee Min Hunz with luv
 // ============================================================================
 // Control Write - AXI Write Burst Controller
@@ -76,7 +77,7 @@ module control_write #(
             case(state)
                 IDLE: begin
                     if (awvalid && awready) begin
-                        reg_addr    <= awaddr >> 2;
+                        reg_addr    <= (awaddr - `MEM_BASE) >> 2;
                         reg_awburst <= awburst;
                         // reg_awsize  <= awsize;
                     end

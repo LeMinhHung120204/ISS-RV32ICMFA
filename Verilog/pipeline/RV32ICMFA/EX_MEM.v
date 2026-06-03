@@ -21,7 +21,7 @@ module EX_MEM #(
 ,   input                       EN
 ,   input                       Flush
 ,   input                       E_RegWrite
-,   input                       E_MemWrite
+// ,   input                       E_MemWrite
 // ,   input                       E_ResPCSel
 // ,   input                       E_data_req
 ,   input   [DATA_WIDTH - 1:0]  E_ALUResult 
@@ -38,17 +38,17 @@ module EX_MEM #(
 // ,   input   [2:0]               E_amo_op
 // ,   input                       E_lr
 // ,   input                       E_sc
-,   input                       E_Predict_Taken
-,   input   [ADDR_WIDTH - 1:0]  E_PC
-,   input   [ADDR_WIDTH - 1:0]  E_PCPlus4
-,   input   [ADDR_WIDTH - 1:0]  E_PCTarget
-,   input                       E_Branch
-,   input                       E_Jump
-,   input                       E_PCSrc
-,   input   [2:0]               E_GHSR
+// ,   input                       E_Predict_Taken
+// ,   input   [ADDR_WIDTH - 1:0]  E_PC
+// ,   input   [ADDR_WIDTH - 1:0]  E_PCPlus4
+// ,   input   [ADDR_WIDTH - 1:0]  E_PCTarget
+// ,   input                       E_Branch
+// ,   input                       E_Jump
+// ,   input                       E_PCSrc
+// ,   input   [2:0]               E_GHSR
 
 ,   output reg                      M_RegWrite
-,   output reg                      M_MemWrite
+// ,   output reg                      M_MemWrite
 // ,   output reg  M_ResPCSel 
 // ,   output reg                      M_data_req
 ,   output reg [DATA_WIDTH - 1:0]   M_ALUResult
@@ -64,14 +64,14 @@ module EX_MEM #(
 // ,   output reg  [2:0]               M_amo_op
 // ,   output reg                      M_lr
 // ,   output reg                      M_sc
-,   output reg                      M_Predict_Taken
-,   output reg  [ADDR_WIDTH - 1:0]  M_PC
-,   output reg  [ADDR_WIDTH - 1:0]  M_PCPlus4
-,   output reg  [ADDR_WIDTH - 1:0]  M_PCTarget
-,   output reg                      M_Branch
-,   output reg                      M_Jump
-,   output reg                      M_PCSrc
-,   output reg  [2:0]               M_GHSR
+// ,   output reg                      M_Predict_Taken
+// ,   output reg  [ADDR_WIDTH - 1:0]  M_PC
+// ,   output reg  [ADDR_WIDTH - 1:0]  M_PCPlus4
+// ,   output reg  [ADDR_WIDTH - 1:0]  M_PCTarget
+// ,   output reg                      M_Branch
+// ,   output reg                      M_Jump
+// ,   output reg                      M_PCSrc
+// ,   output reg  [2:0]               M_GHSR
 );
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
@@ -86,29 +86,29 @@ module EX_MEM #(
             // M_amo_op    <= 3'd0;
             M_funct3    <= 3'd0;
             M_RegWrite  <= 1'd0;
-            M_MemWrite  <= 1'd0;
+            // M_MemWrite  <= 1'd0;
             // M_ResPCSel  <= 1'd0;
             // M_data_req  <= 1'b0;
             // M_amo       <= 1'b0;
             // M_lr        <= 1'b0;
             // M_sc        <= 1'b0;
 
-            M_Predict_Taken <= 1'b0;
-            M_PC            <= 32'd0;
-            M_PCPlus4       <= 32'd0;
-            M_PCTarget      <= 32'd0;
-            M_Branch        <= 1'b0;
-            M_Jump          <= 1'b0;
-            M_PCSrc         <= 1'b0;
-            M_GHSR          <= 3'd0;
+            // M_Predict_Taken <= 1'b0;
+            // M_PC            <= 32'd0;
+            // M_PCPlus4       <= 32'd0;
+            // M_PCTarget      <= 32'd0;
+            // M_Branch        <= 1'b0;
+            // M_Jump          <= 1'b0;
+            // M_PCSrc         <= 1'b0;
+            // M_GHSR          <= 3'd0;
         end 
         else if (Flush) begin
             M_RegWrite      <= 1'b0;
-            M_MemWrite      <= 1'b0;
-            M_Branch        <= 1'b0;
-            M_Jump          <= 1'b0;
-            M_PCSrc         <= 1'b0;
-            M_Predict_Taken <= 1'b0; 
+            // M_MemWrite      <= 1'b0;
+            // M_Branch        <= 1'b0;
+            // M_Jump          <= 1'b0;
+            // M_PCSrc         <= 1'b0;
+            // M_Predict_Taken <= 1'b0; 
             // Các tín hiệu Data như M_PC, M_ALUResult không cần xóa cũng được vì không có RegWrite thì chúng vô hại.
         end
         else if (~EN) begin
@@ -121,7 +121,7 @@ module EX_MEM #(
             M_ResultSrc <= E_ResultSrc;
             // M_StoreSrc  <= E_StoreSrc ;
             M_RegWrite  <= E_RegWrite ;
-            M_MemWrite  <= E_MemWrite ;
+            // M_MemWrite  <= E_MemWrite ;
             // M_ResPCSel  <= E_ResPCSel ;
             M_funct3    <= E_funct3;
             // M_data_req  <= E_data_req ;
@@ -130,14 +130,14 @@ module EX_MEM #(
             // M_lr        <= E_lr       ;
             // M_sc        <= E_sc       ;
 
-            M_Predict_Taken <= E_Predict_Taken;
-            M_PC            <= E_PC           ;
-            M_PCPlus4       <= E_PCPlus4      ;
-            M_PCTarget      <= E_PCTarget     ;
-            M_Branch        <= E_Branch       ;
-            M_Jump          <= E_Jump         ;
-            M_PCSrc         <= E_PCSrc        ;
-            M_GHSR          <= E_GHSR         ;
+            // M_Predict_Taken <= E_Predict_Taken;
+            // M_PC            <= E_PC           ;
+            // M_PCPlus4       <= E_PCPlus4      ;
+            // M_PCTarget      <= E_PCTarget     ;
+            // M_Branch        <= E_Branch       ;
+            // M_Jump          <= E_Jump         ;
+            // M_PCSrc         <= E_PCSrc        ;
+            // M_GHSR          <= E_GHSR         ;
         end 
     end 
 endmodule

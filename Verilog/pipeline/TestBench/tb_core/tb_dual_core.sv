@@ -102,7 +102,6 @@ module tb_dual_core;
     wire [1:0] mem_rresp_lower;
     DataMem_wrapper2 #(
         .RAM_ADDR_W     (RAM_ADDR_W)
-    ,   .ID_W           (2)
     ,   .DATA_W         (DATA_W)
     ,   .RESET_VALUE    (RESET_VALUE)
     ) u_unified_mem (
