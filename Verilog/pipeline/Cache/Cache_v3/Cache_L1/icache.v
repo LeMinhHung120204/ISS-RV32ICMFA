@@ -158,7 +158,7 @@ module icache #(
             ,   .TAG_W      (TAG_W)
             ) u_tag_mem (
                 .clk            (clk)
-            // ,   .rst_n          (rst_n)
+            ,   .rst_n          (rst_n)
 
                 // Port read
             ,   .read_index     (mem_read_index)

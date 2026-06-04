@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // from Lee Min Hunz with luv
-module DataMem_wrapper2 #(
+module kit_DataMem_wrapper #(
     parameter FF_DEPTH      = 32            
 ,   parameter RAM_ADDR_W    = 16   
 ,   parameter DATA_W        = 32
@@ -14,6 +14,7 @@ module DataMem_wrapper2 #(
 )(
     input   ACLK
 ,   input   ARESETn
+// ,   input   core_reset
 
     // =========================================================
     // NEW: AXI4-Lite Slave Channel (For Vitis overwrite RAM)

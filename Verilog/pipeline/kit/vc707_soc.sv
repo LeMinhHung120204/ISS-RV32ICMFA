@@ -29,6 +29,7 @@ module vc707_soc #(
 )(
     input ACLK
 ,   input ARESETn
+,   input core_reset
 
     // ==========================================
     // AXI 4 Lite SLAVE CHO INIT RAM 
@@ -83,6 +84,8 @@ module vc707_soc #(
     localparam INIT_IDX_B   = (CODE_B_START - MEM_BASE) >> 2;
     localparam INIT_FILE_A  = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.mem"; // File cho Core A
     localparam INIT_FILE_B  = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.mem"; // File cho Core B
+    // localparam INIT_FILE_A  = "D:/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_a.mem"; // File cho Core A
+    // localparam INIT_FILE_B  = "D:/Khoa_Luan/ISS-RV32ICMFA/Verilog/pipeline/TestBench/tb_core/mem/hex_core_b.mem"; // File cho Core B
 
     // ==========================================
     // AXI 4 full MASTER INTERFACE
@@ -125,7 +128,7 @@ module vc707_soc #(
     wire                m00_axi_rvalid;
     wire                m00_axi_rready;
 
-    dual_core #(
+    kit_dual_core #(
         .MEM_BASE       (MEM_BASE)
     ,   .CODE_A_START   (CODE_A_START)
     ,   .CODE_B_START   (CODE_B_START)
@@ -141,6 +144,7 @@ module vc707_soc #(
     ) dual_core_inst (
         .ACLK           (ACLK)
     ,   .ARESETn        (ARESETn)
+    ,   .core_reset     (core_reset)
 
         // AXI 4 full MASTER INTERFACE
     ,   .m00_axi_awready    (m00_axi_awready)
@@ -201,7 +205,7 @@ module vc707_soc #(
     );
 
 
-    DataMem_wrapper2 #(
+    kit_DataMem_wrapper #(
         .RAM_ADDR_W     (RAM_ADDR_W)
     // ,   .ID_W           (0)    // Unused
     ,   .FF_DEPTH       (FF_DEPTH)
@@ -214,6 +218,7 @@ module vc707_soc #(
     ) DataMem_wrapper_inst (
         .ACLK           (ACLK)
     ,   .ARESETn        (ARESETn)
+    // ,   .core_reset     (core_reset)
 
     // ,   .i_axi_awid       (/* Unused */)
     ,   .i_axi_awaddr     (m00_axi_awaddr)

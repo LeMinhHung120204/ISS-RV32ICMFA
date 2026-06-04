@@ -5,16 +5,16 @@
 `define ADDR_W          32
 
 // Danh cho dhystone benchmark test
-// `define MEM_BASE        32'h0000_0000
-// `define CODE_A_START    32'h0000_0000
-// `define CODE_B_START    32'h0000_0100
-// `define DATA_START      32'h0000_0200 
+`define MEM_BASE        32'h0000_0000
+`define CODE_A_START    32'h0000_0000
+`define CODE_B_START    32'h0000_0100
+`define DATA_START      32'h0000_0200 
 
 // Danh cho riscv-tests
-`define MEM_BASE        32'h8000_0000
-`define CODE_A_START    32'h8000_0000
-`define CODE_B_START    32'h8000_4000
-`define DATA_START      32'h8000_8000
+// `define MEM_BASE        32'h8000_0000
+// `define CODE_A_START    32'h8000_0000
+// `define CODE_B_START    32'h8000_4000
+// `define DATA_START      32'h8000_8000
 
 `define NUM_WAYS        4
 `define NUM_SETS        16

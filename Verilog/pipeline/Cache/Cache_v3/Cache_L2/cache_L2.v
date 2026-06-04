@@ -273,6 +273,7 @@ module cache_L2 #(
             ,   .TAG_W      (TAG_W) 
             ) u_tag_mem (
                 .clk                    (clk)
+            ,   .rst_n                  (rst_n)
 
             ,   .tag_we                 (tag_we & way_write_enable[i])
             ,   .read_index             (mem_read_index)

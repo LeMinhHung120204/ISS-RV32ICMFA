@@ -6,7 +6,7 @@ module tag_mem #(
     parameter INDEX_W       = $clog2(NUM_SETS)
 )(
     input                   clk
-// ,   input                   rst_n 
+,   input                   rst_n 
 ,   input                   tag_we
 ,   input                   moesi_we
 ,   input                   valid_we
@@ -27,58 +27,44 @@ module tag_mem #(
     reg [2:0]       state_moesi [0:NUM_SETS-1];
 
     integer i;
-    // always @(posedge clk or negedge rst_n) begin
-    //     if (~rst_n) begin
-    //         for (i = 0; i < NUM_SETS; i = i + 1) begin
-    //             tag_mem[i] <= {TAG_W{1'b0}};
-    //         end
-    //         dout_tag <= {TAG_W{1'b0}};
-    //     end 
-    //     else begin
-    //         if (tag_we) begin
-    //             tag_mem[write_index] <= din_tag;
-    //         end 
-    //         dout_tag <= tag_mem[read_index];
-    //     end 
-    // end 
 
-    // always @(posedge clk or negedge rst_n) begin
-    //     if (~rst_n) begin
-    //         for(i = 0; i < NUM_SETS; i = i + 1) begin 
-    //             valid_array[i] <= 1'b0;
-    //         end
-    //         valid <= 1'b0;
-    //     end 
-    //     else begin
-    //         if (valid_we) begin
-    //             valid_array[write_index] <= 1'b1;
-    //         end 
-    //         else if (invalid) begin
-    //             valid_array[write_index] <= 1'b0;
-    //         end 
-    //         valid <= valid_array[read_index];
-    //     end 
-    // end 
-    
-    // always @(posedge clk or negedge rst_n) begin
-    //     if (~rst_n) begin
-    //         for (i = 0; i < NUM_SETS; i = i + 1) begin
-    //             state_moesi[i] <= STATE_I;
-    //         end
-    //         moesi_current_state     <= STATE_I;
-    //     end 
-    //     else begin
-    //         if (moesi_we) begin
-    //             state_moesi[write_index] <= moesi_next_state;
-    //         end
-    //         moesi_current_state     <= state_moesi[read_index];
-    //     end
-    // end
     initial begin
         for (i = 0; i < NUM_SETS; i = i + 1) begin
             tag_mem[i]      = {TAG_W{1'b0}};
-            valid_array[i]  = 1'b0;      // Đảm bảo ban đầu luôn là Cache Miss
-            state_moesi[i]  = STATE_I;    // Khởi tạo là 3'd4 [cite: 34]
+            // valid_array[i]  = 1'b0;      
+            // state_moesi[i]  = STATE_I;    
+        end
+    end
+
+    // Reset Valid bits and MOESI state to invalidate cache on reset
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            for (i = 0; i < NUM_SETS; i = i + 1) begin
+                valid_array[i] <= 1'b0;
+                state_moesi[i] <= STATE_I;
+            end
+            valid <= 1'b0;
+            moesi_current_state <= STATE_I;
+        end else begin
+            // Valid bit logic
+            if (valid_we) begin
+                valid_array[write_index] <= 1'b1;
+            end 
+            if (valid_we && (write_index == read_index)) begin
+                valid <= 1'b1;
+            end else begin
+                valid <= valid_array[read_index];
+            end
+            
+            // MOESI state logic
+            if (moesi_we) begin
+                state_moesi[write_index] <= moesi_next_state;
+            end
+            if (moesi_we && (write_index == read_index)) begin
+                moesi_current_state <= moesi_next_state;
+            end else begin
+                moesi_current_state <= state_moesi[read_index];
+            end
         end
     end
 
@@ -92,26 +78,4 @@ module tag_mem #(
             dout_tag <= tag_mem[read_index];
         end
     end 
-
-    always @(posedge clk) begin
-        if (valid_we) begin
-            valid_array[write_index]    <= 1'b1;
-        end 
-        if (valid_we && (write_index == read_index)) begin
-            valid <= 1'b1;
-        end else begin
-            valid <= valid_array[read_index];
-        end
-    end 
-    
-    always @(posedge clk) begin
-        if (moesi_we) begin
-            state_moesi[write_index]    <= moesi_next_state;
-        end
-        if (moesi_we && (write_index == read_index)) begin
-            moesi_current_state <= moesi_next_state;
-        end else begin
-            moesi_current_state <= state_moesi[read_index];
-        end
-    end
 endmodule
