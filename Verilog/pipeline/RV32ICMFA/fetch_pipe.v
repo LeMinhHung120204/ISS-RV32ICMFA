@@ -16,7 +16,8 @@
 // ============================================================================
 module fetch_pipe #(
     parameter DATA_W = 32,
-    parameter ADDR_W = 32
+    parameter ADDR_W = 32,
+    parameter START_PC = 32'd0
 )(
     input clk
 ,   input rst_n
@@ -38,8 +39,8 @@ module fetch_pipe #(
         if (~rst_n) begin
             s2_Predict_Taken    <= 1'b0;
             s2_GHSR             <= 3'd0;
-            s2_PC               <= {(ADDR_W){1'b0}};
-            s2_PCPlus4          <= {(ADDR_W){1'b0}};
+            s2_PC               <= START_PC;
+            s2_PCPlus4          <= START_PC + 32'd4;
         end 
         else begin
             if (Flush) begin

@@ -323,7 +323,11 @@ module RV32IA #(
     // ================================================================
     // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
     // ================================================================
-    fetch_pipe fetch_pipe_register (
+    fetch_pipe #(
+        .DATA_W(WIDTH_DATA),
+        .ADDR_W(WIDTH_ADDR),
+        .START_PC(START_PC)
+    ) fetch_pipe_register (
         .clk    (clk)
     ,   .rst_n  (rst_n)
     ,   .EN     (F_Stall)
