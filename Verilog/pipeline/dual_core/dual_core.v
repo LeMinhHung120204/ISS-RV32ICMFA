@@ -27,8 +27,6 @@ module dual_core #(
 )(
     input ACLK
 ,   input ARESETn
-// ,   input c0_stall
-// ,   input c1_stall
 
     // ==========================================
     // AXI 4 full MASTER INTERFACE (Giao tiep voi Memory)
@@ -60,8 +58,6 @@ module dual_core #(
 ,   output  [2:0]               m00_axi_arsize
 ,   output  [1:0]               m00_axi_arburst
 ,   output                      m00_axi_arvalid
-// ,   output  [2:0]               m00_axi_arprot
-// ,   output  [3:0]               m00_axi_arcache
 
     // R channel
 ,   input   [DATA_W-1:0]        m00_axi_rdata
@@ -122,7 +118,7 @@ module dual_core #(
     wire [31:0]         c1_snp_req_addr;
     wire [1:0]          c1_snp_req_cmd;
     wire                c1_resp_is_shared;
-    // wire                c1_resp_is_dirty;
+
     wire                c1_snp_resp_valid;
     wire                c1_snp_resp_hit;
     wire [LINE_W-1:0]   c1_snp_resp_data;
@@ -134,10 +130,10 @@ module dual_core #(
     wire [31:0]         l2_req_addr;
     wire [LINE_W-1:0]   l2_req_wdata;
     wire                l2_resp_valid;
-    // wire                l2_resp_ready;
+    
     wire [LINE_W-1:0]   l2_resp_rdata;
     wire                L2_pipeline_stall; // Dùng để stall cả 2 core khi L2 cache đang xử lý request
-    
+
     // ================================================================
     // CORE 0 (Khởi tạo ở vị trí CODE_A_START)
     // ================================================================
@@ -153,7 +149,6 @@ module dual_core #(
     ) core_0 (
         .clk                    (ACLK)
     ,   .rst_n                  (ARESETn)
-    // ,   .test_stall             (c0_stall)
 
         // I-Cache
     ,   .i_ic_rdata_valid       (c0_ic_rdata_valid)
@@ -184,7 +179,6 @@ module dual_core #(
     ,   .i_snp_req_addr         (c0_snp_req_addr)
     ,   .i_snp_req_cmd          (c0_snp_req_cmd)
     ,   .i_resp_is_shared       (c0_resp_is_shared)
-    // ,   .i_resp_is_dirty        (c0_resp_is_dirty)
 
     ,   .o_snp_req_ready        (c0_snp_req_ready)
     
@@ -192,10 +186,6 @@ module dual_core #(
     ,   .o_snp_resp_valid       (c0_snp_resp_valid)
     ,   .o_snp_resp_hit         (c0_snp_resp_hit)
     ,   .o_snp_resp_data        (c0_snp_resp_data)
-
-    ,   .i_debug_reg_addr       (w_debug_reg_addr)
-    ,   .i_debug_ren            (c0_debug_ren)
-    ,   .o_debug_reg_data       (c0_debug_data)
     );
 
     // ================================================================
@@ -213,7 +203,6 @@ module dual_core #(
     ) core_1 (
         .clk                    (ACLK)
     ,   .rst_n                  (ARESETn)
-    // ,   .test_stall             (c1_stall)
 
         // I-Cache
     ,   .i_ic_req_ready         (c1_ic_req_ready)
@@ -243,7 +232,6 @@ module dual_core #(
     ,   .i_snp_req_addr         (c1_snp_req_addr)
     ,   .i_snp_req_cmd          (c1_snp_req_cmd)
     ,   .i_resp_is_shared       (c1_resp_is_shared)
-    // ,   .i_resp_is_dirty        (c1_resp_is_dirty)
 
     ,   .o_snp_req_ready        (c1_snp_req_ready)
     
@@ -251,10 +239,6 @@ module dual_core #(
     ,   .o_snp_resp_valid       (c1_snp_resp_valid)
     ,   .o_snp_resp_hit         (c1_snp_resp_hit)
     ,   .o_snp_resp_data        (c1_snp_resp_data)
-
-    ,   .i_debug_reg_addr       (w_debug_reg_addr)
-    ,   .i_debug_ren            (c1_debug_ren)
-    ,   .o_debug_reg_data       (c1_debug_data)
     );
 
     // ================================================================
@@ -291,7 +275,6 @@ module dual_core #(
     ,   .o_dc0_snp_req_addr     (c0_snp_req_addr)
     ,   .o_dc0_snp_req_cmd      (c0_snp_req_cmd)
     ,   .o_dc0_resp_is_shared   (c0_resp_is_shared)
-    // ,   .o_dc0_resp_is_dirty    (c0_resp_is_dirty)
 
     ,   .i_dc0_snp_resp_valid   (c0_snp_resp_valid)
     ,   .i_dc0_snp_resp_hit     (c0_snp_resp_hit)
@@ -321,7 +304,6 @@ module dual_core #(
     ,   .o_dc1_snp_req_addr     (c1_snp_req_addr)
     ,   .o_dc1_snp_req_cmd      (c1_snp_req_cmd)
     ,   .o_dc1_resp_is_shared   (c1_resp_is_shared)
-    // ,   .o_dc1_resp_is_dirty    (c1_resp_is_dirty)
 
     ,   .i_dc1_snp_resp_valid   (c1_snp_resp_valid)
     ,   .i_dc1_snp_resp_hit     (c1_snp_resp_hit)
@@ -337,7 +319,6 @@ module dual_core #(
 
     ,   .i_l2_resp_valid        (l2_resp_valid)
     ,   .i_l2_resp_rdata        (l2_resp_rdata)
-    // ,   .o_l2_resp_ready        (l2_resp_ready)
     );
 
     // ================================================================
@@ -363,7 +344,6 @@ module dual_core #(
     ,   .i_l1_req_wdata         (l2_req_wdata)
 
     ,   .o_l1_resp_valid        (l2_resp_valid)
-    // ,   .i_l1_resp_ready        (l2_resp_ready)
     ,   .o_l1_resp_rdata        (l2_resp_rdata)
     ,   .pipeline_stall         (L2_pipeline_stall)
 
