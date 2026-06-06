@@ -89,20 +89,7 @@ module tb_single_core;
         .m00_axi_rresp      (axi_rresp),
         .m00_axi_rlast      (axi_rlast),
         .m00_axi_rvalid     (axi_rvalid),
-        .m00_axi_rready     (axi_rready),
-
-        // Tie off AXI-Lite Slave
-        .s00_axi_awaddr     (4'd0),
-        .s00_axi_awprot     (3'd0),
-        .s00_axi_awvalid    (1'b0),
-        .s00_axi_wdata      (32'd0),
-        .s00_axi_wstrb      (4'd0),
-        .s00_axi_wvalid     (1'b0),
-        .s00_axi_bready     (1'b1),
-        .s00_axi_araddr     (4'd0),
-        .s00_axi_arprot     (3'd0),
-        .s00_axi_arvalid    (1'b0),
-        .s00_axi_rready     (1'b1)
+        .m00_axi_rready     (axi_rready)
     );
 
     // -------------------------------------------------------------------------

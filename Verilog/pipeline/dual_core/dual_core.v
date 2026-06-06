@@ -69,53 +69,7 @@ module dual_core #(
 ,   input                       m00_axi_rlast
 ,   input                       m00_axi_rvalid
 ,   output                      m00_axi_rready
-
-//     // ==========================================
-//     // AXI 4 lite SLAVE INTERFACE
-//     // ==========================================
-,   input   [3:0]               s00_axi_awaddr
-,   input   [2:0]               s00_axi_awprot
-,   input                       s00_axi_awvalid
-,   output                      s00_axi_awready
-
-,   input   [31:0]              s00_axi_wdata
-,   input   [3:0]               s00_axi_wstrb
-,   input                       s00_axi_wvalid
-,   output                      s00_axi_wready
-
-,   output  [1:0]               s00_axi_bresp
-,   output                      s00_axi_bvalid
-,   input                       s00_axi_bready
-
-,   input   [3:0]               s00_axi_araddr
-,   input   [2:0]               s00_axi_arprot
-,   input                       s00_axi_arvalid
-,   output                      s00_axi_arready
-
-,   output  [31:0]              s00_axi_rdata
-,   output  [1:0]               s00_axi_rresp
-,   output                      s00_axi_rvalid
-,   input                       s00_axi_rready
 );
-
-    // ================================================================
-    // Khai bao WIRES (INTERNAL SIGNALS)
-    // ================================================================
-    // --- DEBUG WIRES ---
-    wire        w_debug_core_sel;
-    wire [4:0]  w_debug_reg_addr;
-    wire        w_debug_ren;
-    wire [31:0] w_debug_reg_data;
-
-    wire [31:0] c0_debug_data;
-    wire [31:0] c1_debug_data;
-    
-    // Docc core 0 neu sel = 0, Đọc core 1 neu sel = 1
-    wire        c0_debug_ren = w_debug_ren & (~w_debug_core_sel);
-    wire        c1_debug_ren = w_debug_ren & w_debug_core_sel;
-    
-    // MUX chon data dauu ra tra ve cho module AXI
-    assign w_debug_reg_data = w_debug_core_sel ? c1_debug_data : c0_debug_data;
 
     // --- CORE 0 WIRES ---
     wire                c0_ic_req_valid;
@@ -183,11 +137,7 @@ module dual_core #(
     // wire                l2_resp_ready;
     wire [LINE_W-1:0]   l2_resp_rdata;
     wire                L2_pipeline_stall; // Dùng để stall cả 2 core khi L2 cache đang xử lý request
-
-    // // 3'b000: Unprivileged, Secure, Data access
-    // assign m00_axi_arprot  = 3'b000;
-    // // 4'b0000: (Normal, Non-cacheable, Modifiable, Bufferable
-    // assign m00_axi_arcache = 4'b0011;
+    
     // ================================================================
     // CORE 0 (Khởi tạo ở vị trí CODE_A_START)
     // ================================================================
@@ -448,45 +398,4 @@ module dual_core #(
     ,   .iRVALID                (m00_axi_rvalid)
     ,   .oRREADY                (m00_axi_rready)
     );
-
-    // ================================================================
-    // AXI LITE SLAVE MODULE (Xu ly Debug)
-    // ================================================================
-    debug #( 
-        .C_S00_AXI_DATA_WIDTH   (32)
-    ,   .C_S00_AXI_ADDR_WIDTH   (4)
-    ) debug_axi_inst (
-        .o_debug_core_sel   (w_debug_core_sel)
-    ,   .o_debug_reg_addr   (w_debug_reg_addr)
-    ,   .o_debug_ren        (w_debug_ren)
-    ,   .i_debug_reg_data   (w_debug_reg_data)
-
-    ,   .s00_axi_aclk       (ACLK)
-    ,   .s00_axi_aresetn    (ARESETn)
-    
-    ,   .s00_axi_araddr     (s00_axi_araddr)
-    ,   .s00_axi_arprot     (s00_axi_arprot)
-    ,   .s00_axi_arvalid    (s00_axi_arvalid)
-    ,   .s00_axi_arready    (s00_axi_arready)
-
-    ,   .s00_axi_awaddr     (s00_axi_awaddr)
-    ,   .s00_axi_awprot     (s00_axi_awprot)
-    ,   .s00_axi_awvalid    (s00_axi_awvalid)
-    ,   .s00_axi_awready    (s00_axi_awready)
-    
-    ,   .s00_axi_wdata      (s00_axi_wdata)
-    ,   .s00_axi_wstrb      (s00_axi_wstrb)
-    ,   .s00_axi_wvalid     (s00_axi_wvalid)
-    ,   .s00_axi_wready     (s00_axi_wready)
-    
-    ,   .s00_axi_bresp      (s00_axi_bresp)
-    ,   .s00_axi_bvalid     (s00_axi_bvalid)
-    ,   .s00_axi_bready     (s00_axi_bready)
-
-    ,   .s00_axi_rdata      (s00_axi_rdata)
-    ,   .s00_axi_rresp      (s00_axi_rresp)
-    ,   .s00_axi_rvalid     (s00_axi_rvalid)
-    ,   .s00_axi_rready     (s00_axi_rready)
-    );
-
 endmodule
