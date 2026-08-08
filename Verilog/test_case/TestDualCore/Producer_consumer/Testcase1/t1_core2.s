@@ -1,3 +1,4 @@
+.option norvc           # BẮT BUỘC: Ép trình biên dịch tắt tập lệnh C, luôn dùng 32-bit
 .section .text.init
     .globl _start
 _start:

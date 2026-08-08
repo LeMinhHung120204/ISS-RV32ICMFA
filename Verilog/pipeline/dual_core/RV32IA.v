@@ -305,7 +305,6 @@ module RV32IA #(
     assign icache_addr = F_PC;          // S1 -> Cache
     assign icache_req  = rst_n;         // Always request when not reset
     assign fetch_stall = F_Stall;
-    assign F_RD        = imem_instr;    // S2 (Cache) -> fetch_pipe
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -319,7 +318,7 @@ module RV32IA #(
         end
     end
 
-    // assign F_RD = s2_ignore_instr ? 32'h00000013 : imem_instr;
+    assign F_RD = s2_ignore_instr ? 32'h00000000 : imem_instr;
     // ================================================================
     // PIPELINE REGISTER: S1 -> S2 (fetch_pipe)
     // ================================================================

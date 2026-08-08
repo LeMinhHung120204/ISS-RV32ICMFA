@@ -30,6 +30,22 @@ module tb_dual_core;
     // Co dieu khien luong Testbench
     reg test_done;
     reg timeout_err;
+    // Hieu nang (Performance metrics)
+    integer c0_inst_ret;
+    integer c1_inst_ret;
+    integer c0_ic_access;
+    integer c0_ic_miss;
+    integer c1_ic_access;
+    integer c1_ic_miss;
+    integer c0_dc_access;
+    integer c0_dc_miss;
+    integer c1_dc_access;
+    integer c1_dc_miss;
+    integer l2_access;
+    integer l2_miss;
+    integer c0_active_cycles;
+    integer c1_active_cycles;
+    
     // Cac day tin hieu AXI
     wire [1:0]    m_axi_awid = 2'b00;
     wire [1:0]    m_axi_arid = 2'b00;
@@ -63,6 +79,7 @@ module tb_dual_core;
     // -------------------------------------------------------------------------
     // 2. Instantiate DUT
     // -------------------------------------------------------------------------
+    assign m_axi_rresp = 4'b00; // memory always return OK  
     dual_core #(
         .CODE_A_START   (CODE_A_START)
     ,   .CODE_B_START   (CODE_B_START)
@@ -106,8 +123,7 @@ module tb_dual_core;
     ,   .RESET_VALUE    (RESET_VALUE)
     ) u_unified_mem (
         .ACLK           (ACLK)
-    ,   .ARESETn      
-        (ARESETn)
+    ,   .ARESETn        (ARESETn)
     ,   .i_axi_awvalid  (m_axi_awvalid)
     ,   .o_axi_awready  (m_axi_awready)
     ,   .i_axi_awaddr   (m_axi_awaddr)
@@ -117,8 +133,7 @@ module tb_dual_core;
     ,   .i_axi_wvalid   (m_axi_wvalid)
     ,   .o_axi_wready   (m_axi_wready)
     ,   .i_axi_wdata    (m_axi_wdata)
-    ,   .i_axi_wstrb 
-        (m_axi_wstrb)
+    ,   .i_axi_wstrb    (m_axi_wstrb)
     ,   .i_axi_wlast    (m_axi_wlast)
     ,   .o_axi_bvalid   (m_axi_bvalid)
     ,   .i_axi_bready   (m_axi_bready)
@@ -172,23 +187,92 @@ module tb_dual_core;
         end
     end
 
+    // Performance Monitoring
+    always @(posedge ACLK) begin
+        if (!ARESETn) begin
+            c0_inst_ret <= 0;
+            c1_inst_ret <= 0;
+            c0_ic_access <= 0;
+            c0_ic_miss <= 0;
+            c1_ic_access <= 0;
+            c1_ic_miss <= 0;
+            c0_dc_access <= 0;
+            c0_dc_miss <= 0;
+            c1_dc_access <= 0;
+            c1_dc_miss <= 0;
+            l2_access <= 0;
+            l2_miss <= 0;
+            c0_active_cycles <= 0;
+            c1_active_cycles <= 0;
+        end else if (!test_done) begin
+            // Active Cycles Tracking
+            if (u_soc_top.core_0.u_RV32IA.register_file.register[26] != 1) begin
+                c0_active_cycles <= c0_active_cycles + 1;
+            end
+            if (u_soc_top.core_1.u_RV32IA.register_file.register[26] != 1) begin
+                c1_active_cycles <= c1_active_cycles + 1;
+            end
+
+            // Instruction commit (Approximate: when EX stage completes a valid instruction)
+            if (!u_soc_top.core_0.u_RV32IA.E_Stall && !u_soc_top.core_0.u_RV32IA.E_Flush && u_soc_top.core_0.u_RV32IA.E_PC != 32'd0) begin
+                c0_inst_ret <= c0_inst_ret + 1;
+            end
+            if (!u_soc_top.core_1.u_RV32IA.E_Stall && !u_soc_top.core_1.u_RV32IA.E_Flush && u_soc_top.core_1.u_RV32IA.E_PC != 32'd0) begin
+                c1_inst_ret <= c1_inst_ret + 1;
+            end
+            
+            // I-Cache Accesses
+            if (u_soc_top.core_0.icache_req && !u_soc_top.core_0.u_icache_L1.internal_stall)
+                c0_ic_access <= c0_ic_access + 1;
+            if (u_soc_top.core_1.icache_req && !u_soc_top.core_1.u_icache_L1.internal_stall)
+                c1_ic_access <= c1_ic_access + 1;
+            
+            // I-Cache Misses
+            if (u_soc_top.core_0.u_icache_L1.refill_we)
+                c0_ic_miss <= c0_ic_miss + 1;
+            if (u_soc_top.core_1.u_icache_L1.refill_we)
+                c1_ic_miss <= c1_ic_miss + 1;
+
+            // D-Cache Accesses
+            if (u_soc_top.core_0.u_dcache_L1.cpu_req && !u_soc_top.core_0.u_dcache_L1.pipeline_stall)
+                c0_dc_access <= c0_dc_access + 1;
+            if (u_soc_top.core_1.u_dcache_L1.cpu_req && !u_soc_top.core_1.u_dcache_L1.pipeline_stall)
+                c1_dc_access <= c1_dc_access + 1;
+            
+            // D-Cache Misses (Refill from L2)
+            if (u_soc_top.core_0.u_dcache_L1.refill_we)
+                c0_dc_miss <= c0_dc_miss + 1;
+            if (u_soc_top.core_1.u_dcache_L1.refill_we)
+                c1_dc_miss <= c1_dc_miss + 1;
+
+            // L2 Cache Accesses & Misses
+            if (u_soc_top.u_cache_L2.i_l1_req_valid && u_soc_top.u_cache_L2.o_l1_req_ready)
+                l2_access <= l2_access + 1;
+            if (u_soc_top.u_cache_L2.refill_we)
+                l2_miss <= l2_miss + 1;
+        end
+    end
+
     // -------------------------------------------------------------------------
     // 4. MAIN TEST PLAN RUNNER
     // -------------------------------------------------------------------------
-    string paths_a [0:1];
-    string paths_b [0:1];
-    string test_names [0:1];
+    string paths_a [1];
+    string paths_b [1];
+    string test_names [1];
     
     integer t;
     integer i;
     integer f_log;
     integer f_alu_log;
     integer f_reg_log;
+    integer f_cs_log;
+    integer f_perf_log;
     initial begin
-        // --- MO FILE LOG ---
         f_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_results.log", "w");
         f_alu_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/alu_log.txt", "w");
         f_reg_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/register_dump.txt", "w");
+        f_cs_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/critical_section.log", "w");
+        f_perf_log = $fopen("C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/performance.log", "w");
         if (f_log == 0) begin
             $display("LOI: Khong the tao file test_results.log!");
             $finish;
@@ -200,17 +284,15 @@ module tb_dual_core;
 
         // --- CAU HINH DUONG DAN TEST ---
         test_names[0] = "TEST 1: LR/SC (MOESI E/M States)";
-        paths_a[0]    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_case/TestDualCore/Critical Section_Mutual Exclusion/Testcase1/core_a.hex";
-        paths_b[0]    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_case/TestDualCore/Critical Section_Mutual Exclusion/Testcase1/core_b.hex";
-        test_names[1] = "TEST 2: PETERSON (MOESI S/I States)";
-        paths_a[1]    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_case/TestDualCore/Critical Section_Mutual Exclusion/Testcase2/core_a.hex";
-        paths_b[1]    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_case/TestDualCore/Critical Section_Mutual Exclusion/Testcase2/core_b.hex";
+        paths_a[0]    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_case/TestDualCore/CriticalSection_MutualExclusion/Testcase1/core_a.hex";
+        paths_b[0]    = "C:/Hung/Khoa_Luan/ISS-RV32ICMFA/Verilog/test_case/TestDualCore/CriticalSection_MutualExclusion/Testcase1/core_b.hex";
 
         ARESETn = 0;
         
         $fdisplay(f_log, "========================================================");
         $fdisplay(f_log, "BAO CAO KET QUA: MOESI CACHE COHERENCE VERIFICATION");
         $fdisplay(f_log, "========================================================\n");
+        $fflush(f_log);
         for (t = 0; t < 1; t = t + 1) begin
             $display("\n========================================================");
             $display(">>> BAT DAU CHAY: %s", test_names[t]);
@@ -249,6 +331,27 @@ module tb_dual_core;
                 
                 // Goi ham Autocheck doc Register File truc tiep
                 autocheck(f_log);
+                
+                // Logging Performance Metrics
+                $fdisplay(f_perf_log, "\n========================================================");
+                $fdisplay(f_perf_log, "PERFORMANCE METRICS (CPI & CACHE HIT RATE)");
+                $fdisplay(f_perf_log, "========================================================");
+                $fdisplay(f_perf_log, "Global Total Cycles: %0d", cycle_count);
+                $fdisplay(f_perf_log, "Core 0 Active      : %0d cycles, Instructions: %0d  =>  CPI: %0.2f", c0_active_cycles, c0_inst_ret, (c0_inst_ret > 0) ? (c0_active_cycles * 1.0 / c0_inst_ret) : 0);
+                $fdisplay(f_perf_log, "Core 1 Active      : %0d cycles, Instructions: %0d  =>  CPI: %0.2f", c1_active_cycles, c1_inst_ret, (c1_inst_ret > 0) ? (c1_active_cycles * 1.0 / c1_inst_ret) : 0);
+                $fdisplay(f_perf_log, "--------------------------------------------------------");
+                $fdisplay(f_perf_log, "Core 0 I-Cache     : Access = %0d, Miss = %0d, Hit = %0d", c0_ic_access, c0_ic_miss, (c0_ic_access - c0_ic_miss));
+                $fdisplay(f_perf_log, "   => Hit Rate     : %0.2f%%", (c0_ic_access > 0) ? ((c0_ic_access - c0_ic_miss) * 100.0 / c0_ic_access) : 0);
+                $fdisplay(f_perf_log, "Core 1 I-Cache     : Access = %0d, Miss = %0d, Hit = %0d", c1_ic_access, c1_ic_miss, (c1_ic_access - c1_ic_miss));
+                $fdisplay(f_perf_log, "   => Hit Rate     : %0.2f%%", (c1_ic_access > 0) ? ((c1_ic_access - c1_ic_miss) * 100.0 / c1_ic_access) : 0);
+                $fdisplay(f_perf_log, "Core 0 D-Cache     : Access = %0d, Miss = %0d, Hit = %0d", c0_dc_access, c0_dc_miss, (c0_dc_access - c0_dc_miss));
+                $fdisplay(f_perf_log, "   => Hit Rate     : %0.2f%%", (c0_dc_access > 0) ? ((c0_dc_access - c0_dc_miss) * 100.0 / c0_dc_access) : 0);
+                $fdisplay(f_perf_log, "Core 1 D-Cache     : Access = %0d, Miss = %0d, Hit = %0d", c1_dc_access, c1_dc_miss, (c1_dc_access - c1_dc_miss));
+                $fdisplay(f_perf_log, "   => Hit Rate     : %0.2f%%", (c1_dc_access > 0) ? ((c1_dc_access - c1_dc_miss) * 100.0 / c1_dc_access) : 0);
+                $fdisplay(f_perf_log, "Shared L2 Cache    : Access = %0d, Miss = %0d, Hit = %0d", l2_access, l2_miss, (l2_access - l2_miss));
+                $fdisplay(f_perf_log, "   => Hit Rate     : %0.2f%%", (l2_access > 0) ? ((l2_access - l2_miss) * 100.0 / l2_access) : 0);
+                $fdisplay(f_perf_log, "========================================================");
+                $fflush(f_perf_log);
             end
             
             $fdisplay(f_log, "\n");
@@ -262,6 +365,8 @@ module tb_dual_core;
         $fclose(f_log);
         $fclose(f_alu_log);
         $fclose(f_reg_log);
+        $fclose(f_cs_log);
+        $fclose(f_perf_log);
         $finish;
     end
 
@@ -446,6 +551,37 @@ module tb_dual_core;
                 $fdisplay(f_alu_log, "[TIME: %10t] CORE 0 [PC: 0x%03h | ALU: 0x%08h (%8d)]  <==>  CORE 1 [PC: 0x%03h | ALU: 0x%08h (%8d)]", 
                           $time, pc_c0, alu_c0, alu_c0, pc_c1, alu_c1, alu_c1);
             end
+        end
+    end
+
+    // =========================================================================
+    // CRITICAL SECTION MONITOR FOR E_PC
+    // =========================================================================
+    wire in_cs_c0 = (pc_c0 == 32'h24 || pc_c0 == 32'h28 || pc_c0 == 32'h2C);
+    wire in_cs_c1 = (pc_c1 == 32'h124 || pc_c1 == 32'h128 || pc_c1 == 32'h12C);
+    
+    reg [31:0] prev_pc_c0;
+    reg [31:0] prev_pc_c1;
+
+    always @(posedge ACLK) begin
+        if (!ARESETn) begin
+            prev_pc_c0 <= 32'hFFFFFFFF;
+            prev_pc_c1 <= 32'hFFFFFFFF;
+        end else begin
+            if (in_cs_c0 || in_cs_c1) begin
+                if (pc_c0 != prev_pc_c0 || pc_c1 != prev_pc_c1) begin
+                    $fdisplay(f_cs_log, "[TIME: %10t] Core0_E_PC = 0x%03h | Core1_E_PC = 0x%03h %s", 
+                              $time, pc_c0, pc_c1, 
+                              (in_cs_c0 && in_cs_c1) ? " >>> VIOLATION: MUTUAL EXCLUSION FAILED <<<" : "");
+                    $fflush(f_cs_log);
+                end
+                
+                if (in_cs_c0 && in_cs_c1 && (pc_c0 != prev_pc_c0 || pc_c1 != prev_pc_c1)) begin
+                    $display("❌ [TIME: %10t] MUTUAL EXCLUSION VIOLATION! Core 0 PC: %03h, Core 1 PC: %03h", $time, pc_c0, pc_c1);
+                end
+            end
+            prev_pc_c0 <= pc_c0;
+            prev_pc_c1 <= pc_c1;
         end
     end
 
